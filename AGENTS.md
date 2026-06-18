@@ -4,7 +4,7 @@
 
 A multi-user web application for preparing for certification exams (AWS, Azure, Kubernetes, AI/ML). The tool ingests learning material from multiple external sources, generates personalized study sessions and quizzes via LLM, tracks performance over time, and exposes a streaming AI tutor agent.
 
-Full specification (incl. architecture decisions): `SPEC.md`. UI design system: `DESIGN.md`.
+Product requirements (why/who/success): `PRD.md`. Full specification (incl. architecture decisions): `SPEC.md`. UI design system: `DESIGN.md`.
 
 ## Monorepo Structure
 

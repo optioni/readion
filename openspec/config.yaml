@@ -8,6 +8,8 @@ context: |
   tracks user performance, and exposes a streaming AI tutor agent.
 
   Full specification: SPEC.md in the project root.
+  Product requirements: PRD.md in the project root.
+  UI design principles: DESIGN.md in the project root.
 
   ## Monorepo Structure
   - apps/api — NestJS API server
