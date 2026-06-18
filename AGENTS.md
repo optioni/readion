@@ -9,7 +9,7 @@ Product requirements (why/who/success): `PRD.md`. Full specification (incl. arch
 ## Monorepo Structure
 
 ```
-learning-tool/
+readion/
 ├── apps/
 │   ├── api/        # NestJS API server
 │   ├── web/        # NuxtJS (Vue 3) frontend
@@ -40,7 +40,7 @@ yarn install
 docker compose up -d
 
 # Run database migrations
-yarn workspace @learning-tool/db migration:up
+yarn workspace @readion/db migration:up
 
 # Start all apps in development mode
 yarn dev
@@ -156,13 +156,13 @@ MikroORM manages entities, migrations, and queries. The `packages/db` package ow
 
 ```bash
 # Create a new migration
-yarn workspace @learning-tool/db migration:create
+yarn workspace @readion/db migration:create
 
 # Run migrations
-yarn workspace @learning-tool/db migration:up
+yarn workspace @readion/db migration:up
 
 # Rollback
-yarn workspace @learning-tool/db migration:down
+yarn workspace @readion/db migration:down
 ```
 
 Never modify migration files after they have been committed — create a new migration instead.

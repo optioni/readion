@@ -1,7 +1,7 @@
 schema: spec-driven
 
 context: |
-  # Learning Tool
+  # Readion
 
   A multi-user web application for preparing for certification exams (AWS, Azure, Kubernetes, AI/ML).
   The tool ingests learning material from multiple sources, generates personalized study sessions and quizzes,

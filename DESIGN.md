@@ -1,7 +1,7 @@
 ---
-name: learning-tool
+name: readion
 version: alpha
-description: Design system for the learning tool certification exam prep app. Dark-mode-first, clean and minimal — low visual noise to keep the learner focused on content.
+description: Design system for Readion, the certification exam prep app. Dark-mode-first, clean and minimal — low visual noise to keep the learner focused on content.
 
 colors:
   background:

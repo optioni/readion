@@ -1,4 +1,4 @@
-# Learning Tool — Product Requirements Document
+# Readion — Product Requirements Document
 
 > **Scope of this document.** This PRD covers the *why*, *who*, and *what-success-looks-like*. It deliberately does **not** restate implementation: the technical design, data model, API, and infrastructure live in [`SPEC.md`](./SPEC.md), and the visual design system lives in [`DESIGN.md`](./DESIGN.md). Where a requirement maps to a built feature, it links to the relevant `SPEC.md` section.
 

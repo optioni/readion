@@ -1,4 +1,4 @@
-# Learning Tool — Specification
+# Readion — Specification
 
 ## Overview
 
@@ -62,7 +62,7 @@ A multi-user web application for preparing for certification exams (e.g. AWS Clo
 ## Repository Structure
 
 ```
-learning-tool/
+readion/
 ├── apps/
 │   ├── api/          # NestJS API server
 │   ├── web/          # NuxtJS frontend
