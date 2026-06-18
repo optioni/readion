@@ -38,6 +38,7 @@ A multi-user web application for preparing for certification exams (e.g. AWS Clo
 | Queue / cache | Redis (BullMQ + session cache) |
 | AI SDK | Vercel AI SDK (provider-agnostic) |
 | Web scraping | amerkurev/scrapper (Docker sidecar) |
+| Web search | Configurable search API (e.g. Tavily / Brave) — used for official-guide discovery during certification setup |
 | API client generation | Orval (generates typed Vue Query composables from OpenAPI spec) |
 | Data fetching | `@tanstack/vue-query` (configured as a Nuxt plugin, consumed via Orval-generated composables) |
 | Component library | Nuxt UI |
@@ -105,15 +106,16 @@ Used for two purposes:
 | Entity | Purpose |
 |---|---|
 | `User` | Account, email, bcrypt password hash, global preferences, role (user/admin) |
-| `Certification` | Supported exam (name, provider, domain list, question count, time limit) |
+| `Certification` | Supported exam (name, provider, domain list with weights, question count, passing score, time limit). Exam-format fields are structured (never generated at question time) and carry provenance — `verified` (seed data) or per-field citation to the official exam guide (see Certification Setup & Grounding) |
 | `UserCertification` | Join entity: user enrollment in a cert — enrolled at, status (active/archived), per-cert session preference overrides |
 | `ContentSource` | Registered source per certification (URL, type, last fetched, interval, enabled) |
 | `ContentChunk` | Parsed text chunk with pgvector embedding, multi-domain tags (`{domain, confidence}[]` with a derived `primaryDomain`), source reference, content hash |
-| `StudySession` | Session record (user, certification, config, start/end time, status, last item index) |
+| `StudySession` | Session record (user, certification, config, start/end time, status, last item index, `kind`: `study` \| `review`) |
 | `SessionItem` | Individual item within a session (type: reading/quiz/video, content, completed flag) |
 | `QuizResponse` | User answer, correctness, confidence rating (1–5), time taken |
 | `WeakArea` | Aggregated score per user, per certification, per domain — updated after each session and mock exam |
-| `MockExam` | Full timed exam attempt per user and certification — overall score, domain breakdown, review data |
+| `ReviewItem` | Spaced-repetition state for a concept (anchored to a content chunk) per `UserCertification` — Leitner `box`, `dueAt`, `lastReviewedAt`, `state` (`active` \| `mastered` \| `suppressed`) |
+| `MockExam` | Exam attempt per user and certification — `type` (`mock` \| `diagnostic`), overall score, domain breakdown, review data. `mock` = full real-exam format (timed, pass/fail); `diagnostic` = short calibration taken at enrollment (see Diagnostic Exam) |
 | `AgentConversation` | Agent chat session — either linked to a `StudySession` (lifecycle follows the session) or standalone (sliding 4-hour inactivity TTL) |
 | `AgentMessage` | Individual message in a conversation — role (`user` \| `assistant` \| `tool` \| `system`), content stored as JSONB mirroring the Vercel AI SDK `CoreMessage` type (string or array of content parts). Tool call invocations and tool results are stored as separate messages to allow full conversation reconstruction. |
 
@@ -149,25 +151,34 @@ Used for two purposes:
 - Session history list with filters
 
 **QuizModule**
-- Generate quiz questions from semantically retrieved content chunks via LLM
+- Generate quiz questions from semantically retrieved content chunks via LLM, under the extractive-grounding contract + verifier pass (see Grounding & Verification) — unverified questions are never served
 - Accept user answers, score, and store with confidence rating
-- Return explanations for wrong answers (agent-powered)
+- Return explanations for wrong answers (agent-powered), also grounded + verified
+- Accept user "report" on a question/explanation → quarantine + cache eviction
 
 **MockExamModule**
 - Create timed mock exam matching real exam format (question count, time limit)
 - No agent access during exam
 - Score and store full attempt on submission
 - Review mode: see all questions with correct answers and explanations
+- Exam questions are generated under the same grounding + verifier guarantee as quizzes (see Grounding & Verification)
+- Also owns the **diagnostic** variant (`type: diagnostic`): a short (10–15 question) calibration exam spread across all domains, no pass/fail, used to seed a new enrollment's baseline (see Diagnostic Exam). Shares scoring, domain-breakdown, and review infrastructure with mocks
 
 **WeakAreasModule**
 - Aggregate quiz performance per domain per user
 - Expose ranked weak area list used by session planner and dashboard
 - Updated after each session and mock exam
 
+**ReviewModule**
+- Owns the spaced-repetition queue (`ReviewItem` records) per `UserCertification`
+- Accrues concepts from wrong / low-confidence answers (including diagnostic misses); applies the Leitner schedule on each review answer
+- Exposes the due-item count and creates a `review`-kind `StudySession` for the standalone "5-minute review" (see Spaced Repetition & Review Queue)
+- Mark-as-mastered / suppress endpoints to retire a concept from review and new-material selection
+
 **AgentModule**
 - Streaming Q&A agent via Vercel AI SDK, delivered over Server-Sent Events
 - Two distinct agent modes:
-  - **In-session agent** — full tool access, scoped to the session's certification (see tools below)
+  - **In-session agent** — full tool access, scoped to the session's certification (see tools below). System prompt enforces grounding: answer only from retrieved context, cite sources, and abstain rather than guess when material is thin (abstention can trigger `fetchMoreMaterial`) — see Grounding & Verification
   - **Standalone agent** — a general-knowledge tutor with **no cert-scoped tools**. Because there is no certification or session context, none of the RAG/progress tools below apply (they all require a cert corpus or session). It answers from the model's general knowledge only, grounded by the conversation. This keeps standalone chat simple and avoids implying cert-specific grounding it cannot provide.
 - In-session agent tools:
   - `semanticSearch` — query content chunks by embedding similarity
@@ -331,6 +342,8 @@ NuxtJS (Vue 3) with Nuxt UI (component library), TailwindCSS, and Pinia.
 
 **Visual style:** Clean and minimal — low visual noise, keeps the learner focused on content. Dark mode supported from day one (Nuxt UI handles this natively). Light/dark toggle available in the user preferences.
 
+**Mobile & PWA:** The web app is fully responsive and installable as a Progressive Web App. Native apps remain a non-goal, but the time-constrained learner studies in fragmented moments (commute, between meetings), so phone-quality layouts and the quick "5-minute review" must work well on small screens. (No offline mode — see Non-Goals.)
+
 ### Layout Decisions
 
 **Session view — Split Panel**
@@ -342,6 +355,7 @@ All enrolled certifications stacked vertically, each as a card showing:
 - Readiness score with delta since last session
 - Weak areas (top 3 domains with scores)
 - Recent sessions (last 3, with domain and accuracy)
+- Due-review count with a "5-minute review" quick-start (shown only when items are due)
 - Start Session and Mock Exam quick-start buttons
 
 The certification with the lowest readiness score gets the gradient hero treatment at the top of the list — it needs the most attention. Other certs are shown in a muted style below, sorted by readiness score ascending. An "+ Add certification" entry sits at the bottom of the list.
@@ -351,6 +365,7 @@ The certification with the lowest readiness score gets the gradient hero treatme
 **Onboarding**
 - Select target certification
 - Configure default session preferences (duration, content mix, style)
+- Offer an optional **diagnostic exam** ("Take a 2-minute diagnostic to personalize your first session") with a clear Skip option (see Diagnostic Exam)
 - **No-certifications case:** onboarding is skipped entirely when no certifications exist yet. The first registered user (an admin) is routed straight to the admin certification-setup flow instead; a non-admin who somehow arrives with zero available certs sees an empty state ("No certifications available yet") rather than a dead-end cert picker
 
 **Dashboard**
@@ -364,6 +379,8 @@ The certification with the lowest readiness score gets the gradient hero treatme
 - Split panel: content (reading blocks and quiz cards) on the left, AI agent chat on the right
 - Agent panel is collapsible to maximise content area
 - Confidence rating (1–5) after each topic block
+- Source citation chips on quiz cards and reading blocks (from stored provenance)
+- "Report this question" action on quiz cards/explanations → quarantine (see Grounding & Verification)
 - Session timer and progress bar in the header
 - Transitions to end-of-session summary on completion
 
@@ -377,6 +394,8 @@ The certification with the lowest readiness score gets the gradient hero treatme
 - Weak area breakdown per domain with trend over time
 - Historical quiz accuracy charts
 - Session history with per-session stats
+- Passive readiness trajectory ("at your recent pace, exam-ready in ~N weeks") — informational only, no dates or reminders
+- Mark a concept or domain as **mastered** to retire it from review and new-material selection
 
 **Agent chat**
 - Standalone Q&A interface outside of sessions — a general-knowledge tutor with no certification context and no cert-scoped tools
@@ -384,8 +403,9 @@ The certification with the lowest readiness score gets the gradient hero treatme
 - No inline source citations here (no RAG corpus is attached); citations only appear in the in-session agent
 
 **Admin**
-- Certification setup: admin enters a cert name or code, an LLM agent pre-fills domains, weights, exam format, and suggested content sources; admin reviews and confirms
+- Certification setup (see Certification Setup & Grounding): primary-target certs load from verified seed data; for new/unlisted certs the agent discovers candidate official-guide URLs via web search, the admin **confirms the source**, then the agent extracts each format field from that source with a per-field citation and an "unverified — confirm manually" flag on anything it couldn't ground. Admin reviews each field against its cited source and confirms
 - Manual certification form for unknown or new certs with no LLM knowledge
+- Content quality: review and manage **quarantined** generated items (reported by users or auto-flagged), with provenance
 - Content source management per certification (add, enable/disable, trigger re-ingestion)
 - Ingestion job status and manual trigger
 - User management: list all users, promote / demote admin role
@@ -487,6 +507,8 @@ All workflows defined under `.github/workflows/`.
 `@willsoto/nestjs-prometheus` exposes a `/metrics` endpoint on the API and worker for Prometheus scraping. Key metrics:
 - HTTP request latency and status codes
 - LLM call latency, token usage, and error rates per model/use-case
+- Verifier pass/fail rate, regeneration count per item, and substitution/abstention rate
+- User-reported / quarantined item rate per certification
 - BullMQ queue depth and job processing time per queue
 - Content chunk ingestion count per source type
 - Active session count
@@ -523,6 +545,7 @@ Key config groups:
 - JWT (secret, access/refresh token expiry)
 - AI provider (provider name, API key, model IDs per task type, embedding model). The embedding **dimension is not runtime config** — it is fixed by the pgvector column at migration time. On boot the app reads the live column dimension and fails fast if the configured embedding model's output dimension does not match it
 - Scrapper (base URL)
+- Web search (provider, API key — used for certification-guide discovery)
 - CORS (allowed origins)
 - Email (SMTP2GO host, port, username, password, from address)
 - Sentry (DSN)
@@ -557,6 +580,8 @@ SMTP2GO as the email provider via `nodemailer`. A dedicated `MailModule` in `app
 **Emails sent in v1:**
 - Password reset link (expires in 1 hour)
 - Welcome email on registration
+- Weekly progress digest (opt-out): readiness %, weekly delta, weakest domain, and due-review count, with a gentle prompt to continue. Encouraging in tone, never nagging; one-click unsubscribe
+- Post-exam outcome nudge: after a user reaches exam-readiness and study activity lulls, a one-tap "Did you take the exam? Passed / Didn't pass / Not yet" survey (feeds the pass-rate metric; optional, at most one follow-up)
 
 SMTP credentials configured via env vars.
 
@@ -651,6 +676,28 @@ LLM is used for:
 
 Embeddings are generated via the Vercel AI SDK. The embedding provider is configured independently from the chat provider — they do not need to match. This is important because some chat providers (e.g. Anthropic) offer no embedding model. The default embedding model is **OpenAI `text-embedding-3-small`** (1536 dimensions, fast, cost-effective for bulk chunk ingestion). This can be swapped for `text-embedding-3-large` or Voyage AI's `voyage-3` if retrieval quality needs improvement, but only via a migration that alters the `content_chunks` embedding column dimension — the dimension is not a runtime-tunable setting. The app validates the configured model's dimension against the live column on startup and refuses to boot on a mismatch.
 
+### Grounding & Verification
+
+Generated study content must be faithful to source material — a study tool that teaches wrong answers is worse than none. Grounding has several layers.
+
+**Two sources of truth, never blurred.**
+- *Content facts* (what is true about the technology) come only from retrieved `ContentChunk`s.
+- *Exam-format facts* (question count, passing score, time limit, domain list and weights) come only from structured `Certification` fields — they are **never generated at question time**. See Certification Setup & Grounding for how those fields are populated and trusted.
+
+**Extractive generation contract.** The quiz/explanation generator must, for the correct answer, quote the supporting span(s) verbatim from the source chunk. If it cannot ground the answer in a quote, it must not assert it. Output is structured: question, options, correct answer, `supportingSpans[]`, `sourceChunkIds[]`.
+
+**Independent verifier pass.** Before any question or explanation is shown *or cached*, a separate utility-model call checks that the correct answer is entailed by the cited span and that the distractors are actually incorrect per the source. The verifier is a distinct call so the model is not grading its own work.
+
+**Failure handling.** On verifier rejection, regenerate up to N times; if still failing, discard the item and substitute one generated from a different concept/chunk so the session stays full. If the topic's chunk coverage is genuinely thin (low retrieval scores), trigger `fetchMoreMaterial`. Users never see an unverified item.
+
+**Provenance & citations.** Each generated question/explanation persists its `sourceChunkIds`, `supportingSpans`, and verifier verdict/score wherever it is stored (`SessionItem` for sessions, the question array for `MockExam`). In-session citation chips and the `explainAnswer` tool derive from this stored provenance — citations are real references, not the model re-stating a source.
+
+**Reading blocks & agent — grounded, not verifier-gated.** Reading blocks are composed from cited chunks (extractive grounding + citation chips); the chunk text *is* the source, so no separate verifier. The in-session agent's system prompt enforces: answer only from retrieved context, cite sources, and **abstain** ("I don't have enough material on that") rather than guess — abstention can trigger `fetchMoreMaterial`. Streaming responses cannot be pre-verified, so grounding + citation + abstention is the guarantee there.
+
+**User report + auto-quarantine.** A "report this question" action on any quiz item or explanation immediately quarantines that generated item (evicted from cache, not reused) and surfaces it to admins with its provenance. Cheap insurance for the rare miss and a real-world quality signal.
+
+Only verified payloads enter the question/explanation cache (see LLM Cost Optimisation); a quarantine evicts the cached entry. The verifier roughly doubles cold-generation LLM calls (generate + verify, plus occasional regenerations) but runs on the cheap utility tier and verified items are cached, so steady-state cost stays bounded.
+
 ### Model Selection Strategy
 
 Not all LLM tasks require the same model. Models are chosen by task type to balance quality and cost:
@@ -658,6 +705,7 @@ Not all LLM tasks require the same model. Models are chosen by task type to bala
 | Task | Model type |
 |---|---|
 | Quiz generation, answer explanation | Utility model (fast, cheap — e.g. Haiku, GPT-4o mini) |
+| Answer verification (faithfulness/entailment check) | Utility model |
 | Agent Q&A responses | Mid-tier model (e.g. Sonnet, GPT-4o) |
 | Certification pre-fill in admin | Mid-tier model |
 | Domain tagging of content chunks | Utility model |
@@ -668,7 +716,7 @@ Model IDs are configured via env vars per task type, not hardcoded.
 
 ### LLM Cost Optimisation
 
-- **Response caching** — quiz questions and explanations are cached in Redis with a TTL, keyed on the full set of inputs that determine the output: source chunk id(s), difficulty, question format, and certification. Any user-specific input that influences generation must be part of the cache key — otherwise it must not be part of the prompt. Per-user tailoring is therefore expressed as content *selection* (which chunks/domains a user sees), not as variation in the generated text for a given chunk, which keeps the cache effective across users. Identical requests within the TTL return the cached response without an LLM call.
+- **Response caching** — quiz questions and explanations are cached in Redis with a TTL, keyed on the full set of inputs that determine the output: source chunk id(s), difficulty, question format, and certification. Any user-specific input that influences generation must be part of the cache key — otherwise it must not be part of the prompt. Per-user tailoring is therefore expressed as content *selection* (which chunks/domains a user sees), not as variation in the generated text for a given chunk, which keeps the cache effective across users. Identical requests within the TTL return the cached response without an LLM call. **Only verified items are cached** (see Grounding & Verification), and a quarantine evicts the cached entry — a question that failed verification or was reported is never served from cache.
 - **Prompt caching** — use provider prompt caching (e.g. Anthropic cache control) for large static context like certification domain lists and system prompts sent repeatedly.
 - **Token budgets** — each LLM call type has a configured max token budget to prevent runaway costs.
 - **Embedding batching** — content chunks are embedded in batches during ingestion rather than one-by-one.
@@ -692,9 +740,9 @@ The number of items is derived from session duration (~2 min per reading block, 
 
 1. Target domains are determined from the session's focus area config (explicit domain, or auto-weighted by weak area scores)
 2. Semantic search retrieves the most relevant content chunks above a minimum cosine similarity threshold of **0.75** (configurable via env). Chunks below this threshold are discarded even if they are the nearest neighbours.
-3. Reading blocks are composed from 1–3 related chunks, formatted by the LLM into clean readable **Markdown prose** — not raw scraped text. The frontend renders Markdown to HTML. The goal is digestible explanations, not raw documentation dumps.
+3. Reading blocks are composed from 1–3 related chunks, formatted by the LLM into clean readable **Markdown prose** — not raw scraped text. The frontend renders Markdown to HTML. The goal is digestible explanations, not raw documentation dumps. Each block defaults to a concise **TL;DR** (3–5 key points); a **"Go deeper"** affordance expands it into the full explanation with examples, generated on demand. The time-constrained learner gets the essentials in seconds and only expands what they don't already know.
 4. For video-based content mix, session items include a **YouTube embed** deep-linked to a timestamp (`?t=<seconds>`), followed by quiz questions generated from the video's transcript chunks. The timestamp is not derived at session time — it is the transcript-segment start offset captured as chunk metadata during ingestion (see Content Pipeline). "Video-based" means *prefer video where available*, not *require video*: if a target domain has no video-sourced chunks above the similarity threshold, that item degrades silently to a normal reading block so the session is never broken or empty.
-5. Quiz questions are generated by the LLM from the same chunks used in the adjacent reading block, reinforcing the material just read.
+5. Quiz questions are generated by the LLM from the same chunks used in the adjacent reading block, reinforcing the material just read. Each question passes the extractive-grounding contract and verifier pass before inclusion; rejected questions are regenerated or substituted (see Grounding & Verification), so pre-generation only ever yields verified items.
 
 ### Quiz question formats
 
@@ -752,6 +800,19 @@ Enrollment creates a `UserCertification` record. Each cert on the dashboard maps
 
 ---
 
+## Diagnostic Exam
+
+When a user enrolls in a certification, the system offers a short **diagnostic exam** to calibrate their starting point, so the first study session is adaptive instead of generic. Without it, weak areas and readiness have no signal until several sessions accumulate — undercutting the core promise for a time-constrained learner.
+
+- **Format** — 10–15 questions generated by the same LLM pipeline as quizzes/mocks, but the planner allocates for **breadth**: every domain is probed at least once, weighted by the domain's exam share. No pass/fail, optional/lenient timer, no agent access. Modeled as `MockExam` with `type: diagnostic` (shares scoring, domain breakdown, and review mode).
+- **Optional and skippable** — offered at onboarding with a clear Skip. If skipped, the enrollment starts with a neutral baseline (no weak-area bias; readiness shown as "not yet calibrated") and the user is **re-prompted once** after the first session or two if still uncalibrated.
+- **Seeding** — on completion it establishes the initial per-domain `WeakArea` map and an initial readiness value. Both enter with **low weight** and decay quickly under the existing recency weighting, so real session/mock data supersedes the 10–15-question sample fast (see Exam Readiness Score, Weak Area Tracking).
+- **Availability** — only offered for **live** certifications, which already meet the per-domain content-coverage bar, guaranteeing every domain has chunks to generate from.
+- **Re-taking** — re-running the diagnostic re-seeds the diagnostic contribution but does not wipe accumulated real session/mock data. Abandoning a diagnostic mid-way is treated as a skip.
+- **UI** — reuses the mock-exam taking and review components (minus the strict timer/pass framing); no dedicated new screens. Entry points are the onboarding card and the later re-prompt nudge.
+
+---
+
 ## Content Staleness
 
 Each `ContentSource` has a configurable re-check interval. Default intervals by source type:
@@ -782,16 +843,49 @@ Users configure sessions with:
 | Focus area | Auto (from weak areas) / Specific domain(s) |
 | Learning style | Spaced repetition / Cram / Weak-area focus |
 
-Session defaults are saved on the user profile. Per-session overrides are supported.
+Session defaults are saved on the user profile. Per-session overrides are supported. The **spaced repetition** style is backed by the review queue — it front-loads due `ReviewItem`s before new material (see Spaced Repetition & Review Queue).
 
 ---
 
 ## Weak Area Tracking
 
-After each session or mock exam, `WeakArea` records are updated per domain:
+The initial `WeakArea` map for a new enrollment is seeded by the diagnostic exam (if taken); if skipped, it starts neutral (no domain bias) until session data accumulates. After each session, review, or mock exam, `WeakArea` records are updated per domain:
 - Calculated from quiz accuracy and confidence ratings combined
 - Surfaced on the dashboard and used to bias session content selection
 - Session planner weights content retrieval toward weak domains when style is set to weak-area focus
+
+---
+
+## Spaced Repetition & Review Queue
+
+A per-`UserCertification` spaced-repetition queue maximizes retention per minute — the priority for a time-constrained learner — by resurfacing shaky knowledge at lengthening intervals instead of re-covering everything.
+
+### Concept unit
+
+SRS state (`ReviewItem`) attaches to a **concept**, anchored to the source `ContentChunk` a question was generated from — coarse enough to be a coherent idea, fine enough to regenerate varied questions. When an item is due, the existing quiz pipeline generates a **fresh** question from that chunk (varying format/difficulty so it is never a verbatim repeat), testing understanding rather than answer-position memory.
+
+### What enters the queue
+
+A concept enters when answered **incorrectly**, or **correctly with low confidence (1–2)**. Confident-correct concepts not already queued stay out, so review time is never spent on known material. Diagnostic-exam misses seed the queue, giving review signal from day one.
+
+### Leitner schedule
+
+Boxes with intervals **1d → 3d → 7d → 16d → 35d** (configurable):
+- Correct + confident (≥ 3) → promote one box, reschedule at the new interval
+- Wrong → reset to box 1
+- Correct-but-unsure (1–2) → hold in the current box, reschedule at the short interval
+- Promoted past the top box → concept becomes `mastered` and exits the queue
+
+### Consumption (both paths)
+
+1. **Standalone "5-minute review"** — a quiz-only `review`-kind `StudySession` pulling only *due* items (capped ~5–7 questions, no reading blocks). When nothing is due, an "all caught up" empty state offers a normal session instead.
+2. **Woven into sessions** — the "spaced repetition" learning style (Session Personalization) is backed by this queue: it front-loads due items at the start of a normal session before new material.
+
+### Interactions
+
+- Review answers are ordinary `QuizResponse`s, so they feed weak areas and the readiness score like any quiz — doing reviews visibly moves the readiness number.
+- **Mark-as-mastered:** a user can manually retire a concept (or domain) they know cold; this sets `state: suppressed`, removing it from both the review queue and new-material selection so the planner stops spending their time on it.
+- Cold start: the queue is empty until the user answers quizzes or takes the diagnostic; the empty state handles this.
 
 ---
 
@@ -802,9 +896,14 @@ A single percentage (0–100%) shown prominently on the dashboard and progress p
 Computed from:
 - Per-domain weak area scores, weighted by the domain's share of the real exam (e.g. AWS CCP: Cloud Concepts 26%, Security 25%, etc.)
 - Mock exam scores factored in with higher weight than regular session quiz scores
+- A diagnostic exam (if taken) seeds the **initial** value but enters with **low weight** and decays quickly under recency weighting — real sessions and mocks supersede it fast
 - Recency-weighted so recent improvement is reflected quickly
 
-The score updates after every session and mock exam. The exact formula is left flexible for tuning during implementation — the intent is a number that moves meaningfully with effort and honestly reflects readiness.
+If no diagnostic was taken and no sessions/mocks exist yet, readiness is shown as **not yet calibrated** rather than a misleading number. The score updates after every session, review, and mock exam (including the diagnostic).
+
+### Readiness trajectory (passive, opt-in)
+
+A purely informational projection on the Progress page: from the user's recent rate of readiness gain, an estimate such as *"at your recent pace, exam-ready in ~N weeks."* No exam date is entered and **no reminders are sent** — the app deliberately avoids deadline pressure and is meant to be visited whenever the user has time. The projection is gentle encouragement, not an obligation, and is hidden until there is enough history to estimate a trend. The exact formula is left flexible for tuning during implementation — the intent is a number that moves meaningfully with effort and honestly reflects readiness.
 
 ---
 
@@ -818,12 +917,31 @@ After every study session or mock exam, the user sees a summary screen before re
 - Exam readiness score change ("72% → 75% ready")
 - Strongest and weakest question of the session, with the option to ask the agent about either
 - A suggested focus for the next session based on updated weak areas
+- A one-tap **"Drill my misses"** action that immediately starts a short targeted session generated from the concepts missed or flagged-unsure in this attempt (these concepts also enter the review queue automatically; the drill is the *don't-wait-for-the-interval* option)
+
+---
+
+## Certification Setup & Grounding
+
+Exam-format facts (question count, passing score, time limit, domain list and weights) must be trustworthy — they drive the readiness score, mock-exam format, and agent context — yet the admin setting up a cert is often a learner who cannot validate them from memory. So cert metadata is grounded, not blindly accepted.
+
+**Primary-target certs — verified seed data.** The certifications listed under Supported Certifications ship as human-verified seed data, curated once against their official exam guides. They do not depend on LLM pre-fill at all. This gives the certs most users will study the highest trust.
+
+**New / unlisted certs — grounded pre-fill.** A bare cert code does not by itself tell the app where to fetch, so the source is discovered and **confirmed by the admin** before anything is extracted:
+1. Admin enters a cert name or code.
+2. **Source discovery** — the setup agent uses a web-search tool to locate the official exam guide, prioritizing the vendor's own domain, and proposes candidate source URL(s). (The LLM never invents a URL and grounds against whatever it fetches — discovery is an explicit search step.)
+3. **Admin confirms the source** — the admin confirms which proposed link is the genuine official guide, or pastes the correct URL if discovery missed it. Confirming *the source* is a check a learner can make (recognizing the official vendor domain) even when they cannot validate the *facts* from memory — so the human gate sits where the admin actually has competence.
+4. **Extraction** — the agent fetches the confirmed source via the scrapper and extracts each format field **with a citation to the exact source passage**.
+5. The admin reviews each field *next to its cited source* and confirms.
+6. Any field that could not be grounded to the confirmed source is flagged **"unverified — confirm manually"** so gaps are visible rather than silently invented.
+
+This preserves the "add any cert without code changes" property while making accept/reject a meaningful, source-checkable action rather than a rubber stamp. Suggested content sources from the pre-fill are likewise presented for admin review before ingestion.
 
 ---
 
 ## Supported Certifications
 
-Certifications are data-driven and added via the admin interface without code changes. The domain list and domain weights (used for the readiness score) are configured per certification.
+Certifications are data-driven and added via the admin interface without code changes. The domain list and domain weights (used for the readiness score) are configured per certification. The certs below ship as **verified seed data** (see Certification Setup & Grounding).
 
 ### Primary Targets
 
