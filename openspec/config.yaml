@@ -1,0 +1,81 @@
+schema: spec-driven
+
+context: |
+  # Learning Tool
+
+  A multi-user web application for preparing for certification exams (AWS, Azure, Kubernetes, AI/ML).
+  The tool ingests learning material from multiple sources, generates personalized study sessions and quizzes,
+  tracks user performance, and exposes a streaming AI tutor agent.
+
+  Full specification: SPEC.md in the project root.
+
+  ## Monorepo Structure
+  - apps/api — NestJS API server
+  - apps/web — NuxtJS (Vue 3) frontend
+  - apps/worker — NestJS content pipeline worker (no HTTP server)
+  - packages/shared — TypeScript types, DTOs, constants
+  - packages/db — MikroORM entities and migrations
+
+  ## Tech Stack
+  - Yarn v4 workspaces (nodeLinker: node-modules)
+  - NestJS + NuxtJS (Vue 3)
+  - MikroORM + PostgreSQL with pgvector (HNSW index)
+  - Redis — BullMQ queues + JWT refresh token storage + rate limiting + LLM response cache
+  - Vercel AI SDK (provider-agnostic LLM + embeddings)
+  - Default embedding model: OpenAI text-embedding-3-small (1536 dims)
+  - Orval — generates typed @tanstack/vue-query composables from OpenAPI spec (committed to repo)
+  - Nuxt UI + TailwindCSS, dark mode first
+  - Biome — linting and formatting (single biome.json at root)
+  - Vitest + Playwright + Testcontainers, 80% coverage minimum
+  - SWC (@swc/core + unplugin-swc) for NestJS compilation
+  - Pino (nestjs-pino), Sentry (@sentry/nestjs, @sentry/nuxt), Prometheus (@willsoto/nestjs-prometheus), OpenTelemetry
+  - @nestjs/config + Zod for env validation
+  - @nestjs/throttler (Redis-backed) for rate limiting
+  - helmet for security headers
+  - nodemailer + SMTP2GO for transactional email
+  - @nestjs/terminus for health checks at GET /health
+  - amerkurev/scrapper Docker sidecar for web scraping
+  - Kubernetes deployment, ArgoCD + ArgoCD Image Updater for GitOps
+  - GitHub Actions CI: PR checks (typecheck, lint, format, test, build), main push builds + tags Docker images
+
+  ## API Conventions
+  - REST, versioned under /api/v1
+  - JSON:API-inspired response envelope: { data, relationships } for single resources, { data[], meta } for collections
+  - ?include= query param for relationship expansion (each combination is a distinct OpenAPI schema)
+  - RFC 7807 Problem Details for errors
+  - Pagination default: 25, max 100
+  - Endpoint actions: POST /api/v1/:resource/:id/:action (e.g. /sessions/:id/end)
+  - class-validator + class-transformer for validation
+  - Global ResponseInterceptor + ExceptionFilter
+
+  ## Testing Approach
+  Outside-in TDD: write failing Playwright e2e test first, then NestJS integration tests (Supertest + @nestjs/testing + Testcontainers), then unit tests.
+  No database mocking in integration tests — Testcontainers spins up real Postgres + Redis.
+  Co-locate unit/integration tests as *.spec.ts. E2E tests in apps/web/e2e/.
+
+  ## Key Domain Concepts
+  - UserCertification: join entity for user enrollment in a cert (status: active/archived, per-cert session prefs)
+  - ContentChunk: chunked + embedded text from ingested sources, tagged to a cert domain, content hash for dedup
+  - Two content layers: ingested knowledge base (shared) + LLM-generated personalized content (per-user)
+  - StudySession: pre-generated items (reading blocks as LLM-formatted Markdown, quiz cards, YouTube embeds)
+  - Session resumes via lastItemIndex + per-item completion flags; abandoned after 24h
+  - WeakArea: per-user per-cert per-domain aggregated score (quiz accuracy + confidence rating)
+  - ExamReadiness: 0-100% score per UserCertification, domain-weighted, recency-weighted
+  - AgentConversation: all message types persisted as JSONB CoreMessage rows (user/assistant/tool/system)
+  - Standalone agent conversations have 7-day TTL
+
+  ## Coding Conventions
+  - TypeScript strict mode throughout
+  - No comments unless the WHY is non-obvious
+  - NestJS modules follow feature boundaries (one module per domain concept)
+  - Roles: user (default) | admin — first registered user becomes admin
+  - All LLM calls via Vercel AI SDK, model IDs from config (not hardcoded)
+  - Model tiers: utility (quiz gen, domain tagging), mid-tier (agent, material gen), thinking (complex reasoning)
+  - LLM response caching in Redis per content chunk + difficulty combination
+
+rules:
+  tasks:
+    - Break tasks into chunks of max 2 hours
+    - Each task should be independently testable
+    - Follow outside-in TDD: e2e test → integration test → unit test → implementation
+    - Reference the relevant SPEC.md section in each task description

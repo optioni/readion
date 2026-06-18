@@ -1,0 +1,341 @@
+name: outside-in-tdd
+version: 1
+description: Outside-In TDD workflow — acceptance tests drive implementation from the outside in. Specs define acceptance test scenarios; design defines mock boundaries; tasks enforce RED → GREEN → REFACTOR from outermost layer inward.
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Initial proposal document outlining the change
+    template: proposal.md
+    instruction: >
+      Create the proposal document that establishes WHY this change is needed.
+
+
+      Sections:
+
+      - **Why**: 1-2 sentences on the problem or opportunity. What problem does
+      this solve? Why now?
+
+      - **What Changes**: Bullet list of changes. Be specific about new
+      capabilities, modifications, or removals. Mark breaking changes with
+      **BREAKING**.
+
+      - **Capabilities**: Identify which specs will be created or modified:
+        - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names (e.g., `user-auth`, `data-export`).
+        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Only include if spec-level behavior changes (not just implementation details). Each needs a delta spec file. Check `openspec/specs/` for existing spec names. Leave empty if no requirement changes.
+      - **Impact**: Affected code, APIs, dependencies, or systems.
+
+
+      IMPORTANT: The Capabilities section is critical. It creates the contract
+      between proposal and specs phases. Research existing specs before filling
+      this in. Each capability listed here will need a corresponding spec file.
+
+
+      Keep it concise (1-2 pages). Focus on the "why" not the "how" -
+      implementation details belong in design.md.
+
+
+      This is the foundation - specs, design, and tasks all build on this.
+    requires: []
+  - id: specs
+    generates: specs/**/*.md
+    description: Detailed specifications — each scenario is a concrete acceptance test case
+    template: spec.md
+    instruction: >
+      Create specification files that define WHAT the system should do.
+      In this outside-in TDD workflow, every scenario you write IS an acceptance
+      test case. Write them as if a test runner will execute them — concrete
+      inputs, observable outputs, no ambiguity.
+
+
+      Create one spec file per capability listed in the proposal's Capabilities
+      section.
+
+      - New capabilities: use the exact kebab-case name from the proposal
+      (specs/<capability>/spec.md).
+
+      - Modified capabilities: use the existing spec folder name from
+      openspec/specs/<capability>/ when creating the delta spec at
+      specs/<capability>/spec.md.
+
+
+      Delta operations (use ## headers):
+
+      - **ADDED Requirements**: New capabilities
+
+      - **MODIFIED Requirements**: Changed behavior - MUST include full updated
+      content
+
+      - **REMOVED Requirements**: Deprecated features - MUST include **Reason**
+      and **Migration**
+
+      - **RENAMED Requirements**: Name changes only - use FROM:/TO: format
+
+
+      Format requirements:
+
+      - Each requirement: `### Requirement: <name>` followed by description
+
+      - Use SHALL/MUST for normative requirements (avoid should/may)
+
+      - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
+
+      - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3
+      hashtags or bullets will fail silently.
+
+      - Every requirement MUST have at least one scenario.
+
+      - Scenarios must be concrete: name specific inputs, exact outputs, and
+      observable side effects. Vague scenarios ("WHEN it works THEN it succeeds")
+      are not acceptable — they cannot be turned into tests.
+
+
+      MODIFIED requirements workflow:
+
+      1. Locate the existing requirement in openspec/specs/<capability>/spec.md
+
+      2. Copy the ENTIRE requirement block (from `### Requirement:` through all
+      scenarios)
+
+      3. Paste under `## MODIFIED Requirements` and edit to reflect new behavior
+
+      4. Ensure header text matches exactly (whitespace-insensitive)
+
+
+      Common pitfall: Using MODIFIED with partial content loses detail at
+      archive time. If adding new concerns without changing existing behavior,
+      use ADDED instead.
+
+
+      Example:
+
+      ```
+
+      ## ADDED Requirements
+
+
+      ### Requirement: User can export data
+
+      The system SHALL allow users to export their data in CSV format.
+
+
+      #### Scenario: Successful export
+
+      - **WHEN** user requests export with valid session token
+
+      - **THEN** system returns a 200 response with Content-Type text/csv
+
+      - **THEN** the CSV contains one row per user record, comma-delimited
+
+
+      ## REMOVED Requirements
+
+
+      ### Requirement: Legacy export
+
+      **Reason**: Replaced by new export system
+
+      **Migration**: Use new export endpoint at /api/v2/export
+
+      ```
+    requires:
+      - proposal
+  - id: design
+    generates: design.md
+    description: Technical design document — includes test boundaries defining what is mocked vs real
+    template: design.md
+    instruction: >
+      Create the design document that explains HOW to implement the change and
+      WHERE the test boundaries sit.
+
+
+      In this outside-in TDD workflow, the most important section is
+      **Test Boundaries**. It must be written before tasks.md, because it defines
+      which dependencies are mocked in the acceptance test and which are real.
+      Without this, the acceptance test cannot be written.
+
+
+      When to include design.md (create only if any apply):
+
+      - Cross-cutting change (multiple services/modules) or new architectural
+      pattern
+
+      - New external dependency or significant data model changes
+
+      - Security, performance, or migration complexity
+
+      - Ambiguity that benefits from technical decisions before coding
+
+
+      Sections:
+
+      - **Context**: Background, current state, constraints, stakeholders
+
+      - **Goals / Non-Goals**: What this design achieves and explicitly excludes
+
+      - **Test Boundaries** (REQUIRED in this schema): For each external
+      dependency or collaborator, state whether it is mocked or real in tests,
+      and at what layer (HTTP, module boundary, DB, etc.). Format as a table:
+        | Dependency | In acceptance test | In unit tests |
+        |---|---|---|
+        | Sentry API | HTTP mock (nock) | HTTP mock |
+        | Postgres | real (test DB) | real (test DB) |
+
+      - **Decisions**: Key technical choices with rationale (why X over Y?).
+      Include alternatives considered for each decision.
+
+      - **Risks / Trade-offs**: Known limitations, things that could go wrong.
+      Format: [Risk] → Mitigation
+
+      - **Open Questions**: Outstanding decisions or unknowns to resolve
+
+
+      Focus on architecture and approach, not line-by-line implementation.
+
+      Reference the proposal for motivation and specs for requirements.
+    requires:
+      - proposal
+  - id: tasks
+    generates: tasks.md
+    description: Outside-in TDD task list — acceptance test first, then inner units, RED→GREEN→REFACTOR throughout
+    template: tasks.md
+    instruction: >
+      Create the task list following outside-in TDD discipline strictly.
+
+
+      **IMPORTANT: Follow the template below exactly.** The apply phase parses
+      checkbox format to track progress. Tasks not using `- [ ]` won't be
+      tracked.
+
+
+      Outside-in TDD rules:
+
+      1. The FIRST task group is always the acceptance test (outer loop RED).
+         Write the full acceptance test before touching any implementation.
+         The test MUST fail for the right reason before proceeding inward.
+
+      2. Work inward layer by layer. For each component, in outermost-first order:
+         a. Write the unit test (RED)
+         b. Implement just enough to pass (GREEN)
+         c. Refactor (REFACTOR)
+         Never write implementation before its unit test exists.
+
+      3. The LAST task group confirms the acceptance test now passes (outer loop
+         GREEN) and covers any final refactoring.
+
+      4. Each task group maps to one layer or component from the design doc.
+         The order of groups mirrors the outside-in dependency order: outermost
+         collaborators first, deepest dependencies last.
+
+
+      Task format rules:
+
+      - Group related tasks under ## numbered headings
+
+      - Each task MUST be a checkbox: `- [ ] X.Y Task description`
+
+      - Label RED / GREEN / REFACTOR tasks explicitly in the description
+
+      - Tasks should be small enough to complete in one session
+
+
+      Example structure:
+
+      ```
+
+      ## 0. Acceptance Test — Outer Loop RED
+
+      - [ ] 0.1 Set up test harness and HTTP mocks for all external dependencies
+      - [ ] 0.2 Write failing acceptance test: [scenario name from spec]
+      - [ ] 0.3 Confirm it fails for the right reason (not a setup error)
+
+
+      ## 1. [Outermost Component]
+
+      - [ ] 1.1 RED: Write unit test for [interface/behaviour]
+      - [ ] 1.2 GREEN: Implement [component] to pass unit test
+      - [ ] 1.3 REFACTOR: Clean up [component]
+
+
+      ## 2. [Next Component Inward]
+
+      - [ ] 2.1 RED: Write unit test for [interface/behaviour]
+      - [ ] 2.2 GREEN: Implement [component] to pass unit test
+      - [ ] 2.3 REFACTOR: Clean up if needed
+
+
+      ## N. Acceptance Test — Outer Loop GREEN
+
+      - [ ] N.1 Confirm acceptance test passes end-to-end
+      - [ ] N.2 REFACTOR: Clean up test setup and mocks if needed
+
+
+      ## N+1. Polish
+
+      - [ ] N+1.1 Run lint — zero errors
+      - [ ] N+1.2 Run formatter — zero errors
+      - [ ] N+1.3 Run type checker — zero errors
+      - [ ] N+1.4 Run coverage report — meets ≥80% threshold on lines, branches, functions
+
+      ```
+
+
+      The LAST task group is always a Polish section with four fixed tasks:
+      run lint, run formatter, run type checker, run coverage report — all must
+      pass with zero errors. Coverage must meet the project threshold (≥80% on
+      lines, branches, and functions). These four tasks are non-negotiable and
+      must appear in every tasks.md regardless of change scope.
+
+
+      Add a documentation task after the four fixed tasks ONLY when the change
+      has durable, useful information to add or correct in a maintained document.
+      The task MUST name the specific document, section, intended audience,
+      information to update, and why it remains useful beyond the current
+      change.
+
+
+      Use these document boundaries:
+
+      - README.md is the entry point for users, operators, and new contributors.
+        Update it only for durable changes to setup, usage, deployment,
+        configuration, development commands, or high-level capabilities.
+
+      - AGENTS.md is operational guidance for coding agents. Update it only for
+        durable constraints, workflows, conventions, verification requirements,
+        or recurring pitfalls that should affect future agent behavior.
+
+      - SPEC.md is the product and architecture contract for maintainers making
+        design decisions. Update it only for durable product behavior, system
+        boundaries, external or cross-module contracts, data models, or
+        architectural decisions. Do not add source-level implementation flow or
+        transient implementation details.
+
+      - Other maintained documents may be updated only when they have a clear
+        audience and the change materially affects their stated purpose.
+
+
+      Do not add a generic documentation review task, require reading AGENTS.md,
+      README.md, or SPEC.md on every change, or edit documentation merely to
+      record that implementation work happened. Avoid changelog-style summaries,
+      duplicated source-level descriptions, and routine additions that make
+      repository guidance harder to use.
+
+
+      Reference specs for WHAT to test (each scenario = one acceptance test),
+      design for WHERE the mock boundaries sit, and the dependency graph for the
+      correct inside-out ordering of component groups.
+    requires:
+      - specs
+      - design
+apply:
+  requires:
+    - tasks
+  tracks: tasks.md
+  instruction: |
+    You are implementing tasks in outside-in TDD order. Rules:
+    - Never implement a component before its unit test is written and failing.
+    - Never mark a RED task done unless the test exists and fails correctly.
+    - Never mark a GREEN task done unless all tests pass.
+    - The acceptance test (group 0) must be written first, before any implementation.
+    - Work through pending tasks in order, mark complete as you go.
+    - Pause if you hit blockers or need clarification.
+    - Do not edit documentation merely because the change is complete. Update a maintained document only when tasks.md includes a specific documentation task for durable, useful information that must be added or corrected.
