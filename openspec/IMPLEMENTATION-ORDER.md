@@ -3,7 +3,6 @@
 This file decomposes `SPEC.md` into a set of **contained** OpenSpec changes and the order they must be implemented in. Each change is intentionally narrow (roughly one SPEC module / section) so proposals stay reviewable and shippable on their own.
 
 - An arrow `A --> B` means **B depends on A** (A must be implemented first).
-- Only `scaffold-monorepo` has a proposal so far. Everything else is **planned** — names and boundaries may be refined as each change is created.
 - This is a planning **index**, not a substitute for the source of truth. When authoring a proposal, read the linked **Spec refs** in `SPEC.md` / `PRD.md` for the actual requirements and acceptance scenarios — the Scope column is only a one-line reminder.
 - **Capabilities** lists the proposed kebab-case spec names each change introduces (`specs/<name>/spec.md`). Pre-naming them keeps capability names consistent and avoids two changes claiming the same spec.
 - **Entity ownership** (table near the bottom) records which change creates each entity + migration, so migrations don't overlap.
