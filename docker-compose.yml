@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: readion
+      POSTGRES_PASSWORD: readion
+      POSTGRES_DB: readion
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U readion -d readion']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  scrapper:
+    image: amerkurev/scrapper:latest
+    ports:
+      - '3000:3000'
+    environment:
+      - BROWSER_DISABLE_DEV_SHM=true
+    # The scrapper sidecar provides web-page-to-text conversion for the worker.
+    # Integration tests that need HTTP scraping should target this service.
+    # Testcontainers-based tests mock the scrapper HTTP client directly.
+
+volumes:
+  postgres_data:
+  redis_data:
