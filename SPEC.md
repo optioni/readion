@@ -105,19 +105,20 @@ Used for two purposes:
 
 | Entity | Purpose |
 |---|---|
-| `User` | Account, email, bcrypt password hash, global preferences, role (user/admin) |
-| `Certification` | Supported exam (name, provider, domain list with weights, question count, passing score, time limit). Exam-format fields are structured (never generated at question time) and carry provenance — `verified` (seed data) or per-field citation to the official exam guide (see Certification Setup & Grounding) |
+| `User` | Account, email, `emailVerified` flag, bcrypt password hash, global preferences (incl. display timezone — default `Europe/Helsinki`), role (user/admin), soft-delete marker for account deletion |
+| `Certification` | Supported exam (name, provider, domain list with weights, question count, passing score, time limit). Exam-format fields are structured (never generated at question time) and carry provenance — `verified` (seed data) or per-field citation to the official exam guide — plus a `verifiedAt` date used for metadata-staleness re-verification (see Certification Setup & Grounding) |
 | `UserCertification` | Join entity: user enrollment in a cert — enrolled at, status (active/archived), per-cert session preference overrides |
 | `ContentSource` | Registered source per certification (URL, type, last fetched, interval, enabled) |
-| `ContentChunk` | Parsed text chunk with pgvector embedding, multi-domain tags (`{domain, confidence}[]` with a derived `primaryDomain`), source reference, content hash |
+| `ContentChunk` | Parsed text chunk with pgvector embedding, multi-domain tags (`{domain, confidence}[]` with a derived `primaryDomain`), source reference, content hash, `state` (`active` \| `superseded`), `supersededById` (lineage to the chunk that replaced it). See Chunk Lifecycle & Reconciliation |
 | `StudySession` | Session record (user, certification, config, start/end time, status, last item index, `kind`: `study` \| `review`) |
 | `SessionItem` | Individual item within a session (type: reading/quiz/video, content, completed flag) |
 | `QuizResponse` | User answer, correctness, confidence rating (1–5), time taken |
 | `WeakArea` | Aggregated score per user, per certification, per domain — updated after each session and mock exam |
 | `ReviewItem` | Spaced-repetition state for a concept (anchored to a content chunk) per `UserCertification` — Leitner `box`, `dueAt`, `lastReviewedAt`, `state` (`active` \| `mastered` \| `suppressed`) |
-| `MockExam` | Exam attempt per user and certification — `type` (`mock` \| `diagnostic`), overall score, domain breakdown, review data. `mock` = full real-exam format (timed, pass/fail); `diagnostic` = short calibration taken at enrollment (see Diagnostic Exam) |
+| `MockExam` | Exam attempt per user and certification — `type` (`mock` \| `diagnostic`), `status` (`in_progress` \| `submitted` \| `expired`), `startedAt`/`deadline` (wall-clock timer), overall score, domain breakdown, review data. `mock` = full real-exam format (timed, pass/fail); `diagnostic` = short calibration taken at enrollment (see Diagnostic Exam, Mock Exam Lifecycle) |
 | `AgentConversation` | Agent chat session — either linked to a `StudySession` (lifecycle follows the session) or standalone (sliding 4-hour inactivity TTL) |
 | `AgentMessage` | Individual message in a conversation — role (`user` \| `assistant` \| `tool` \| `system`), content stored as JSONB mirroring the Vercel AI SDK `CoreMessage` type (string or array of content parts). Tool call invocations and tool results are stored as separate messages to allow full conversation reconstruction. |
+| `AuditLog` | Append-only record of privileged admin actions (role change, source add/disable, content quarantine, cert publish/re-verify) — actor, action, target, timestamp, before/after snapshot. Retained through user deletion but stripped of direct identifiers |
 
 ---
 
@@ -127,13 +128,16 @@ Used for two purposes:
 
 **AuthModule**
 - Email/password registration and login
+- Email verification on registration — a verification link is emailed; the account carries an `emailVerified` flag and is prompted to confirm. Password reset and the verification flow are the two paths that prove address ownership
 - JWT access tokens (short-lived) + refresh tokens (stored in Redis)
 - bcrypt for password hashing
+- Refresh tokens are revoked on password change, password reset, and account deletion (all of a user's outstanding sessions are invalidated)
 - Guards applied globally, with per-route overrides for public endpoints
 
 **UsersModule**
-- User profile read/update
+- User profile read/update, including display timezone (default `Europe/Helsinki`; all timestamps stored UTC)
 - Session default preferences (duration, content mix, difficulty, learning style)
+- Account deletion (`DELETE /api/v1/users/me`, password re-confirmation) — see Account Deletion
 
 **CertificationsModule**
 - List all supported certifications
@@ -159,6 +163,8 @@ Used for two purposes:
 **MockExamModule**
 - Create timed mock exam matching real exam format (question count, time limit)
 - No agent access during exam
+- Wall-clock timer: questions stream into the navigation as they are generated and verified, but the `deadline` clock only starts once the full verified set is ready, so generation never eats exam time (see Mock Exam Lifecycle)
+- Resumable within the deadline; on timer expiry the attempt auto-submits with unanswered questions scored as incorrect
 - Score and store full attempt on submission
 - Review mode: see all questions with correct answers and explanations
 - Exam questions are generated under the same grounding + verifier guarantee as quizzes (see Grounding & Verification)
@@ -182,7 +188,7 @@ Used for two purposes:
   - **Standalone agent** — a general-knowledge tutor with **no cert-scoped tools**. Because there is no certification or session context, none of the RAG/progress tools below apply (they all require a cert corpus or session). It answers from the model's general knowledge only, grounded by the conversation. This keeps standalone chat simple and avoids implying cert-specific grounding it cannot provide.
 - In-session agent tools:
   - `semanticSearch` — query content chunks by embedding similarity
-  - `fetchMoreMaterial` — expand a topic. **Fast path (default):** generate from chunks already in the knowledge base, inline within the agent turn (no worker job) — this handles the majority of cases. **Slow path:** when chunk coverage is genuinely thin, enqueue a high-priority worker ingestion job and return its `jobId`. The frontend subscribes to that job's BullMQ events over the agent SSE channel; on completion the agent re-runs `semanticSearch` and continues. The new content does not arrive synchronously in the same turn.
+  - `fetchMoreMaterial` — expand a topic. **Fast path (default):** generate from chunks already in the knowledge base, inline within the agent turn (no worker job) — this handles the majority of cases. **Slow path:** when chunk coverage is genuinely thin, enqueue a high-priority worker ingestion job and return its `jobId`. The frontend subscribes to that job's BullMQ events over the agent SSE channel; on completion the agent re-runs `semanticSearch` and continues. The new content does not arrive synchronously in the same turn. If the user navigates away before the job finishes, the ingested chunks are still persisted to the shared knowledge base and available to future turns and sessions — the work is never wasted.
   - `explainAnswer` — structured explanation of a quiz answer with source citation
   - `examStrategy` — advice on question type approach or domain strategy
   - `getUserProgress` — retrieve the user's current exam readiness score, per-domain weak area scores, and confidence ratings; used to give personalized study recommendations
@@ -202,6 +208,7 @@ Used for two purposes:
 **AdminModule** (admin-facing)
 - List all users with role and enrollment counts
 - Promote / demote users between `user` and `admin` roles
+- Every privileged action (role change, source add/disable, content quarantine, cert publish/re-verify) writes an `AuditLog` entry; the log is viewable in the admin panel
 
 ### API conventions
 - REST with JSON
@@ -311,6 +318,16 @@ A NestJS application with no HTTP server. Runs BullMQ processors and scheduled c
 
 `amerkurev/scrapper` (or equivalent) runs as a sidecar container in the worker pod. The worker calls it via HTTP to fetch and clean web content, keeping Playwright and browser dependencies out of the worker process entirely.
 
+### Source Etiquette & Content Compliance
+
+Ingestion is deliberately non-invasive — it prefers official/public APIs (already the default for Reddit, GitHub, and YouTube transcripts) and treats third-party content as something to *point at*, not republish wholesale:
+
+- **Respect `robots.txt`** and source ToS — the scrapper honors crawl directives and disallowed paths are skipped.
+- **Polite fetching** — outbound requests are rate-limited per source domain and identify with a descriptive User-Agent; no auth/paywall bypass (paid content is a non-goal).
+- **Attribution is mandatory** — every chunk stores its source URL and is surfaced through citation chips that link back to the original, driving users *to* the source.
+- **Quotation, not reproduction** — extractive `supportingSpans` are short quoted passages shown with attribution; reading blocks are LLM-composed prose grounded in chunks, never raw verbatim dumps of source pages. A configurable cap limits how much verbatim text any single item may surface.
+- **Takedown path** — disabling a source supersedes its chunks and evicts dependent cache entries (see Chunk Lifecycle & Reconciliation), giving a clean removal route on a rights complaint.
+
 ### Processing Pipeline (per source)
 
 1. Fetch raw content via appropriate method
@@ -327,6 +344,10 @@ A NestJS application with no HTTP server. Runs BullMQ processors and scheduled c
 - On-demand fetch (from agent `fetchMoreMaterial` tool) enqueues a high-priority job
 - Cleanup cron: marks `StudySession` records in `active` status older than 24 hours as `abandoned`
 - Cleanup cron: soft-deletes standalone `AgentConversation` records past their sliding 4-hour inactivity TTL. Session-linked conversations are not handled here — they are retired together with their `StudySession` by the session-abandonment cleanup above.
+- Cleanup cron: auto-submits and scores `MockExam` records left `in_progress` past their `deadline` (plus a short grace), marking them `expired` (see Mock Exam Lifecycle)
+- Cleanup cron: hard-purges accounts whose deletion grace window has elapsed, cascading to all user-scoped records (see Account Deletion)
+- Cleanup cron: hard-deletes `superseded` `ContentChunk`s past the retention window that no longer back any retained `SessionItem`/`MockExam` (see Chunk Lifecycle & Reconciliation)
+- Cleanup cron: flags certifications whose `verifiedAt` has aged past the metadata-staleness interval as "due for re-verification" (see Certification Setup & Grounding)
 
 ### BullMQ
 
@@ -388,6 +409,7 @@ The certification with the lowest readiness score gets the gradient hero treatme
 - Full-screen timed exam
 - No agent access
 - Question navigation sidebar
+- Resumable within the deadline (wall-clock timer keeps counting); auto-submits on expiry (see Mock Exam Lifecycle)
 - Submit → score breakdown by domain → review mode
 
 **Progress**
@@ -409,6 +431,8 @@ The certification with the lowest readiness score gets the gradient hero treatme
 - Content source management per certification (add, enable/disable, trigger re-ingestion)
 - Ingestion job status and manual trigger
 - User management: list all users, promote / demote admin role
+- Certs flagged "due for re-verification" (stale `verifiedAt`) are surfaced for a re-check
+- Audit log of privileged actions (`AuditLog`), with actor, target, and before/after
 
 ### Streaming
 
@@ -551,7 +575,9 @@ Key config groups:
 - Sentry (DSN)
 - Observability (OTEL endpoint, log level, Prometheus port)
 - Rate limiting (throttler TTL and limit overrides)
-- Content pipeline (similarity threshold, chunk size, staleness interval overrides)
+- Content pipeline (similarity threshold, chunk size, staleness interval overrides, superseded-chunk retention window)
+- Lifecycle windows (account-deletion grace period, mock-exam auto-submit grace, certification metadata re-verification interval)
+- Defaults (user display timezone — default `Europe/Helsinki`; readiness calibration threshold — min graded answers before a score is shown)
 
 ---
 
@@ -584,6 +610,8 @@ SMTP2GO as the email provider via `nodemailer`. A dedicated `MailModule` in `app
 - Post-exam outcome nudge: after a user reaches exam-readiness and study activity lulls, a one-tap "Did you take the exam? Passed / Didn't pass / Not yet" survey (feeds the pass-rate metric; optional, at most one follow-up)
 
 SMTP credentials configured via env vars.
+
+All timestamps are stored and computed in **UTC**; user-facing times and the digest send-time are rendered in the user's display timezone (default `Europe/Helsinki`). The weekly-digest cron schedules each user's send relative to their stored timezone.
 
 ---
 
@@ -660,7 +688,60 @@ This means:
 When a user or the agent determines a topic needs more depth, the system tries these in order:
 
 1. **Generate from existing chunks (fast path)** — the LLM expands the topic using chunks already in the knowledge base, inline within the request/agent turn (immediate, no new ingestion). Handles the majority of cases.
-2. **Fetch new source content (slow path)** — if chunk coverage for the topic is genuinely thin (determined by low semantic search scores), a high-priority ingestion job is enqueued. This is asynchronous and cannot complete within the originating turn: the caller receives a `jobId`, the frontend subscribes to that job's BullMQ events over the agent SSE channel, and on completion the agent re-queries the now-richer knowledge base. New ingestion is reserved for genuine gaps.
+2. **Fetch new source content (slow path)** — if chunk coverage for the topic is genuinely thin (determined by low semantic search scores), a high-priority ingestion job is enqueued. This is asynchronous and cannot complete within the originating turn: the caller receives a `jobId`, the frontend subscribes to that job's BullMQ events over the agent SSE channel, and on completion the agent re-queries the now-richer knowledge base. New ingestion is reserved for genuine gaps. Because ingested chunks land in the shared knowledge base, the result persists even if the originating turn is abandoned — the next session or agent turn benefits from it.
+
+---
+
+## Chunk Lifecycle & Reconciliation
+
+Many records point at a `ContentChunk` by id — `ReviewItem` anchors, cached questions, and the `sourceChunkIds`/`supportingSpans` persisted on `SessionItem` and `MockExam`. Because ingestion upserts by content hash, a source edit produces a *new* chunk rather than mutating the old one, so chunks must be reconciled on re-ingestion instead of accumulating forever or being hard-deleted out from under their dependents.
+
+### Reconciliation on re-ingestion
+
+After a source is re-fetched, the resulting chunk set is diffed against the source's existing chunks by content hash:
+
+- **Unchanged** (hash still present) — kept as-is.
+- **New** (hash not seen before) — inserted as `active`.
+- **Disappeared** (previously present, no longer in the latest fetch) — marked `state: superseded` (soft delete), not physically removed. Where a clear successor exists (same source, overlapping span/section), `supersededById` records the lineage.
+
+Superseded chunks are excluded from semantic retrieval and new generation but remain readable for history. A cleanup cron hard-deletes superseded chunks older than a retention window that no longer back any retained `SessionItem`/`MockExam`.
+
+### Effect on dependents
+
+- **Stored questions / reading blocks** (`SessionItem`, `MockExam`) already persist their `supportingSpans` and chunk ids as a **snapshot**, so historical sessions and exam reviews stay intact and faithful even if the underlying chunk is later superseded. A citation may resolve to a superseded chunk — that is correct for history.
+- **Cache** — entries keyed on a chunk id are evicted when that chunk is superseded (same eviction path as a quarantine), so no stale generated content is served.
+- **ReviewItem** — anchored to a *concept*, not hard-bound to one chunk row. If its anchor chunk is superseded, it re-anchors to `supersededById` where lineage exists; otherwise on the next due-generation it retrieves a fresh chunk for the same concept/domain via semantic search. If nothing above the similarity threshold remains, the item is held and may trigger `fetchMoreMaterial` rather than being silently dropped.
+
+### Source removal & takedown
+
+Disabling or deleting a `ContentSource` (including an honored takedown request) supersedes all of its chunks immediately and evicts dependent cache entries; `ReviewItem`s re-anchor or fall back to retrieval as above. Content removal therefore has a single, predictable path.
+
+---
+
+## Mock Exam Lifecycle
+
+A mock exam is exam-faithful: timed, agent-free, and scored against the real pass mark. Its lifecycle differs from a study session because the timer is wall-clock and the format is fixed.
+
+### Generation
+
+The full question set is generated and independently verified (same grounding + verifier guarantee as session quizzes) behind a brief "preparing exam" screen. Questions may **stream into the navigation sidebar as each is verified** — quality is unaffected because every question is verified individually regardless of delivery order — but the `deadline` clock **only starts once the complete verified set is ready**, so generation latency never eats into exam time.
+
+### Timer, resume & expiry
+
+The timer is **wall-clock**: `deadline = startedAt + timeLimit`, computed server-side. A mock is **resumable** within its deadline — if the browser closes, elapsed time keeps counting (exam-faithful), and on return the user resumes with answers preserved and the clock where it should be. On reaching the deadline the attempt **auto-submits**, scoring unanswered questions as incorrect. A cleanup cron auto-submits any attempt left `in_progress` past its deadline (plus a short grace) and marks it `expired`.
+
+The diagnostic variant shares this machinery but with a lenient/optional timer and no pass/fail framing (see Diagnostic Exam).
+
+---
+
+## Account Deletion
+
+Users can delete their own account from preferences (`DELETE /api/v1/users/me`, password re-confirmation required). Deletion is two-stage:
+
+1. **Soft delete (immediate)** — the account is marked deleted: refresh tokens are revoked, the email is released (freed for re-registration), and the user can no longer authenticate. A configurable grace window (default 14 days) allows support-assisted recovery.
+2. **Hard purge (after grace window)** — a cleanup cron permanently removes the user and cascades to all user-scoped records: `UserCertification`, `StudySession`, `SessionItem`, `QuizResponse`, `MockExam`, `WeakArea`, `ReviewItem`, `AgentConversation`, `AgentMessage`. Shared `ContentChunk`s are untouched (they belong to no user). `AuditLog` entries are retained but stripped of direct identifiers.
+
+Admin-initiated deletion follows the same path. Deleting the last remaining admin is blocked.
 
 ---
 
@@ -751,11 +832,13 @@ Sessions support mixed question types:
 - **True / False** — for clear-cut factual statements
 - **Scenario-based** — longer stem describing a real-world situation, 4 options (used at exam-ready difficulty)
 
-The LLM selects the most appropriate format per question based on the content chunk and difficulty level.
+The question format is chosen by the **session planner** before generation — deterministically from the content chunk's characteristics and the session difficulty — not by the generation call itself. This keeps `format` a stable, known cache-key input (see LLM Cost Optimisation): the cache can be checked *before* any LLM call, and identical `{chunkIds, difficulty, format, certification}` requests reuse the cached verified question rather than the model picking a format mid-generation (which would make the key uncomputable up front).
 
 ### Session resume
 
 `StudySession` tracks a `lastItemIndex` and per-item completion flags. If a user navigates away or refreshes, the session remains in `active` status. On returning to the session view, the app resumes from the last incomplete item. Sessions in `active` status older than 24 hours are automatically marked `abandoned` by a cleanup cron job.
+
+**At most one `active` `StudySession` per `UserCertification`** (the limit spans both `study` and `review` kinds). Attempting to start a new session while one is already active surfaces and resumes the in-progress one rather than creating a second — so `lastItemIndex` is never ambiguous. Different enrollments are independent; the limit is per enrollment, not per user.
 
 ---
 
@@ -899,7 +982,7 @@ Computed from:
 - A diagnostic exam (if taken) seeds the **initial** value but enters with **low weight** and decays quickly under recency weighting — real sessions and mocks supersede it fast
 - Recency-weighted so recent improvement is reflected quickly
 
-If no diagnostic was taken and no sessions/mocks exist yet, readiness is shown as **not yet calibrated** rather than a misleading number. The score updates after every session, review, and mock exam (including the diagnostic).
+If no diagnostic was taken and no sessions/mocks exist yet, readiness is shown as **not yet calibrated** rather than a misleading number. It flips from "not yet calibrated" to a real percentage as soon as there is enough signal to be honest: a completed diagnostic, **or** at least **N graded quiz answers** (default 10, configurable) accumulated across any combination of sessions, reviews, and mocks. Below that bar the dashboard keeps showing "not yet calibrated". The score updates after every session, review, and mock exam (including the diagnostic).
 
 ### Readiness trajectory (passive, opt-in)
 
@@ -936,6 +1019,10 @@ Exam-format facts (question count, passing score, time limit, domain list and we
 6. Any field that could not be grounded to the confirmed source is flagged **"unverified — confirm manually"** so gaps are visible rather than silently invented.
 
 This preserves the "add any cert without code changes" property while making accept/reject a meaningful, source-checkable action rather than a rubber stamp. Suggested content sources from the pre-fill are likewise presented for admin review before ingestion.
+
+**Metadata freshness.** Each certification's exam-format fields carry a `verifiedAt` date (and, for grounded pre-fill, the source URL they were extracted from). Vendors revise exams over time, so a configurable staleness interval flags a cert's metadata as **"due for re-verification"** in the admin once `verifiedAt` ages past it — surfacing it for a human re-check rather than silently trusting stale weights and formats. Re-verification reruns the same source-confirmation + per-field-citation flow.
+
+**Draft → live is automatic.** A cert leaves `draft` and becomes enrollable on its own once the coverage bar is met (per-domain chunk minimums, total-chunk multiple, ≥1 ingested source per domain — see PRD §4); there is no manual "publish" button. The admin UI shows per-domain coverage so the gap to go-live is visible, but crossing the bar flips the cert to `live` without an extra step.
 
 ---
 

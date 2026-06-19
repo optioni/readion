@@ -90,10 +90,11 @@ Pass rate is **self-reported via a post-exam survey nudge**, not inferred. Mecha
 | End-of-session summaries with next-session suggestions | [End-of-Session Summary](./SPEC.md#end-of-session-summary) |
 | Multi-user with independent progress | [Resource ownership](./SPEC.md#authentication--authorisation) |
 | Admin: data-driven certification setup (LLM-assisted), content-source management | [Admin](./SPEC.md#frontend--appsweb), [ContentModule](./SPEC.md#api--appsapi) |
+| Account lifecycle: email verification, self-serve account deletion with data purge | [Auth](./SPEC.md#authentication--authorisation), [Account Deletion](./SPEC.md#account-deletion) |
 
 ### Certification go-live criteria
 
-A certification stays in a **draft** state (visible to admins, not enrollable by users) until its knowledge base meets a minimum coverage bar, so users never enroll into empty or lopsided content. A cert becomes **live** (enrollable) only when:
+A certification stays in a **draft** state (visible to admins, not enrollable by users) until its knowledge base meets a minimum coverage bar, so users never enroll into empty or lopsided content. A cert becomes **live** (enrollable) **automatically** — no manual publish step — once all of the following hold:
 
 - **Every domain** in the cert's domain list has **≥ 20 ingested content chunks** above the quality/similarity threshold — no domain may be empty, since any domain can be a session focus area.
 - **Total chunks ≥ 3× the real exam's question count**, so a full mock exam can be generated without recycling the same chunks.
@@ -158,7 +159,10 @@ Expressed as outcomes; the *how* is in `SPEC.md`.
 - **FR18 — Fragmented-time access.** The app is responsive and installable as a PWA so study (especially the 5-minute review) works well on a phone in spare moments.
 - **FR19 — Passive pacing, no obligation.** A purely informational readiness trajectory ("exam-ready in ~N weeks at your recent pace") is shown on the progress page — no exam-date entry, no reminders — keeping the product a calm tool visited on the user's terms.
 - **FR20 — Faithful generated content.** Quiz/exam questions and explanations are grounded in source chunks (extractive) and pass an independent verifier before being shown or cached; unverified items are regenerated or substituted, never displayed. Users can report a bad item, which quarantines it. Reading blocks and the agent stay grounded via citations and abstain-rather-than-guess.
-- **FR21 — Trustworthy certification setup.** Exam-format facts are structured, never generated at question time. Primary-target certs ship as verified seed data; for new certs the app discovers the official exam guide via web search, the admin confirms the source, and the agent extracts each field with a per-field citation plus explicit flags on anything ungrounded — so the admin verifies against a recognizable source rather than from memory.
+- **FR21 — Trustworthy certification setup.** Exam-format facts are structured, never generated at question time. Primary-target certs ship as verified seed data; for new certs the app discovers the official exam guide via web search, the admin confirms the source, and the agent extracts each field with a per-field citation plus explicit flags on anything ungrounded — so the admin verifies against a recognizable source rather than from memory. Cert metadata carries a verification date and is flagged for re-verification as it ages, since vendors revise exams ([Certification Setup & Grounding](./SPEC.md#certification-setup--grounding)).
+- **FR22 — Account lifecycle & data ownership.** Registration verifies email ownership. Users can delete their own account; deletion immediately revokes access and frees the email, then hard-purges all personal data (sessions, responses, exams, conversations, progress) after a short grace window. Shared knowledge-base content is unaffected ([Account Deletion](./SPEC.md#account-deletion)).
+- **FR23 — Respectful ingestion.** Content is ingested non-invasively — `robots.txt`/ToS respected, official/public APIs preferred, every chunk attributed and linked back to its source, only short quoted spans surfaced (never wholesale reproduction), with a takedown path that removes a source's content and its derived cache ([Source Etiquette & Content Compliance](./SPEC.md#source-etiquette--content-compliance)).
+- **FR24 — Faithful content over time.** A re-ingested or removed source never corrupts or orphans what points at it: chunks are reconciled (superseded, not silently mutated), stored questions keep their snapshot provenance, and review items re-anchor or re-retrieve rather than breaking ([Chunk Lifecycle & Reconciliation](./SPEC.md#chunk-lifecycle--reconciliation)).
 
 ## 7. Assumptions
 - The primary user can study online, in English, on the web, in short blocks.
