@@ -1,4 +1,4 @@
-# Learning Tool
+# Readion
 
 A multi-user web application for preparing for certification exams. Study with personalized sessions, AI-generated quizzes, weak area tracking, and an on-demand AI tutor — all driven by up-to-date content from official docs, YouTube, Reddit, whitepapers, and more.
 
