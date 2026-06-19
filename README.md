@@ -25,15 +25,15 @@ cp apps/web/.env.example apps/web/.env
 cp apps/worker/.env.example apps/worker/.env
 
 # Run database migrations
-yarn workspace @learning-tool/db migration:up
+yarn workspace @readion/db migration:up
 
 # Start all apps
 yarn dev
 ```
 
 - Web: http://localhost:3000
-- API: http://localhost:4000
-- API docs (dev only): http://localhost:4000/api-json
+- API: http://localhost:3001
+- API docs (dev only): http://localhost:3001/api-json
 
 ## Architecture
 
