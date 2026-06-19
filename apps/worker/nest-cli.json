@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "builder": {
+      "type": "swc",
+      "options": {
+        "module": { "type": "commonjs" },
+        "sourceMaps": true,
+        "jsc": {
+          "target": "es2022",
+          "parser": { "syntax": "typescript", "decorators": true, "dynamicImport": true },
+          "transform": { "decoratorMetadata": true, "legacyDecorator": true },
+          "keepClassNames": true,
+          "baseUrl": "../..",
+          "paths": {
+            "@readion/shared": ["packages/shared/src/index.ts"],
+            "@readion/shared/*": ["packages/shared/src/*"],
+            "@readion/db": ["packages/db/src/index.ts"],
+            "@readion/db/*": ["packages/db/src/*"]
+          }
+        }
+      }
+    }
+  }
+}
