@@ -1,0 +1,28 @@
+{
+  "name": "readion",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "yarn workspaces foreach --all --exclude . --parallel --interlaced run dev",
+    "build": "yarn workspaces foreach --all --exclude . --topological-dev run build",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format .",
+    "format:fix": "biome format --write .",
+    "typecheck": "yarn workspaces foreach --all --exclude . run typecheck",
+    "test": "vitest run && yarn workspaces foreach --all --exclude . --parallel run test",
+    "test:coverage": "yarn workspaces foreach --all --exclude . --parallel run test:coverage",
+    "codegen": "orval"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.0",
+    "@playwright/test": "^1.61.0",
+    "@vitest/coverage-v8": "^4.1.9",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  },
+  "packageManager": "yarn@4.16.0"
+}
