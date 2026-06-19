@@ -10,6 +10,7 @@ context: |
   Full specification: SPEC.md in the project root.
   Product requirements: PRD.md in the project root.
   UI design principles: DESIGN.md in the project root.
+  Implementation order: IMPLEMENTATION_ORDER.md in the openspec directory.
 
   ## Monorepo Structure
   - apps/api — NestJS API server

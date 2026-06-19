@@ -309,6 +309,10 @@ artifacts:
         architectural decisions. Do not add source-level implementation flow or
         transient implementation details.
 
+      - PRD.md is the product requirements document for stakeholders. Update it only for
+        durable changes to user-facing features, user experience, or business
+        requirements that affect stakeholder understanding and decision-making.
+
       - Other maintained documents may be updated only when they have a clear
         audience and the change materially affects their stated purpose.
 
