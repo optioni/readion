@@ -23,8 +23,8 @@ describe('ProblemDetails', () => {
       detail: 'Validation failed',
       errors: [{ field: 'email', message: 'Email is already taken' }],
     }
-    expectTypeOf(pd.errors![0]!.field).toEqualTypeOf<string>()
-    expectTypeOf(pd.errors![0]!.message).toEqualTypeOf<string>()
+    expectTypeOf(pd.errors?.[0]?.field).toEqualTypeOf<string>()
+    expectTypeOf(pd.errors?.[0]?.message).toEqualTypeOf<string>()
     expect(pd.errors).toHaveLength(1)
   })
 })
