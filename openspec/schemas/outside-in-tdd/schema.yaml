@@ -7,6 +7,7 @@ artifacts:
     description: Initial proposal document outlining the change
     template: proposal.md
     instruction: >
+      You are a senior engineer practicing strict outside-in TDD.
       Create the proposal document that establishes WHY this change is needed.
 
 
@@ -41,6 +42,7 @@ artifacts:
     description: Detailed specifications — each scenario is a concrete acceptance test case
     template: spec.md
     instruction: >
+      You are a senior engineer practicing strict outside-in TDD.
       Create specification files that define WHAT the system should do.
       In this outside-in TDD workflow, every scenario you write IS an acceptance
       test case. Write them as if a test runner will execute them — concrete
@@ -144,6 +146,7 @@ artifacts:
     description: Technical design document — includes test boundaries defining what is mocked vs real
     template: design.md
     instruction: >
+      You are a senior engineer practicing strict outside-in TDD.
       Create the design document that explains HOW to implement the change and
       WHERE the test boundaries sit.
 
@@ -199,6 +202,7 @@ artifacts:
     description: Outside-in TDD task list — acceptance test first, then inner units, RED→GREEN→REFACTOR throughout
     template: tasks.md
     instruction: >
+      You are a senior engineer practicing strict outside-in TDD.
       Create the task list following outside-in TDD discipline strictly.
 
 
@@ -269,28 +273,80 @@ artifacts:
       - [ ] N.2 REFACTOR: Clean up test setup and mocks if needed
 
 
-      ## N+1. Polish
+      ## N+1. Change Review — Subagent Verification
 
-      - [ ] N+1.1 Run lint — zero errors
-      - [ ] N+1.2 Run formatter — zero errors
-      - [ ] N+1.3 Run type checker — zero errors
-      - [ ] N+1.4 Run coverage report — meets ≥80% threshold on lines, branches, functions
+      - [ ] N+1.1 Dispatch a subagent to review the change against proposal.md, the spec scenarios, and design.md (reviewer reports findings only, does not edit)
+      - [ ] N+1.2 Triage findings: fix every CRITICAL, resolve or accept each WARNING, note SUGGESTIONs; re-run affected tests
+
+
+      ## N+2. Polish
+
+      - [ ] N+2.1 Run lint — zero errors
+      - [ ] N+2.2 Run formatter — zero errors
+      - [ ] N+2.3 Run type checker — zero errors
+      - [ ] N+2.4 Run coverage report — meets ≥80% threshold on lines, branches, functions
+
+
+      <!-- OPTIONAL group below — include ONLY when warranted (see rules after this block); omit entirely otherwise -->
+      <!--
+      ## N+3. Documentation
+
+      - [ ] N+3.1 Update <doc>: <section> (audience: <who>) — <what to update and why it stays useful>
+      -->
 
       ```
 
 
-      The LAST task group is always a Polish section with four fixed tasks:
-      run lint, run formatter, run type checker, run coverage report — all must
-      pass with zero errors. Coverage must meet the project threshold (≥80% on
-      lines, branches, and functions). These four tasks are non-negotiable and
-      must appear in every tasks.md regardless of change scope.
+      This example mirrors the structure in templates/tasks.md — when you edit
+      one, update the other so they do not drift.
 
 
-      Add a documentation task after the four fixed tasks ONLY when the change
-      has durable, useful information to add or correct in a maintained document.
-      The task MUST name the specific document, section, intended audience,
-      information to update, and why it remains useful beyond the current
-      change.
+      The Change Review group is always placed after the Outer Loop GREEN
+      group and before Polish. It contains exactly two tasks:
+
+      1. Dispatch a subagent to review the implemented change. Give the reviewer
+         only the change artifacts (proposal.md, the spec scenarios, design.md)
+         and the diff plus task list — NOT your implementation reasoning, so it
+         verifies independently rather than ratifying your choices. The reviewer
+         reports findings only — it MUST NOT edit code. It checks three
+         dimensions and assigns each finding a severity:
+         - **Completeness**: every `- [ ]` task is genuinely done; every spec
+           scenario has a corresponding test and implementation.
+         - **Correctness**: implementation matches each requirement; each
+           scenario's WHEN/THEN is exercised by a test.
+         - **Coherence**: design.md Decisions and Test Boundaries were followed;
+           code matches project conventions.
+         Severities: **CRITICAL** (must fix — incomplete tasks, missing
+         requirement implementations), **WARNING** (should fix — spec/design
+         divergences, missing scenario coverage), **SUGGESTION** (nice to fix —
+         pattern inconsistencies, minor improvements). When uncertain, prefer
+         the lower severity. The reviewer MUST return findings grouped by
+         severity, each naming the file or task, the problem, and a suggested
+         fix.
+
+      2. Triage the subagent's findings: fix every CRITICAL, resolve or
+         consciously accept each WARNING (recording a one-line reason for each
+         accepted WARNING), note SUGGESTIONs, and re-run affected tests after
+         any fixes.
+
+      These two review tasks are non-negotiable and must appear in every
+      tasks.md regardless of change scope.
+
+
+      The last NON-OPTIONAL task group is always a Polish section with four
+      fixed tasks: run lint, run formatter, run type checker, run coverage report
+      — all must pass with zero errors. Coverage must meet the project threshold
+      (≥80% on lines, branches, and functions). These four tasks are
+      non-negotiable and must appear in every tasks.md regardless of change
+      scope. Keep Polish to exactly these four tasks — do not append unrelated
+      work to it.
+
+
+      Add a separate Documentation group AFTER Polish ONLY when the change has
+      durable, useful information to add or correct in a maintained document.
+      Omit the group entirely otherwise. Each task in it MUST name the specific
+      document, section, intended audience, information to update, and why it
+      remains useful beyond the current change.
 
 
       Use these document boundaries:
@@ -341,5 +397,6 @@ apply:
     - Never mark a GREEN task done unless all tests pass.
     - The acceptance test (group 0) must be written first, before any implementation.
     - Work through pending tasks in order, mark complete as you go.
+    - When you reach the Change Review group, dispatch a separate subagent to verify the change. Give it only the change artifacts and the diff, not your implementation reasoning, so it reviews independently; it reports findings only and must not edit code. Then triage its findings yourself — fix every CRITICAL, resolve or accept each WARNING (noting a one-line reason for each acceptance) — before moving on to Polish. Do not skip straight from Outer Loop GREEN to Polish. If subagents are unavailable in this environment, instead perform the review as a separate, focused self-review pass against the same rubric.
     - Pause if you hit blockers or need clarification.
     - Do not edit documentation merely because the change is complete. Update a maintained document only when tasks.md includes a specific documentation task for durable, useful information that must be added or corrected.

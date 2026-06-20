@@ -1,4 +1,4 @@
-schema: spec-driven
+schema: outside-in-tdd
 
 context: |
   # Readion
