@@ -1,8 +1,24 @@
+import swc from 'unplugin-swc'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+  oxc: false,
+  plugins: [
+    swc.vite({
+      jsc: {
+        target: 'es2022',
+        parser: { syntax: 'typescript', decorators: true },
+        transform: {
+          decoratorMetadata: true,
+          legacyDecorator: true,
+        },
+        keepClassNames: true,
+      },
+    }),
+  ],
   test: {
     include: ['src/**/*.{spec,test}.ts'],
+    setupFiles: ['reflect-metadata'],
     testTimeout: 120_000,
     coverage: {
       provider: 'v8',
