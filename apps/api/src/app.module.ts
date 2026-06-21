@@ -1,7 +1,24 @@
 import { Module } from '@nestjs/common'
-import { AppController } from './app.controller'
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
+import { ThrottlerGuard } from '@nestjs/throttler'
+import { DbModule } from '@readion/db'
+import { ResponseInterceptor } from './common/interceptors/response.interceptor'
+import { ApiConfigModule } from './config/config.module'
+import { HealthModule } from './health/health.module'
+import { RedisModule } from './redis/redis.module'
+import { ApiThrottlerModule } from './throttler/throttler.module'
 
 @Module({
-  controllers: [AppController],
+  imports: [ApiConfigModule, DbModule, RedisModule, ApiThrottlerModule, HealthModule],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
+  ],
 })
 export class AppModule {}
