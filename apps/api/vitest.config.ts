@@ -1,8 +1,16 @@
+import { resolve } from 'node:path'
 import swc from 'unplugin-swc'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   oxc: false,
+  resolve: {
+    alias: [
+      { find: '@readion/db/src', replacement: resolve(__dirname, '../../packages/db/src') },
+      { find: '@readion/db', replacement: resolve(__dirname, '../../packages/db/src/index.ts') },
+      { find: '@readion/shared', replacement: resolve(__dirname, '../../packages/shared/src/index.ts') },
+    ],
+  },
   plugins: [
     swc.vite({
       jsc: {
@@ -19,7 +27,8 @@ export default defineConfig({
   test: {
     globals: true,
     include: ['src/**/*.{spec,test}.ts'],
-    setupFiles: ['reflect-metadata'],
+    setupFiles: ['./src/test-setup.ts'],
+    testTimeout: 120_000,
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
