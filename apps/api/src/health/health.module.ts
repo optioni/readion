@@ -1,0 +1,12 @@
+import { Module } from '@nestjs/common'
+import { TerminusModule } from '@nestjs/terminus'
+import { HealthController } from './health.controller'
+import { PostgresHealthIndicator } from './postgres-health.indicator'
+import { RedisHealthIndicator } from './redis-health.indicator'
+
+@Module({
+  imports: [TerminusModule],
+  controllers: [HealthController],
+  providers: [RedisHealthIndicator, PostgresHealthIndicator],
+})
+export class HealthModule {}
