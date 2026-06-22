@@ -11,10 +11,18 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.1.27",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.27",
+    "@nestjs/schedule": "^6.1.3",
+    "@readion/db": "workspace:*",
+    "@readion/shared": "workspace:*",
+    "bullmq": "^5.49.0",
+    "ioredis": "^5.5.0",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.23",
@@ -25,6 +33,7 @@
     "@swc/helpers": "^0.5.23",
     "@types/node": "^24.13.2",
     "@vitest/coverage-v8": "^4.1.9",
+    "testcontainers": "^12.0.3",
     "typescript": "^6.0.3",
     "unplugin-swc": "^1.5.9",
     "vitest": "^4.1.9"
