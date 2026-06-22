@@ -1,2 +1,46 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+
+@theme {
+  --font-sans: Inter, ui-sans-serif, system-ui;
+  --color-readion-background-base: #0f172a;
+  --color-readion-background-surface: #1e293b;
+  --color-readion-background-elevated: #0a0f1e;
+  --color-readion-background-overlay: #16213e;
+  --color-readion-primary: #1d4ed8;
+  --color-readion-primary-hover: #1e40af;
+  --color-readion-primary-50: #eff6ff;
+  --color-readion-primary-100: #dbeafe;
+  --color-readion-primary-200: #bfdbfe;
+  --color-readion-primary-300: #93c5fd;
+  --color-readion-primary-400: #60a5fa;
+  --color-readion-primary-500: #1d4ed8;
+  --color-readion-primary-600: #1e40af;
+  --color-readion-primary-700: #1e3a8a;
+  --color-readion-primary-800: #172554;
+  --color-readion-primary-900: #111827;
+  --color-readion-primary-950: #0a0f1e;
+  --color-readion-status-poor: #f87171;
+  --color-readion-status-warning: #fb923c;
+  --color-readion-status-medium: #fbbf24;
+  --color-readion-status-good: #34d399;
+}
+
+:root {
+  color-scheme: dark;
+  --readion-background-base: #0f172a;
+  --readion-background-surface: #1e293b;
+  --readion-background-elevated: #0a0f1e;
+  --readion-background-overlay: #16213e;
+  --readion-primary: #1d4ed8;
+  --ui-primary: #1d4ed8;
+  --readion-status-poor: #f87171;
+  --readion-status-warning: #fb923c;
+  --readion-status-medium: #fbbf24;
+  --readion-status-good: #34d399;
+}
+
+html {
+  font-family: Inter, ui-sans-serif, system-ui;
+  background: var(--readion-background-base);
+}
