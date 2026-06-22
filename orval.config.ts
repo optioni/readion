@@ -9,7 +9,14 @@ export default defineConfig({
       target: 'apps/web/src/api/index.ts',
       schemas: 'apps/web/src/api/model',
       client: 'vue-query',
+      httpClient: 'fetch',
       mode: 'tags-split',
+      override: {
+        mutator: {
+          path: 'apps/web/app/api/mutator.ts',
+          name: 'readionFetch',
+        },
+      },
     },
   },
 })

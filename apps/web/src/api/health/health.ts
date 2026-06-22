@@ -12,17 +12,45 @@ import type {
   UseQueryReturnType,
 } from '@tanstack/vue-query'
 import { useQuery } from '@tanstack/vue-query'
-import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
-import axios from 'axios'
 
 import { unref } from 'vue'
-
+import { readionFetch } from '../../../app/api/mutator'
 import type { HealthControllerCheck200, HealthControllerCheck503 } from '.././model'
 
-export const healthControllerCheck = (
-  options?: AxiosRequestConfig,
-): Promise<AxiosResponse<HealthControllerCheck200>> => {
-  return axios.get(`/health`, options)
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
+
+export type healthControllerCheckResponse200 = {
+  data: HealthControllerCheck200
+  status: 200
+}
+
+export type healthControllerCheckResponse503 = {
+  data: HealthControllerCheck503
+  status: 503
+}
+
+export type healthControllerCheckResponseSuccess = healthControllerCheckResponse200 & {
+  headers: Headers
+}
+export type healthControllerCheckResponseError = healthControllerCheckResponse503 & {
+  headers: Headers
+}
+
+export type healthControllerCheckResponse =
+  | healthControllerCheckResponseSuccess
+  | healthControllerCheckResponseError
+
+export const getHealthControllerCheckUrl = () => {
+  return `/health`
+}
+
+export const healthControllerCheck = async (
+  options?: RequestInit,
+): Promise<healthControllerCheckResponse> => {
+  return readionFetch<healthControllerCheckResponse>(getHealthControllerCheckUrl(), {
+    ...options,
+    method: 'GET',
+  })
 }
 
 export const getHealthControllerCheckQueryKey = () => {
@@ -31,17 +59,17 @@ export const getHealthControllerCheckQueryKey = () => {
 
 export const getHealthControllerCheckQueryOptions = <
   TData = Awaited<ReturnType<typeof healthControllerCheck>>,
-  TError = AxiosError<HealthControllerCheck503>,
+  TError = HealthControllerCheck503,
 >(options?: {
   query?: UseQueryOptions<Awaited<ReturnType<typeof healthControllerCheck>>, TError, TData>
-  axios?: AxiosRequestConfig
+  request?: SecondParameter<typeof readionFetch>
 }) => {
-  const { query: queryOptions, axios: axiosOptions } = options ?? {}
+  const { query: queryOptions, request: requestOptions } = options ?? {}
 
   const queryKey = getHealthControllerCheckQueryKey()
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof healthControllerCheck>>> = ({ signal }) =>
-    healthControllerCheck({ signal, ...axiosOptions })
+    healthControllerCheck({ signal, ...requestOptions })
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof healthControllerCheck>>,
@@ -53,14 +81,14 @@ export const getHealthControllerCheckQueryOptions = <
 export type HealthControllerCheckQueryResult = NonNullable<
   Awaited<ReturnType<typeof healthControllerCheck>>
 >
-export type HealthControllerCheckQueryError = AxiosError<HealthControllerCheck503>
+export type HealthControllerCheckQueryError = HealthControllerCheck503
 
 export function useHealthControllerCheck<
   TData = Awaited<ReturnType<typeof healthControllerCheck>>,
-  TError = AxiosError<HealthControllerCheck503>,
+  TError = HealthControllerCheck503,
 >(options?: {
   query?: UseQueryOptions<Awaited<ReturnType<typeof healthControllerCheck>>, TError, TData>
-  axios?: AxiosRequestConfig
+  request?: SecondParameter<typeof readionFetch>
 }): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthControllerCheckQueryOptions(options)
 
