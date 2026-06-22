@@ -223,8 +223,10 @@ artifacts:
          c. Refactor (REFACTOR)
          Never write implementation before its unit test exists.
 
-      3. The LAST task group confirms the acceptance test now passes (outer loop
-         GREEN) and covers any final refactoring.
+      3. The Outer Loop GREEN task group confirms the acceptance test now passes,
+         verifies that all affected apps start in the local environment (a smoke
+         test that boots each app and confirms no startup/config errors), and
+         covers any final refactoring.
 
       4. Each task group maps to one layer or component from the design doc.
          The order of groups mirrors the outside-in dependency order: outermost
@@ -270,7 +272,8 @@ artifacts:
       ## N. Acceptance Test — Outer Loop GREEN
 
       - [ ] N.1 Confirm acceptance test passes end-to-end
-      - [ ] N.2 REFACTOR: Clean up test setup and mocks if needed
+      - [ ] N.2 Verify all affected apps start in the local environment (smoke test) — boot each app and confirm no startup/config errors
+      - [ ] N.3 REFACTOR: Clean up test setup and mocks if needed
 
 
       ## N+1. Change Review — Subagent Verification

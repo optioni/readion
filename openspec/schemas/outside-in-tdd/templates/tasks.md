@@ -19,7 +19,8 @@
 ## N. Acceptance Test — Outer Loop GREEN
 
 - [ ] N.1 Confirm acceptance test passes end-to-end
-- [ ] N.2 REFACTOR: Clean up test setup and mocks if needed
+- [ ] N.2 Verify all affected apps start in the local environment (smoke test) — boot each app and confirm no startup/config errors
+- [ ] N.3 REFACTOR: Clean up test setup and mocks if needed
 
 ## N+1. Change Review — Subagent Verification
 

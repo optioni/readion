@@ -80,5 +80,5 @@ rules:
   tasks:
     - Break tasks into chunks of max 2 hours
     - Each task should be independently testable
-    - Follow outside-in TDD: e2e test → integration test → unit test → implementation
+    - "Follow outside-in TDD: e2e test → integration test → unit test → implementation"
     - Reference the relevant SPEC.md section in each task description
