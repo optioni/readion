@@ -1,8 +1,10 @@
 import 'reflect-metadata'
 import { parseEnv } from './config/env.schema'
+import { loadApiEnvFile } from './config/env-file'
 import { initTracing } from './tracing'
 
 async function bootstrap() {
+  loadApiEnvFile()
   const env = parseEnv(process.env)
   initTracing({ endpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT })
 
