@@ -13,7 +13,9 @@ import { registerSourceQueue } from './queue.helpers'
 import { QueueModule } from './queue.module'
 
 function getRedisConnection() {
-  const url = new URL(process.env.REDIS_URL!)
+  const redisUrl = process.env.REDIS_URL
+  if (!redisUrl) throw new Error('REDIS_URL is not set')
+  const url = new URL(redisUrl)
   return { host: url.hostname, port: Number(url.port) || 6379 }
 }
 
@@ -97,8 +99,9 @@ describe('QueueModule integration', () => {
       expect(jobId).toBe(job.id)
       expect(failedReason).toContain('always fails')
       expect(callCount).toBe(3)
+      if (!job.id) throw new Error('Expected queued job to have an id')
 
-      const finishedJob = await queue.getJob(job.id!)
+      const finishedJob = await queue.getJob(job.id)
       expect(finishedJob?.attemptsMade).toBe(3)
 
       await worker.close()

@@ -30,7 +30,7 @@ export default defineConfig({
   test: {
     globals: true,
     include: ['src/**/*.{spec,test}.ts'],
-    setupFiles: ['reflect-metadata'],
+    setupFiles: ['./src/test-setup.ts'],
     testTimeout: 120_000,
     coverage: {
       provider: 'v8',

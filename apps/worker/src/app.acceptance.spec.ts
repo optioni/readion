@@ -14,6 +14,7 @@ import {
 import type { Job } from 'bullmq'
 import { Queue, QueueEvents } from 'bullmq'
 import type Redis from 'ioredis'
+import { Logger as PinoLogger } from 'nestjs-pino'
 import type { StartedTestContainer } from 'testcontainers'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { BaseProcessor } from './queue/base.processor'
@@ -22,6 +23,16 @@ import { REDIS_CLIENT } from './redis/redis.module'
 import type { ScrapperClient } from './scrapper/scrapper.client'
 import { ScrapperError } from './scrapper/scrapper.errors'
 import { SCRAPPER_CLIENT } from './scrapper/scrapper.module'
+
+async function getFreePort(): Promise<number> {
+  return new Promise((resolve) => {
+    const server = net.createServer()
+    server.listen(0, '127.0.0.1', () => {
+      const port = (server.address() as net.AddressInfo).port
+      server.close(() => resolve(port))
+    })
+  })
+}
 
 // AppModule is intentionally NOT statically imported here.
 // ConfigModule.forRoot() validates process.env at import time, so AppModule is
@@ -81,15 +92,18 @@ describe('Worker Acceptance', () => {
   let harness: DbHarness
   let redisContainer: StartedTestContainer
   let stub: ScrapperStub
+  let prometheusPort: number
 
   beforeAll(async () => {
-    const [pg, redis, scrapperStub] = await Promise.all([
+    const [pg, redis, scrapperStub, freePort] = await Promise.all([
       startPostgresContainer(),
       startRedisContainer(),
       startScrapperStub(),
+      getFreePort(),
     ])
     redisContainer = redis
     stub = scrapperStub
+    prometheusPort = freePort
 
     const dbHost = pg.getHost()
     const dbPort = pg.getMappedPort(5432)
@@ -100,6 +114,8 @@ describe('Worker Acceptance', () => {
     process.env.REDIS_URL = `redis://${redisHost}:${redisPort}`
     process.env.SCRAPPER_URL = `http://127.0.0.1:${stub.port}`
     process.env.NODE_ENV = 'development'
+    process.env.PROMETHEUS_PORT = String(prometheusPort)
+    process.env.SERVICE_NAME = 'readion-worker-test'
     process.env.DB_HOST = dbHost
     process.env.DB_PORT = String(dbPort)
     process.env.DB_NAME = 'readion_test'
@@ -176,7 +192,9 @@ describe('Worker Acceptance', () => {
   describe('job-queue', () => {
     it('enqueued job is consumed by the base-derived processor to completed', async () => {
       const queue = moduleRef.get<Queue>(`BullQueue_${TEST_QUEUE}`)
-      const parsed = new URL(process.env.REDIS_URL!)
+      const redisUrl = process.env.REDIS_URL
+      if (!redisUrl) throw new Error('REDIS_URL is not set')
+      const parsed = new URL(redisUrl)
       const queueEvents = new QueueEvents(TEST_QUEUE, {
         connection: { host: parsed.hostname, port: Number(parsed.port) || 6379 },
       })
@@ -203,6 +221,28 @@ describe('Worker Acceptance', () => {
     it('scrapper client maps a 500 response to a typed ScrapperError', async () => {
       const scrapper = moduleRef.get<ScrapperClient>(SCRAPPER_CLIENT)
       await expect(scrapper.fetch('https://example.com/500')).rejects.toBeInstanceOf(ScrapperError)
+    })
+  })
+
+  describe('observability', () => {
+    describe('prometheus-metrics', () => {
+      it('GET /metrics on PROMETHEUS_PORT returns 200 with default process metrics', async () => {
+        const res = await fetch(`http://127.0.0.1:${prometheusPort}/metrics`)
+        expect(res.status).toBe(200)
+        const text = await res.text()
+        expect(text).toContain('process_cpu_seconds_total')
+      })
+    })
+
+    describe('structured-logging', () => {
+      it('nestjs-pino Logger is injectable and callable', () => {
+        const logger = moduleRef.get(PinoLogger)
+        expect(logger).toBeDefined()
+        expect(typeof logger.log).toBe('function')
+        expect(typeof logger.warn).toBe('function')
+        expect(typeof logger.error).toBe('function')
+        expect(() => logger.log('observability-acceptance-smoke')).not.toThrow()
+      })
     })
   })
 })
