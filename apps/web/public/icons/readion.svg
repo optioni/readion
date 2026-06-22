@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Readion">
+  <rect width="512" height="512" rx="64" fill="#0f172a" />
+  <path
+    d="M136 148c0-18 14-32 32-32h104c58 0 104 46 104 104 0 38-20 71-50 90l50 86h-74l-42-72h-54v72h-70V148Zm70 56v64h62c20 0 36-14 36-32s-16-32-36-32h-62Z"
+    fill="#1d4ed8"
+  />
+  <path d="M144 404h224" stroke="#e2e8f0" stroke-width="24" stroke-linecap="round" />
+</svg>

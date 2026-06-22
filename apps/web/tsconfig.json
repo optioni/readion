@@ -1,19 +1,18 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
+    "strict": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
     "target": "ESNext",
+    "lib": ["ESNext", "DOM"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "preserve",
     "jsxImportSource": "vue",
-    "lib": ["ESNext", "DOM"],
-    "paths": {
-      "~/*": ["./app/*"],
-      "@/*": ["./app/*"]
-    },
     "noEmit": true
   },
-  "include": ["**/*.ts", "**/*.tsx", "**/*.vue"],
-  "exclude": ["node_modules", "dist", ".nuxt", ".output"]
+  "exclude": ["node_modules", "dist", ".output", "coverage"]
 }
