@@ -3,8 +3,9 @@
   "compilerOptions": {
     "strict": true,
     "module": "commonjs",
-    "types": ["node"],
+    "types": ["node", "vitest/globals"],
     "baseUrl": "../..",
+    "paths": {},
     "ignoreDeprecations": "6.0",
     "outDir": "./dist",
     "rootDir": "./src",
