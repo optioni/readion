@@ -8,7 +8,10 @@ export default defineConfig({
     alias: [
       { find: '@readion/db/src', replacement: resolve(__dirname, '../../packages/db/src') },
       { find: '@readion/db', replacement: resolve(__dirname, '../../packages/db/src/index.ts') },
-      { find: '@readion/shared', replacement: resolve(__dirname, '../../packages/shared/src/index.ts') },
+      {
+        find: '@readion/shared',
+        replacement: resolve(__dirname, '../../packages/shared/src/index.ts'),
+      },
     ],
   },
   plugins: [
