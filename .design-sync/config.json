@@ -1,0 +1,11 @@
+{
+  "projectId": "38736cfc-91fa-45ef-8524-8103e746ef9f",
+  "shape": "package",
+  "pkg": "@readion/tokens",
+  "globalName": "ReadionTokens",
+  "buildCmd": "echo 'tokens-only, no JS build needed'",
+  "cssEntry": ".design-sync/tokens.css",
+  "componentSrcMap": {},
+  "runtimeFontPrefixes": ["Inter"],
+  "readmeHeader": ".design-sync/conventions.md"
+}

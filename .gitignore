@@ -37,3 +37,9 @@ Thumbs.db
 # Playwright
 playwright-report/
 test-results/
+
+# Claude Design
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/node_modules
