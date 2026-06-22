@@ -47,7 +47,53 @@ jobs:
           context: .
           file: apps/${{ matrix.app }}/Dockerfile
           push: true
+          build-args: |
+            SENTRY_RELEASE=${{ github.sha }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  upload-sourcemaps:
+    name: Upload source maps to Sentry
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    env:
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+      SENTRY_AUTH_TOKEN_SET: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+
+      - uses: actions/setup-node@v4
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - run: corepack enable
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+      - run: yarn install --frozen-lockfile
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+      - run: yarn workspace @readion/api build
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+      - run: yarn workspace @readion/worker build
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+
+      - name: Create Sentry release
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        run: npx @sentry/cli@latest releases new "${{ github.sha }}"
+
+      - name: Upload api source maps
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        run: npx @sentry/cli@latest releases files "${{ github.sha }}" upload-sourcemaps apps/api/dist --url-prefix "~/"
+
+      - name: Upload worker source maps
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        run: npx @sentry/cli@latest releases files "${{ github.sha }}" upload-sourcemaps apps/worker/dist --url-prefix "~/"
+
+      - name: Finalize Sentry release
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        run: npx @sentry/cli@latest releases finalize "${{ github.sha }}"

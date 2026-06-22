@@ -20,7 +20,9 @@ RUN yarn workspace @readion/worker build
 
 FROM node:24-slim AS runner
 WORKDIR /app
+ARG SENTRY_RELEASE
 ENV NODE_ENV=production
+ENV SENTRY_RELEASE=$SENTRY_RELEASE
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/apps/worker/dist ./apps/worker/dist
 COPY apps/worker/package.json ./apps/worker/
