@@ -7,10 +7,20 @@ import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import { IsEmail, IsNotEmpty } from 'class-validator'
 import supertest from 'supertest'
 import type { StartedTestContainer } from 'testcontainers'
+import { vi } from 'vitest'
 import { AppModule } from './app.module'
 import { bootstrapApp } from './bootstrap'
 import type { CollectionResult } from './common/interceptors/response.interceptor'
 import { AuthThrottle } from './throttler/throttler.decorators'
+
+const { mockCaptureException } = vi.hoisted(() => ({
+  mockCaptureException: vi.fn<(error: unknown) => string>().mockReturnValue('fake-event-id'),
+}))
+
+vi.mock('@sentry/nestjs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@sentry/nestjs')>()
+  return { ...actual, captureException: mockCaptureException, init: vi.fn() }
+})
 
 class TestEmailDto {
   @IsEmail()
@@ -86,6 +96,7 @@ describe('API Acceptance', () => {
     process.env.PORT = '0'
     process.env.NODE_ENV = 'development'
     process.env.CORS_ORIGIN = 'http://localhost:3000'
+    process.env.SENTRY_DSN = 'https://fake@sentry.io/0'
 
     const orm = await MikroORM.init({
       ...mikroOrmConfig,
@@ -110,6 +121,7 @@ describe('API Acceptance', () => {
     await app?.close()
     await postgresContainer?.stop()
     await redisContainer?.stop()
+    delete process.env.SENTRY_DSN
   })
 
   describe('api-runtime: response envelopes', () => {
@@ -253,6 +265,47 @@ describe('API Acceptance', () => {
     it('unprefixed application route is not found', async () => {
       const res = await supertest(app.getHttpServer()).get('/test/resource')
       expect(res.status).toBe(404)
+    })
+  })
+
+  describe('observability', () => {
+    describe('prometheus-metrics', () => {
+      it('GET /metrics returns 200 in Prometheus text format with HTTP duration histogram', async () => {
+        await supertest(app.getHttpServer()).get('/api/v1/test/resource')
+
+        const res = await supertest(app.getHttpServer()).get('/metrics')
+        expect(res.status).toBe(200)
+        expect(res.headers['content-type']).toMatch('text/plain')
+        expect(res.text).toContain('process_cpu_seconds_total')
+        expect(res.text).toContain('readion_http_request_duration_seconds')
+        expect(res.text).toContain('method="GET"')
+        expect(res.text).toContain('status_code="200"')
+      })
+    })
+
+    describe('structured-logging', () => {
+      it('request carries a correlation id response header', async () => {
+        const res = await supertest(app.getHttpServer()).get('/api/v1/test/resource')
+        expect(res.headers['x-request-id']).toBeDefined()
+      })
+
+      it('authorization header is redacted and request still succeeds', async () => {
+        const res = await supertest(app.getHttpServer())
+          .get('/api/v1/test/resource')
+          .set('Authorization', 'Bearer secret-token')
+        expect(res.status).toBe(200)
+      })
+    })
+
+    describe('sentry-error-capture', () => {
+      it('unhandled error is captured while client still receives RFC 7807 body', async () => {
+        mockCaptureException.mockClear()
+
+        const res = await supertest(app.getHttpServer()).get('/api/v1/test/boom')
+        expect(res.status).toBe(500)
+        expect(res.body.type).toBe('/errors/internal-server-error')
+        expect(mockCaptureException).toHaveBeenCalled()
+      })
     })
   })
 })

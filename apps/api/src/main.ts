@@ -1,10 +1,20 @@
 import 'reflect-metadata'
-import { NestFactory } from '@nestjs/core'
-import { AppModule } from './app.module'
-import { bootstrapApp } from './bootstrap'
+import { parseEnv } from './config/env.schema'
+import { initTracing } from './tracing'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const env = parseEnv(process.env)
+  initTracing({ endpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT })
+
+  const [{ NestFactory }, { Logger }, { AppModule }, { bootstrapApp }] = await Promise.all([
+    import('@nestjs/core'),
+    import('nestjs-pino'),
+    import('./app.module'),
+    import('./bootstrap'),
+  ])
+
+  const app = await NestFactory.create(AppModule, { bufferLogs: true })
+  app.useLogger(app.get(Logger))
   await bootstrapApp(app)
   const port = process.env.PORT ?? 3001
   await app.listen(port)

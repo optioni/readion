@@ -5,11 +5,19 @@ import { DbModule } from '@readion/db'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { ApiConfigModule } from './config/config.module'
 import { HealthModule } from './health/health.module'
+import { ApiObservabilityModule } from './observability/observability.module'
 import { RedisModule } from './redis/redis.module'
 import { ApiThrottlerModule } from './throttler/throttler.module'
 
 @Module({
-  imports: [ApiConfigModule, DbModule, RedisModule, ApiThrottlerModule, HealthModule],
+  imports: [
+    ApiConfigModule,
+    ApiObservabilityModule.forRoot(),
+    DbModule,
+    RedisModule,
+    ApiThrottlerModule,
+    HealthModule,
+  ],
   providers: [
     {
       provide: APP_GUARD,

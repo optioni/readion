@@ -2,6 +2,7 @@ import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
 import { Catch, HttpException } from '@nestjs/common'
 import type { ProblemDetails, ValidationErrorItem } from '@readion/shared'
 import { ERROR_TYPES } from '@readion/shared'
+import * as Sentry from '@sentry/nestjs'
 
 const STATUS_TO_TYPE: Record<number, string> = {
   400: ERROR_TYPES.VALIDATION,
@@ -68,6 +69,8 @@ export class ProblemDetailsFilter implements ExceptionFilter {
       status = exception.getStatus()
       detail = extractDetail(exception)
       errors = extractErrors(exception)
+    } else if (process.env.SENTRY_DSN) {
+      Sentry.captureException(exception)
     }
 
     const body: ProblemDetails = {

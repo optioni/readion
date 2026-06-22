@@ -25,7 +25,7 @@ export async function bootstrapApp(app: INestApplication): Promise<void> {
   const corsOrigin = config.get<string>('CORS_ORIGIN') ?? 'http://localhost:3000'
   const nodeEnv = config.get<string>('NODE_ENV') ?? 'development'
 
-  app.setGlobalPrefix('api/v1', { exclude: ['health', 'api-json'] })
+  app.setGlobalPrefix('api/v1', { exclude: ['health', 'api-json', 'metrics'] })
 
   app.use(
     helmet({
