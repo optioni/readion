@@ -3,7 +3,9 @@ export const APP_VERSION = '0.1.0'
 
 export {
   databaseUrlFragment,
+  observabilityEnvFragment,
   redisUrlFragment,
+  workerPrometheusFragment,
   zodCoerceBoolean,
   zodCoerceNumber,
   zodRequiredUrl,

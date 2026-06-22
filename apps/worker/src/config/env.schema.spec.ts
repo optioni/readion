@@ -42,3 +42,46 @@ describe('worker env schema', () => {
     expect(() => parseEnv(rest)).toThrow(/SCRAPPER_URL/)
   })
 })
+
+describe('worker env schema — observability group', () => {
+  it('resolves LOG_LEVEL to info when omitted', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.LOG_LEVEL).toBe('info')
+  })
+
+  it('rejects LOG_LEVEL=verbose (not a pino level) naming the field', () => {
+    expect(() => parseEnv({ ...VALID_ENV, LOG_LEVEL: 'verbose' })).toThrow(/LOG_LEVEL/)
+  })
+
+  it('rejects a malformed OTEL_EXPORTER_OTLP_ENDPOINT naming the field', () => {
+    expect(() => parseEnv({ ...VALID_ENV, OTEL_EXPORTER_OTLP_ENDPOINT: 'not-a-url' })).toThrow(
+      /OTEL_EXPORTER_OTLP_ENDPOINT/,
+    )
+  })
+
+  it('boots when optional SENTRY_DSN and OTEL endpoint are absent', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.SENTRY_DSN).toBeUndefined()
+    expect(result.SENTRY_RELEASE).toBeUndefined()
+    expect(result.OTEL_EXPORTER_OTLP_ENDPOINT).toBeUndefined()
+  })
+
+  it('accepts a SENTRY_RELEASE string', () => {
+    const result = parseEnv({ ...VALID_ENV, SENTRY_RELEASE: 'abc123' })
+    expect(result.SENTRY_RELEASE).toBe('abc123')
+  })
+
+  it('resolves PROMETHEUS_PORT to 9091 when omitted', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.PROMETHEUS_PORT).toBe(9091)
+  })
+
+  it('accepts PROMETHEUS_PORT as a string number', () => {
+    const result = parseEnv({ ...VALID_ENV, PROMETHEUS_PORT: '9999' })
+    expect(result.PROMETHEUS_PORT).toBe(9999)
+  })
+
+  it('rejects a non-numeric PROMETHEUS_PORT naming the field', () => {
+    expect(() => parseEnv({ ...VALID_ENV, PROMETHEUS_PORT: 'abc' })).toThrow(/PROMETHEUS_PORT/)
+  })
+})

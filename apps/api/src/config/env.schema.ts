@@ -1,5 +1,6 @@
 import {
   databaseUrlFragment,
+  observabilityEnvFragment,
   redisUrlFragment,
   zodCoerceNumber,
   zodRequiredUrl,
@@ -16,6 +17,7 @@ export const GENERAL_LIMIT_DEFAULT = 300
 const envSchema = z.object({
   ...databaseUrlFragment,
   ...redisUrlFragment,
+  ...observabilityEnvFragment,
   PORT: zodCoerceNumber().default(3001),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   CORS_ORIGIN: zodRequiredUrl().default('http://localhost:3000'),

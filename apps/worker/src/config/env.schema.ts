@@ -1,9 +1,17 @@
-import { databaseUrlFragment, redisUrlFragment, zodRequiredUrl } from '@readion/shared'
+import {
+  databaseUrlFragment,
+  observabilityEnvFragment,
+  redisUrlFragment,
+  workerPrometheusFragment,
+  zodRequiredUrl,
+} from '@readion/shared'
 import { z } from 'zod'
 
 const envSchema = z.object({
   ...databaseUrlFragment,
   ...redisUrlFragment,
+  ...observabilityEnvFragment,
+  ...workerPrometheusFragment,
   SCRAPPER_URL: zodRequiredUrl(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 })
