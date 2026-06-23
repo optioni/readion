@@ -14,22 +14,63 @@ export const AGENT_LIMIT_DEFAULT = 30
 export const GENERAL_TTL_DEFAULT = 60_000
 export const GENERAL_LIMIT_DEFAULT = 300
 
-const envSchema = z.object({
-  ...databaseUrlFragment,
-  ...redisUrlFragment,
-  ...observabilityEnvFragment,
-  PORT: zodCoerceNumber().default(3001),
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  CORS_ORIGIN: zodRequiredUrl().default('http://localhost:3000'),
-  THROTTLER_AUTH_LIMIT: zodCoerceNumber().default(AUTH_LIMIT_DEFAULT),
-  THROTTLER_AUTH_TTL: zodCoerceNumber().default(AUTH_TTL_DEFAULT),
-  THROTTLER_AGENT_LIMIT: zodCoerceNumber().default(AGENT_LIMIT_DEFAULT),
-  THROTTLER_AGENT_TTL: zodCoerceNumber().default(AGENT_TTL_DEFAULT),
-  THROTTLER_GENERAL_LIMIT: zodCoerceNumber().default(GENERAL_LIMIT_DEFAULT),
-  THROTTLER_GENERAL_TTL: zodCoerceNumber().default(GENERAL_TTL_DEFAULT),
-  DISK_HEALTH_PATH: z.string().default('/'),
-  DISK_HEALTH_THRESHOLD: zodCoerceNumber().default(0.9),
-})
+function parseMailbox(value: string) {
+  const displayNameMatch = value.match(/<([^<>]+)>$/)
+  return displayNameMatch?.[1] ?? value
+}
+
+function isEmailAddress(value: string) {
+  return /^[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+$/.test(parseMailbox(value))
+}
+
+function emptyStringToUndefined(value: unknown) {
+  return value === '' ? undefined : value
+}
+
+const optionalNonEmptyString = z.preprocess(emptyStringToUndefined, z.string().min(1).optional())
+const optionalSmtpPort = z.preprocess(emptyStringToUndefined, zodCoerceNumber().optional())
+const smtpFields = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USERNAME', 'SMTP_PASSWORD'] as const
+
+const envSchema = z
+  .object({
+    ...databaseUrlFragment,
+    ...redisUrlFragment,
+    ...observabilityEnvFragment,
+    SMTP_HOST: optionalNonEmptyString,
+    SMTP_PORT: optionalSmtpPort,
+    SMTP_USERNAME: optionalNonEmptyString,
+    SMTP_PASSWORD: optionalNonEmptyString,
+    MAIL_FROM: z
+      .string()
+      .min(1)
+      .refine(isEmailAddress, { message: 'Must include an email address' }),
+    PORT: zodCoerceNumber().default(3001),
+    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+    CORS_ORIGIN: zodRequiredUrl().default('http://localhost:3000'),
+    THROTTLER_AUTH_LIMIT: zodCoerceNumber().default(AUTH_LIMIT_DEFAULT),
+    THROTTLER_AUTH_TTL: zodCoerceNumber().default(AUTH_TTL_DEFAULT),
+    THROTTLER_AGENT_LIMIT: zodCoerceNumber().default(AGENT_LIMIT_DEFAULT),
+    THROTTLER_AGENT_TTL: zodCoerceNumber().default(AGENT_TTL_DEFAULT),
+    THROTTLER_GENERAL_LIMIT: zodCoerceNumber().default(GENERAL_LIMIT_DEFAULT),
+    THROTTLER_GENERAL_TTL: zodCoerceNumber().default(GENERAL_TTL_DEFAULT),
+    DISK_HEALTH_PATH: z.string().default('/'),
+    DISK_HEALTH_THRESHOLD: zodCoerceNumber().default(0.9),
+  })
+  .superRefine((env, ctx) => {
+    if (env.NODE_ENV !== 'production') {
+      return
+    }
+
+    for (const field of smtpFields) {
+      if (env[field] === undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Required in production',
+          path: [field],
+        })
+      }
+    }
+  })
 
 export type EnvConfig = z.infer<typeof envSchema>
 

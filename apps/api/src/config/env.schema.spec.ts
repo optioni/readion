@@ -7,6 +7,11 @@ const VALID_ENV = {
   PORT: '3001',
   NODE_ENV: 'development',
   CORS_ORIGIN: 'http://localhost:3000',
+  SMTP_HOST: 'mail.smtp2go.com',
+  SMTP_PORT: '2525',
+  SMTP_USERNAME: 'smtp-user',
+  SMTP_PASSWORD: 'smtp-password',
+  MAIL_FROM: 'Readion <no-reply@readion.app>',
 }
 
 describe('env schema', () => {
@@ -109,5 +114,42 @@ describe('env schema — observability group', () => {
   it('accepts a SENTRY_RELEASE string', () => {
     const result = parseEnv({ ...VALID_ENV, SENTRY_RELEASE: 'abc123' })
     expect(result.SENTRY_RELEASE).toBe('abc123')
+  })
+})
+
+describe('env schema — email group', () => {
+  it('parses valid email config and coerces SMTP_PORT to number', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.SMTP_HOST).toBe('mail.smtp2go.com')
+    expect(result.SMTP_PORT).toBe(2525)
+    expect(result.SMTP_USERNAME).toBe('smtp-user')
+    expect(result.SMTP_PASSWORD).toBe('smtp-password')
+    expect(result.MAIL_FROM).toBe('Readion <no-reply@readion.app>')
+  })
+
+  it('throws when SMTP_PASSWORD is missing', () => {
+    const { SMTP_PASSWORD: _, ...rest } = { ...VALID_ENV, NODE_ENV: 'production' }
+    expect(() => parseEnv(rest)).toThrow(/SMTP_PASSWORD/)
+  })
+
+  it('allows credential-free development to use the capturing transport', () => {
+    const result = parseEnv({
+      DATABASE_URL: VALID_ENV.DATABASE_URL,
+      REDIS_URL: VALID_ENV.REDIS_URL,
+      NODE_ENV: 'development',
+      MAIL_FROM: VALID_ENV.MAIL_FROM,
+    })
+
+    expect(result.NODE_ENV).toBe('development')
+    expect(result.SMTP_USERNAME).toBeUndefined()
+    expect(result.SMTP_PASSWORD).toBeUndefined()
+  })
+
+  it('throws when SMTP_PORT is non-numeric', () => {
+    expect(() => parseEnv({ ...VALID_ENV, SMTP_PORT: 'not-a-number' })).toThrow(/SMTP_PORT/)
+  })
+
+  it('throws when MAIL_FROM is not an email address', () => {
+    expect(() => parseEnv({ ...VALID_ENV, MAIL_FROM: 'not-an-email' })).toThrow(/MAIL_FROM/)
   })
 })

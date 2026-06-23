@@ -5,6 +5,7 @@ import { DbModule } from '@readion/db'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { ApiConfigModule } from './config/config.module'
 import { HealthModule } from './health/health.module'
+import { MailModule } from './mail/mail.module'
 import { ApiObservabilityModule } from './observability/observability.module'
 import { RedisModule } from './redis/redis.module'
 import { ApiThrottlerModule } from './throttler/throttler.module'
@@ -17,6 +18,7 @@ import { ApiThrottlerModule } from './throttler/throttler.module'
     RedisModule,
     ApiThrottlerModule,
     HealthModule,
+    MailModule,
   ],
   providers: [
     {
