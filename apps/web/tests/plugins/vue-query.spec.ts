@@ -7,7 +7,10 @@ import {
   readionQueryDefaultOptions,
   readionVueQueryPlugin,
 } from '~/lib/vue-query'
-import { getHealthControllerCheckQueryKey, useHealthControllerCheck } from '../../src/api/health/health'
+import {
+  getHealthControllerCheckQueryKey,
+  useHealthControllerCheck,
+} from '../../src/api/health/health'
 
 describe('Vue Query plugin', () => {
   it('provides one shared QueryClient to generated composables', () => {
