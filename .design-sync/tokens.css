@@ -1,4 +1,4 @@
-/* Readion design tokens — dark-mode-first, extracted from apps/web/app/assets/css/main.css */
+/* Readion design tokens — for claude.ai/design. Source of truth: apps/web/app/design/tokens.ts */
 
 :root {
   color-scheme: dark;
@@ -13,6 +13,8 @@
   /* Primary */
   --readion-primary: #1d4ed8;
   --readion-primary-hover: #1e40af;
+  --readion-primary-muted: #1e40af;
+  --readion-primary-subtle: #334155;
 
   /* Primary scale */
   --readion-primary-50: #eff6ff;
@@ -47,32 +49,6 @@
   /* Border */
   --readion-border-default: #1e293b;
   --readion-border-strong: #334155;
-
-  /* Border radius */
-  --readion-rounded-sm: 3px;
-  --readion-rounded-md: 6px;
-  --readion-rounded-lg: 8px;
-  --readion-rounded-xl: 12px;
-  --readion-rounded-full: 9999px;
-
-  /* Spacing */
-  --readion-spacing-xs: 4px;
-  --readion-spacing-sm: 8px;
-  --readion-spacing-md: 12px;
-  --readion-spacing-lg: 16px;
-  --readion-spacing-xl: 24px;
-
-  /* Typography */
-  --readion-font-sans: Inter, ui-sans-serif, system-ui;
-  --readion-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-  --readion-font-size-base: 14px;
-  --readion-font-size-heading: 20px;
-  --readion-font-size-label: 11px;
-  --readion-font-size-score: 28px;
-  --readion-font-size-mono: 13px;
-  --readion-line-height-base: 1.5;
-  --readion-line-height-heading: 1.25;
-  --readion-letter-spacing-label: 0.1em;
 }
 
 html {

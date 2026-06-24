@@ -10,8 +10,8 @@ All design values are CSS custom properties. Apply them via inline `style` or a 
 <div style={{
   background: "var(--readion-background-surface)",
   color: "var(--readion-text-primary)",
-  padding: "var(--readion-spacing-xl)",
-  borderRadius: "var(--readion-rounded-lg)",
+  padding: "24px",
+  borderRadius: "8px",
 }}>
   Content
 </div>
@@ -27,7 +27,10 @@ All design values are CSS custom properties. Apply them via inline `style` or a 
 | Overlay / modal bg | `--readion-background-overlay` | `#16213e` |
 | Primary action | `--readion-primary` | `#1d4ed8` |
 | Primary hover | `--readion-primary-hover` | `#1e40af` |
+| Primary muted | `--readion-primary-muted` | `#1e40af` |
+| Primary subtle | `--readion-primary-subtle` | `#334155` |
 | Accent label | `--readion-accent-label` | `#7c8cf8` |
+| Accent label muted | `--readion-accent-label-muted` | `#93c5fd` |
 | Body text | `--readion-text-primary` | `#e2e8f0` |
 | Secondary text | `--readion-text-secondary` | `#94a3b8` |
 | Muted / meta text | `--readion-text-muted` | `#64748b` |
@@ -39,29 +42,26 @@ All design values are CSS custom properties. Apply them via inline `style` or a 
 | Readiness: medium | `--readion-status-medium` | `#fbbf24` |
 | Readiness: good | `--readion-status-good` | `#34d399` |
 
-## Spacing
+## Spacing and shape
 
-`--readion-spacing-xs` (4px) · `--readion-spacing-sm` (8px) · `--readion-spacing-md` (12px) · `--readion-spacing-lg` (16px) · `--readion-spacing-xl` (24px)
-
-## Border radius
-
-`--readion-rounded-sm` (3px) · `--readion-rounded-md` (6px) · `--readion-rounded-lg` (8px) · `--readion-rounded-xl` (12px) · `--readion-rounded-full` (9999px)
+The app uses standard Tailwind spacing. For inline styles in React, match these values: 4px (tight), 8px (small), 12px (medium), 16px (base), 24px (large), 32px (xl). Border-radius values: 3px (sm), 6px (md), 8px (lg), 12px (xl), 9999px (pill).
 
 ## Typography
 
-Font family: Inter (falls back to `ui-sans-serif, system-ui`). Font sizes: `--readion-font-size-base` (14px), `--readion-font-size-heading` (20px), `--readion-font-size-label` (11px, uppercase `--readion-letter-spacing-label` 0.1em), `--readion-font-size-score` (28px bold for readiness scores).
+Font family: Inter (falls back to `ui-sans-serif, system-ui`). Set via `font-family: Inter, ui-sans-serif, system-ui`. Sizes: 11px (label/caps, `letter-spacing: 0.1em; text-transform: uppercase`), 14px (body default), 20px (heading), 28px (score/hero number).
 
 ## Idiomatic example — quiz option card
 
 ```jsx
 <div style={{
-  background: "var(--readion-background-base)",
+  background: "var(--readion-background-surface)",
   color: "var(--readion-text-secondary)",
   border: "1px solid var(--readion-border-default)",
-  borderRadius: "var(--readion-rounded-sm)",
-  padding: "var(--readion-spacing-sm)",
-  fontSize: "var(--readion-font-size-base)",
-  lineHeight: "var(--readion-line-height-base)",
+  borderRadius: "3px",
+  padding: "8px",
+  fontSize: "14px",
+  lineHeight: "1.5",
+  fontFamily: "Inter, ui-sans-serif, system-ui",
 }}>
   Option text
 </div>

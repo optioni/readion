@@ -10,18 +10,22 @@
 ## Re-sync command
 
 ```sh
-node .ds-sync/package-build.mjs \
+node .ds-sync/resync.mjs \
   --config .design-sync/config.json \
   --node-modules .ds-sync/node_modules \
   --entry .design-sync/stub.mjs \
-  --out ./ds-bundle
-node .ds-sync/package-validate.mjs ./ds-bundle
+  --out ./ds-bundle \
+  --remote .design-sync/.cache/remote-sync.json
 ```
 
-Then upload per the incremental/atomic path as appropriate.
+Then upload per the atomic path (pinned re-sync).
+
+## Token source of truth
+
+`apps/web/app/assets/css/main.css` was migrated to Tailwind v4 `@theme` syntax — it no longer holds the full token set as `:root` CSS variables. The canonical design token source is now `apps/web/app/design/tokens.ts`. When tokens change, update `.design-sync/tokens.css` to match `tokens.ts` (not `main.css`), then re-sync.
 
 ## Re-sync risks
 
-- **Token drift** — `.design-sync/tokens.css` is a hand-extracted copy of the values from `apps/web/app/assets/css/main.css`. If tokens change in `main.css`, they must be manually updated in `tokens.css` and a re-sync run.
+- **Token drift** — `.design-sync/tokens.css` must be kept in sync with `apps/web/app/design/tokens.ts`. The app uses Tailwind utilities for most styling, so CSS variable usage in Vue files is minimal — diff `tokens.ts` against `tokens.css` to spot drift.
 - **No component previews** — there is nothing to re-verify on the component side. Future re-syncs are purely CSS token updates.
-- **Inter font** — referenced in the CSS but not shipped (marked as `runtimeFontPrefixes`). The app relies on system fonts / host environment providing Inter. Acceptable; recorded in NOTES.md per skill requirement.
+- **Inter font** — referenced in the CSS but not shipped (marked as `runtimeFontPrefixes`). The app relies on system fonts / host environment providing Inter. Acceptable.
