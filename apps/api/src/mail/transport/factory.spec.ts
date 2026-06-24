@@ -72,4 +72,23 @@ describe('mail transport factory', () => {
     expect(sendMail).toHaveBeenCalledWith(message)
     expect(capturedMessages).toEqual([message])
   })
+
+  it('builds unauthenticated SMTP transport for local development sinks', async () => {
+    const createTransport = vi.fn<CreateNodemailerTransport>(() => ({
+      sendMail: vi.fn<MailTransport['sendMail']>().mockResolvedValue({ messageId: 'smtp-1' }),
+    }))
+    const config = {
+      NODE_ENV: 'development',
+      SMTP_HOST: 'localhost',
+      SMTP_PORT: 1025,
+    } as const
+
+    const transport = createMailTransport(config, [], createTransport)
+    await transport.sendMail(message)
+
+    expect(createTransport).toHaveBeenCalledWith({
+      host: 'localhost',
+      port: 1025,
+    })
+  })
 })

@@ -8,8 +8,15 @@ export type FoundationalTemplatePayload = {
   actionUrl: string
 }
 
+export type AuthLinkTemplatePayload = {
+  productName: string
+  actionUrl: string
+}
+
 export type MailTemplatePayloads = {
   foundational: FoundationalTemplatePayload
+  emailVerification: AuthLinkTemplatePayload
+  passwordReset: AuthLinkTemplatePayload
 }
 
 export const foundationalTemplate = {
@@ -26,6 +33,34 @@ export const foundationalTemplate = {
     ),
 } satisfies MailTemplate<FoundationalTemplatePayload>
 
+export const emailVerificationTemplate = {
+  subject: (payload) => `Verify your ${payload.productName} email`,
+  text: (payload) =>
+    `Verify your ${payload.productName} email address by opening this link: ${payload.actionUrl}`,
+  html: (payload) =>
+    wrapInBaseLayout(
+      `<main>
+        <p>Verify your ${escapeHtml(payload.productName)} email address.</p>
+        <p><a href="${escapeHtml(payload.actionUrl)}">${escapeHtml(payload.actionUrl)}</a></p>
+      </main>`,
+    ),
+} satisfies MailTemplate<AuthLinkTemplatePayload>
+
+export const passwordResetTemplate = {
+  subject: (payload) => `Reset your ${payload.productName} password`,
+  text: (payload) =>
+    `Reset your ${payload.productName} password by opening this link: ${payload.actionUrl}`,
+  html: (payload) =>
+    wrapInBaseLayout(
+      `<main>
+        <p>Reset your ${escapeHtml(payload.productName)} password.</p>
+        <p><a href="${escapeHtml(payload.actionUrl)}">${escapeHtml(payload.actionUrl)}</a></p>
+      </main>`,
+    ),
+} satisfies MailTemplate<AuthLinkTemplatePayload>
+
 export const mailTemplateRegistry = {
   foundational: foundationalTemplate,
+  emailVerification: emailVerificationTemplate,
+  passwordReset: passwordResetTemplate,
 } satisfies MailTemplateRegistry<MailTemplatePayloads>

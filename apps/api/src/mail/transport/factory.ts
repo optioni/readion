@@ -12,7 +12,7 @@ export type SmtpTransportConfig = {
 export type SmtpTransportOptions = {
   host: string
   port: number
-  auth: {
+  auth?: {
     user: string
     pass: string
   }
@@ -38,10 +38,11 @@ const defaultCreateNodemailerTransport: CreateNodemailerTransport = (options) =>
   })
 }
 
-function hasSmtpConfig(config: SmtpTransportConfig): config is Required<SmtpTransportConfig> {
-  return Boolean(
-    config.SMTP_HOST && config.SMTP_PORT && config.SMTP_USERNAME && config.SMTP_PASSWORD,
-  )
+function hasSmtpEndpoint(config: SmtpTransportConfig): config is SmtpTransportConfig & {
+  SMTP_HOST: string
+  SMTP_PORT: number
+} {
+  return Boolean(config.SMTP_HOST && config.SMTP_PORT)
 }
 
 export function createCapturingMailTransport(
@@ -64,12 +65,22 @@ export function createMailTransport(
   capturedMessages: CapturedMailMessage[],
   createNodemailerTransport: CreateNodemailerTransport = defaultCreateNodemailerTransport,
 ): MailTransport {
-  if (config.NODE_ENV === 'test' || (config.NODE_ENV === 'development' && !hasSmtpConfig(config))) {
+  if (
+    config.NODE_ENV === 'test' ||
+    (config.NODE_ENV === 'development' && !hasSmtpEndpoint(config))
+  ) {
     return createCapturingMailTransport(capturedMessages, createNodemailerTransport)
   }
 
-  if (!hasSmtpConfig(config)) {
+  if (!hasSmtpEndpoint(config)) {
     throw new Error('SMTP transport requires SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD')
+  }
+
+  if (!config.SMTP_USERNAME || !config.SMTP_PASSWORD) {
+    return createNodemailerTransport({
+      host: config.SMTP_HOST,
+      port: config.SMTP_PORT,
+    })
   }
 
   return createNodemailerTransport({
