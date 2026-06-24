@@ -9,6 +9,7 @@ import supertest from 'supertest'
 import type { StartedTestContainer } from 'testcontainers'
 import { vi } from 'vitest'
 import { AppModule } from './app.module'
+import { Public } from './auth/auth.guards'
 import { bootstrapApp } from './bootstrap'
 import type { CollectionResult } from './common/interceptors/response.interceptor'
 import { AuthThrottle } from './throttler/throttler.decorators'
@@ -29,6 +30,7 @@ class TestEmailDto {
 }
 
 @Controller('test')
+@Public()
 class TestController {
   @Get('resource')
   resource() {

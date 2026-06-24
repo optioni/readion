@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { DiskHealthIndicator, HealthCheck, HealthCheckService } from '@nestjs/terminus'
+import { Public } from '../auth/auth.guards'
 import { SkipEnvelope } from '../common/interceptors/response.interceptor'
 import type { EnvConfig } from '../config/env.schema'
 import { PostgresHealthIndicator } from './postgres-health.indicator'
@@ -8,6 +9,7 @@ import { RedisHealthIndicator } from './redis-health.indicator'
 
 @Controller('health')
 @SkipEnvelope()
+@Public()
 export class HealthController {
   constructor(
     private readonly health: HealthCheckService,

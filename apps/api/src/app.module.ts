@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { ThrottlerGuard } from '@nestjs/throttler'
 import { DbModule } from '@readion/db'
+import { AuthModule } from './auth/auth.module'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { ApiConfigModule } from './config/config.module'
 import { HealthModule } from './health/health.module'
@@ -19,6 +20,7 @@ import { ApiThrottlerModule } from './throttler/throttler.module'
     ApiThrottlerModule,
     HealthModule,
     MailModule,
+    AuthModule,
   ],
   providers: [
     {
