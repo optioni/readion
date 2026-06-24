@@ -58,14 +58,14 @@ describe('DB Foundation — Acceptance', () => {
     expect(rows[0].extname).toBe('vector')
   })
 
-  it('no domain tables introduced by migrations', async () => {
+  it('domain migrations create the users table', async () => {
     const em = harness.getEm()
     const rows = await em.getConnection().execute<{ tablename: string }[]>(`
       SELECT tablename FROM pg_tables
       WHERE schemaname = 'public'
-      AND tablename NOT IN ('mikro_orm_migrations', 'fixture_items')
+      AND tablename = 'users'
     `)
-    expect(rows).toHaveLength(0)
+    expect(rows).toHaveLength(1)
   })
 
   it('new entity receives UUID v4 primary key', async () => {
