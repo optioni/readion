@@ -12,6 +12,10 @@ const VALID_ENV = {
   SMTP_USERNAME: 'smtp-user',
   SMTP_PASSWORD: 'smtp-password',
   MAIL_FROM: 'Readion <no-reply@readion.app>',
+  JWT_SECRET: 'test-secret-with-at-least-32-characters',
+  JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS: '900',
+  JWT_REFRESH_TOKEN_EXPIRES_IN_SECONDS: '604800',
+  WEB_BASE_URL: 'http://localhost:3000',
 }
 
 describe('env schema', () => {
@@ -138,6 +142,8 @@ describe('env schema — email group', () => {
       REDIS_URL: VALID_ENV.REDIS_URL,
       NODE_ENV: 'development',
       MAIL_FROM: VALID_ENV.MAIL_FROM,
+      JWT_SECRET: VALID_ENV.JWT_SECRET,
+      WEB_BASE_URL: VALID_ENV.WEB_BASE_URL,
     })
 
     expect(result.NODE_ENV).toBe('development')
@@ -151,5 +157,28 @@ describe('env schema — email group', () => {
 
   it('throws when MAIL_FROM is not an email address', () => {
     expect(() => parseEnv({ ...VALID_ENV, MAIL_FROM: 'not-an-email' })).toThrow(/MAIL_FROM/)
+  })
+})
+
+describe('env schema — auth group', () => {
+  it('throws when JWT_SECRET is missing', () => {
+    const { JWT_SECRET: _, ...rest } = VALID_ENV
+    expect(() => parseEnv(rest)).toThrow(/JWT_SECRET/)
+  })
+
+  it('throws when WEB_BASE_URL is malformed', () => {
+    expect(() => parseEnv({ ...VALID_ENV, WEB_BASE_URL: 'not-a-url' })).toThrow(/WEB_BASE_URL/)
+  })
+
+  it('exposes typed access and refresh token expiries', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS).toBe(900)
+    expect(result.JWT_REFRESH_TOKEN_EXPIRES_IN_SECONDS).toBe(604_800)
+    expect(result.WEB_BASE_URL).toBe('http://localhost:3000')
+  })
+
+  it('exposes bcrypt cost with a low-test override', () => {
+    const result = parseEnv({ ...VALID_ENV, BCRYPT_COST: '4' })
+    expect(result.BCRYPT_COST).toBe(4)
   })
 })

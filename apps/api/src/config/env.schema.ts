@@ -13,6 +13,9 @@ export const AGENT_TTL_DEFAULT = 60_000
 export const AGENT_LIMIT_DEFAULT = 30
 export const GENERAL_TTL_DEFAULT = 60_000
 export const GENERAL_LIMIT_DEFAULT = 300
+export const JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS_DEFAULT = 900
+export const JWT_REFRESH_TOKEN_EXPIRES_IN_SECONDS_DEFAULT = 604_800
+export const BCRYPT_COST_DEFAULT = 12
 
 function parseMailbox(value: string) {
   const displayNameMatch = value.match(/<([^<>]+)>$/)
@@ -47,6 +50,15 @@ const envSchema = z
     PORT: zodCoerceNumber().default(3001),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     CORS_ORIGIN: zodRequiredUrl().default('http://localhost:3000'),
+    JWT_SECRET: z.string().min(1),
+    JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS: zodCoerceNumber().default(
+      JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS_DEFAULT,
+    ),
+    JWT_REFRESH_TOKEN_EXPIRES_IN_SECONDS: zodCoerceNumber().default(
+      JWT_REFRESH_TOKEN_EXPIRES_IN_SECONDS_DEFAULT,
+    ),
+    WEB_BASE_URL: zodRequiredUrl(),
+    BCRYPT_COST: zodCoerceNumber().default(BCRYPT_COST_DEFAULT),
     THROTTLER_AUTH_LIMIT: zodCoerceNumber().default(AUTH_LIMIT_DEFAULT),
     THROTTLER_AUTH_TTL: zodCoerceNumber().default(AUTH_TTL_DEFAULT),
     THROTTLER_AGENT_LIMIT: zodCoerceNumber().default(AGENT_LIMIT_DEFAULT),
