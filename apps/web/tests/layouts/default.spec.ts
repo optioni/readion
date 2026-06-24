@@ -1,15 +1,26 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { createPinia } from 'pinia'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AppNavBar from '~/components/AppNavBar.vue'
 import DefaultLayout from '~/layouts/default.vue'
 
+vi.stubGlobal('useRouter', () => ({ push: vi.fn() }))
+vi.stubGlobal('useRuntimeConfig', () => ({
+  public: { apiBaseUrl: 'http://localhost:3001/api/v1' },
+}))
+
 describe('Default layout', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('renders the app banner and wraps page content in a centered max-width container', () => {
     const wrapper = mount(DefaultLayout, {
       slots: {
         default: '<section data-testid="page-content">Session content</section>',
       },
       global: {
+        plugins: [createPinia()],
         components: {
           AppNavBar,
         },
