@@ -11,6 +11,7 @@ import { MailModule } from './mail/mail.module'
 import { ApiObservabilityModule } from './observability/observability.module'
 import { RedisModule } from './redis/redis.module'
 import { ApiThrottlerModule } from './throttler/throttler.module'
+import { UserCertificationsModule } from './user-certifications/user-certifications.module'
 import { UsersModule } from './users/users.module'
 
 @Module({
@@ -25,6 +26,7 @@ import { UsersModule } from './users/users.module'
     AuthModule,
     UsersModule,
     CertificationsModule,
+    UserCertificationsModule,
   ],
   providers: [
     {
