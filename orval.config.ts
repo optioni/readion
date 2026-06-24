@@ -11,6 +11,7 @@ export default defineConfig({
       client: 'vue-query',
       httpClient: 'fetch',
       mode: 'tags-split',
+      tsconfig: './tsconfig.base.json',
       override: {
         mutator: {
           path: 'apps/web/app/api/mutator.ts',
