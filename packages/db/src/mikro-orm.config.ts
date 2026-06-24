@@ -1,10 +1,11 @@
 import { join } from 'node:path'
 import { defineConfig } from '@mikro-orm/postgresql'
+import { CertificationSchema } from './entities/certification.entity'
 import { UserSchema } from './entities/user.entity'
 import { PluralUnderscoreNamingStrategy } from './naming-strategy'
 
 export default defineConfig({
-  entities: [UserSchema],
+  entities: [UserSchema, CertificationSchema],
   discovery: { warnWhenNoEntities: false },
   dbName: process.env.DB_NAME ?? 'readion',
   host: process.env.DB_HOST ?? 'localhost',
