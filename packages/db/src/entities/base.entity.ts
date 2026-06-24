@@ -15,5 +15,5 @@ export const BaseSchema = defineEntity({
 })
 
 export abstract class BaseEntity extends BaseSchema.class {
-  id: string = v4()
+  override id: string = v4()
 }

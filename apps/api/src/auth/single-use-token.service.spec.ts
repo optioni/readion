@@ -40,7 +40,7 @@ class ExpiringFakeRedis {
     return item.value
   }
 
-  async set(key: string, value: string, mode: 'EX', ttlSeconds: number) {
+  async set(key: string, value: string, _mode: 'EX', ttlSeconds: number) {
     this.values.set(key, { value, expiresAt: this.now + ttlSeconds * 1000 })
     return 'OK'
   }

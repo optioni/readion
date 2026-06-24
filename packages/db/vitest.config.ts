@@ -1,8 +1,17 @@
+import { resolve } from 'node:path'
 import swc from 'unplugin-swc'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   oxc: false,
+  resolve: {
+    alias: [
+      {
+        find: '@readion/shared',
+        replacement: resolve(__dirname, '../shared/src/index.ts'),
+      },
+    ],
+  },
   plugins: [
     swc.vite({
       jsc: {

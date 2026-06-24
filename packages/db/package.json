@@ -26,6 +26,7 @@
     "@mikro-orm/migrations": "^7.1.4",
     "@mikro-orm/nestjs": "^7.0.2",
     "@mikro-orm/postgresql": "^7.1.4",
+    "@readion/shared": "workspace:*",
     "uuid": "^9.0.0"
   },
   "peerDependencies": {

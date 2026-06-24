@@ -71,7 +71,12 @@ describe('useReadionEventSource', () => {
     })
 
     const wrapper = mount(Probe)
-    const source = FakeEventSource.instances[0]!
+    const source = FakeEventSource.instances[0]
+
+    expect(source).toBeDefined()
+    if (!source) {
+      throw new Error('EventSource was not constructed')
+    }
 
     expect(source.url).toBe('http://localhost:3001/api/v1/agent/events')
     expect(source.init?.withCredentials).toBe(true)
@@ -107,7 +112,12 @@ describe('useReadionEventSource', () => {
     })
 
     const wrapper = mount(Probe)
-    const source = FakeEventSource.instances[0]!
+    const source = FakeEventSource.instances[0]
+
+    expect(source).toBeDefined()
+    if (!source) {
+      throw new Error('EventSource was not constructed')
+    }
 
     expect(source.url).toBe('http://localhost:3001/api/v1/agent/events')
 

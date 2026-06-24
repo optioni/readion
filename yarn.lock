@@ -6169,6 +6169,7 @@ __metadata:
     "@mikro-orm/nestjs": "npm:^7.0.2"
     "@mikro-orm/postgresql": "npm:^7.1.4"
     "@nestjs/testing": "npm:^11.0.0"
+    "@readion/shared": "workspace:*"
     "@swc/core": "npm:^1.15.0"
     "@types/pg": "npm:^8.20.0"
     "@types/uuid": "npm:^9.0.0"

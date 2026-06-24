@@ -23,6 +23,16 @@ describe('worker env schema', () => {
     expect(result.NODE_ENV).toBe('development')
   })
 
+  it('user lifecycle grace window defaults to 14 days when omitted', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.LIFECYCLE_DELETION_GRACE_DAYS).toBe(14)
+  })
+
+  it('accepts a user lifecycle grace-window override', () => {
+    const result = parseEnv({ ...VALID_ENV, LIFECYCLE_DELETION_GRACE_DAYS: '30' })
+    expect(result.LIFECYCLE_DELETION_GRACE_DAYS).toBe(30)
+  })
+
   it('Boot fails when a required variable is missing (REDIS_URL)', () => {
     const { REDIS_URL: _, ...rest } = VALID_ENV
     expect(() => parseEnv(rest)).toThrow(/REDIS_URL/)

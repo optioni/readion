@@ -48,6 +48,6 @@ import { PasswordResetTokenService, VerificationTokenService } from './single-us
       useClass: CsrfGuard,
     },
   ],
-  exports: [AccessTokenService, PasswordHashingService],
+  exports: [AccessTokenService, PasswordHashingService, RefreshTokenStore],
 })
 export class AuthModule {}

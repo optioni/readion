@@ -62,6 +62,22 @@ describe('env schema', () => {
     expect(result.THROTTLER_GENERAL_TTL).toBe(60_000)
   })
 
+  it('exposes user lifecycle defaults when overrides are absent', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.LIFECYCLE_DELETION_GRACE_DAYS).toBe(14)
+    expect(result.DEFAULT_DISPLAY_TIMEZONE).toBe('Europe/Helsinki')
+  })
+
+  it('accepts user lifecycle overrides from env', () => {
+    const result = parseEnv({
+      ...VALID_ENV,
+      LIFECYCLE_DELETION_GRACE_DAYS: '30',
+      DEFAULT_DISPLAY_TIMEZONE: 'America/New_York',
+    })
+    expect(result.LIFECYCLE_DELETION_GRACE_DAYS).toBe(30)
+    expect(result.DEFAULT_DISPLAY_TIMEZONE).toBe('America/New_York')
+  })
+
   it('accepts throttler overrides from env', () => {
     const result = parseEnv({
       ...VALID_ENV,

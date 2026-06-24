@@ -1,7 +1,7 @@
 import {
-  CanActivate,
+  type CanActivate,
   createParamDecorator,
-  ExecutionContext,
+  type ExecutionContext,
   ForbiddenException,
   Injectable,
   SetMetadata,

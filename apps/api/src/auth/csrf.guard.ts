@@ -1,5 +1,10 @@
 import { randomBytes } from 'node:crypto'
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common'
+import {
+  type CanActivate,
+  type ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common'
 
 export type AuthCookieOptions = {
   httpOnly?: boolean

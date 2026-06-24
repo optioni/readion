@@ -16,14 +16,17 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
-    command: 'yarn dev --host 127.0.0.1 --port 3000',
-    env: {
-      ...process.env,
-      NUXT_PUBLIC_API_BASE_URL:
-        process.env.NUXT_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:3001/api/v1',
-    },
-    url: 'http://127.0.0.1:3000',
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer:
+    process.env.READION_E2E_SKIP_WEB_SERVER === '1'
+      ? undefined
+      : {
+          command: 'yarn dev --host 127.0.0.1 --port 3000',
+          env: {
+            ...process.env,
+            NUXT_PUBLIC_API_BASE_URL:
+              process.env.NUXT_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:3001/api/v1',
+          },
+          url: 'http://127.0.0.1:3000',
+          reuseExistingServer: !process.env.CI,
+        },
 })

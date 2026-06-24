@@ -1,5 +1,7 @@
 import {
+  DEFAULT_DISPLAY_TIMEZONE,
   databaseUrlFragment,
+  isSupportedTimeZone,
   observabilityEnvFragment,
   redisUrlFragment,
   zodCoerceNumber,
@@ -16,6 +18,7 @@ export const GENERAL_LIMIT_DEFAULT = 300
 export const JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS_DEFAULT = 900
 export const JWT_REFRESH_TOKEN_EXPIRES_IN_SECONDS_DEFAULT = 604_800
 export const BCRYPT_COST_DEFAULT = 12
+export const LIFECYCLE_DELETION_GRACE_DAYS_DEFAULT = 14
 
 function parseMailbox(value: string) {
   const displayNameMatch = value.match(/<([^<>]+)>$/)
@@ -59,6 +62,11 @@ const envSchema = z
     ),
     WEB_BASE_URL: zodRequiredUrl(),
     BCRYPT_COST: zodCoerceNumber().default(BCRYPT_COST_DEFAULT),
+    LIFECYCLE_DELETION_GRACE_DAYS: zodCoerceNumber().default(LIFECYCLE_DELETION_GRACE_DAYS_DEFAULT),
+    DEFAULT_DISPLAY_TIMEZONE: z
+      .string()
+      .refine(isSupportedTimeZone, { message: 'Must be a valid IANA timezone' })
+      .default(DEFAULT_DISPLAY_TIMEZONE),
     THROTTLER_AUTH_LIMIT: zodCoerceNumber().default(AUTH_LIMIT_DEFAULT),
     THROTTLER_AUTH_TTL: zodCoerceNumber().default(AUTH_TTL_DEFAULT),
     THROTTLER_AGENT_LIMIT: zodCoerceNumber().default(AGENT_LIMIT_DEFAULT),

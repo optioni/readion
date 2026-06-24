@@ -1,6 +1,11 @@
 import * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
-import { Injectable, Logger, OnApplicationBootstrap, OnApplicationShutdown } from '@nestjs/common'
+import {
+  Injectable,
+  Logger,
+  type OnApplicationBootstrap,
+  type OnApplicationShutdown,
+} from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { register } from 'prom-client'
 import type { WorkerEnvConfig } from '../config/env.schema'

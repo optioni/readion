@@ -171,7 +171,7 @@ function getSetCookieValues(response: { headersArray(): Array<{ name: string; va
 
 function getCookieValue(setCookieHeaders: string[] | undefined, cookieName: string) {
   const cookie = setCookieHeaders?.find((header) => header.startsWith(`${cookieName}=`))
-  return cookie?.split(';')[0].slice(cookieName.length + 1)
+  return cookie?.split(';')[0]?.slice(cookieName.length + 1)
 }
 
 function getCookieHeader(setCookieHeaders: string[] | undefined, cookieName: string) {

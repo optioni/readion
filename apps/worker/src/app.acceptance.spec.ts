@@ -23,6 +23,7 @@ import { REDIS_CLIENT } from './redis/redis.module'
 import type { ScrapperClient } from './scrapper/scrapper.client'
 import { ScrapperError } from './scrapper/scrapper.errors'
 import { SCRAPPER_CLIENT } from './scrapper/scrapper.module'
+import { USER_HARD_PURGE_CRON } from './users/user-purge.service'
 
 async function getFreePort(): Promise<number> {
   return new Promise((resolve) => {
@@ -157,10 +158,10 @@ describe('Worker Acceptance', () => {
       expect(pong).toBe('PONG')
     })
 
-    it('Schedule registry is available and reports zero cron jobs', () => {
+    it('Schedule registry exposes the user hard-purge cron job', () => {
       const registry = moduleRef.get(SchedulerRegistry)
       expect(registry).toBeDefined()
-      expect(registry.getCronJobs().size).toBe(0)
+      expect(registry.getCronJobs().has(USER_HARD_PURGE_CRON)).toBe(true)
     })
 
     it('EntityManager is resolvable in the worker context', async () => {
