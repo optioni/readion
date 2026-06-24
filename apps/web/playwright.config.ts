@@ -18,6 +18,11 @@ export default defineConfig({
   ],
   webServer: {
     command: 'yarn dev --host 127.0.0.1 --port 3000',
+    env: {
+      ...process.env,
+      NUXT_PUBLIC_API_BASE_URL:
+        process.env.NUXT_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:3001/api/v1',
+    },
     url: 'http://127.0.0.1:3000',
     reuseExistingServer: !process.env.CI,
   },
