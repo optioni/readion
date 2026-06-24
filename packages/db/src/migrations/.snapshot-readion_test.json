@@ -23,6 +23,40 @@
           "enumItems": [],
           "mappedType": "datetime"
         },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "display_timezone": {
+          "name": "display_timezone",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'Europe/Helsinki'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
         "email": {
           "name": "email",
           "type": "text",
@@ -108,6 +142,91 @@
           "enumItems": ["user", "admin"],
           "mappedType": "enum"
         },
+        "session_default_content_mix": {
+          "name": "session_default_content_mix",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'balanced'",
+          "comment": null,
+          "collation": null,
+          "enumItems": ["balanced", "reading-heavy", "quiz-heavy"],
+          "mappedType": "enum"
+        },
+        "session_default_difficulty": {
+          "name": "session_default_difficulty",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'intermediate'",
+          "comment": null,
+          "collation": null,
+          "enumItems": ["beginner", "intermediate", "advanced", "adaptive"],
+          "mappedType": "enum"
+        },
+        "session_default_duration": {
+          "name": "session_default_duration",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "30",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "session_default_focus_area": {
+          "name": "session_default_focus_area",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'auto'",
+          "comment": null,
+          "collation": null,
+          "enumItems": ["auto", "weak-areas", "new-material", "review"],
+          "mappedType": "enum"
+        },
+        "session_default_learning_style": {
+          "name": "session_default_learning_style",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'weak-area-focus'",
+          "comment": null,
+          "collation": null,
+          "enumItems": ["weak-area-focus", "spaced-repetition", "scenario-based"],
+          "mappedType": "enum"
+        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamptz(6)",
@@ -131,10 +250,10 @@
           "columnNames": ["lower(email)"],
           "composite": false,
           "constraint": false,
-          "keyName": "users_email_lower_unique",
+          "keyName": "users_email_lower_active_unique",
           "primary": false,
           "unique": true,
-          "expression": "CREATE UNIQUE INDEX users_email_lower_unique ON public.users USING btree (lower(email))"
+          "expression": "CREATE UNIQUE INDEX users_email_lower_active_unique ON public.users USING btree (lower(email)) WHERE (deleted_at IS NULL)"
         },
         {
           "columnNames": ["id"],
@@ -151,6 +270,36 @@
           "expression": "\"role\" in ('user', 'admin')",
           "definition": "check (\"role\" in ('user', 'admin'))",
           "columnName": "role"
+        },
+        {
+          "name": "users_session_default_content_mix_check",
+          "expression": "\"session_default_content_mix\" in ('balanced', 'reading-heavy', 'quiz-heavy')",
+          "definition": "check (\"session_default_content_mix\" in ('balanced', 'reading-heavy', 'quiz-heavy'))",
+          "columnName": "session_default_content_mix"
+        },
+        {
+          "name": "users_session_default_difficulty_check",
+          "expression": "\"session_default_difficulty\" in ('beginner', 'intermediate', 'advanced', 'adaptive')",
+          "definition": "check (\"session_default_difficulty\" in ('beginner', 'intermediate', 'advanced', 'adaptive'))",
+          "columnName": "session_default_difficulty"
+        },
+        {
+          "name": "users_session_default_duration_check",
+          "expression": "session_default_duration = ANY (ARRAY[15, 30, 60, 90])",
+          "definition": "CHECK ((session_default_duration = ANY (ARRAY[15, 30, 60, 90])))",
+          "columnName": "session_default_duration"
+        },
+        {
+          "name": "users_session_default_focus_area_check",
+          "expression": "\"session_default_focus_area\" in ('auto', 'weak-areas', 'new-material', 'review')",
+          "definition": "check (\"session_default_focus_area\" in ('auto', 'weak-areas', 'new-material', 'review'))",
+          "columnName": "session_default_focus_area"
+        },
+        {
+          "name": "users_session_default_learning_style_check",
+          "expression": "\"session_default_learning_style\" in ('weak-area-focus', 'spaced-repetition', 'scenario-based')",
+          "definition": "check (\"session_default_learning_style\" in ('weak-area-focus', 'spaced-repetition', 'scenario-based'))",
+          "columnName": "session_default_learning_style"
         }
       ],
       "triggers": [],
