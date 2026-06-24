@@ -145,7 +145,9 @@ describe('User entity', () => {
   })
 
   it('round-trips the users lifecycle migration down and back up', async () => {
-    await orm.migrator.down()
+    // Roll back to just before Migration20260624000000 (users lifecycle).
+    // Newer certification migrations sit on top of it and must be rolled back first.
+    await orm.migrator.down({ to: '20260623000000' })
 
     const em = orm.em.fork()
     const columnsAfterDown = await em.getConnection().execute<{ column_name: string }[]>(`
