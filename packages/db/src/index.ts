@@ -6,6 +6,11 @@ export {
   certificationStates,
 } from './entities/certification.entity'
 export { User, UserRole, type UserRoleValue, UserSchema } from './entities/user.entity'
+export {
+  UserCertification,
+  UserCertificationSchema,
+  userCertificationStatuses,
+} from './entities/user-certification.entity'
 export { default as mikroOrmConfig } from './mikro-orm.config'
 export { PluralUnderscoreNamingStrategy } from './naming-strategy'
 export * from './test-helpers/containers'

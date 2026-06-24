@@ -268,6 +268,325 @@
       "comment": null
     },
     {
+      "name": "user_certifications",
+      "schema": "public",
+      "columns": {
+        "certification_id": {
+          "name": "certification_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "enrolled_at": {
+          "name": "enrolled_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "session_override_content_mix": {
+          "name": "session_override_content_mix",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "balanced",
+            "reading-heavy",
+            "quiz-heavy"
+          ],
+          "mappedType": "enum"
+        },
+        "session_override_difficulty": {
+          "name": "session_override_difficulty",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "beginner",
+            "intermediate",
+            "advanced",
+            "adaptive"
+          ],
+          "mappedType": "enum"
+        },
+        "session_override_duration": {
+          "name": "session_override_duration",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "session_override_focus_area": {
+          "name": "session_override_focus_area",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "auto",
+            "weak-areas",
+            "new-material",
+            "review"
+          ],
+          "mappedType": "enum"
+        },
+        "session_override_learning_style": {
+          "name": "session_override_learning_style",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "weak-area-focus",
+            "spaced-repetition",
+            "scenario-based"
+          ],
+          "mappedType": "enum"
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'active'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "active",
+            "archived"
+          ],
+          "mappedType": "enum"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "user_certifications_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "user_id",
+            "certification_id"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "user_certifications_user_certification_unique",
+          "primary": false,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "user_certifications_session_override_content_mix_check",
+          "expression": "\"session_override_content_mix\" in ('balanced', 'reading-heavy', 'quiz-heavy')",
+          "definition": "check (\"session_override_content_mix\" in ('balanced', 'reading-heavy', 'quiz-heavy'))",
+          "columnName": "session_override_content_mix"
+        },
+        {
+          "name": "user_certifications_session_override_difficulty_check",
+          "expression": "\"session_override_difficulty\" in ('beginner', 'intermediate', 'advanced', 'adaptive')",
+          "definition": "check (\"session_override_difficulty\" in ('beginner', 'intermediate', 'advanced', 'adaptive'))",
+          "columnName": "session_override_difficulty"
+        },
+        {
+          "name": "user_certifications_session_override_duration_check",
+          "expression": "session_override_duration = ANY (ARRAY[15, 30, 60, 90])",
+          "definition": "CHECK ((session_override_duration = ANY (ARRAY[15, 30, 60, 90])))",
+          "columnName": "session_override_duration"
+        },
+        {
+          "name": "user_certifications_session_override_focus_area_check",
+          "expression": "\"session_override_focus_area\" in ('auto', 'weak-areas', 'new-material', 'review')",
+          "definition": "check (\"session_override_focus_area\" in ('auto', 'weak-areas', 'new-material', 'review'))",
+          "columnName": "session_override_focus_area"
+        },
+        {
+          "name": "user_certifications_session_override_learning_style_check",
+          "expression": "\"session_override_learning_style\" in ('weak-area-focus', 'spaced-repetition', 'scenario-based')",
+          "definition": "check (\"session_override_learning_style\" in ('weak-area-focus', 'spaced-repetition', 'scenario-based'))",
+          "columnName": "session_override_learning_style"
+        },
+        {
+          "name": "user_certifications_status_check",
+          "expression": "\"status\" in ('active', 'archived')",
+          "definition": "check (\"status\" in ('active', 'archived'))",
+          "columnName": "status"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {
+        "user_certifications_certification_id_fkey": {
+          "columnNames": [
+            "certification_id"
+          ],
+          "constraintName": "user_certifications_certification_id_fkey",
+          "localTableName": "public.user_certifications",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.certifications"
+        },
+        "user_certifications_user_id_fkey": {
+          "columnNames": [
+            "user_id"
+          ],
+          "constraintName": "user_certifications_user_id_fkey",
+          "localTableName": "public.user_certifications",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.users",
+          "deleteRule": "cascade"
+        }
+      },
+      "comment": null
+    },
+    {
       "name": "users",
       "schema": "public",
       "columns": {
