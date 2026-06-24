@@ -48,6 +48,18 @@ export type { PaginationQueryParams } from './pagination'
 export { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from './pagination'
 export type { ProblemDetails, ValidationErrorItem } from './problem-details'
 export { ERROR_TYPES } from './problem-details'
+export type {
+  EnrollCertificationRequest,
+  EnrollmentResponse,
+  EnrollmentSessionOverrides,
+  EnrollmentStatus,
+  UpdateEnrollmentRequest,
+} from './user-certifications'
+export {
+  enrollCertificationRequestSchema,
+  enrollmentStatuses,
+  updateEnrollmentRequestSchema,
+} from './user-certifications'
 export type { SessionDefaults, UpdateUserProfileRequest, UserProfileResponse } from './users'
 export {
   DEFAULT_DISPLAY_TIMEZONE,
