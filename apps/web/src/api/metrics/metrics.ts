@@ -20,7 +20,7 @@ import { readionFetch } from '../../../app/api/mutator'
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 
 export type metricsControllerIndexResponse200 = {
-  data: undefined
+  data: void
   status: 200
 }
 
