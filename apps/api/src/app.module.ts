@@ -10,6 +10,7 @@ import { MailModule } from './mail/mail.module'
 import { ApiObservabilityModule } from './observability/observability.module'
 import { RedisModule } from './redis/redis.module'
 import { ApiThrottlerModule } from './throttler/throttler.module'
+import { UsersModule } from './users/users.module'
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ApiThrottlerModule } from './throttler/throttler.module'
     HealthModule,
     MailModule,
     AuthModule,
+    UsersModule,
   ],
   providers: [
     {
