@@ -10,6 +10,25 @@
 **Non-Goals:**
 <!-- What is explicitly out of scope -->
 
+<!-- Frontend/UI changes only — import the designed views into the change and document them here. Omit this whole section for non-UI changes (see the design instruction). -->
+<!--
+## Visual Design
+
+Visual source of truth: the Claude Design project(s), imported into this change at `design/<view>.html`.
+
+| Artboard / screen | Maps to |
+|---|---|
+| <!-- e.g. Sign in --> | <!-- e.g. /login page --> |
+
+**Layout to implement:** <!-- shared layout(s) to build once and reuse -->
+
+### Design ↔ contract reconciliation
+
+| Design element | Conflict with contract | Resolution |
+|---|---|---|
+| <!-- e.g. per-field "no account found" error --> | <!-- e.g. spec mandates a uniform 401 --> | <!-- e.g. show the uniform banner only --> |
+-->
+
 ## Test Boundaries
 
 <!-- For each external dependency or collaborator, state whether it is mocked or real in tests and at what layer.
