@@ -22,6 +22,13 @@ export {
   registerRequestSchema,
   roles,
 } from './auth'
+export type {
+  CertificationDomain,
+  CertificationFieldCitation,
+  CertificationProvenance,
+  CertificationResponse,
+  CertificationState,
+} from './certifications'
 export {
   databaseUrlFragment,
   observabilityEnvFragment,
