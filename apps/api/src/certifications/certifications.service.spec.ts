@@ -30,7 +30,7 @@ describe('CertificationsService', () => {
   })
 
   afterEach(async () => {
-    await orm.em.getConnection().execute('TRUNCATE TABLE certifications')
+    await orm.em.getConnection().execute('TRUNCATE TABLE certifications CASCADE')
   })
 
   function seedCert(
