@@ -13,6 +13,9 @@ export type ProblemDetails = {
 type ReadionFetchFactoryOptions = {
   apiBaseUrl: string
   getAccessToken?: () => string | null | undefined
+  getCsrfToken?: () => string | null | undefined
+  onRefreshToken?: (newToken: string) => void
+  onRefreshFailed?: () => void
 }
 
 export class ReadionProblemDetailsError extends Error implements ProblemDetails {
@@ -34,6 +37,11 @@ export class ReadionProblemDetailsError extends Error implements ProblemDetails 
     return this.message
   }
 }
+
+const CSRF_COOKIE_NAME = 'csrf_token'
+const CSRF_HEADER_NAME = 'x-csrf-token'
+const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
+const REFRESH_PATH = '/api/v1/auth/refresh'
 
 const buildUrl = (apiBaseUrl: string, path: string, params?: ReadionFetchOptions['params']) => {
   const normalizedBaseUrl = apiBaseUrl.replace(/\/$/, '')
@@ -62,21 +70,76 @@ const parseProblemDetails = async (response: Response): Promise<ProblemDetails> 
   }
 }
 
-export const createReadionFetch =
-  ({ apiBaseUrl, getAccessToken }: ReadionFetchFactoryOptions) =>
-  async <TResponse>(path: string, options: ReadionFetchOptions = {}): Promise<TResponse> => {
-    const headers = new Headers(options.headers)
-    const accessToken = getAccessToken?.()
+export const getCsrfTokenFromCookie = (): string | null => {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie
+    .split(';')
+    .map((c) => c.trim())
+    .find((c) => c.startsWith(`${CSRF_COOKIE_NAME}=`))
+  return match ? (match.slice(CSRF_COOKIE_NAME.length + 1) ?? null) : null
+}
 
-    if (accessToken) {
-      headers.set('Authorization', `Bearer ${accessToken}`)
+// Shared in-flight refresh promise — prevents parallel refresh storms
+let refreshing: Promise<string | null> | null = null
+
+export const createReadionFetch =
+  ({
+    apiBaseUrl,
+    getAccessToken,
+    getCsrfToken,
+    onRefreshToken,
+    onRefreshFailed,
+  }: ReadionFetchFactoryOptions) =>
+  async <TResponse>(path: string, options: ReadionFetchOptions = {}): Promise<TResponse> => {
+    const method = (options.method ?? 'GET').toUpperCase()
+    const accessToken = getAccessToken?.()
+    const csrfToken = UNSAFE_METHODS.has(method) ? getCsrfToken?.() : null
+
+    const buildHeaders = (token: string | null | undefined) => {
+      const headers = new Headers(options.headers)
+      if (token) headers.set('Authorization', `Bearer ${token}`)
+      if (csrfToken) headers.set(CSRF_HEADER_NAME, csrfToken)
+      return headers
     }
 
-    const response = await fetch(buildUrl(apiBaseUrl, path, options.params), {
-      ...options,
-      credentials: 'include',
-      headers,
-    })
+    const doFetch = (token: string | null | undefined) =>
+      fetch(buildUrl(apiBaseUrl, path, options.params), {
+        ...options,
+        credentials: 'include',
+        headers: buildHeaders(token),
+      })
+
+    let response = await doFetch(accessToken)
+
+    if (response.status === 401 && onRefreshToken) {
+      if (!refreshing) {
+        const refreshUrl = buildUrl(apiBaseUrl, REFRESH_PATH, undefined)
+        const csrfForRefresh = getCsrfTokenFromCookie()
+        refreshing = fetch(refreshUrl, {
+          method: 'POST',
+          credentials: 'include',
+          ...(csrfForRefresh ? { headers: { [CSRF_HEADER_NAME]: csrfForRefresh } } : {}),
+        })
+          .then(async (r) => {
+            if (!r.ok) return null
+            const body = (await r.json()) as { data?: { accessToken?: string } }
+            return body?.data?.accessToken ?? null
+          })
+          .finally(() => {
+            refreshing = null
+          })
+      }
+
+      const newToken = await refreshing
+
+      if (newToken) {
+        onRefreshToken(newToken)
+        response = await doFetch(newToken)
+      } else {
+        onRefreshFailed?.()
+        throw new ReadionProblemDetailsError(await parseProblemDetails(response))
+      }
+    }
 
     if (!response.ok) {
       throw new ReadionProblemDetailsError(await parseProblemDetails(response))
@@ -97,7 +160,14 @@ export const readionFetch = async <TResponse>(
   options?: ReadionFetchOptions,
 ): Promise<TResponse> => {
   const runtimeConfig = useRuntimeConfig()
+  const { useAuthStore } = await import('~/stores/auth')
+  const auth = useAuthStore()
+
   return createReadionFetch({
     apiBaseUrl: runtimeConfig.public.apiBaseUrl,
+    getAccessToken: () => auth.accessToken,
+    getCsrfToken: getCsrfTokenFromCookie,
+    onRefreshToken: (token) => auth.setSession(token, auth.user),
+    onRefreshFailed: () => auth.clear(),
   })(path, options)
 }
