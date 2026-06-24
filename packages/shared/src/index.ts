@@ -1,6 +1,27 @@
 export const APP_NAME = 'Readion'
 export const APP_VERSION = '0.1.0'
 
+export type {
+  AuthSessionResponse,
+  AuthUser,
+  ForgotPasswordRequest,
+  LoginRequest,
+  PasswordResetRequest,
+  RefreshResponse,
+  RegisterRequest,
+  RoleValue,
+} from './auth'
+export {
+  authSessionResponseSchema,
+  authUserSchema,
+  forgotPasswordRequestSchema,
+  loginRequestSchema,
+  passwordResetRequestSchema,
+  Role,
+  refreshResponseSchema,
+  registerRequestSchema,
+  roles,
+} from './auth'
 export {
   databaseUrlFragment,
   observabilityEnvFragment,
