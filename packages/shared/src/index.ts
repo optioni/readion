@@ -41,3 +41,18 @@ export type { PaginationQueryParams } from './pagination'
 export { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from './pagination'
 export type { ProblemDetails, ValidationErrorItem } from './problem-details'
 export { ERROR_TYPES } from './problem-details'
+export type { SessionDefaults, UpdateUserProfileRequest, UserProfileResponse } from './users'
+export {
+  DEFAULT_DISPLAY_TIMEZONE,
+  DEFAULT_SESSION_DEFAULTS,
+  displayTimezoneSchema,
+  isSupportedTimeZone,
+  sessionDefaultContentMixes,
+  sessionDefaultDifficulties,
+  sessionDefaultDurations,
+  sessionDefaultFocusAreas,
+  sessionDefaultLearningStyles,
+  sessionDefaultsSchema,
+  updateUserProfileRequestSchema,
+  userProfileResponseSchema,
+} from './users'
