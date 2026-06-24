@@ -35,6 +35,7 @@ Thumbs.db
 *.swo
 
 # Playwright
+.playwright-mcp/
 playwright-report/
 test-results/
 
