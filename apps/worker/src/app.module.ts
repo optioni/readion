@@ -6,6 +6,7 @@ import { WorkerObservabilityModule } from './observability/observability.module'
 import { QueueModule } from './queue/queue.module'
 import { RedisModule } from './redis/redis.module'
 import { ScrapperModule } from './scrapper/scrapper.module'
+import { UsersModule } from './users/users.module'
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ScrapperModule } from './scrapper/scrapper.module'
     QueueModule,
     ScheduleModule.forRoot(),
     ScrapperModule,
+    UsersModule,
   ],
 })
 export class AppModule {}
