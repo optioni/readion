@@ -46,7 +46,7 @@ export class AuthService {
       throw new ConflictException('Email is already taken')
     }
 
-    const userCount = await em.count(User, {})
+    const userCount = await em.count(User, { deletedAt: null })
     const user = em.create(User, {
       email: input.email,
       passwordHash: await this.passwords.hash(input.password),
@@ -86,7 +86,7 @@ export class AuthService {
     }
 
     const em = this.em.fork()
-    const user = await em.findOne(User, { id: rotated.userId })
+    const user = await em.findOne(User, { id: rotated.userId, deletedAt: null })
 
     if (user === null) {
       throw new UnauthorizedException('Invalid refresh token')
@@ -220,9 +220,10 @@ export class AuthService {
   private async findUserByEmail(em: EntityManager, email: string) {
     const rows = await em
       .getConnection()
-      .execute<{ id: string }[]>('SELECT id FROM users WHERE lower(email) = lower(?) LIMIT 1', [
-        email,
-      ])
+      .execute<{ id: string }[]>(
+        'SELECT id FROM users WHERE lower(email) = lower(?) AND deleted_at IS NULL LIMIT 1',
+        [email],
+      )
 
     if (rows.length === 0) {
       return null

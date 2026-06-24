@@ -77,6 +77,22 @@ describe('auth acceptance', () => {
     expect(second.body.data.user.role).toBe('user')
   })
 
+  it('allows a soft-deleted email to be re-registered as a new active account', async () => {
+    const first = await registerUser(app, 'released@example.com', 'correcthorse')
+    expect(first.status).toBe(201)
+
+    const original = await em.findOneOrFail(User, { email: 'released@example.com' })
+    original.deletedAt = new Date('2026-01-01T00:00:00.000Z')
+    await em.flush()
+    em.clear()
+
+    const second = await registerUser(app, 'released@example.com', 'correcthorse')
+    expect(second.status).toBe(201)
+    expect(second.body.data.user.id).not.toBe(first.body.data.user.id)
+
+    expect(await em.count(User, { email: 'released@example.com' })).toBe(2)
+  })
+
   it('logs in with correct credentials and rejects wrong password and unknown email uniformly', async () => {
     const register = await registerUser(app, 'login@example.com', 'correcthorse')
     expect(register.status).toBe(201)
