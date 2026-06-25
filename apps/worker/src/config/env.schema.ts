@@ -1,6 +1,8 @@
 import {
   CHUNK_OVERLAP_DEFAULT,
   CHUNK_SIZE_DEFAULT,
+  DEFAULT_MIN_CHUNKS_PER_DOMAIN,
+  DEFAULT_TOTAL_CHUNK_MULTIPLE,
   DOMAIN_CONFIDENCE_THRESHOLD_DEFAULT,
   databaseUrlFragment,
   EMBEDDING_DIMENSION,
@@ -55,6 +57,14 @@ const envSchema = z.object({
   CONTENT_RECHECK_PODCAST_MINUTES: zodCoerceNumber().default(SOURCE_RECHECK_INTERVALS.podcast),
   CONTENT_RECHECK_ANKI_MINUTES: zodCoerceNumber().default(SOURCE_RECHECK_INTERVALS.anki),
   CONTENT_RECHECK_QUIZLET_MINUTES: zodCoerceNumber().default(SOURCE_RECHECK_INTERVALS.quizlet),
+
+  // Coverage thresholds for cert go-live promotion
+  CERT_COVERAGE_MIN_CHUNKS_PER_DOMAIN: zodCoerceNumber()
+    .refine((n) => n > 0, { message: 'Must be a positive number' })
+    .default(DEFAULT_MIN_CHUNKS_PER_DOMAIN),
+  CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE: zodCoerceNumber()
+    .refine((n) => n > 0, { message: 'Must be a positive number' })
+    .default(DEFAULT_TOTAL_CHUNK_MULTIPLE),
 })
 
 export type WorkerEnvConfig = z.infer<typeof envSchema>

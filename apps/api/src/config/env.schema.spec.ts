@@ -346,3 +346,37 @@ describe('env schema — grounding group', () => {
     ).toThrow(/GROUNDING_SIMILARITY_THRESHOLD/)
   })
 })
+
+describe('env schema — cert coverage thresholds', () => {
+  it('CERT_COVERAGE_MIN_CHUNKS_PER_DOMAIN defaults to 20', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.CERT_COVERAGE_MIN_CHUNKS_PER_DOMAIN).toBe(20)
+  })
+
+  it('CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE defaults to 3', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE).toBe(3)
+  })
+
+  it('accepts CERT_COVERAGE_MIN_CHUNKS_PER_DOMAIN override', () => {
+    const result = parseEnv({ ...VALID_ENV, CERT_COVERAGE_MIN_CHUNKS_PER_DOMAIN: '10' })
+    expect(result.CERT_COVERAGE_MIN_CHUNKS_PER_DOMAIN).toBe(10)
+  })
+
+  it('accepts CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE override', () => {
+    const result = parseEnv({ ...VALID_ENV, CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE: '5' })
+    expect(result.CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE).toBe(5)
+  })
+
+  it('rejects non-positive CERT_COVERAGE_MIN_CHUNKS_PER_DOMAIN', () => {
+    expect(() => parseEnv({ ...VALID_ENV, CERT_COVERAGE_MIN_CHUNKS_PER_DOMAIN: '0' })).toThrow(
+      /CERT_COVERAGE_MIN_CHUNKS_PER_DOMAIN/,
+    )
+  })
+
+  it('rejects non-positive CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE', () => {
+    expect(() => parseEnv({ ...VALID_ENV, CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE: '0' })).toThrow(
+      /CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE/,
+    )
+  })
+})

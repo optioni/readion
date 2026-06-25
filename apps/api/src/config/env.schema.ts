@@ -1,6 +1,8 @@
 import {
   aiEnvFragment,
   DEFAULT_DISPLAY_TIMEZONE,
+  DEFAULT_MIN_CHUNKS_PER_DOMAIN,
+  DEFAULT_TOTAL_CHUNK_MULTIPLE,
   databaseUrlFragment,
   groundingEnvFragment,
   isSupportedTimeZone,
@@ -79,6 +81,12 @@ const envSchema = z
     THROTTLER_GENERAL_TTL: zodCoerceNumber().default(GENERAL_TTL_DEFAULT),
     DISK_HEALTH_PATH: z.string().default('/'),
     DISK_HEALTH_THRESHOLD: zodCoerceNumber().default(0.9),
+    CERT_COVERAGE_MIN_CHUNKS_PER_DOMAIN: zodCoerceNumber()
+      .refine((n) => n > 0, { message: 'Must be a positive number' })
+      .default(DEFAULT_MIN_CHUNKS_PER_DOMAIN),
+    CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE: zodCoerceNumber()
+      .refine((n) => n > 0, { message: 'Must be a positive number' })
+      .default(DEFAULT_TOTAL_CHUNK_MULTIPLE),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'production') {
