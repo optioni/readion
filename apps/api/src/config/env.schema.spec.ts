@@ -1,7 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { parseEnv } from './env.schema'
 
+const VALID_AI_ENV = {
+  AI_PROVIDER: 'anthropic',
+  AI_MODEL_QUIZ_GENERATION: 'claude-haiku-4-5',
+  AI_MODEL_ANSWER_VERIFICATION: 'claude-haiku-4-5',
+  AI_MODEL_DOMAIN_TAGGING: 'claude-haiku-4-5',
+  AI_MODEL_AGENT_QA: 'claude-sonnet-4-6',
+  AI_MODEL_CERTIFICATION_PREFILL: 'claude-sonnet-4-6',
+  AI_MODEL_MATERIAL_GENERATION: 'claude-sonnet-4-6',
+  AI_MODEL_COMPLEX_REASONING: 'claude-sonnet-4-6',
+}
+
 const VALID_ENV = {
+  ...VALID_AI_ENV,
   DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
   REDIS_URL: 'redis://localhost:6379',
   PORT: '3001',
@@ -154,6 +166,7 @@ describe('env schema — email group', () => {
 
   it('allows credential-free development to use the capturing transport', () => {
     const result = parseEnv({
+      ...VALID_AI_ENV,
       DATABASE_URL: VALID_ENV.DATABASE_URL,
       REDIS_URL: VALID_ENV.REDIS_URL,
       NODE_ENV: 'development',
@@ -196,5 +209,90 @@ describe('env schema — auth group', () => {
   it('exposes bcrypt cost with a low-test override', () => {
     const result = parseEnv({ ...VALID_ENV, BCRYPT_COST: '4' })
     expect(result.BCRYPT_COST).toBe(4)
+  })
+})
+
+describe('env schema — AI provider group', () => {
+  it('parses a valid AI configuration with all required fields', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.AI_PROVIDER).toBe('anthropic')
+    expect(result.AI_MODEL_QUIZ_GENERATION).toBe('claude-haiku-4-5')
+    expect(result.AI_MODEL_AGENT_QA).toBe('claude-sonnet-4-6')
+  })
+
+  it('throws when AI_PROVIDER is missing', () => {
+    const { AI_PROVIDER: _, ...rest } = VALID_ENV
+    expect(() => parseEnv(rest)).toThrow(/AI_PROVIDER/)
+  })
+
+  it('throws when AI_PROVIDER is not a supported value', () => {
+    expect(() => parseEnv({ ...VALID_ENV, AI_PROVIDER: 'gemini' })).toThrow(/AI_PROVIDER/)
+  })
+
+  it('throws when AI_MODEL_QUIZ_GENERATION is missing', () => {
+    const { AI_MODEL_QUIZ_GENERATION: _, ...rest } = VALID_ENV
+    expect(() => parseEnv(rest)).toThrow(/AI_MODEL_QUIZ_GENERATION/)
+  })
+
+  it('throws when any per-task model ID is missing', () => {
+    for (const key of [
+      'AI_MODEL_ANSWER_VERIFICATION',
+      'AI_MODEL_DOMAIN_TAGGING',
+      'AI_MODEL_AGENT_QA',
+      'AI_MODEL_CERTIFICATION_PREFILL',
+      'AI_MODEL_MATERIAL_GENERATION',
+      'AI_MODEL_COMPLEX_REASONING',
+    ] as const) {
+      const rest = { ...VALID_ENV }
+      delete (rest as Record<string, unknown>)[key]
+      expect(() => parseEnv(rest)).toThrow(new RegExp(key))
+    }
+  })
+
+  it('resolves token budget defaults when overrides are absent', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.AI_MAX_TOKENS_QUIZ_GENERATION).toBe(1024)
+    expect(result.AI_MAX_TOKENS_ANSWER_VERIFICATION).toBe(512)
+    expect(result.AI_MAX_TOKENS_DOMAIN_TAGGING).toBe(256)
+    expect(result.AI_MAX_TOKENS_AGENT_QA).toBe(2048)
+    expect(result.AI_MAX_TOKENS_CERTIFICATION_PREFILL).toBe(4096)
+    expect(result.AI_MAX_TOKENS_MATERIAL_GENERATION).toBe(4096)
+    expect(result.AI_MAX_TOKENS_COMPLEX_REASONING).toBe(8192)
+  })
+
+  it('accepts per-task token budget overrides', () => {
+    const result = parseEnv({ ...VALID_ENV, AI_MAX_TOKENS_QUIZ_GENERATION: '512' })
+    expect(result.AI_MAX_TOKENS_QUIZ_GENERATION).toBe(512)
+  })
+
+  it('resolves embedding defaults when overrides are absent', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.AI_EMBEDDING_PROVIDER).toBe('openai')
+    expect(result.AI_EMBEDDING_MODEL).toBe('text-embedding-3-small')
+    expect(result.AI_EMBEDDING_API_KEY).toBeUndefined()
+  })
+
+  it('resolves cache TTL default of 86400 when override is absent', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.AI_RESPONSE_CACHE_TTL_SECONDS).toBe(86_400)
+  })
+
+  it('accepts a cache TTL override', () => {
+    const result = parseEnv({ ...VALID_ENV, AI_RESPONSE_CACHE_TTL_SECONDS: '3600' })
+    expect(result.AI_RESPONSE_CACHE_TTL_SECONDS).toBe(3600)
+  })
+
+  it('AI_API_KEY is optional in non-production', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.AI_API_KEY).toBeUndefined()
+  })
+
+  it('AI_API_KEY is required in production and throws when missing', () => {
+    expect(() => parseEnv({ ...VALID_ENV, NODE_ENV: 'production' })).toThrow(/AI_API_KEY/)
+  })
+
+  it('env schema has no AI_EMBEDDING_DIMENSION variable', () => {
+    const parsed = parseEnv(VALID_ENV)
+    expect('AI_EMBEDDING_DIMENSION' in parsed).toBe(false)
   })
 })

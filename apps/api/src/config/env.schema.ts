@@ -1,4 +1,5 @@
 import {
+  aiEnvFragment,
   DEFAULT_DISPLAY_TIMEZONE,
   databaseUrlFragment,
   isSupportedTimeZone,
@@ -42,6 +43,7 @@ const envSchema = z
     ...databaseUrlFragment,
     ...redisUrlFragment,
     ...observabilityEnvFragment,
+    ...aiEnvFragment,
     SMTP_HOST: optionalNonEmptyString,
     SMTP_PORT: optionalSmtpPort,
     SMTP_USERNAME: optionalNonEmptyString,
@@ -89,6 +91,14 @@ const envSchema = z
           path: [field],
         })
       }
+    }
+
+    if (env.AI_API_KEY === undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Required in production',
+        path: ['AI_API_KEY'],
+      })
     }
   })
 
