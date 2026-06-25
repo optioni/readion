@@ -19,6 +19,8 @@ import type {
 import { enrollCertificationRequestSchema } from '@readion/shared'
 import { IsEnum, IsOptional } from 'class-validator'
 import { CurrentUser, type CurrentUserPrincipal } from '../auth/auth.guards'
+import type { WeakAreaDto } from '../weak-areas/weak-areas.service'
+import { WeakAreasService } from '../weak-areas/weak-areas.service'
 import { UserCertificationsService } from './user-certifications.service'
 
 export class ListEnrollmentsQueryDto {
@@ -54,11 +56,38 @@ class EnrollmentResponseDto {
   sessionDefaults!: EnrollmentSessionOverrides
 }
 
+class WeakAreaResponseDto {
+  @ApiProperty()
+  id!: string
+  @ApiProperty()
+  domain!: string
+  @ApiProperty()
+  score!: number
+  @ApiProperty()
+  accuracy!: number
+  @ApiProperty()
+  meanConfidence!: number
+  @ApiProperty()
+  responseCount!: number
+}
+
+class WeakAreaRelationshipDto {
+  @ApiProperty()
+  href!: string
+  @ApiPropertyOptional({ type: [WeakAreaResponseDto] })
+  data?: WeakAreaDto[]
+}
+
+class EnrollmentRelationshipsDto {
+  @ApiProperty({ type: WeakAreaRelationshipDto })
+  weakAreas!: WeakAreaRelationshipDto
+}
+
 class EnrollmentDetailResponseDto {
   @ApiProperty({ type: EnrollmentResponseDto })
   data!: EnrollmentResponse
-  @ApiProperty()
-  relationships!: Record<string, never>
+  @ApiProperty({ type: EnrollmentRelationshipsDto })
+  relationships!: EnrollmentRelationshipsDto
 }
 
 class EnrollmentListMetaDto {
@@ -77,19 +106,38 @@ class EnrollmentListResponseDto {
   meta!: EnrollmentListMetaDto
 }
 
+class WeakAreaListMetaDto {
+  @ApiProperty()
+  total!: number
+  @ApiProperty()
+  page!: number
+  @ApiProperty()
+  limit!: number
+}
+
+class WeakAreaListResponseDto {
+  @ApiProperty({ type: [WeakAreaResponseDto] })
+  data!: WeakAreaDto[]
+  @ApiProperty({ type: WeakAreaListMetaDto })
+  meta!: WeakAreaListMetaDto
+}
+
 @Controller('user-certifications')
 export class UserCertificationsController {
-  constructor(private readonly service: UserCertificationsService) {}
+  constructor(
+    private readonly service: UserCertificationsService,
+    private readonly weakAreas: WeakAreasService,
+  ) {}
 
   @Post()
   @ApiResponse({ status: 201, type: EnrollmentDetailResponseDto })
   async enroll(
     @CurrentUser() user: CurrentUserPrincipal,
     @Body() body: unknown,
-  ): Promise<{ data: EnrollmentResponse; relationships: Record<string, never> }> {
+  ): Promise<{ data: EnrollmentResponse; relationships: EnrollmentRelationshipsDto }> {
     const parsed = parseEnrollBody(body)
     const data = await this.service.enroll(user.id, parsed.certificationId, parsed.sessionDefaults)
-    return { data, relationships: {} }
+    return { data, relationships: buildRelationships(data.id) }
   }
 
   @Get()
@@ -100,13 +148,29 @@ export class UserCertificationsController {
   }
 
   @Get(':id')
+  @ApiQuery({ name: 'include', required: false })
   @ApiResponse({ status: 200, type: EnrollmentDetailResponseDto })
   async detail(
     @CurrentUser() user: CurrentUserPrincipal,
     @Param('id') id: string,
-  ): Promise<{ data: EnrollmentResponse; relationships: Record<string, never> }> {
+    @Query('include') include?: string,
+  ): Promise<{ data: EnrollmentResponse; relationships: EnrollmentRelationshipsDto }> {
     const data = await this.service.findOne(user.id, id)
-    return { data, relationships: {} }
+    const relationships = await this.buildRelationships(user.id, id, include)
+    return { data, relationships }
+  }
+
+  @Get(':id/weak-areas')
+  @ApiResponse({ status: 200, type: WeakAreaListResponseDto })
+  async listWeakAreas(
+    @CurrentUser() user: CurrentUserPrincipal,
+    @Param('id') id: string,
+  ): Promise<{ data: WeakAreaDto[]; meta: WeakAreaListMetaDto }> {
+    const items = await this.weakAreas.listWithRecompute(user.id, id)
+    return {
+      data: items,
+      meta: { total: items.length, page: 1, limit: items.length },
+    }
   }
 
   @Patch(':id')
@@ -115,9 +179,9 @@ export class UserCertificationsController {
     @CurrentUser() user: CurrentUserPrincipal,
     @Param('id') id: string,
     @Body() body: unknown,
-  ): Promise<{ data: EnrollmentResponse; relationships: Record<string, never> }> {
+  ): Promise<{ data: EnrollmentResponse; relationships: EnrollmentRelationshipsDto }> {
     const data = await this.service.updateOverrides(user.id, id, body)
-    return { data, relationships: {} }
+    return { data, relationships: buildRelationships(id) }
   }
 
   @Post(':id/archive')
@@ -126,9 +190,9 @@ export class UserCertificationsController {
   async archive(
     @CurrentUser() user: CurrentUserPrincipal,
     @Param('id') id: string,
-  ): Promise<{ data: EnrollmentResponse; relationships: Record<string, never> }> {
+  ): Promise<{ data: EnrollmentResponse; relationships: EnrollmentRelationshipsDto }> {
     const data = await this.service.archive(user.id, id)
-    return { data, relationships: {} }
+    return { data, relationships: buildRelationships(id) }
   }
 
   @Post(':id/restore')
@@ -137,9 +201,32 @@ export class UserCertificationsController {
   async restore(
     @CurrentUser() user: CurrentUserPrincipal,
     @Param('id') id: string,
-  ): Promise<{ data: EnrollmentResponse; relationships: Record<string, never> }> {
+  ): Promise<{ data: EnrollmentResponse; relationships: EnrollmentRelationshipsDto }> {
     const data = await this.service.restore(user.id, id)
-    return { data, relationships: {} }
+    return { data, relationships: buildRelationships(id) }
+  }
+
+  private async buildRelationships(
+    userId: string,
+    enrollmentId: string,
+    include?: string,
+  ): Promise<EnrollmentRelationshipsDto> {
+    const href = `/api/v1/user-certifications/${enrollmentId}/weak-areas`
+    const includes = include?.split(',').map((s) => s.trim()) ?? []
+
+    if (includes.includes('weakAreas')) {
+      await this.weakAreas.recompute(enrollmentId)
+      const data = await this.weakAreas.listForEnrollment(userId, enrollmentId)
+      return { weakAreas: { href, data } }
+    }
+
+    return { weakAreas: { href } }
+  }
+}
+
+function buildRelationships(enrollmentId: string): EnrollmentRelationshipsDto {
+  return {
+    weakAreas: { href: `/api/v1/user-certifications/${enrollmentId}/weak-areas` },
   }
 }
 

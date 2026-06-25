@@ -15,6 +15,7 @@ import { RedisModule } from './redis/redis.module'
 import { ApiThrottlerModule } from './throttler/throttler.module'
 import { UserCertificationsModule } from './user-certifications/user-certifications.module'
 import { UsersModule } from './users/users.module'
+import { WeakAreasModule } from './weak-areas/weak-areas.module'
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { UsersModule } from './users/users.module'
     CertificationsModule,
     UserCertificationsModule,
     QuizModule,
+    WeakAreasModule,
   ],
   providers: [
     {
