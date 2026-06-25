@@ -1,0 +1,38 @@
+## Why
+
+Every downstream study, content, and agent feature (`content-pipeline`, `grounding-verification`, `quiz`, `sessions`, `agent`, `cert-setup-grounding`, …) needs to call an LLM for generation, embed text for semantic search, and reuse expensive verified results — but `apps/api` has no LLM layer at all. Standing up one provider-agnostic gateway, the per-task model-tier config, the embedding service, and the verified-only response cache once — before `content-pipeline` — means every later change resolves a model by task type, embeds via one batched API, and reads/writes the cache through a single contract instead of re-wiring the Vercel AI SDK and re-deriving cost controls each time.
+
+## What Changes
+
+- **`LlmModule` in `apps/api`** — a global/exported NestJS module wrapping the **Vercel AI SDK** as the single LLM entry point. No feature module imports a provider SDK (`@anthropic-ai/sdk`, `openai`, …) directly; all generation, streaming, and embedding goes through this module's services. Provider is selected from config (`AI_PROVIDER`).
+- **Model-tier resolution** — a typed service that maps a **task type** (quiz generation, answer verification, domain tagging, agent Q&A, certification pre-fill, on-demand material generation, complex reasoning) to a configured model ID and its tier (utility / mid-tier / thinking). Model IDs are never hardcoded; they come from env vars per task type. Callers ask for a task, not a model string.
+- **Embedding service** — generates embeddings via the Vercel AI SDK using an independently-configured embedding provider/model (default OpenAI `text-embedding-3-small`, 1536 dims), with **batch embedding** for bulk ingestion. Exposes the configured model's expected vector dimension as a known constant so consumers (and the future `content_chunks` boot-check) can assert against it.
+- **Token budgets** — each task type has a configured max-token budget applied to its calls, preventing runaway costs. Budgets are config-driven defaults per tier/task.
+- **Provider prompt caching** — a helper for marking large, repeated static context (system prompts, certification domain lists) as cacheable via provider cache controls (e.g. Anthropic `cache_control`), so downstream changes (`sessions`, `agent`) get cheap repeated context for free.
+- **Verified-only LLM response cache (`llm-cache`)** — a Redis-backed cache service for generated quiz questions and explanations, keyed on the **full set of inputs that determine the output** (source chunk id(s), difficulty, question format, certification), with a configurable TTL. This change ships the cache *contract and store*: a `get`/`set`/`evict(by key)` API where **`set` only ever persists an item already marked verified**, and an eviction path used by quarantine. The verifier pass itself and what counts as "verified" are owned by `grounding-verification`; this change provides the gate and the store it writes through.
+- **LLM-call instrumentation** — emit the SPEC Observability → Metrics signals that originate at the gateway: LLM call latency, token usage, and error rate **per model / use-case**, plus tracing spans around LLM and embedding calls. (The metrics/tracing *infrastructure* is owned by `observability`; this change emits the gateway-level signals through it.)
+- **AI provider config group** — extend the `apps/api` Zod env schema (`apps/api/src/config/env.schema.ts`) with the AI provider group: provider name, API key(s), per-task-type model IDs, embedding provider/model, per-task token budgets, and the cache TTL. Fails fast at boot if required values are missing or malformed, per the Configuration spec. Shared, reusable env fragments live in `packages/shared/src/env`.
+
+No domain entity and no migration are introduced — per the roadmap entity-ownership table, `llm-foundation` owns no entity. No HTTP endpoint is added; this is an internal service layer consumed by other modules.
+
+**Deferred boundary (explicitly out of scope here):** SPEC says the app validates the configured embedding model's output dimension against the **live `content_chunks` pgvector column** on boot and refuses to start on a mismatch. That column is owned by `content-pipeline` and does not exist yet. `llm-foundation` therefore owns the embedding model's *declared* dimension constant and a pure validator; wiring the boot-time check against the live column is deferred to `content-pipeline` (which owns the column).
+
+## Capabilities
+
+### New Capabilities
+- `llm-gateway`: a NestJS `LlmModule` providing the single Vercel AI SDK entry point for text generation, streaming, and embeddings; task-type → model-tier resolution from config (no hardcoded model IDs); a batched embedding service exposing the configured model's declared vector dimension; per-task token budgets; a provider prompt-caching helper for repeated static context; and gateway-level LLM-call instrumentation (latency, token usage, error rate per model/use-case).
+- `llm-cache`: a Redis-backed, verified-only response cache for generated quiz questions and explanations — keyed on the full output-determining input set (source chunk id(s), difficulty, format, certification) with a configurable TTL, a `set` that persists only items marked verified, identical-request cache hits that skip the LLM call, and an eviction API used by quarantine.
+
+### Modified Capabilities
+<!-- None. This change extends the api Zod env schema established by api-foundation with the AI provider group, and emits metrics/traces through the observability infrastructure, but introduces foundation capabilities only and modifies no existing spec's requirements. -->
+
+## Impact
+
+- **Code**: `apps/api/src/llm/` — `llm.module.ts`, `llm.service.ts` (generate/stream entry point), `model-registry.service.ts` (task → model/tier/token-budget resolution), `embedding.service.ts` (batched embeddings + declared dimension), `prompt-cache.ts` (provider cache-control helper), `cache/llm-response-cache.service.ts` (verified-only Redis cache + key builder + eviction). Extends `apps/api/src/config/env.schema.ts` with the AI provider group; adds shared env fragments under `packages/shared/src/env`.
+- **Dependencies (apps/api)**: `ai` (Vercel AI SDK) plus the configured provider adapters (`@ai-sdk/anthropic`, `@ai-sdk/openai`). Consumes existing `@nestjs/config` + Zod validation and `@readion/shared` env helpers from `api-foundation`, the existing `ioredis` connection for the cache, and the `observability` metrics/tracing infrastructure.
+- **Database**: none — no entity, no migration.
+- **Entities owned**: none (per the roadmap entity-ownership table).
+- **Cross-cutting**: no worker cron attributed to this change. Feature-emitted metrics: LLM call latency, token usage, and error rate per model/use-case are emitted from the gateway (verifier/regeneration/quarantine/ingestion/session metrics belong to their owning feature changes).
+- **Out of scope (owned elsewhere)**: the verifier pass and the definition of "verified" (`grounding-verification`); the embedding boot-check against the live `content_chunks` column (`content-pipeline`); domain tagging, chunking, and pgvector upsert (`content-pipeline`); actual quiz/explanation prompt content and quarantine triggers (`quiz`, `grounding-verification`); agent system-prompt assembly (`agent`).
+- **Depends on**: `api-foundation` (archived) — for the NestJS bootstrap, the `@nestjs/config` + Zod env schema this extends, the global-module wiring, and the Redis connection.
+- **Unblocks**: `grounding-verification`, `content-pipeline`, and transitively `quiz`, `sessions`, `agent`, `cert-setup-grounding`.
