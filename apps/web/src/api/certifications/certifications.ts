@@ -14,13 +14,17 @@ import type {
 import { useQuery } from '@tanstack/vue-query'
 import type { MaybeRef } from 'vue'
 import { computed, unref } from 'vue'
-
 import { readionFetch } from '../../../app/api/mutator'
+import type {
+  CertificationDetailResponseDto,
+  CertificationListResponseDto,
+  CertificationsControllerListParams,
+} from '.././model'
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 
 export type certificationsControllerListResponse200 = {
-  data: void
+  data: CertificationListResponseDto
   status: 200
 }
 
@@ -31,37 +35,58 @@ export type certificationsControllerListResponseSuccess =
 
 export type certificationsControllerListResponse = certificationsControllerListResponseSuccess
 
-export const getCertificationsControllerListUrl = () => {
-  return `/api/v1/certifications`
+export const getCertificationsControllerListUrl = (params?: CertificationsControllerListParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/certifications?${stringifiedParams}`
+    : `/api/v1/certifications`
 }
 
 export const certificationsControllerList = async (
+  params?: CertificationsControllerListParams,
   options?: RequestInit,
 ): Promise<certificationsControllerListResponse> => {
-  return readionFetch<certificationsControllerListResponse>(getCertificationsControllerListUrl(), {
-    ...options,
-    method: 'GET',
-  })
+  return readionFetch<certificationsControllerListResponse>(
+    getCertificationsControllerListUrl(params),
+    {
+      ...options,
+      method: 'GET',
+    },
+  )
 }
 
-export const getCertificationsControllerListQueryKey = () => {
-  return ['api', 'v1', 'certifications'] as const
+export const getCertificationsControllerListQueryKey = (
+  params?: MaybeRef<CertificationsControllerListParams>,
+) => {
+  return ['api', 'v1', 'certifications', ...(params ? [params] : [])] as const
 }
 
 export const getCertificationsControllerListQueryOptions = <
   TData = Awaited<ReturnType<typeof certificationsControllerList>>,
   TError = unknown,
->(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof certificationsControllerList>>, TError, TData>
-  request?: SecondParameter<typeof readionFetch>
-}) => {
+>(
+  params?: MaybeRef<CertificationsControllerListParams>,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof certificationsControllerList>>, TError, TData>
+    request?: SecondParameter<typeof readionFetch>
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {}
 
-  const queryKey = getCertificationsControllerListQueryKey()
+  const queryKey = getCertificationsControllerListQueryKey(params)
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof certificationsControllerList>>> = ({
     signal,
-  }) => certificationsControllerList({ signal, ...requestOptions })
+  }) => certificationsControllerList(unref(params), { signal, ...requestOptions })
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof certificationsControllerList>>,
@@ -78,11 +103,14 @@ export type CertificationsControllerListQueryError = unknown
 export function useCertificationsControllerList<
   TData = Awaited<ReturnType<typeof certificationsControllerList>>,
   TError = unknown,
->(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof certificationsControllerList>>, TError, TData>
-  request?: SecondParameter<typeof readionFetch>
-}): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getCertificationsControllerListQueryOptions(options)
+>(
+  params?: MaybeRef<CertificationsControllerListParams>,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof certificationsControllerList>>, TError, TData>
+    request?: SecondParameter<typeof readionFetch>
+  },
+): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getCertificationsControllerListQueryOptions(params, options)
 
   const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey }
 
@@ -92,7 +120,7 @@ export function useCertificationsControllerList<
 }
 
 export type certificationsControllerDetailResponse200 = {
-  data: void
+  data: CertificationDetailResponseDto
   status: 200
 }
 
