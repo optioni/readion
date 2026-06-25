@@ -10,6 +10,11 @@ process.env.NODE_ENV = process.env.NODE_ENV ?? 'test'
 process.env.SERVICE_NAME = process.env.SERVICE_NAME ?? 'readion-worker-test'
 process.env.PROMETHEUS_PORT = process.env.PROMETHEUS_PORT ?? '0'
 
+// AI / LLM defaults for tests (no real API calls expected; services are mocked)
+process.env.AI_PROVIDER = process.env.AI_PROVIDER ?? 'openai'
+process.env.AI_MODEL_DOMAIN_TAGGING = process.env.AI_MODEL_DOMAIN_TAGGING ?? 'gpt-4o-mini'
+process.env.AI_EMBEDDING_MODEL = process.env.AI_EMBEDDING_MODEL ?? 'text-embedding-3-small'
+
 afterAll(() => {
   register.clear()
 })

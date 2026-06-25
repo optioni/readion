@@ -53,6 +53,63 @@ describe('worker env schema', () => {
   })
 })
 
+describe('worker env schema — content pipeline', () => {
+  it('similarity threshold defaults to 0.75', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.CONTENT_SIMILARITY_THRESHOLD).toBe(0.75)
+  })
+
+  it('domain confidence threshold defaults to 0.5', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.CONTENT_DOMAIN_CONFIDENCE_THRESHOLD).toBe(0.5)
+  })
+
+  it('accepts domain confidence threshold override', () => {
+    const result = parseEnv({ ...VALID_ENV, CONTENT_DOMAIN_CONFIDENCE_THRESHOLD: '0.7' })
+    expect(result.CONTENT_DOMAIN_CONFIDENCE_THRESHOLD).toBe(0.7)
+  })
+
+  it('chunk size defaults to 500 tokens', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.CONTENT_CHUNK_SIZE).toBe(500)
+  })
+
+  it('chunk overlap defaults to 50 tokens', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.CONTENT_CHUNK_OVERLAP).toBe(50)
+  })
+
+  it('accepts similarity threshold override', () => {
+    const result = parseEnv({ ...VALID_ENV, CONTENT_SIMILARITY_THRESHOLD: '0.8' })
+    expect(result.CONTENT_SIMILARITY_THRESHOLD).toBe(0.8)
+  })
+
+  it('web recheck interval defaults to 10080 minutes (weekly)', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.CONTENT_RECHECK_WEB_MINUTES).toBe(10_080)
+  })
+
+  it('pdf recheck interval defaults to 43200 minutes (monthly)', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.CONTENT_RECHECK_PDF_MINUTES).toBe(43_200)
+  })
+
+  it('accepts per-source-type interval override', () => {
+    const result = parseEnv({ ...VALID_ENV, CONTENT_RECHECK_WEB_MINUTES: '5040' })
+    expect(result.CONTENT_RECHECK_WEB_MINUTES).toBe(5040)
+  })
+
+  it('embedding dimension defaults to 1536', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.AI_EMBEDDING_DIMENSION).toBe(1536)
+  })
+
+  it('AI provider defaults to openai', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.AI_PROVIDER).toBe('openai')
+  })
+})
+
 describe('worker env schema — observability group', () => {
   it('resolves LOG_LEVEL to info when omitted', () => {
     const result = parseEnv(VALID_ENV)
