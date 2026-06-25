@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common'
 import { ScheduleModule } from '@nestjs/schedule'
 import { DbModule } from '@readion/db'
 import { WorkerConfigModule } from './config/config.module'
+import { ContentPipelineModule } from './content-pipeline/content-pipeline.module'
 import { WorkerObservabilityModule } from './observability/observability.module'
 import { QueueModule } from './queue/queue.module'
 import { RedisModule } from './redis/redis.module'
 import { ScrapperModule } from './scrapper/scrapper.module'
+import { SemanticSearchModule } from './semantic-search/semantic-search.module'
 import { UsersModule } from './users/users.module'
 
 @Module({
@@ -18,6 +20,8 @@ import { UsersModule } from './users/users.module'
     ScheduleModule.forRoot(),
     ScrapperModule,
     UsersModule,
+    ContentPipelineModule,
+    SemanticSearchModule,
   ],
 })
 export class AppModule {}
