@@ -44,6 +44,9 @@ export {
   type AiProvider,
   aiEnvFragment,
   databaseUrlFragment,
+  GROUNDING_MAX_REGEN_ATTEMPTS_DEFAULT,
+  GROUNDING_VERBATIM_CAP_DEFAULT,
+  groundingEnvFragment,
   observabilityEnvFragment,
   redisUrlFragment,
   workerPrometheusFragment,
@@ -57,6 +60,15 @@ export type {
   RelationshipRef,
   SingleResourceEnvelope,
 } from './envelope'
+export type {
+  DistractorFinding,
+  ExtractiveItem,
+  FetchMoreMaterialSignal,
+  GroundingSignal,
+  Provenance,
+  SubstitutionSignal,
+  VerifierVerdict,
+} from './grounding'
 export type { PaginationQueryParams } from './pagination'
 export { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from './pagination'
 export type { ProblemDetails, ValidationErrorItem } from './problem-details'
