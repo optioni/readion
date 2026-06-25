@@ -77,7 +77,7 @@ describe('LlmModule acceptance', () => {
       difficulty: 'medium',
       format: 'mcq',
     })
-    await cacheService.set(key, { ...result, verified: true })
+    await cacheService.set(key, ['chunk-1', 'chunk-2'], { ...result, verified: true })
 
     // 3. Cache hit — no SDK call
     const cached = await cacheService.get(key)
@@ -113,7 +113,7 @@ describe('LlmModule acceptance', () => {
       verified: false,
     }
     // @ts-expect-error deliberate type violation to test runtime guard
-    await expect(cacheService.set(key, badInput)).rejects.toThrow()
+    await expect(cacheService.set(key, [], badInput)).rejects.toThrow()
 
     const result = await cacheService.get(key)
     expect(result).toBeNull()
