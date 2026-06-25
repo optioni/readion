@@ -5,11 +5,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export * from './healthControllerCheck200';
-export * from './healthControllerCheck200Details';
-export * from './healthControllerCheck200Error';
-export * from './healthControllerCheck200Info';
-export * from './healthControllerCheck503';
-export * from './healthControllerCheck503Details';
-export * from './healthControllerCheck503Error';
-export * from './healthControllerCheck503Info';
+export * from './healthControllerCheck200'
+export * from './healthControllerCheck200Details'
+export * from './healthControllerCheck200Error'
+export * from './healthControllerCheck200Info'
+export * from './healthControllerCheck503'
+export * from './healthControllerCheck503Details'
+export * from './healthControllerCheck503Error'
+export * from './healthControllerCheck503Info'

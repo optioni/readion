@@ -4,106 +4,87 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import {
-  useQuery
-} from '@tanstack/vue-query';
+
 import type {
   QueryFunction,
   QueryKey,
   UseQueryOptions,
-  UseQueryReturnType
-} from '@tanstack/vue-query';
+  UseQueryReturnType,
+} from '@tanstack/vue-query'
+import { useQuery } from '@tanstack/vue-query'
 
-import {
-  unref
-} from 'vue';
+import { unref } from 'vue'
 
-import { readionFetch } from '../../../app/api/mutator';
+import { readionFetch } from '../../../app/api/mutator'
 
-
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 
 export type metricsControllerIndexResponse200 = {
   data: void
   status: 200
 }
-    
-export type metricsControllerIndexResponseSuccess = (metricsControllerIndexResponse200) & {
-  headers: Headers;
-};
-;
 
-export type metricsControllerIndexResponse = (metricsControllerIndexResponseSuccess)
+export type metricsControllerIndexResponseSuccess = metricsControllerIndexResponse200 & {
+  headers: Headers
+}
+
+export type metricsControllerIndexResponse = metricsControllerIndexResponseSuccess
 
 export const getMetricsControllerIndexUrl = () => {
-
-
-  
-
   return `/metrics`
 }
 
-export const metricsControllerIndex = async ( options?: RequestInit): Promise<metricsControllerIndexResponse> => {
-  
-  return readionFetch<metricsControllerIndexResponse>(getMetricsControllerIndexUrl(),
-  {      
+export const metricsControllerIndex = async (
+  options?: RequestInit,
+): Promise<metricsControllerIndexResponse> => {
+  return readionFetch<metricsControllerIndexResponse>(getMetricsControllerIndexUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
-
-
+    method: 'GET',
+  })
+}
 
 export const getMetricsControllerIndexQueryKey = () => {
-    return [
-    'metrics'
-    ] as const;
-    }
-
-    
-export const getMetricsControllerIndexQueryOptions = <TData = Awaited<ReturnType<typeof metricsControllerIndex>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof metricsControllerIndex>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  getMetricsControllerIndexQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof metricsControllerIndex>>> = ({ signal }) => metricsControllerIndex({ signal, ...requestOptions });
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof metricsControllerIndex>>, TError, TData> 
+  return ['metrics'] as const
 }
 
-export type MetricsControllerIndexQueryResult = NonNullable<Awaited<ReturnType<typeof metricsControllerIndex>>>
+export const getMetricsControllerIndexQueryOptions = <
+  TData = Awaited<ReturnType<typeof metricsControllerIndex>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof metricsControllerIndex>>, TError, TData>
+  request?: SecondParameter<typeof readionFetch>
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = getMetricsControllerIndexQueryKey()
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof metricsControllerIndex>>> = ({ signal }) =>
+    metricsControllerIndex({ signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof metricsControllerIndex>>,
+    TError,
+    TData
+  >
+}
+
+export type MetricsControllerIndexQueryResult = NonNullable<
+  Awaited<ReturnType<typeof metricsControllerIndex>>
+>
 export type MetricsControllerIndexQueryError = unknown
 
-
-
-export function useMetricsControllerIndex<TData = Awaited<ReturnType<typeof metricsControllerIndex>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof metricsControllerIndex>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
-  
- ): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
-
+export function useMetricsControllerIndex<
+  TData = Awaited<ReturnType<typeof metricsControllerIndex>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof metricsControllerIndex>>, TError, TData>
+  request?: SecondParameter<typeof readionFetch>
+}): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getMetricsControllerIndexQueryOptions(options)
 
-  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey }
 
-  query.queryKey = unref(queryOptions).queryKey as QueryKey;
+  query.queryKey = unref(queryOptions).queryKey as QueryKey
 
-  return query;
+  return query
 }
-
-
-
-

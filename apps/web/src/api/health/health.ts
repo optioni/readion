@@ -4,31 +4,20 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import {
-  useQuery
-} from '@tanstack/vue-query';
+
 import type {
   QueryFunction,
   QueryKey,
   UseQueryOptions,
-  UseQueryReturnType
-} from '@tanstack/vue-query';
+  UseQueryReturnType,
+} from '@tanstack/vue-query'
+import { useQuery } from '@tanstack/vue-query'
 
-import {
-  unref
-} from 'vue';
+import { unref } from 'vue'
+import { readionFetch } from '../../../app/api/mutator'
+import type { HealthControllerCheck200, HealthControllerCheck503 } from '.././model'
 
-import type {
-  HealthControllerCheck200,
-  HealthControllerCheck503
-} from '.././model';
-
-import { readionFetch } from '../../../app/api/mutator';
-
-
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 
 export type healthControllerCheckResponse200 = {
   data: HealthControllerCheck200
@@ -39,83 +28,73 @@ export type healthControllerCheckResponse503 = {
   data: HealthControllerCheck503
   status: 503
 }
-    
-export type healthControllerCheckResponseSuccess = (healthControllerCheckResponse200) & {
-  headers: Headers;
-};
-export type healthControllerCheckResponseError = (healthControllerCheckResponse503) & {
-  headers: Headers;
-};
 
-export type healthControllerCheckResponse = (healthControllerCheckResponseSuccess | healthControllerCheckResponseError)
+export type healthControllerCheckResponseSuccess = healthControllerCheckResponse200 & {
+  headers: Headers
+}
+export type healthControllerCheckResponseError = healthControllerCheckResponse503 & {
+  headers: Headers
+}
+
+export type healthControllerCheckResponse =
+  | healthControllerCheckResponseSuccess
+  | healthControllerCheckResponseError
 
 export const getHealthControllerCheckUrl = () => {
-
-
-  
-
   return `/health`
 }
 
-export const healthControllerCheck = async ( options?: RequestInit): Promise<healthControllerCheckResponse> => {
-  
-  return readionFetch<healthControllerCheckResponse>(getHealthControllerCheckUrl(),
-  {      
+export const healthControllerCheck = async (
+  options?: RequestInit,
+): Promise<healthControllerCheckResponse> => {
+  return readionFetch<healthControllerCheckResponse>(getHealthControllerCheckUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
-
-
+    method: 'GET',
+  })
+}
 
 export const getHealthControllerCheckQueryKey = () => {
-    return [
-    'health'
-    ] as const;
-    }
-
-    
-export const getHealthControllerCheckQueryOptions = <TData = Awaited<ReturnType<typeof healthControllerCheck>>, TError = HealthControllerCheck503>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthControllerCheck>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  getHealthControllerCheckQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof healthControllerCheck>>> = ({ signal }) => healthControllerCheck({ signal, ...requestOptions });
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof healthControllerCheck>>, TError, TData> 
+  return ['health'] as const
 }
 
-export type HealthControllerCheckQueryResult = NonNullable<Awaited<ReturnType<typeof healthControllerCheck>>>
+export const getHealthControllerCheckQueryOptions = <
+  TData = Awaited<ReturnType<typeof healthControllerCheck>>,
+  TError = HealthControllerCheck503,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof healthControllerCheck>>, TError, TData>
+  request?: SecondParameter<typeof readionFetch>
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = getHealthControllerCheckQueryKey()
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof healthControllerCheck>>> = ({ signal }) =>
+    healthControllerCheck({ signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof healthControllerCheck>>,
+    TError,
+    TData
+  >
+}
+
+export type HealthControllerCheckQueryResult = NonNullable<
+  Awaited<ReturnType<typeof healthControllerCheck>>
+>
 export type HealthControllerCheckQueryError = HealthControllerCheck503
 
-
-
-export function useHealthControllerCheck<TData = Awaited<ReturnType<typeof healthControllerCheck>>, TError = HealthControllerCheck503>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthControllerCheck>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
-  
- ): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
-
+export function useHealthControllerCheck<
+  TData = Awaited<ReturnType<typeof healthControllerCheck>>,
+  TError = HealthControllerCheck503,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof healthControllerCheck>>, TError, TData>
+  request?: SecondParameter<typeof readionFetch>
+}): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthControllerCheckQueryOptions(options)
 
-  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey };
+  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey }
 
-  query.queryKey = unref(queryOptions).queryKey as QueryKey;
+  query.queryKey = unref(queryOptions).queryKey as QueryKey
 
-  return query;
+  return query
 }
-
-
-
-
