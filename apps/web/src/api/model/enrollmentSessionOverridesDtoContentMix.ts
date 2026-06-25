@@ -8,4 +8,4 @@
 /**
  * @nullable
  */
-export type EnrollmentSessionOverridesDtoContentMix = { [key: string]: unknown } | null
+export type EnrollmentSessionOverridesDtoContentMix = { [key: string]: unknown } | null;

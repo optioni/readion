@@ -4,8 +4,8 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { CoverageReportDto } from './coverageReportDto'
+import type { CoverageReportDto } from './coverageReportDto';
 
 export interface CoverageReportResponseDto {
-  data: CoverageReportDto
+  data: CoverageReportDto;
 }

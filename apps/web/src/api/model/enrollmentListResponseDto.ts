@@ -4,11 +4,10 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
-import type { EnrollmentListMetaDto } from './enrollmentListMetaDto'
-import type { EnrollmentResponseDto } from './enrollmentResponseDto'
+import type { EnrollmentResponseDto } from './enrollmentResponseDto';
+import type { EnrollmentListMetaDto } from './enrollmentListMetaDto';
 
 export interface EnrollmentListResponseDto {
-  data: EnrollmentResponseDto[]
-  meta: EnrollmentListMetaDto
+  data: EnrollmentResponseDto[];
+  meta: EnrollmentListMetaDto;
 }

@@ -4,7 +4,10 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
+import {
+  useMutation,
+  useQuery
+} from '@tanstack/vue-query';
 import type {
   MutationFunction,
   QueryFunction,
@@ -12,247 +15,252 @@ import type {
   UseMutationOptions,
   UseMutationReturnType,
   UseQueryOptions,
-  UseQueryReturnType,
-} from '@tanstack/vue-query'
-import { useMutation, useQuery } from '@tanstack/vue-query'
+  UseQueryReturnType
+} from '@tanstack/vue-query';
 
-import { unref } from 'vue'
+import {
+  unref
+} from 'vue';
 
-import { readionFetch } from '../../../app/api/mutator'
+import { readionFetch } from '../../../app/api/mutator';
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
 
 export type usersControllerGetMeResponse200 = {
   data: void
   status: 200
 }
+    
+export type usersControllerGetMeResponseSuccess = (usersControllerGetMeResponse200) & {
+  headers: Headers;
+};
+;
 
-export type usersControllerGetMeResponseSuccess = usersControllerGetMeResponse200 & {
-  headers: Headers
-}
-
-export type usersControllerGetMeResponse = usersControllerGetMeResponseSuccess
+export type usersControllerGetMeResponse = (usersControllerGetMeResponseSuccess)
 
 export const getUsersControllerGetMeUrl = () => {
+
+
+  
+
   return `/api/v1/users/me`
 }
 
-export const usersControllerGetMe = async (
-  options?: RequestInit,
-): Promise<usersControllerGetMeResponse> => {
-  return readionFetch<usersControllerGetMeResponse>(getUsersControllerGetMeUrl(), {
+export const usersControllerGetMe = async ( options?: RequestInit): Promise<usersControllerGetMeResponse> => {
+  
+  return readionFetch<usersControllerGetMeResponse>(getUsersControllerGetMeUrl(),
+  {      
     ...options,
-    method: 'GET',
-  })
-}
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
 
 export const getUsersControllerGetMeQueryKey = () => {
-  return ['api', 'v1', 'users', 'me'] as const
+    return [
+    'api','v1','users','me'
+    ] as const;
+    }
+
+    
+export const getUsersControllerGetMeQueryOptions = <TData = Awaited<ReturnType<typeof usersControllerGetMe>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetMe>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  getUsersControllerGetMeQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetMe>>> = ({ signal }) => usersControllerGetMe({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetMe>>, TError, TData> 
 }
 
-export const getUsersControllerGetMeQueryOptions = <
-  TData = Awaited<ReturnType<typeof usersControllerGetMe>>,
-  TError = unknown,
->(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetMe>>, TError, TData>
-  request?: SecondParameter<typeof readionFetch>
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {}
-
-  const queryKey = getUsersControllerGetMeQueryKey()
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetMe>>> = ({ signal }) =>
-    usersControllerGetMe({ signal, ...requestOptions })
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof usersControllerGetMe>>,
-    TError,
-    TData
-  >
-}
-
-export type UsersControllerGetMeQueryResult = NonNullable<
-  Awaited<ReturnType<typeof usersControllerGetMe>>
->
+export type UsersControllerGetMeQueryResult = NonNullable<Awaited<ReturnType<typeof usersControllerGetMe>>>
 export type UsersControllerGetMeQueryError = unknown
 
-export function useUsersControllerGetMe<
-  TData = Awaited<ReturnType<typeof usersControllerGetMe>>,
-  TError = unknown,
->(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetMe>>, TError, TData>
-  request?: SecondParameter<typeof readionFetch>
-}): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+
+
+export function useUsersControllerGetMe<TData = Awaited<ReturnType<typeof usersControllerGetMe>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof usersControllerGetMe>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
+  
+ ): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+
   const queryOptions = getUsersControllerGetMeQueryOptions(options)
 
-  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey }
+  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey };
 
-  query.queryKey = unref(queryOptions).queryKey as QueryKey
+  query.queryKey = unref(queryOptions).queryKey as QueryKey;
 
-  return query
+  return query;
 }
+
+
+
 
 export type usersControllerUpdateMeResponse200 = {
   data: void
   status: 200
 }
+    
+export type usersControllerUpdateMeResponseSuccess = (usersControllerUpdateMeResponse200) & {
+  headers: Headers;
+};
+;
 
-export type usersControllerUpdateMeResponseSuccess = usersControllerUpdateMeResponse200 & {
-  headers: Headers
-}
-
-export type usersControllerUpdateMeResponse = usersControllerUpdateMeResponseSuccess
+export type usersControllerUpdateMeResponse = (usersControllerUpdateMeResponseSuccess)
 
 export const getUsersControllerUpdateMeUrl = () => {
+
+
+  
+
   return `/api/v1/users/me`
 }
 
-export const usersControllerUpdateMe = async (
-  options?: RequestInit,
-): Promise<usersControllerUpdateMeResponse> => {
-  return readionFetch<usersControllerUpdateMeResponse>(getUsersControllerUpdateMeUrl(), {
+export const usersControllerUpdateMe = async ( options?: RequestInit): Promise<usersControllerUpdateMeResponse> => {
+  
+  return readionFetch<usersControllerUpdateMeResponse>(getUsersControllerUpdateMeUrl(),
+  {      
     ...options,
-    method: 'PATCH',
-  })
-}
-
-export const getUsersControllerUpdateMeMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof usersControllerUpdateMe>>,
-    TError,
-    void,
-    TContext
-  >
-  request?: SecondParameter<typeof readionFetch>
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof usersControllerUpdateMe>>,
-  TError,
-  void,
-  TContext
-> => {
-  const mutationKey = ['usersControllerUpdateMe']
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined }
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof usersControllerUpdateMe>>,
-    void
-  > = () => {
-    return usersControllerUpdateMe(requestOptions)
+    method: 'PATCH'
+    
+    
   }
+);}
 
-  return { mutationFn, ...mutationOptions }
-}
 
-export type UsersControllerUpdateMeMutationResult = NonNullable<
-  Awaited<ReturnType<typeof usersControllerUpdateMe>>
->
 
-export type UsersControllerUpdateMeMutationError = unknown
 
-export const useUsersControllerUpdateMe = <TError = unknown, TContext = unknown>(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof usersControllerUpdateMe>>,
-    TError,
-    void,
-    TContext
-  >
-  request?: SecondParameter<typeof readionFetch>
-}): UseMutationReturnType<
-  Awaited<ReturnType<typeof usersControllerUpdateMe>>,
-  TError,
-  void,
-  TContext
-> => {
-  const mutationOptions = getUsersControllerUpdateMeMutationOptions(options)
+export const getUsersControllerUpdateMeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMe>>, TError,void, TContext>, request?: SecondParameter<typeof readionFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMe>>, TError,void, TContext> => {
 
-  return useMutation(mutationOptions)
-}
-export type usersControllerDeleteMeResponse204 = {
+const mutationKey = ['usersControllerUpdateMe'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerUpdateMe>>, void> = () => {
+          
+
+          return  usersControllerUpdateMe(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersControllerUpdateMeMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerUpdateMe>>>
+    
+    export type UsersControllerUpdateMeMutationError = unknown
+
+    export const useUsersControllerUpdateMe = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerUpdateMe>>, TError,void, TContext>, request?: SecondParameter<typeof readionFetch>}
+ ): UseMutationReturnType<
+        Awaited<ReturnType<typeof usersControllerUpdateMe>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getUsersControllerUpdateMeMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    export type usersControllerDeleteMeResponse204 = {
   data: void
   status: 204
 }
+    
+export type usersControllerDeleteMeResponseSuccess = (usersControllerDeleteMeResponse204) & {
+  headers: Headers;
+};
+;
 
-export type usersControllerDeleteMeResponseSuccess = usersControllerDeleteMeResponse204 & {
-  headers: Headers
-}
-
-export type usersControllerDeleteMeResponse = usersControllerDeleteMeResponseSuccess
+export type usersControllerDeleteMeResponse = (usersControllerDeleteMeResponseSuccess)
 
 export const getUsersControllerDeleteMeUrl = () => {
+
+
+  
+
   return `/api/v1/users/me`
 }
 
-export const usersControllerDeleteMe = async (
-  options?: RequestInit,
-): Promise<usersControllerDeleteMeResponse> => {
-  return readionFetch<usersControllerDeleteMeResponse>(getUsersControllerDeleteMeUrl(), {
+export const usersControllerDeleteMe = async ( options?: RequestInit): Promise<usersControllerDeleteMeResponse> => {
+  
+  return readionFetch<usersControllerDeleteMeResponse>(getUsersControllerDeleteMeUrl(),
+  {      
     ...options,
-    method: 'DELETE',
-  })
-}
-
-export const getUsersControllerDeleteMeMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof usersControllerDeleteMe>>,
-    TError,
-    void,
-    TContext
-  >
-  request?: SecondParameter<typeof readionFetch>
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof usersControllerDeleteMe>>,
-  TError,
-  void,
-  TContext
-> => {
-  const mutationKey = ['usersControllerDeleteMe']
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined }
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof usersControllerDeleteMe>>,
-    void
-  > = () => {
-    return usersControllerDeleteMe(requestOptions)
+    method: 'DELETE'
+    
+    
   }
+);}
 
-  return { mutationFn, ...mutationOptions }
-}
 
-export type UsersControllerDeleteMeMutationResult = NonNullable<
-  Awaited<ReturnType<typeof usersControllerDeleteMe>>
->
 
-export type UsersControllerDeleteMeMutationError = unknown
 
-export const useUsersControllerDeleteMe = <TError = unknown, TContext = unknown>(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof usersControllerDeleteMe>>,
-    TError,
-    void,
-    TContext
-  >
-  request?: SecondParameter<typeof readionFetch>
-}): UseMutationReturnType<
-  Awaited<ReturnType<typeof usersControllerDeleteMe>>,
-  TError,
-  void,
-  TContext
-> => {
-  const mutationOptions = getUsersControllerDeleteMeMutationOptions(options)
+export const getUsersControllerDeleteMeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerDeleteMe>>, TError,void, TContext>, request?: SecondParameter<typeof readionFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerDeleteMe>>, TError,void, TContext> => {
 
-  return useMutation(mutationOptions)
-}
+const mutationKey = ['usersControllerDeleteMe'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerDeleteMe>>, void> = () => {
+          
+
+          return  usersControllerDeleteMe(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersControllerDeleteMeMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerDeleteMe>>>
+    
+    export type UsersControllerDeleteMeMutationError = unknown
+
+    export const useUsersControllerDeleteMe = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerDeleteMe>>, TError,void, TContext>, request?: SecondParameter<typeof readionFetch>}
+ ): UseMutationReturnType<
+        Awaited<ReturnType<typeof usersControllerDeleteMe>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getUsersControllerDeleteMeMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    

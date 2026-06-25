@@ -4,8 +4,8 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { UserCertificationsControllerListStatus } from './userCertificationsControllerListStatus'
+import type { UserCertificationsControllerListStatus } from './userCertificationsControllerListStatus';
 
 export type UserCertificationsControllerListParams = {
-  status?: UserCertificationsControllerListStatus
-}
+status?: UserCertificationsControllerListStatus;
+};

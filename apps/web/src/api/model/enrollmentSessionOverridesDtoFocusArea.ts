@@ -8,4 +8,4 @@
 /**
  * @nullable
  */
-export type EnrollmentSessionOverridesDtoFocusArea = { [key: string]: unknown } | null
+export type EnrollmentSessionOverridesDtoFocusArea = { [key: string]: unknown } | null;

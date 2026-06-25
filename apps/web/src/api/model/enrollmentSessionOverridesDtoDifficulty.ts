@@ -8,4 +8,4 @@
 /**
  * @nullable
  */
-export type EnrollmentSessionOverridesDtoDifficulty = { [key: string]: unknown } | null
+export type EnrollmentSessionOverridesDtoDifficulty = { [key: string]: unknown } | null;

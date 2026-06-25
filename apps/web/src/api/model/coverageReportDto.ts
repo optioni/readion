@@ -4,14 +4,13 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
-import type { CoverageReportDtoState } from './coverageReportDtoState'
-import type { DomainCoverageDto } from './domainCoverageDto'
+import type { DomainCoverageDto } from './domainCoverageDto';
+import type { CoverageReportDtoState } from './coverageReportDtoState';
 
 export interface CoverageReportDto {
-  domains: DomainCoverageDto[]
-  totalChunks: number
-  totalThreshold: number
-  state: CoverageReportDtoState
-  met: boolean
+  domains: DomainCoverageDto[];
+  totalChunks: number;
+  totalThreshold: number;
+  state: CoverageReportDtoState;
+  met: boolean;
 }

@@ -5,11 +5,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type EnrollmentResponseDtoStatus =
-  (typeof EnrollmentResponseDtoStatus)[keyof typeof EnrollmentResponseDtoStatus]
+export type EnrollmentResponseDtoStatus = typeof EnrollmentResponseDtoStatus[keyof typeof EnrollmentResponseDtoStatus];
+
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const EnrollmentResponseDtoStatus = {
   active: 'active',
   archived: 'archived',
-} as const
+} as const;

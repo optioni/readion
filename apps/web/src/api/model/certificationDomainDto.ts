@@ -6,6 +6,6 @@
  */
 
 export interface CertificationDomainDto {
-  name: string
-  weight: number
+  name: string;
+  weight: number;
 }

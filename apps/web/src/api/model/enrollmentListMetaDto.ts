@@ -6,7 +6,7 @@
  */
 
 export interface EnrollmentListMetaDto {
-  total: number
-  page: number
-  limit: number
+  total: number;
+  page: number;
+  limit: number;
 }

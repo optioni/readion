@@ -8,9 +8,7 @@
 /**
  * @nullable
  */
-export type HealthControllerCheck200Error = {
-  [key: string]: {
-    status: string
-    [key: string]: unknown
-  }
-} | null
+export type HealthControllerCheck200Error = {[key: string]: {
+  status: string;
+  [key: string]: unknown;
+ }} | null;
