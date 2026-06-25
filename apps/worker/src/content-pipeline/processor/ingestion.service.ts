@@ -7,6 +7,7 @@ import { chunkText } from '../chunker/chunker'
 import type { DomainTaggerService } from '../domain-tagger/domain-tagger.service'
 import type { EmbedderService } from '../embedder/embedder.service'
 import type { IngestionMetricService } from '../metrics/ingestion-metric.service'
+import { ChunkReconciliationService } from '../reconciliation/chunk-reconciliation.service'
 import { ContentChunkRepository } from '../repository/content-chunk.repository'
 import { ContentSourceRepository } from '../repository/content-source.repository'
 import type { StrategyRegistry } from '../strategies/strategy.registry'
@@ -23,6 +24,7 @@ export class IngestionService {
     private readonly sourceRepo: ContentSourceRepository,
     private readonly config: ConfigService<WorkerEnvConfig>,
     @Inject('IngestionMetricService') private readonly metrics: IngestionMetricService,
+    private readonly reconciliation: ChunkReconciliationService,
   ) {}
 
   async ingest(sourceId: string, domains: string[]): Promise<void> {
@@ -45,6 +47,8 @@ export class IngestionService {
       return
     }
 
+    const allFetchedHashes: string[] = []
+
     for (const item of fetchedItems) {
       const chunks = chunkText(item.text, { chunkSize, overlap: chunkOverlap })
 
@@ -64,7 +68,10 @@ export class IngestionService {
 
       await this.chunkRepo.upsertMany(inputs)
       this.metrics.increment(source.type as ContentSourceType, inputs.length)
+      allFetchedHashes.push(...inputs.map((inp) => inp.contentHash))
     }
+
+    await this.reconciliation.reconcile(sourceId, allFetchedHashes)
 
     await this.sourceRepo.updateLastFetchedAt(sourceId, new Date())
     this.logger.log(`Source ${sourceId} ingested successfully`)

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { LlmModule } from '../llm/llm.module'
 import { StaleSourceCron } from './cron/stale-source.cron'
+import { SupersededChunkCleanupCron } from './cron/superseded-chunk-cleanup.cron'
 import { DomainTaggerService } from './domain-tagger/domain-tagger.service'
 import { EmbedderService } from './embedder/embedder.service'
 import { IngestionMetricService } from './metrics/ingestion-metric.service'
@@ -8,6 +9,7 @@ import { IngestionService } from './processor/ingestion.service'
 import { INGESTION_PROCESSORS } from './processor/typed-ingestion-processors'
 import { ContentQueuesModule } from './queues/content-queues.module'
 import { ContentQueuesService } from './queues/content-queues.service'
+import { ChunkReconciliationService } from './reconciliation/chunk-reconciliation.service'
 import { ContentChunkRepository } from './repository/content-chunk.repository'
 import { ContentSourceRepository } from './repository/content-source.repository'
 import { AnkiFetchStrategy } from './strategies/anki.strategy'
@@ -19,6 +21,7 @@ import { RedditFetchStrategy } from './strategies/reddit.strategy'
 import { StrategyRegistry } from './strategies/strategy.registry'
 import { WebFetchStrategy } from './strategies/web.strategy'
 import { YouTubeFetchStrategy } from './strategies/youtube.strategy'
+import { ChunkSupersessionService } from './supersession/chunk-supersession.service'
 
 @Module({
   imports: [LlmModule, ContentQueuesModule],
@@ -39,6 +42,9 @@ import { YouTubeFetchStrategy } from './strategies/youtube.strategy'
     IngestionMetricService,
     ContentQueuesService,
     StaleSourceCron,
+    ChunkSupersessionService,
+    ChunkReconciliationService,
+    SupersededChunkCleanupCron,
     ...INGESTION_PROCESSORS,
     {
       provide: 'StrategyRegistry',
@@ -62,6 +68,9 @@ import { YouTubeFetchStrategy } from './strategies/youtube.strategy'
     ContentChunkRepository,
     ContentSourceRepository,
     ContentQueuesService,
+    ChunkSupersessionService,
+    ChunkReconciliationService,
+    SupersededChunkCleanupCron,
     IngestionService,
   ],
 })

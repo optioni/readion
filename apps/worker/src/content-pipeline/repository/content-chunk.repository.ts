@@ -46,6 +46,9 @@ export class ContentChunkRepository {
         domain_tags = EXCLUDED.domain_tags,
         primary_domain = EXCLUDED.primary_domain,
         metadata = EXCLUDED.metadata,
+        state = 'active',
+        superseded_by_id = NULL,
+        superseded_at = NULL,
         updated_at = NOW()
       `,
       [
@@ -115,6 +118,7 @@ export class ContentChunkRepository {
       FROM content_chunks cc
       JOIN content_sources cs ON cs.id = cc.content_source_id
       WHERE cc.certification_id = ?
+        AND cc.state = 'active'
         AND 1 - (cc.embedding <=> ?::vector) >= ?
         ${domainFilter}
       ORDER BY cc.embedding <=> ?::vector

@@ -4,6 +4,7 @@ import { SOURCE_RECHECK_INTERVALS } from '@readion/shared'
 import type { StartedTestContainer } from 'testcontainers'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WorkerConfigModule } from '../../config/config.module'
+import { ChunkReconciliationService } from '../reconciliation/chunk-reconciliation.service'
 import { ContentChunkRepository } from '../repository/content-chunk.repository'
 import { ContentSourceRepository } from '../repository/content-source.repository'
 import { IngestionService } from './ingestion.service'
@@ -38,6 +39,9 @@ describe('IngestionService (integration)', () => {
   const mockMetrics = {
     increment: vi.fn(),
   }
+  const mockReconciliation = {
+    reconcile: vi.fn().mockResolvedValue(undefined),
+  }
 
   beforeAll(async () => {
     const [dbHarness, redis] = await Promise.all([createDbHarness(), startRedisContainer()])
@@ -55,6 +59,7 @@ describe('IngestionService (integration)', () => {
         { provide: 'DomainTaggerService', useValue: mockDomainTagger },
         { provide: 'EmbedderService', useValue: mockEmbedder },
         { provide: 'IngestionMetricService', useValue: mockMetrics },
+        { provide: ChunkReconciliationService, useValue: mockReconciliation },
       ],
     }).compile()
     await moduleRef.init()
