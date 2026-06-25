@@ -266,7 +266,11 @@ describe('UserCertificationsService', () => {
 
       const enrollment = await service.enroll(user.id, cert.id)
       const result = await service.updateOverrides(user.id, enrollment.id, {
-        sessionDefaults: { contentMix: 'quiz-heavy', difficulty: 'advanced', focusArea: 'weak-areas' },
+        sessionDefaults: {
+          contentMix: 'quiz-heavy',
+          difficulty: 'advanced',
+          focusArea: 'weak-areas',
+        },
       })
 
       expect(result.sessionDefaults.contentMix).toBe('quiz-heavy')
