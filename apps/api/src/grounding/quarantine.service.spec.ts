@@ -61,7 +61,7 @@ describe('QuarantineService (real Redis)', () => {
   })
 
   it('evicts the cached entry and produces an immutable quarantine record', async () => {
-    await cacheService.set(CACHE_KEY, VERIFIED_PAYLOAD)
+    await cacheService.set(CACHE_KEY, [], VERIFIED_PAYLOAD)
 
     const record = await quarantineService.quarantine(CACHE_KEY, PROVENANCE, 'user-report')
 
@@ -74,7 +74,7 @@ describe('QuarantineService (real Redis)', () => {
   })
 
   it('a read after quarantine is a miss', async () => {
-    await cacheService.set(CACHE_KEY, VERIFIED_PAYLOAD)
+    await cacheService.set(CACHE_KEY, [], VERIFIED_PAYLOAD)
     await quarantineService.quarantine(CACHE_KEY, PROVENANCE, 'auto-flag')
 
     const result = await cacheService.get(CACHE_KEY)
@@ -83,10 +83,10 @@ describe('QuarantineService (real Redis)', () => {
   })
 
   it('user-report and auto-flag go through the same operation producing equivalent records', async () => {
-    await cacheService.set(CACHE_KEY, VERIFIED_PAYLOAD)
+    await cacheService.set(CACHE_KEY, [], VERIFIED_PAYLOAD)
     const userRecord = await quarantineService.quarantine(CACHE_KEY, PROVENANCE, 'user-report')
 
-    await cacheService.set(CACHE_KEY, VERIFIED_PAYLOAD)
+    await cacheService.set(CACHE_KEY, [], VERIFIED_PAYLOAD)
     const autoRecord = await quarantineService.quarantine(CACHE_KEY, PROVENANCE, 'auto-flag')
 
     expect(userRecord.cacheKey).toBe(autoRecord.cacheKey)
@@ -97,7 +97,7 @@ describe('QuarantineService (real Redis)', () => {
   it('increments the quarantined-items metric labelled by certification', async () => {
     const counter = makeCounter()
     const svc = new QuarantineService(cacheService, counter)
-    await cacheService.set(CACHE_KEY, VERIFIED_PAYLOAD)
+    await cacheService.set(CACHE_KEY, [], VERIFIED_PAYLOAD)
 
     await svc.quarantine(CACHE_KEY, PROVENANCE, 'user-report', 'aws-saa')
 

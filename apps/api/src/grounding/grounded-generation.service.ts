@@ -87,11 +87,15 @@ export class GroundedGenerationService {
         score: verdict.score,
       }
 
-      await this.cache.set(options.cacheKey, {
-        text: JSON.stringify({ item, provenance }),
-        usage: { inputTokens: undefined, outputTokens: undefined, totalTokens: undefined },
-        verified: true,
-      })
+      await this.cache.set(
+        options.cacheKey,
+        chunks.map((c) => c.id),
+        {
+          text: JSON.stringify({ item, provenance }),
+          usage: { inputTokens: undefined, outputTokens: undefined, totalTokens: undefined },
+          verified: true,
+        },
+      )
 
       return { success: true, item, provenance, regenerations }
     }
