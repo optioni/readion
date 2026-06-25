@@ -10,6 +10,7 @@ import { HealthModule } from './health/health.module'
 import { LlmModule } from './llm/llm.module'
 import { MailModule } from './mail/mail.module'
 import { ApiObservabilityModule } from './observability/observability.module'
+import { QuizModule } from './quiz/quiz.module'
 import { RedisModule } from './redis/redis.module'
 import { ApiThrottlerModule } from './throttler/throttler.module'
 import { UserCertificationsModule } from './user-certifications/user-certifications.module'
@@ -29,6 +30,7 @@ import { UsersModule } from './users/users.module'
     UsersModule,
     CertificationsModule,
     UserCertificationsModule,
+    QuizModule,
   ],
   providers: [
     {
