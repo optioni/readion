@@ -1,8 +1,6 @@
 {
   "name": "public",
-  "namespaces": [
-    "public"
-  ],
+  "namespaces": ["public"],
   "tables": [
     {
       "name": "certifications",
@@ -175,10 +173,7 @@
           "default": "'draft'",
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "draft",
-            "live"
-          ],
+          "enumItems": ["draft", "live"],
           "mappedType": "enum"
         },
         "time_limit_minutes": {
@@ -235,9 +230,7 @@
       },
       "indexes": [
         {
-          "columnNames": [
-            "code"
-          ],
+          "columnNames": ["code"],
           "composite": false,
           "constraint": false,
           "keyName": "certifications_code_unique",
@@ -245,9 +238,7 @@
           "unique": true
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": true,
           "keyName": "certifications_pkey",
@@ -353,11 +344,7 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "balanced",
-            "reading-heavy",
-            "quiz-heavy"
-          ],
+          "enumItems": ["balanced", "reading-heavy", "quiz-heavy"],
           "mappedType": "enum"
         },
         "session_override_difficulty": {
@@ -374,12 +361,7 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "beginner",
-            "intermediate",
-            "advanced",
-            "adaptive"
-          ],
+          "enumItems": ["beginner", "intermediate", "advanced", "adaptive"],
           "mappedType": "enum"
         },
         "session_override_duration": {
@@ -413,12 +395,7 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "auto",
-            "weak-areas",
-            "new-material",
-            "review"
-          ],
+          "enumItems": ["auto", "weak-areas", "new-material", "review"],
           "mappedType": "enum"
         },
         "session_override_learning_style": {
@@ -435,11 +412,7 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "weak-area-focus",
-            "spaced-repetition",
-            "scenario-based"
-          ],
+          "enumItems": ["weak-area-focus", "spaced-repetition", "scenario-based"],
           "mappedType": "enum"
         },
         "status": {
@@ -456,10 +429,7 @@
           "default": "'active'",
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "active",
-            "archived"
-          ],
+          "enumItems": ["active", "archived"],
           "mappedType": "enum"
         },
         "updated_at": {
@@ -499,9 +469,7 @@
       },
       "indexes": [
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": true,
           "keyName": "user_certifications_pkey",
@@ -509,10 +477,7 @@
           "unique": true
         },
         {
-          "columnNames": [
-            "user_id",
-            "certification_id"
-          ],
+          "columnNames": ["user_id", "certification_id"],
           "composite": true,
           "constraint": false,
           "keyName": "user_certifications_user_certification_unique",
@@ -561,25 +526,17 @@
       "triggers": [],
       "foreignKeys": {
         "user_certifications_certification_id_fkey": {
-          "columnNames": [
-            "certification_id"
-          ],
+          "columnNames": ["certification_id"],
           "constraintName": "user_certifications_certification_id_fkey",
           "localTableName": "public.user_certifications",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "referencedTableName": "public.certifications"
         },
         "user_certifications_user_id_fkey": {
-          "columnNames": [
-            "user_id"
-          ],
+          "columnNames": ["user_id"],
           "constraintName": "user_certifications_user_id_fkey",
           "localTableName": "public.user_certifications",
-          "referencedColumnNames": [
-            "id"
-          ],
+          "referencedColumnNames": ["id"],
           "referencedTableName": "public.users",
           "deleteRule": "cascade"
         }
@@ -723,10 +680,7 @@
           "default": "'user'",
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "user",
-            "admin"
-          ],
+          "enumItems": ["user", "admin"],
           "mappedType": "enum"
         },
         "session_default_content_mix": {
@@ -743,11 +697,7 @@
           "default": "'balanced'",
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "balanced",
-            "reading-heavy",
-            "quiz-heavy"
-          ],
+          "enumItems": ["balanced", "reading-heavy", "quiz-heavy"],
           "mappedType": "enum"
         },
         "session_default_difficulty": {
@@ -764,12 +714,7 @@
           "default": "'intermediate'",
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "beginner",
-            "intermediate",
-            "advanced",
-            "adaptive"
-          ],
+          "enumItems": ["beginner", "intermediate", "advanced", "adaptive"],
           "mappedType": "enum"
         },
         "session_default_duration": {
@@ -803,12 +748,7 @@
           "default": "'auto'",
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "auto",
-            "weak-areas",
-            "new-material",
-            "review"
-          ],
+          "enumItems": ["auto", "weak-areas", "new-material", "review"],
           "mappedType": "enum"
         },
         "session_default_learning_style": {
@@ -825,11 +765,7 @@
           "default": "'weak-area-focus'",
           "comment": null,
           "collation": null,
-          "enumItems": [
-            "weak-area-focus",
-            "spaced-repetition",
-            "scenario-based"
-          ],
+          "enumItems": ["weak-area-focus", "spaced-repetition", "scenario-based"],
           "mappedType": "enum"
         },
         "updated_at": {
@@ -852,9 +788,7 @@
       },
       "indexes": [
         {
-          "columnNames": [
-            "lower(email)"
-          ],
+          "columnNames": ["lower(email)"],
           "composite": false,
           "constraint": false,
           "keyName": "users_email_lower_active_unique",
@@ -863,9 +797,7 @@
           "expression": "CREATE UNIQUE INDEX users_email_lower_active_unique ON public.users USING btree (lower(email)) WHERE (deleted_at IS NULL)"
         },
         {
-          "columnNames": [
-            "id"
-          ],
+          "columnNames": ["id"],
           "composite": false,
           "constraint": true,
           "keyName": "users_pkey",
