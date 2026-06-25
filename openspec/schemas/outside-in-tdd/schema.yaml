@@ -427,9 +427,93 @@ artifacts:
     requires:
       - specs
       - design
+  - id: planning-review
+    generates: planning-review.md
+    description: Pre-implementation planning review — finds and fixes gaps across proposal, specs, design, and tasks
+    template: planning-review.md
+    instruction: >
+      You are a senior engineer reviewing the complete planning package before
+      implementation starts.
+
+
+      Read proposal.md, every specs/**/spec.md file, design.md, and tasks.md.
+      Review them as one contract. Your job is to find gaps, fix the owning
+      artifact, and leave planning-review.md as the repair log.
+
+
+      Gap review checklist:
+
+      - **Capability coverage**: every capability named in proposal.md has a
+      matching spec file; every changed requirement appears in the correct
+      ADDED/MODIFIED/REMOVED/RENAMED section; no capability exists only in
+      tasks.md or design.md.
+
+      - **Scenario coverage**: every spec scenario is concrete enough to become
+      an acceptance test and has corresponding acceptance-test work in tasks.md.
+
+      - **Design completeness**: design.md resolves implementation-critical
+      choices before coding starts: module boundaries, data model or migration
+      shape, API contracts, external dependencies, error handling, security
+      constraints, async/job behavior, UI states, and rollback or migration
+      concerns when applicable.
+
+      - **Test boundaries**: design.md Test Boundaries lists each real or mocked
+      collaborator needed by the acceptance test and unit tests. No task should
+      invent a mock boundary that design.md does not name.
+
+      - **Task alignment**: tasks.md follows outside-in order and includes work
+      for every requirement, scenario, design decision, migration, generated
+      client update, visual-design reconciliation, verification step, and
+      durable documentation update that the planning artifacts require.
+
+      - **Contradictions and stale assumptions**: proposal, specs, design, and
+      tasks do not disagree about scope, endpoints, domain names, persistence
+      behavior, dependencies, UI copy/states, or verification expectations.
+
+
+      If you find a gap, fix the artifact that owns the source of truth before
+      finalizing this review:
+
+      - proposal.md owns motivation, scope, capabilities, and impact.
+
+      - specs/**/spec.md owns externally observable behavior and acceptance
+      scenarios.
+
+      - design.md owns technical decisions, test boundaries, risks, UI contract
+      reconciliation, and implementation-critical unknowns.
+
+      - tasks.md owns the ordered outside-in implementation and verification
+      checklist.
+
+
+      Then write planning-review.md with:
+
+      - **Reviewed Artifacts**: list what you reviewed.
+
+      - **Gaps Found and Fixed**: one row per gap with severity, source artifact,
+      problem, fix made, and artifact/section updated.
+
+      - **No Remaining Implementation-Blocking Gaps**: confirm none remain, or
+      stop and ask for clarification if a gap cannot be fixed from available
+      context.
+
+      - **Deferred Non-Blocking Notes**: optional. Only include if something is
+      intentionally deferred and tasks.md or design.md explains when it will be
+      resolved.
+
+
+      Do not use planning-review.md as a wishlist or separate design document.
+      It records the review and the fixes already made. Implementation must not
+      start until implementation-blocking planning gaps are fixed or explicitly
+      clarified by the user.
+    requires:
+      - proposal
+      - specs
+      - design
+      - tasks
 apply:
   requires:
-    - tasks
+    - planning-review
   tracks: tasks.md
   instruction: |
     You are implementing tasks in outside-in TDD order. Rules:
