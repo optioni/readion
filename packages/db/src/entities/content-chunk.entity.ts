@@ -1,5 +1,5 @@
 import { defineEntity, OptionalProps, p } from '@mikro-orm/core'
-import type { ChunkMetadata, DomainTag } from '@readion/shared'
+import type { ChunkMetadata, ChunkState, DomainTag } from '@readion/shared'
 import { EMBEDDING_DIMENSION } from '@readion/shared'
 import { v4 } from 'uuid'
 import { VectorType } from '../types/vector.type'
@@ -18,11 +18,14 @@ export const ContentChunkSchema = defineEntity({
     domainTags: p.json<DomainTag[]>(),
     primaryDomain: p.string(),
     metadata: p.json<ChunkMetadata>(),
+    state: p.string().default('active'),
+    supersededById: p.uuid().nullable(),
+    supersededAt: p.datetime().nullable(),
   },
 })
 
 export class ContentChunk extends ContentChunkSchema.class {
-  [OptionalProps]?: 'embedding' | 'metadata'
+  [OptionalProps]?: 'embedding' | 'metadata' | 'state' | 'supersededById' | 'supersededAt'
 
   override id: string = v4()
   override contentSourceId!: string
@@ -33,6 +36,9 @@ export class ContentChunk extends ContentChunkSchema.class {
   override domainTags!: DomainTag[]
   override primaryDomain!: string
   override metadata: ChunkMetadata = {}
+  override state: ChunkState = 'active'
+  override supersededById: string | null = null
+  override supersededAt: Date | null = null
 }
 
 ContentChunkSchema.setClass(ContentChunk)
