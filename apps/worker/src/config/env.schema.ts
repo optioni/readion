@@ -15,6 +15,7 @@ import {
 import { z } from 'zod'
 
 export const LIFECYCLE_DELETION_GRACE_DAYS_DEFAULT = 14
+export const SUPERSEDED_CHUNK_RETENTION_DAYS_DEFAULT = 30
 
 const AI_PROVIDERS = ['anthropic', 'openai'] as const
 
@@ -25,6 +26,9 @@ const envSchema = z.object({
   ...workerPrometheusFragment,
   SCRAPPER_URL: zodRequiredUrl(),
   LIFECYCLE_DELETION_GRACE_DAYS: zodCoerceNumber().default(LIFECYCLE_DELETION_GRACE_DAYS_DEFAULT),
+  SUPERSEDED_CHUNK_RETENTION_DAYS: zodCoerceNumber().default(
+    SUPERSEDED_CHUNK_RETENTION_DAYS_DEFAULT,
+  ),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
   // AI / LLM config

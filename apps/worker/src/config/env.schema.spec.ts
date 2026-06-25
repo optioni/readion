@@ -110,6 +110,24 @@ describe('worker env schema — content pipeline', () => {
   })
 })
 
+describe('worker env schema — chunk lifecycle', () => {
+  it('superseded chunk retention window defaults to 30 days when unset', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.SUPERSEDED_CHUNK_RETENTION_DAYS).toBe(30)
+  })
+
+  it('accepts a retention window override', () => {
+    const result = parseEnv({ ...VALID_ENV, SUPERSEDED_CHUNK_RETENTION_DAYS: '60' })
+    expect(result.SUPERSEDED_CHUNK_RETENTION_DAYS).toBe(60)
+  })
+
+  it('rejects a non-numeric retention window naming the field', () => {
+    expect(() =>
+      parseEnv({ ...VALID_ENV, SUPERSEDED_CHUNK_RETENTION_DAYS: 'not-a-number' }),
+    ).toThrow(/SUPERSEDED_CHUNK_RETENTION_DAYS/)
+  })
+})
+
 describe('worker env schema — observability group', () => {
   it('resolves LOG_LEVEL to info when omitted', () => {
     const result = parseEnv(VALID_ENV)
