@@ -15,6 +15,7 @@ export {
 } from './entities/user-certification.entity'
 export { default as mikroOrmConfig } from './mikro-orm.config'
 export { PluralUnderscoreNamingStrategy } from './naming-strategy'
+export { type CoverageStats, queryCoverageStats } from './queries/coverage-stats.query'
 export * from './test-helpers/containers'
 export { createDbHarness, type DbHarness } from './test-helpers/db-harness'
 export { buildHnswIndexDdl, VectorType } from './types/vector.type'
