@@ -37,6 +37,10 @@ process.env.AI_MODEL_MATERIAL_GENERATION =
 process.env.AI_MODEL_COMPLEX_REASONING =
   process.env.AI_MODEL_COMPLEX_REASONING ?? 'claude-sonnet-4-6'
 
+process.env.GROUNDING_MAX_REGEN_ATTEMPTS = process.env.GROUNDING_MAX_REGEN_ATTEMPTS ?? '3'
+process.env.GROUNDING_VERBATIM_CAP = process.env.GROUNDING_VERBATIM_CAP ?? '500'
+process.env.GROUNDING_SIMILARITY_THRESHOLD = process.env.GROUNDING_SIMILARITY_THRESHOLD ?? '0.75'
+
 // Clear prom-client registry after each test file to prevent duplicate-registration errors
 // across test app instances.
 afterAll(() => {

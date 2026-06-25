@@ -1,5 +1,10 @@
 export { AI_MAX_TOKENS_DEFAULTS, type AiProvider, aiEnvFragment } from './ai'
 export {
+  GROUNDING_MAX_REGEN_ATTEMPTS_DEFAULT,
+  GROUNDING_VERBATIM_CAP_DEFAULT,
+  groundingEnvFragment,
+} from './grounding'
+export {
   databaseUrlFragment,
   redisUrlFragment,
   zodCoerceBoolean,
