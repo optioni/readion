@@ -40,7 +40,6 @@ graph TD
   %% Phase 5 — Content pipeline
   content[content-pipeline]
   chunklc[chunk-lifecycle]
-  contentadmin[content-admin]
   golive[cert-go-live]
 
   %% Phase 6 — Study features
@@ -58,6 +57,7 @@ graph TD
 
   %% Phase 8 — Admin / cert setup
   admin[admin]
+  contentadmin[content-admin]
   certsetup[cert-setup-grounding]
 
   %% Phase 9 — Email lifecycle & analytics
@@ -237,7 +237,6 @@ graph TD
 |---|---|---|---|---|
 | `content-pipeline` | `ContentSource` + `ContentChunk` entities, per-source-type fetch strategies, scrapper integration, chunking, LLM domain tagging, embeddings, pgvector upsert/dedup, staleness cron, BullMQ per-source queues. | Content Pipeline (Source Types, Source Etiquette, Processing Pipeline, Scheduling); Content Architecture; Content Staleness; Core Entities (ContentSource, ContentChunk) | `content-ingestion`, `semantic-search` | `worker-foundation`, `certifications`, `llm-foundation` |
 | `chunk-lifecycle` | Reconciliation on re-ingestion (active/superseded/lineage), cache-eviction hooks, superseded-chunk cleanup cron, source removal/takedown path. | Chunk Lifecycle & Reconciliation | `chunk-lifecycle` | `content-pipeline` |
-| `content-admin` | `ContentModule` (admin): source register/manage, manual re-ingest trigger, ingestion job status. | ContentModule; Frontend → Admin (content source management) | `content-source-admin` | `content-pipeline`, `auth`, `admin` |
 | `cert-go-live` | Coverage-bar evaluation (≥20 chunks/domain, total ≥3× question count, ≥1 source/domain) recomputed on ingestion completion; **automatic `draft`→`live` flip** (no manual publish); per-domain coverage read model for the admin UI. Unblocks enrolling/testing the study loop against a live cert. | Certification Setup & Grounding → "Draft → live is automatic"; PRD §4 → Certification go-live criteria | `cert-go-live` | `content-pipeline`, `certifications` |
 
 ### Phase 6 — Study features
@@ -261,6 +260,7 @@ graph TD
 | Change | Scope | Spec refs | Capabilities | Depends on |
 |---|---|---|---|---|
 | `admin` | `AdminModule`: user list, promote/demote, `AuditLog` (append-only privileged-action logging). | AdminModule; Authentication & Authorisation → Roles; Core Entities (AuditLog) | `user-admin`, `audit-log` | `auth`, `users` |
+| `content-admin` | `ContentModule` (admin): source register/manage, manual re-ingest trigger, ingestion job status. | ContentModule; Frontend → Admin (content source management) | `content-source-admin` | `content-pipeline`, `auth`, `admin` |
 | `cert-setup-grounding` | Admin cert setup for **new/unlisted** certs: web-search source discovery, admin source confirm, grounded per-field extraction + citations, unverified flags, re-verification flow. (The coverage-bar auto draft→live lives in `cert-go-live`.) | Certification Setup & Grounding | `certification-setup` | `certifications`, `content-pipeline`, `llm-foundation`, `content-admin`, `admin` |
 
 ### Phase 9 — Email lifecycle & analytics
