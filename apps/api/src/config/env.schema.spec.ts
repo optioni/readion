@@ -296,3 +296,53 @@ describe('env schema — AI provider group', () => {
     expect('AI_EMBEDDING_DIMENSION' in parsed).toBe(false)
   })
 })
+
+describe('env schema — grounding group', () => {
+  it('resolves GROUNDING_MAX_REGEN_ATTEMPTS default of 3 when omitted', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.GROUNDING_MAX_REGEN_ATTEMPTS).toBe(3)
+  })
+
+  it('accepts a GROUNDING_MAX_REGEN_ATTEMPTS override', () => {
+    const result = parseEnv({ ...VALID_ENV, GROUNDING_MAX_REGEN_ATTEMPTS: '5' })
+    expect(result.GROUNDING_MAX_REGEN_ATTEMPTS).toBe(5)
+  })
+
+  it('throws when GROUNDING_MAX_REGEN_ATTEMPTS is non-numeric', () => {
+    expect(() => parseEnv({ ...VALID_ENV, GROUNDING_MAX_REGEN_ATTEMPTS: 'abc' })).toThrow(
+      /GROUNDING_MAX_REGEN_ATTEMPTS/,
+    )
+  })
+
+  it('resolves GROUNDING_VERBATIM_CAP default of 500 when omitted', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.GROUNDING_VERBATIM_CAP).toBe(500)
+  })
+
+  it('accepts a GROUNDING_VERBATIM_CAP override', () => {
+    const result = parseEnv({ ...VALID_ENV, GROUNDING_VERBATIM_CAP: '300' })
+    expect(result.GROUNDING_VERBATIM_CAP).toBe(300)
+  })
+
+  it('throws when GROUNDING_VERBATIM_CAP is non-numeric', () => {
+    expect(() => parseEnv({ ...VALID_ENV, GROUNDING_VERBATIM_CAP: 'not-a-number' })).toThrow(
+      /GROUNDING_VERBATIM_CAP/,
+    )
+  })
+
+  it('resolves GROUNDING_SIMILARITY_THRESHOLD default of 0.75 when omitted', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.GROUNDING_SIMILARITY_THRESHOLD).toBe(0.75)
+  })
+
+  it('accepts a GROUNDING_SIMILARITY_THRESHOLD override', () => {
+    const result = parseEnv({ ...VALID_ENV, GROUNDING_SIMILARITY_THRESHOLD: '0.8' })
+    expect(result.GROUNDING_SIMILARITY_THRESHOLD).toBe(0.8)
+  })
+
+  it('throws when GROUNDING_SIMILARITY_THRESHOLD is non-numeric', () => {
+    expect(() =>
+      parseEnv({ ...VALID_ENV, GROUNDING_SIMILARITY_THRESHOLD: 'not-a-number' }),
+    ).toThrow(/GROUNDING_SIMILARITY_THRESHOLD/)
+  })
+})
