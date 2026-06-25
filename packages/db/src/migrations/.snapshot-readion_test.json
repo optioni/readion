@@ -1,6 +1,8 @@
 {
   "name": "public",
-  "namespaces": ["public"],
+  "namespaces": [
+    "public"
+  ],
   "tables": [
     {
       "name": "certifications",
@@ -173,7 +175,10 @@
           "default": "'draft'",
           "comment": null,
           "collation": null,
-          "enumItems": ["draft", "live"],
+          "enumItems": [
+            "draft",
+            "live"
+          ],
           "mappedType": "enum"
         },
         "time_limit_minutes": {
@@ -230,7 +235,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["code"],
+          "columnNames": [
+            "code"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "certifications_code_unique",
@@ -238,7 +245,9 @@
           "unique": true
         },
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "certifications_pkey",
@@ -252,6 +261,441 @@
           "expression": "\"state\" in ('draft', 'live')",
           "definition": "check (\"state\" in ('draft', 'live'))",
           "columnName": "state"
+        }
+      ],
+      "triggers": [],
+      "foreignKeys": {},
+      "comment": null
+    },
+    {
+      "name": "content_chunks",
+      "schema": "public",
+      "columns": {
+        "certification_id": {
+          "name": "certification_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "content_hash": {
+          "name": "content_hash",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "content_source_id": {
+          "name": "content_source_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "domain_tags": {
+          "name": "domain_tags",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "embedding": {
+          "name": "embedding",
+          "type": "vector(1536)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "unknown"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'{}'",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "primary_domain": {
+          "name": "primary_domain",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "content_source_id",
+            "content_hash"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "content_chunks_content_source_hash_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "embedding"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "content_chunks_embedding_hnsw_idx",
+          "primary": false,
+          "unique": false,
+          "type": "hnsw"
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "content_chunks_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "triggers": [],
+      "foreignKeys": {
+        "content_chunks_content_source_id_fkey": {
+          "columnNames": [
+            "content_source_id"
+          ],
+          "constraintName": "content_chunks_content_source_id_fkey",
+          "localTableName": "public.content_chunks",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.content_sources",
+          "deleteRule": "cascade"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "content_sources",
+      "schema": "public",
+      "columns": {
+        "certification_id": {
+          "name": "certification_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "true",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "last_fetched_at": {
+          "name": "last_fetched_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "recheck_interval_minutes": {
+          "name": "recheck_interval_minutes",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "web",
+            "pdf",
+            "youtube",
+            "reddit",
+            "github",
+            "podcast",
+            "anki",
+            "quizlet"
+          ],
+          "mappedType": "enum"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "content_sources_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [
+        {
+          "name": "content_sources_type_check",
+          "expression": "\"type\" in ('web', 'pdf', 'youtube', 'reddit', 'github', 'podcast', 'anki', 'quizlet')",
+          "definition": "check (\"type\" in ('web', 'pdf', 'youtube', 'reddit', 'github', 'podcast', 'anki', 'quizlet'))",
+          "columnName": "type"
         }
       ],
       "triggers": [],
@@ -344,7 +788,11 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": ["balanced", "reading-heavy", "quiz-heavy"],
+          "enumItems": [
+            "balanced",
+            "reading-heavy",
+            "quiz-heavy"
+          ],
           "mappedType": "enum"
         },
         "session_override_difficulty": {
@@ -361,7 +809,12 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": ["beginner", "intermediate", "advanced", "adaptive"],
+          "enumItems": [
+            "beginner",
+            "intermediate",
+            "advanced",
+            "adaptive"
+          ],
           "mappedType": "enum"
         },
         "session_override_duration": {
@@ -395,7 +848,12 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": ["auto", "weak-areas", "new-material", "review"],
+          "enumItems": [
+            "auto",
+            "weak-areas",
+            "new-material",
+            "review"
+          ],
           "mappedType": "enum"
         },
         "session_override_learning_style": {
@@ -412,7 +870,11 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": ["weak-area-focus", "spaced-repetition", "scenario-based"],
+          "enumItems": [
+            "weak-area-focus",
+            "spaced-repetition",
+            "scenario-based"
+          ],
           "mappedType": "enum"
         },
         "status": {
@@ -429,7 +891,10 @@
           "default": "'active'",
           "comment": null,
           "collation": null,
-          "enumItems": ["active", "archived"],
+          "enumItems": [
+            "active",
+            "archived"
+          ],
           "mappedType": "enum"
         },
         "updated_at": {
@@ -469,7 +934,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "user_certifications_pkey",
@@ -477,7 +944,10 @@
           "unique": true
         },
         {
-          "columnNames": ["user_id", "certification_id"],
+          "columnNames": [
+            "user_id",
+            "certification_id"
+          ],
           "composite": true,
           "constraint": false,
           "keyName": "user_certifications_user_certification_unique",
@@ -526,17 +996,25 @@
       "triggers": [],
       "foreignKeys": {
         "user_certifications_certification_id_fkey": {
-          "columnNames": ["certification_id"],
+          "columnNames": [
+            "certification_id"
+          ],
           "constraintName": "user_certifications_certification_id_fkey",
           "localTableName": "public.user_certifications",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.certifications"
         },
         "user_certifications_user_id_fkey": {
-          "columnNames": ["user_id"],
+          "columnNames": [
+            "user_id"
+          ],
           "constraintName": "user_certifications_user_id_fkey",
           "localTableName": "public.user_certifications",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.users",
           "deleteRule": "cascade"
         }
@@ -680,7 +1158,10 @@
           "default": "'user'",
           "comment": null,
           "collation": null,
-          "enumItems": ["user", "admin"],
+          "enumItems": [
+            "user",
+            "admin"
+          ],
           "mappedType": "enum"
         },
         "session_default_content_mix": {
@@ -697,7 +1178,11 @@
           "default": "'balanced'",
           "comment": null,
           "collation": null,
-          "enumItems": ["balanced", "reading-heavy", "quiz-heavy"],
+          "enumItems": [
+            "balanced",
+            "reading-heavy",
+            "quiz-heavy"
+          ],
           "mappedType": "enum"
         },
         "session_default_difficulty": {
@@ -714,7 +1199,12 @@
           "default": "'intermediate'",
           "comment": null,
           "collation": null,
-          "enumItems": ["beginner", "intermediate", "advanced", "adaptive"],
+          "enumItems": [
+            "beginner",
+            "intermediate",
+            "advanced",
+            "adaptive"
+          ],
           "mappedType": "enum"
         },
         "session_default_duration": {
@@ -748,7 +1238,12 @@
           "default": "'auto'",
           "comment": null,
           "collation": null,
-          "enumItems": ["auto", "weak-areas", "new-material", "review"],
+          "enumItems": [
+            "auto",
+            "weak-areas",
+            "new-material",
+            "review"
+          ],
           "mappedType": "enum"
         },
         "session_default_learning_style": {
@@ -765,7 +1260,11 @@
           "default": "'weak-area-focus'",
           "comment": null,
           "collation": null,
-          "enumItems": ["weak-area-focus", "spaced-repetition", "scenario-based"],
+          "enumItems": [
+            "weak-area-focus",
+            "spaced-repetition",
+            "scenario-based"
+          ],
           "mappedType": "enum"
         },
         "updated_at": {
@@ -788,7 +1287,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["lower(email)"],
+          "columnNames": [
+            "lower(email)"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "users_email_lower_active_unique",
@@ -797,7 +1298,9 @@
           "expression": "CREATE UNIQUE INDEX users_email_lower_active_unique ON public.users USING btree (lower(email)) WHERE (deleted_at IS NULL)"
         },
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "users_pkey",

@@ -1,12 +1,20 @@
 import { join } from 'node:path'
 import { defineConfig } from '@mikro-orm/postgresql'
 import { CertificationSchema } from './entities/certification.entity'
+import { ContentChunkSchema } from './entities/content-chunk.entity'
+import { ContentSourceSchema } from './entities/content-source.entity'
 import { UserSchema } from './entities/user.entity'
 import { UserCertificationSchema } from './entities/user-certification.entity'
 import { PluralUnderscoreNamingStrategy } from './naming-strategy'
 
 export default defineConfig({
-  entities: [UserSchema, CertificationSchema, UserCertificationSchema],
+  entities: [
+    UserSchema,
+    CertificationSchema,
+    UserCertificationSchema,
+    ContentSourceSchema,
+    ContentChunkSchema,
+  ],
   discovery: { warnWhenNoEntities: false },
   dbName: process.env.DB_NAME ?? 'readion',
   host: process.env.DB_HOST ?? 'localhost',
