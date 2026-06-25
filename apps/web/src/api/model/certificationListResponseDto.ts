@@ -4,10 +4,11 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { CertificationResponseDto } from './certificationResponseDto';
-import type { CertificationListMetaDto } from './certificationListMetaDto';
+
+import type { CertificationListMetaDto } from './certificationListMetaDto'
+import type { CertificationResponseDto } from './certificationResponseDto'
 
 export interface CertificationListResponseDto {
-  data: CertificationResponseDto[];
-  meta: CertificationListMetaDto;
+  data: CertificationResponseDto[]
+  meta: CertificationListMetaDto
 }

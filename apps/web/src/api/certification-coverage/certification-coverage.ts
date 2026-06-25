@@ -4,34 +4,20 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import {
-  useQuery
-} from '@tanstack/vue-query';
+
 import type {
   QueryFunction,
   QueryKey,
   UseQueryOptions,
-  UseQueryReturnType
-} from '@tanstack/vue-query';
+  UseQueryReturnType,
+} from '@tanstack/vue-query'
+import { useQuery } from '@tanstack/vue-query'
+import type { MaybeRef } from 'vue'
+import { computed, unref } from 'vue'
+import { readionFetch } from '../../../app/api/mutator'
+import type { CoverageReportResponseDto } from '.././model'
 
-import {
-  computed,
-  unref
-} from 'vue';
-import type {
-  MaybeRef
-} from 'vue';
-
-import type {
-  CoverageReportResponseDto
-} from '.././model';
-
-import { readionFetch } from '../../../app/api/mutator';
-
-
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 
 export type certificationCoverageControllerCoverageResponse200 = {
   data: CoverageReportResponseDto
@@ -47,83 +33,102 @@ export type certificationCoverageControllerCoverageResponse404 = {
   data: void
   status: 404
 }
-    
-export type certificationCoverageControllerCoverageResponseSuccess = (certificationCoverageControllerCoverageResponse200) & {
-  headers: Headers;
-};
-export type certificationCoverageControllerCoverageResponseError = (certificationCoverageControllerCoverageResponse403 | certificationCoverageControllerCoverageResponse404) & {
-  headers: Headers;
-};
 
-export type certificationCoverageControllerCoverageResponse = (certificationCoverageControllerCoverageResponseSuccess | certificationCoverageControllerCoverageResponseError)
+export type certificationCoverageControllerCoverageResponseSuccess =
+  certificationCoverageControllerCoverageResponse200 & {
+    headers: Headers
+  }
+export type certificationCoverageControllerCoverageResponseError = (
+  | certificationCoverageControllerCoverageResponse403
+  | certificationCoverageControllerCoverageResponse404
+) & {
+  headers: Headers
+}
 
-export const getCertificationCoverageControllerCoverageUrl = (id: string,) => {
+export type certificationCoverageControllerCoverageResponse =
+  | certificationCoverageControllerCoverageResponseSuccess
+  | certificationCoverageControllerCoverageResponseError
 
-
-  
-
+export const getCertificationCoverageControllerCoverageUrl = (id: string) => {
   return `/api/v1/certifications/${id}/coverage`
 }
 
-export const certificationCoverageControllerCoverage = async (id: string, options?: RequestInit): Promise<certificationCoverageControllerCoverageResponse> => {
-  
-  return readionFetch<certificationCoverageControllerCoverageResponse>(getCertificationCoverageControllerCoverageUrl(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
-
-
-
-export const getCertificationCoverageControllerCoverageQueryKey = (id?: MaybeRef<string>,) => {
-    return [
-    'api','v1','certifications',id,'coverage'
-    ] as const;
-    }
-
-    
-export const getCertificationCoverageControllerCoverageQueryOptions = <TData = Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>, TError = void>(id: MaybeRef<string>, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  getCertificationCoverageControllerCoverageQueryKey(id);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>> = ({ signal }) => certificationCoverageControllerCoverage(unref(id), { signal, ...requestOptions });
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: computed(() => !!(unref(id))), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>, TError, TData> 
+export const certificationCoverageControllerCoverage = async (
+  id: string,
+  options?: RequestInit,
+): Promise<certificationCoverageControllerCoverageResponse> => {
+  return readionFetch<certificationCoverageControllerCoverageResponse>(
+    getCertificationCoverageControllerCoverageUrl(id),
+    {
+      ...options,
+      method: 'GET',
+    },
+  )
 }
 
-export type CertificationCoverageControllerCoverageQueryResult = NonNullable<Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>>
+export const getCertificationCoverageControllerCoverageQueryKey = (id?: MaybeRef<string>) => {
+  return ['api', 'v1', 'certifications', id, 'coverage'] as const
+}
+
+export const getCertificationCoverageControllerCoverageQueryOptions = <
+  TData = Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>,
+  TError = void,
+>(
+  id: MaybeRef<string>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = getCertificationCoverageControllerCoverageQueryKey(id)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>
+  > = ({ signal }) =>
+    certificationCoverageControllerCoverage(unref(id), { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: computed(() => !!unref(id)),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>,
+    TError,
+    TData
+  >
+}
+
+export type CertificationCoverageControllerCoverageQueryResult = NonNullable<
+  Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>
+>
 export type CertificationCoverageControllerCoverageQueryError = void
 
+export function useCertificationCoverageControllerCoverage<
+  TData = Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>,
+  TError = void,
+>(
+  id: MaybeRef<string>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getCertificationCoverageControllerCoverageQueryOptions(id, options)
 
+  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey }
 
-export function useCertificationCoverageControllerCoverage<TData = Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>, TError = void>(
- id: MaybeRef<string>, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof certificationCoverageControllerCoverage>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
-  
- ): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  query.queryKey = unref(queryOptions).queryKey as QueryKey
 
-  const queryOptions = getCertificationCoverageControllerCoverageQueryOptions(id,options)
-
-  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = unref(queryOptions).queryKey as QueryKey;
-
-  return query;
+  return query
 }
-
-
-
-

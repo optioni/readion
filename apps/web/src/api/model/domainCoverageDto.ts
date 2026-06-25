@@ -6,9 +6,9 @@
  */
 
 export interface DomainCoverageDto {
-  name: string;
-  chunkCount: number;
-  chunkThreshold: number;
-  enabledSourceCount: number;
-  met: boolean;
+  name: string
+  chunkCount: number
+  chunkThreshold: number
+  enabledSourceCount: number
+  met: boolean
 }

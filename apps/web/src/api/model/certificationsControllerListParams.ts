@@ -6,13 +6,13 @@
  */
 
 export type CertificationsControllerListParams = {
-/**
- * @minimum 1
- */
-page?: number;
-/**
- * Capped at 100 by the service
- * @minimum 1
- */
-limit?: number;
-};
+  /**
+   * @minimum 1
+   */
+  page?: number
+  /**
+   * Capped at 100 by the service
+   * @minimum 1
+   */
+  limit?: number
+}

@@ -5,7 +5,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type HealthControllerCheck503Details = {[key: string]: {
-  status: string;
-  [key: string]: unknown;
- }};
+export type HealthControllerCheck503Details = {
+  [key: string]: {
+    status: string
+    [key: string]: unknown
+  }
+}

@@ -4,17 +4,17 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { CertificationDomainDto } from './certificationDomainDto';
-import type { CertificationResponseDtoState } from './certificationResponseDtoState';
+import type { CertificationDomainDto } from './certificationDomainDto'
+import type { CertificationResponseDtoState } from './certificationResponseDtoState'
 
 export interface CertificationResponseDto {
-  id: string;
-  name: string;
-  provider: string;
-  code: string;
-  domains: CertificationDomainDto[];
-  questionCount: number;
-  passingScore: number;
-  timeLimitMinutes: number;
-  state: CertificationResponseDtoState;
+  id: string
+  name: string
+  provider: string
+  code: string
+  domains: CertificationDomainDto[]
+  questionCount: number
+  passingScore: number
+  timeLimitMinutes: number
+  state: CertificationResponseDtoState
 }

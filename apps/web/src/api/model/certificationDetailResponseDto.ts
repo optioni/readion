@@ -4,10 +4,11 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { CertificationResponseDto } from './certificationResponseDto';
-import type { CertificationDetailResponseDtoRelationships } from './certificationDetailResponseDtoRelationships';
+
+import type { CertificationDetailResponseDtoRelationships } from './certificationDetailResponseDtoRelationships'
+import type { CertificationResponseDto } from './certificationResponseDto'
 
 export interface CertificationDetailResponseDto {
-  data: CertificationResponseDto;
-  relationships: CertificationDetailResponseDtoRelationships;
+  data: CertificationResponseDto
+  relationships: CertificationDetailResponseDtoRelationships
 }

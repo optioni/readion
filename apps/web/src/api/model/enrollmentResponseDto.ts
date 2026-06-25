@@ -4,13 +4,13 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { EnrollmentResponseDtoStatus } from './enrollmentResponseDtoStatus';
-import type { EnrollmentSessionOverridesDto } from './enrollmentSessionOverridesDto';
+import type { EnrollmentResponseDtoStatus } from './enrollmentResponseDtoStatus'
+import type { EnrollmentSessionOverridesDto } from './enrollmentSessionOverridesDto'
 
 export interface EnrollmentResponseDto {
-  id: string;
-  certificationId: string;
-  status: EnrollmentResponseDtoStatus;
-  enrolledAt: string;
-  sessionDefaults: EnrollmentSessionOverridesDto;
+  id: string
+  certificationId: string
+  status: EnrollmentResponseDtoStatus
+  enrolledAt: string
+  sessionDefaults: EnrollmentSessionOverridesDto
 }

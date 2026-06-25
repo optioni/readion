@@ -5,4 +5,4 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CertificationDetailResponseDtoRelationships = { [key: string]: unknown };
+export type CertificationDetailResponseDtoRelationships = { [key: string]: unknown }

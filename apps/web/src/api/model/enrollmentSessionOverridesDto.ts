@@ -4,20 +4,20 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { EnrollmentSessionOverridesDtoContentMix } from './enrollmentSessionOverridesDtoContentMix';
-import type { EnrollmentSessionOverridesDtoDifficulty } from './enrollmentSessionOverridesDtoDifficulty';
-import type { EnrollmentSessionOverridesDtoFocusArea } from './enrollmentSessionOverridesDtoFocusArea';
-import type { EnrollmentSessionOverridesDtoLearningStyle } from './enrollmentSessionOverridesDtoLearningStyle';
+import type { EnrollmentSessionOverridesDtoContentMix } from './enrollmentSessionOverridesDtoContentMix'
+import type { EnrollmentSessionOverridesDtoDifficulty } from './enrollmentSessionOverridesDtoDifficulty'
+import type { EnrollmentSessionOverridesDtoFocusArea } from './enrollmentSessionOverridesDtoFocusArea'
+import type { EnrollmentSessionOverridesDtoLearningStyle } from './enrollmentSessionOverridesDtoLearningStyle'
 
 export interface EnrollmentSessionOverridesDto {
   /** @nullable */
-  duration: number | null;
+  duration: number | null
   /** @nullable */
-  contentMix: EnrollmentSessionOverridesDtoContentMix;
+  contentMix: EnrollmentSessionOverridesDtoContentMix
   /** @nullable */
-  difficulty: EnrollmentSessionOverridesDtoDifficulty;
+  difficulty: EnrollmentSessionOverridesDtoDifficulty
   /** @nullable */
-  focusArea: EnrollmentSessionOverridesDtoFocusArea;
+  focusArea: EnrollmentSessionOverridesDtoFocusArea
   /** @nullable */
-  learningStyle: EnrollmentSessionOverridesDtoLearningStyle;
+  learningStyle: EnrollmentSessionOverridesDtoLearningStyle
 }

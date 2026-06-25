@@ -4,324 +4,367 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import {
-  useMutation
-} from '@tanstack/vue-query';
+
 import type {
   MutationFunction,
   UseMutationOptions,
-  UseMutationReturnType
-} from '@tanstack/vue-query';
+  UseMutationReturnType,
+} from '@tanstack/vue-query'
+import { useMutation } from '@tanstack/vue-query'
 
-import { readionFetch } from '../../../app/api/mutator';
+import { readionFetch } from '../../../app/api/mutator'
 
-
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 
 export type quizControllerGenerateResponse200 = {
   data: void
   status: 200
 }
-    
-export type quizControllerGenerateResponseSuccess = (quizControllerGenerateResponse200) & {
-  headers: Headers;
-};
-;
 
-export type quizControllerGenerateResponse = (quizControllerGenerateResponseSuccess)
+export type quizControllerGenerateResponseSuccess = quizControllerGenerateResponse200 & {
+  headers: Headers
+}
+
+export type quizControllerGenerateResponse = quizControllerGenerateResponseSuccess
 
 export const getQuizControllerGenerateUrl = () => {
-
-
-  
-
   return `/api/v1/quiz/generate`
 }
 
-export const quizControllerGenerate = async ( options?: RequestInit): Promise<quizControllerGenerateResponse> => {
-  
-  return readionFetch<quizControllerGenerateResponse>(getQuizControllerGenerateUrl(),
-  {      
+export const quizControllerGenerate = async (
+  options?: RequestInit,
+): Promise<quizControllerGenerateResponse> => {
+  return readionFetch<quizControllerGenerateResponse>(getQuizControllerGenerateUrl(), {
     ...options,
-    method: 'POST'
-    
-    
+    method: 'POST',
+  })
+}
+
+export const getQuizControllerGenerateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof quizControllerGenerate>>,
+    TError,
+    void,
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof quizControllerGenerate>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ['quizControllerGenerate']
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof quizControllerGenerate>>,
+    void
+  > = () => {
+    return quizControllerGenerate(requestOptions)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type QuizControllerGenerateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof quizControllerGenerate>>
+>
 
+export type QuizControllerGenerateMutationError = unknown
 
-export const getQuizControllerGenerateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizControllerGenerate>>, TError,void, TContext>, request?: SecondParameter<typeof readionFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof quizControllerGenerate>>, TError,void, TContext> => {
+export const useQuizControllerGenerate = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof quizControllerGenerate>>,
+    TError,
+    void,
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationReturnType<
+  Awaited<ReturnType<typeof quizControllerGenerate>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationOptions = getQuizControllerGenerateMutationOptions(options)
 
-const mutationKey = ['quizControllerGenerate'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof quizControllerGenerate>>, void> = () => {
-          
-
-          return  quizControllerGenerate(requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type QuizControllerGenerateMutationResult = NonNullable<Awaited<ReturnType<typeof quizControllerGenerate>>>
-    
-    export type QuizControllerGenerateMutationError = unknown
-
-    export const useQuizControllerGenerate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizControllerGenerate>>, TError,void, TContext>, request?: SecondParameter<typeof readionFetch>}
- ): UseMutationReturnType<
-        Awaited<ReturnType<typeof quizControllerGenerate>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getQuizControllerGenerateMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-    export type quizControllerSubmitAnswerResponse201 = {
+  return useMutation(mutationOptions)
+}
+export type quizControllerSubmitAnswerResponse201 = {
   data: void
   status: 201
 }
-    
-export type quizControllerSubmitAnswerResponseSuccess = (quizControllerSubmitAnswerResponse201) & {
-  headers: Headers;
-};
-;
 
-export type quizControllerSubmitAnswerResponse = (quizControllerSubmitAnswerResponseSuccess)
+export type quizControllerSubmitAnswerResponseSuccess = quizControllerSubmitAnswerResponse201 & {
+  headers: Headers
+}
 
-export const getQuizControllerSubmitAnswerUrl = (questionId: string,) => {
+export type quizControllerSubmitAnswerResponse = quizControllerSubmitAnswerResponseSuccess
 
-
-  
-
+export const getQuizControllerSubmitAnswerUrl = (questionId: string) => {
   return `/api/v1/quiz/${questionId}/submit`
 }
 
-export const quizControllerSubmitAnswer = async (questionId: string, options?: RequestInit): Promise<quizControllerSubmitAnswerResponse> => {
-  
-  return readionFetch<quizControllerSubmitAnswerResponse>(getQuizControllerSubmitAnswerUrl(questionId),
-  {      
-    ...options,
-    method: 'POST'
-    
-    
+export const quizControllerSubmitAnswer = async (
+  questionId: string,
+  options?: RequestInit,
+): Promise<quizControllerSubmitAnswerResponse> => {
+  return readionFetch<quizControllerSubmitAnswerResponse>(
+    getQuizControllerSubmitAnswerUrl(questionId),
+    {
+      ...options,
+      method: 'POST',
+    },
+  )
+}
+
+export const getQuizControllerSubmitAnswerMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof quizControllerSubmitAnswer>>,
+    TError,
+    { questionId: string },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof quizControllerSubmitAnswer>>,
+  TError,
+  { questionId: string },
+  TContext
+> => {
+  const mutationKey = ['quizControllerSubmitAnswer']
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof quizControllerSubmitAnswer>>,
+    { questionId: string }
+  > = (props) => {
+    const { questionId } = props ?? {}
+
+    return quizControllerSubmitAnswer(questionId, requestOptions)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type QuizControllerSubmitAnswerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof quizControllerSubmitAnswer>>
+>
 
+export type QuizControllerSubmitAnswerMutationError = unknown
 
-export const getQuizControllerSubmitAnswerMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizControllerSubmitAnswer>>, TError,{questionId: string}, TContext>, request?: SecondParameter<typeof readionFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof quizControllerSubmitAnswer>>, TError,{questionId: string}, TContext> => {
+export const useQuizControllerSubmitAnswer = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof quizControllerSubmitAnswer>>,
+    TError,
+    { questionId: string },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationReturnType<
+  Awaited<ReturnType<typeof quizControllerSubmitAnswer>>,
+  TError,
+  { questionId: string },
+  TContext
+> => {
+  const mutationOptions = getQuizControllerSubmitAnswerMutationOptions(options)
 
-const mutationKey = ['quizControllerSubmitAnswer'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof quizControllerSubmitAnswer>>, {questionId: string}> = (props) => {
-          const {questionId} = props ?? {};
-
-          return  quizControllerSubmitAnswer(questionId,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type QuizControllerSubmitAnswerMutationResult = NonNullable<Awaited<ReturnType<typeof quizControllerSubmitAnswer>>>
-    
-    export type QuizControllerSubmitAnswerMutationError = unknown
-
-    export const useQuizControllerSubmitAnswer = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizControllerSubmitAnswer>>, TError,{questionId: string}, TContext>, request?: SecondParameter<typeof readionFetch>}
- ): UseMutationReturnType<
-        Awaited<ReturnType<typeof quizControllerSubmitAnswer>>,
-        TError,
-        {questionId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getQuizControllerSubmitAnswerMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-    export type quizControllerGenerateExplanationResponse200 = {
+  return useMutation(mutationOptions)
+}
+export type quizControllerGenerateExplanationResponse200 = {
   data: void
   status: 200
 }
-    
-export type quizControllerGenerateExplanationResponseSuccess = (quizControllerGenerateExplanationResponse200) & {
-  headers: Headers;
-};
-;
 
-export type quizControllerGenerateExplanationResponse = (quizControllerGenerateExplanationResponseSuccess)
+export type quizControllerGenerateExplanationResponseSuccess =
+  quizControllerGenerateExplanationResponse200 & {
+    headers: Headers
+  }
 
-export const getQuizControllerGenerateExplanationUrl = (questionId: string,) => {
+export type quizControllerGenerateExplanationResponse =
+  quizControllerGenerateExplanationResponseSuccess
 
-
-  
-
+export const getQuizControllerGenerateExplanationUrl = (questionId: string) => {
   return `/api/v1/quiz/${questionId}/explanation`
 }
 
-export const quizControllerGenerateExplanation = async (questionId: string, options?: RequestInit): Promise<quizControllerGenerateExplanationResponse> => {
-  
-  return readionFetch<quizControllerGenerateExplanationResponse>(getQuizControllerGenerateExplanationUrl(questionId),
-  {      
-    ...options,
-    method: 'POST'
-    
-    
+export const quizControllerGenerateExplanation = async (
+  questionId: string,
+  options?: RequestInit,
+): Promise<quizControllerGenerateExplanationResponse> => {
+  return readionFetch<quizControllerGenerateExplanationResponse>(
+    getQuizControllerGenerateExplanationUrl(questionId),
+    {
+      ...options,
+      method: 'POST',
+    },
+  )
+}
+
+export const getQuizControllerGenerateExplanationMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof quizControllerGenerateExplanation>>,
+    TError,
+    { questionId: string },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof quizControllerGenerateExplanation>>,
+  TError,
+  { questionId: string },
+  TContext
+> => {
+  const mutationKey = ['quizControllerGenerateExplanation']
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof quizControllerGenerateExplanation>>,
+    { questionId: string }
+  > = (props) => {
+    const { questionId } = props ?? {}
+
+    return quizControllerGenerateExplanation(questionId, requestOptions)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type QuizControllerGenerateExplanationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof quizControllerGenerateExplanation>>
+>
 
+export type QuizControllerGenerateExplanationMutationError = unknown
 
-export const getQuizControllerGenerateExplanationMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizControllerGenerateExplanation>>, TError,{questionId: string}, TContext>, request?: SecondParameter<typeof readionFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof quizControllerGenerateExplanation>>, TError,{questionId: string}, TContext> => {
+export const useQuizControllerGenerateExplanation = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof quizControllerGenerateExplanation>>,
+    TError,
+    { questionId: string },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationReturnType<
+  Awaited<ReturnType<typeof quizControllerGenerateExplanation>>,
+  TError,
+  { questionId: string },
+  TContext
+> => {
+  const mutationOptions = getQuizControllerGenerateExplanationMutationOptions(options)
 
-const mutationKey = ['quizControllerGenerateExplanation'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof quizControllerGenerateExplanation>>, {questionId: string}> = (props) => {
-          const {questionId} = props ?? {};
-
-          return  quizControllerGenerateExplanation(questionId,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type QuizControllerGenerateExplanationMutationResult = NonNullable<Awaited<ReturnType<typeof quizControllerGenerateExplanation>>>
-    
-    export type QuizControllerGenerateExplanationMutationError = unknown
-
-    export const useQuizControllerGenerateExplanation = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizControllerGenerateExplanation>>, TError,{questionId: string}, TContext>, request?: SecondParameter<typeof readionFetch>}
- ): UseMutationReturnType<
-        Awaited<ReturnType<typeof quizControllerGenerateExplanation>>,
-        TError,
-        {questionId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getQuizControllerGenerateExplanationMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-    export type quizControllerReportQuestionResponse204 = {
+  return useMutation(mutationOptions)
+}
+export type quizControllerReportQuestionResponse204 = {
   data: void
   status: 204
 }
-    
-export type quizControllerReportQuestionResponseSuccess = (quizControllerReportQuestionResponse204) & {
-  headers: Headers;
-};
-;
 
-export type quizControllerReportQuestionResponse = (quizControllerReportQuestionResponseSuccess)
+export type quizControllerReportQuestionResponseSuccess =
+  quizControllerReportQuestionResponse204 & {
+    headers: Headers
+  }
 
-export const getQuizControllerReportQuestionUrl = (questionId: string,) => {
+export type quizControllerReportQuestionResponse = quizControllerReportQuestionResponseSuccess
 
-
-  
-
+export const getQuizControllerReportQuestionUrl = (questionId: string) => {
   return `/api/v1/quiz/${questionId}/report`
 }
 
-export const quizControllerReportQuestion = async (questionId: string, options?: RequestInit): Promise<quizControllerReportQuestionResponse> => {
-  
-  return readionFetch<quizControllerReportQuestionResponse>(getQuizControllerReportQuestionUrl(questionId),
-  {      
-    ...options,
-    method: 'POST'
-    
-    
+export const quizControllerReportQuestion = async (
+  questionId: string,
+  options?: RequestInit,
+): Promise<quizControllerReportQuestionResponse> => {
+  return readionFetch<quizControllerReportQuestionResponse>(
+    getQuizControllerReportQuestionUrl(questionId),
+    {
+      ...options,
+      method: 'POST',
+    },
+  )
+}
+
+export const getQuizControllerReportQuestionMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof quizControllerReportQuestion>>,
+    TError,
+    { questionId: string },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof quizControllerReportQuestion>>,
+  TError,
+  { questionId: string },
+  TContext
+> => {
+  const mutationKey = ['quizControllerReportQuestion']
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof quizControllerReportQuestion>>,
+    { questionId: string }
+  > = (props) => {
+    const { questionId } = props ?? {}
+
+    return quizControllerReportQuestion(questionId, requestOptions)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type QuizControllerReportQuestionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof quizControllerReportQuestion>>
+>
 
+export type QuizControllerReportQuestionMutationError = unknown
 
-export const getQuizControllerReportQuestionMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizControllerReportQuestion>>, TError,{questionId: string}, TContext>, request?: SecondParameter<typeof readionFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof quizControllerReportQuestion>>, TError,{questionId: string}, TContext> => {
+export const useQuizControllerReportQuestion = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof quizControllerReportQuestion>>,
+    TError,
+    { questionId: string },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationReturnType<
+  Awaited<ReturnType<typeof quizControllerReportQuestion>>,
+  TError,
+  { questionId: string },
+  TContext
+> => {
+  const mutationOptions = getQuizControllerReportQuestionMutationOptions(options)
 
-const mutationKey = ['quizControllerReportQuestion'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof quizControllerReportQuestion>>, {questionId: string}> = (props) => {
-          const {questionId} = props ?? {};
-
-          return  quizControllerReportQuestion(questionId,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type QuizControllerReportQuestionMutationResult = NonNullable<Awaited<ReturnType<typeof quizControllerReportQuestion>>>
-    
-    export type QuizControllerReportQuestionMutationError = unknown
-
-    export const useQuizControllerReportQuestion = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizControllerReportQuestion>>, TError,{questionId: string}, TContext>, request?: SecondParameter<typeof readionFetch>}
- ): UseMutationReturnType<
-        Awaited<ReturnType<typeof quizControllerReportQuestion>>,
-        TError,
-        {questionId: string},
-        TContext
-      > => {
-
-      const mutationOptions = getQuizControllerReportQuestionMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-    
+  return useMutation(mutationOptions)
+}

@@ -5,11 +5,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type CertificationResponseDtoState = typeof CertificationResponseDtoState[keyof typeof CertificationResponseDtoState];
-
+export type CertificationResponseDtoState =
+  (typeof CertificationResponseDtoState)[keyof typeof CertificationResponseDtoState]
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const CertificationResponseDtoState = {
   draft: 'draft',
   live: 'live',
-} as const;
+} as const

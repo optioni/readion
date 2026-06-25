@@ -4,10 +4,7 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/vue-query';
+
 import type {
   MutationFunction,
   QueryFunction,
@@ -15,503 +12,709 @@ import type {
   UseMutationOptions,
   UseMutationReturnType,
   UseQueryOptions,
-  UseQueryReturnType
-} from '@tanstack/vue-query';
-
-import {
-  computed,
-  unref
-} from 'vue';
-import type {
-  MaybeRef
-} from 'vue';
-
+  UseQueryReturnType,
+} from '@tanstack/vue-query'
+import { useMutation, useQuery } from '@tanstack/vue-query'
+import type { MaybeRef } from 'vue'
+import { computed, unref } from 'vue'
+import { readionFetch } from '../../../app/api/mutator'
 import type {
   EnrollmentDetailResponseDto,
   EnrollmentListResponseDto,
-  UserCertificationsControllerListParams
-} from '.././model';
+  UserCertificationsControllerDetailParams,
+  UserCertificationsControllerListParams,
+  WeakAreaListResponseDto,
+} from '.././model'
 
-import { readionFetch } from '../../../app/api/mutator';
-
-
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 
 export type userCertificationsControllerEnrollResponse201 = {
   data: EnrollmentDetailResponseDto
   status: 201
 }
-    
-export type userCertificationsControllerEnrollResponseSuccess = (userCertificationsControllerEnrollResponse201) & {
-  headers: Headers;
-};
-;
 
-export type userCertificationsControllerEnrollResponse = (userCertificationsControllerEnrollResponseSuccess)
+export type userCertificationsControllerEnrollResponseSuccess =
+  userCertificationsControllerEnrollResponse201 & {
+    headers: Headers
+  }
+
+export type userCertificationsControllerEnrollResponse =
+  userCertificationsControllerEnrollResponseSuccess
 
 export const getUserCertificationsControllerEnrollUrl = () => {
-
-
-  
-
   return `/api/v1/user-certifications`
 }
 
-export const userCertificationsControllerEnroll = async ( options?: RequestInit): Promise<userCertificationsControllerEnrollResponse> => {
-  
-  return readionFetch<userCertificationsControllerEnrollResponse>(getUserCertificationsControllerEnrollUrl(),
-  {      
-    ...options,
-    method: 'POST'
-    
-    
+export const userCertificationsControllerEnroll = async (
+  options?: RequestInit,
+): Promise<userCertificationsControllerEnrollResponse> => {
+  return readionFetch<userCertificationsControllerEnrollResponse>(
+    getUserCertificationsControllerEnrollUrl(),
+    {
+      ...options,
+      method: 'POST',
+    },
+  )
+}
+
+export const getUserCertificationsControllerEnrollMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userCertificationsControllerEnroll>>,
+    TError,
+    void,
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof userCertificationsControllerEnroll>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ['userCertificationsControllerEnroll']
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof userCertificationsControllerEnroll>>,
+    void
+  > = () => {
+    return userCertificationsControllerEnroll(requestOptions)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type UserCertificationsControllerEnrollMutationResult = NonNullable<
+  Awaited<ReturnType<typeof userCertificationsControllerEnroll>>
+>
 
+export type UserCertificationsControllerEnrollMutationError = unknown
 
-export const getUserCertificationsControllerEnrollMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userCertificationsControllerEnroll>>, TError,void, TContext>, request?: SecondParameter<typeof readionFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof userCertificationsControllerEnroll>>, TError,void, TContext> => {
+export const useUserCertificationsControllerEnroll = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userCertificationsControllerEnroll>>,
+    TError,
+    void,
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationReturnType<
+  Awaited<ReturnType<typeof userCertificationsControllerEnroll>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationOptions = getUserCertificationsControllerEnrollMutationOptions(options)
 
-const mutationKey = ['userCertificationsControllerEnroll'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userCertificationsControllerEnroll>>, void> = () => {
-          
-
-          return  userCertificationsControllerEnroll(requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UserCertificationsControllerEnrollMutationResult = NonNullable<Awaited<ReturnType<typeof userCertificationsControllerEnroll>>>
-    
-    export type UserCertificationsControllerEnrollMutationError = unknown
-
-    export const useUserCertificationsControllerEnroll = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userCertificationsControllerEnroll>>, TError,void, TContext>, request?: SecondParameter<typeof readionFetch>}
- ): UseMutationReturnType<
-        Awaited<ReturnType<typeof userCertificationsControllerEnroll>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getUserCertificationsControllerEnrollMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-    export type userCertificationsControllerListResponse200 = {
+  return useMutation(mutationOptions)
+}
+export type userCertificationsControllerListResponse200 = {
   data: EnrollmentListResponseDto
   status: 200
 }
-    
-export type userCertificationsControllerListResponseSuccess = (userCertificationsControllerListResponse200) & {
-  headers: Headers;
-};
-;
 
-export type userCertificationsControllerListResponse = (userCertificationsControllerListResponseSuccess)
+export type userCertificationsControllerListResponseSuccess =
+  userCertificationsControllerListResponse200 & {
+    headers: Headers
+  }
 
-export const getUserCertificationsControllerListUrl = (params?: UserCertificationsControllerListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export type userCertificationsControllerListResponse =
+  userCertificationsControllerListResponseSuccess
+
+export const getUserCertificationsControllerListUrl = (
+  params?: UserCertificationsControllerListParams,
+) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
       normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/v1/user-certifications?${stringifiedParams}` : `/api/v1/user-certifications`
+  return stringifiedParams.length > 0
+    ? `/api/v1/user-certifications?${stringifiedParams}`
+    : `/api/v1/user-certifications`
 }
 
-export const userCertificationsControllerList = async (params?: UserCertificationsControllerListParams, options?: RequestInit): Promise<userCertificationsControllerListResponse> => {
-  
-  return readionFetch<userCertificationsControllerListResponse>(getUserCertificationsControllerListUrl(params),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-);}
+export const userCertificationsControllerList = async (
+  params?: UserCertificationsControllerListParams,
+  options?: RequestInit,
+): Promise<userCertificationsControllerListResponse> => {
+  return readionFetch<userCertificationsControllerListResponse>(
+    getUserCertificationsControllerListUrl(params),
+    {
+      ...options,
+      method: 'GET',
+    },
+  )
+}
 
-
-
-
-
-export const getUserCertificationsControllerListQueryKey = (params?: MaybeRef<UserCertificationsControllerListParams>,) => {
-    return [
-    'api','v1','user-certifications', ...(params ? [params]: [])
-    ] as const;
-    }
-
-    
-export const getUserCertificationsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof userCertificationsControllerList>>, TError = unknown>(params?: MaybeRef<UserCertificationsControllerListParams>, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof userCertificationsControllerList>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
+export const getUserCertificationsControllerListQueryKey = (
+  params?: MaybeRef<UserCertificationsControllerListParams>,
 ) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  getUserCertificationsControllerListQueryKey(params);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof userCertificationsControllerList>>> = ({ signal }) => userCertificationsControllerList(unref(params), { signal, ...requestOptions });
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userCertificationsControllerList>>, TError, TData> 
+  return ['api', 'v1', 'user-certifications', ...(params ? [params] : [])] as const
 }
 
-export type UserCertificationsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof userCertificationsControllerList>>>
+export const getUserCertificationsControllerListQueryOptions = <
+  TData = Awaited<ReturnType<typeof userCertificationsControllerList>>,
+  TError = unknown,
+>(
+  params?: MaybeRef<UserCertificationsControllerListParams>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof userCertificationsControllerList>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = getUserCertificationsControllerListQueryKey(params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof userCertificationsControllerList>>> = ({
+    signal,
+  }) => userCertificationsControllerList(unref(params), { signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof userCertificationsControllerList>>,
+    TError,
+    TData
+  >
+}
+
+export type UserCertificationsControllerListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof userCertificationsControllerList>>
+>
 export type UserCertificationsControllerListQueryError = unknown
 
+export function useUserCertificationsControllerList<
+  TData = Awaited<ReturnType<typeof userCertificationsControllerList>>,
+  TError = unknown,
+>(
+  params?: MaybeRef<UserCertificationsControllerListParams>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof userCertificationsControllerList>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getUserCertificationsControllerListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey }
 
-export function useUserCertificationsControllerList<TData = Awaited<ReturnType<typeof userCertificationsControllerList>>, TError = unknown>(
- params?: MaybeRef<UserCertificationsControllerListParams>, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof userCertificationsControllerList>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
-  
- ): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  query.queryKey = unref(queryOptions).queryKey as QueryKey
 
-  const queryOptions = getUserCertificationsControllerListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = unref(queryOptions).queryKey as QueryKey;
-
-  return query;
+  return query
 }
-
-
-
 
 export type userCertificationsControllerDetailResponse200 = {
   data: EnrollmentDetailResponseDto
   status: 200
 }
-    
-export type userCertificationsControllerDetailResponseSuccess = (userCertificationsControllerDetailResponse200) & {
-  headers: Headers;
-};
-;
 
-export type userCertificationsControllerDetailResponse = (userCertificationsControllerDetailResponseSuccess)
-
-export const getUserCertificationsControllerDetailUrl = (id: string,) => {
-
-
-  
-
-  return `/api/v1/user-certifications/${id}`
-}
-
-export const userCertificationsControllerDetail = async (id: string, options?: RequestInit): Promise<userCertificationsControllerDetailResponse> => {
-  
-  return readionFetch<userCertificationsControllerDetailResponse>(getUserCertificationsControllerDetailUrl(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
+export type userCertificationsControllerDetailResponseSuccess =
+  userCertificationsControllerDetailResponse200 & {
+    headers: Headers
   }
-);}
 
+export type userCertificationsControllerDetailResponse =
+  userCertificationsControllerDetailResponseSuccess
 
-
-
-
-export const getUserCertificationsControllerDetailQueryKey = (id?: MaybeRef<string>,) => {
-    return [
-    'api','v1','user-certifications',id
-    ] as const;
-    }
-
-    
-export const getUserCertificationsControllerDetailQueryOptions = <TData = Awaited<ReturnType<typeof userCertificationsControllerDetail>>, TError = unknown>(id: MaybeRef<string>, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof userCertificationsControllerDetail>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
+export const getUserCertificationsControllerDetailUrl = (
+  id: string,
+  params?: UserCertificationsControllerDetailParams,
 ) => {
+  const normalizedParams = new URLSearchParams()
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  })
 
-  const queryKey =  getUserCertificationsControllerDetailQueryKey(id);
+  const stringifiedParams = normalizedParams.toString()
 
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof userCertificationsControllerDetail>>> = ({ signal }) => userCertificationsControllerDetail(unref(id), { signal, ...requestOptions });
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: computed(() => !!(unref(id))), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof userCertificationsControllerDetail>>, TError, TData> 
+  return stringifiedParams.length > 0
+    ? `/api/v1/user-certifications/${id}?${stringifiedParams}`
+    : `/api/v1/user-certifications/${id}`
 }
 
-export type UserCertificationsControllerDetailQueryResult = NonNullable<Awaited<ReturnType<typeof userCertificationsControllerDetail>>>
+export const userCertificationsControllerDetail = async (
+  id: string,
+  params?: UserCertificationsControllerDetailParams,
+  options?: RequestInit,
+): Promise<userCertificationsControllerDetailResponse> => {
+  return readionFetch<userCertificationsControllerDetailResponse>(
+    getUserCertificationsControllerDetailUrl(id, params),
+    {
+      ...options,
+      method: 'GET',
+    },
+  )
+}
+
+export const getUserCertificationsControllerDetailQueryKey = (
+  id?: MaybeRef<string>,
+  params?: MaybeRef<UserCertificationsControllerDetailParams>,
+) => {
+  return ['api', 'v1', 'user-certifications', id, ...(params ? [params] : [])] as const
+}
+
+export const getUserCertificationsControllerDetailQueryOptions = <
+  TData = Awaited<ReturnType<typeof userCertificationsControllerDetail>>,
+  TError = unknown,
+>(
+  id: MaybeRef<string>,
+  params?: MaybeRef<UserCertificationsControllerDetailParams>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof userCertificationsControllerDetail>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = getUserCertificationsControllerDetailQueryKey(id, params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof userCertificationsControllerDetail>>> = ({
+    signal,
+  }) => userCertificationsControllerDetail(unref(id), unref(params), { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: computed(() => !!unref(id)),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof userCertificationsControllerDetail>>,
+    TError,
+    TData
+  >
+}
+
+export type UserCertificationsControllerDetailQueryResult = NonNullable<
+  Awaited<ReturnType<typeof userCertificationsControllerDetail>>
+>
 export type UserCertificationsControllerDetailQueryError = unknown
 
+export function useUserCertificationsControllerDetail<
+  TData = Awaited<ReturnType<typeof userCertificationsControllerDetail>>,
+  TError = unknown,
+>(
+  id: MaybeRef<string>,
+  params?: MaybeRef<UserCertificationsControllerDetailParams>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof userCertificationsControllerDetail>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getUserCertificationsControllerDetailQueryOptions(id, params, options)
 
+  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey }
 
-export function useUserCertificationsControllerDetail<TData = Awaited<ReturnType<typeof userCertificationsControllerDetail>>, TError = unknown>(
- id: MaybeRef<string>, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof userCertificationsControllerDetail>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
-  
- ): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  query.queryKey = unref(queryOptions).queryKey as QueryKey
 
-  const queryOptions = getUserCertificationsControllerDetailQueryOptions(id,options)
-
-  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = unref(queryOptions).queryKey as QueryKey;
-
-  return query;
+  return query
 }
-
-
-
 
 export type userCertificationsControllerUpdateOverridesResponse200 = {
   data: EnrollmentDetailResponseDto
   status: 200
 }
-    
-export type userCertificationsControllerUpdateOverridesResponseSuccess = (userCertificationsControllerUpdateOverridesResponse200) & {
-  headers: Headers;
-};
-;
 
-export type userCertificationsControllerUpdateOverridesResponse = (userCertificationsControllerUpdateOverridesResponseSuccess)
+export type userCertificationsControllerUpdateOverridesResponseSuccess =
+  userCertificationsControllerUpdateOverridesResponse200 & {
+    headers: Headers
+  }
 
-export const getUserCertificationsControllerUpdateOverridesUrl = (id: string,) => {
+export type userCertificationsControllerUpdateOverridesResponse =
+  userCertificationsControllerUpdateOverridesResponseSuccess
 
-
-  
-
+export const getUserCertificationsControllerUpdateOverridesUrl = (id: string) => {
   return `/api/v1/user-certifications/${id}`
 }
 
-export const userCertificationsControllerUpdateOverrides = async (id: string, options?: RequestInit): Promise<userCertificationsControllerUpdateOverridesResponse> => {
-  
-  return readionFetch<userCertificationsControllerUpdateOverridesResponse>(getUserCertificationsControllerUpdateOverridesUrl(id),
-  {      
-    ...options,
-    method: 'PATCH'
-    
-    
+export const userCertificationsControllerUpdateOverrides = async (
+  id: string,
+  options?: RequestInit,
+): Promise<userCertificationsControllerUpdateOverridesResponse> => {
+  return readionFetch<userCertificationsControllerUpdateOverridesResponse>(
+    getUserCertificationsControllerUpdateOverridesUrl(id),
+    {
+      ...options,
+      method: 'PATCH',
+    },
+  )
+}
+
+export const getUserCertificationsControllerUpdateOverridesMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userCertificationsControllerUpdateOverrides>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof userCertificationsControllerUpdateOverrides>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ['userCertificationsControllerUpdateOverrides']
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof userCertificationsControllerUpdateOverrides>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return userCertificationsControllerUpdateOverrides(id, requestOptions)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type UserCertificationsControllerUpdateOverridesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof userCertificationsControllerUpdateOverrides>>
+>
 
+export type UserCertificationsControllerUpdateOverridesMutationError = unknown
 
-export const getUserCertificationsControllerUpdateOverridesMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userCertificationsControllerUpdateOverrides>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof readionFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof userCertificationsControllerUpdateOverrides>>, TError,{id: string}, TContext> => {
+export const useUserCertificationsControllerUpdateOverrides = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userCertificationsControllerUpdateOverrides>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationReturnType<
+  Awaited<ReturnType<typeof userCertificationsControllerUpdateOverrides>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions = getUserCertificationsControllerUpdateOverridesMutationOptions(options)
 
-const mutationKey = ['userCertificationsControllerUpdateOverrides'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+  return useMutation(mutationOptions)
+}
+export type userCertificationsControllerListWeakAreasResponse200 = {
+  data: WeakAreaListResponseDto
+  status: 200
+}
 
-      
+export type userCertificationsControllerListWeakAreasResponseSuccess =
+  userCertificationsControllerListWeakAreasResponse200 & {
+    headers: Headers
+  }
 
+export type userCertificationsControllerListWeakAreasResponse =
+  userCertificationsControllerListWeakAreasResponseSuccess
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userCertificationsControllerUpdateOverrides>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
+export const getUserCertificationsControllerListWeakAreasUrl = (id: string) => {
+  return `/api/v1/user-certifications/${id}/weak-areas`
+}
 
-          return  userCertificationsControllerUpdateOverrides(id,requestOptions)
-        }
+export const userCertificationsControllerListWeakAreas = async (
+  id: string,
+  options?: RequestInit,
+): Promise<userCertificationsControllerListWeakAreasResponse> => {
+  return readionFetch<userCertificationsControllerListWeakAreasResponse>(
+    getUserCertificationsControllerListWeakAreasUrl(id),
+    {
+      ...options,
+      method: 'GET',
+    },
+  )
+}
 
-        
+export const getUserCertificationsControllerListWeakAreasQueryKey = (id?: MaybeRef<string>) => {
+  return ['api', 'v1', 'user-certifications', id, 'weak-areas'] as const
+}
 
+export const getUserCertificationsControllerListWeakAreasQueryOptions = <
+  TData = Awaited<ReturnType<typeof userCertificationsControllerListWeakAreas>>,
+  TError = unknown,
+>(
+  id: MaybeRef<string>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof userCertificationsControllerListWeakAreas>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
 
-  return  { mutationFn, ...mutationOptions }}
+  const queryKey = getUserCertificationsControllerListWeakAreasQueryKey(id)
 
-    export type UserCertificationsControllerUpdateOverridesMutationResult = NonNullable<Awaited<ReturnType<typeof userCertificationsControllerUpdateOverrides>>>
-    
-    export type UserCertificationsControllerUpdateOverridesMutationError = unknown
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof userCertificationsControllerListWeakAreas>>
+  > = ({ signal }) =>
+    userCertificationsControllerListWeakAreas(unref(id), { signal, ...requestOptions })
 
-    export const useUserCertificationsControllerUpdateOverrides = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userCertificationsControllerUpdateOverrides>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof readionFetch>}
- ): UseMutationReturnType<
-        Awaited<ReturnType<typeof userCertificationsControllerUpdateOverrides>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
+  return {
+    queryKey,
+    queryFn,
+    enabled: computed(() => !!unref(id)),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof userCertificationsControllerListWeakAreas>>,
+    TError,
+    TData
+  >
+}
 
-      const mutationOptions = getUserCertificationsControllerUpdateOverridesMutationOptions(options);
+export type UserCertificationsControllerListWeakAreasQueryResult = NonNullable<
+  Awaited<ReturnType<typeof userCertificationsControllerListWeakAreas>>
+>
+export type UserCertificationsControllerListWeakAreasQueryError = unknown
 
-      return useMutation(mutationOptions);
-    }
-    export type userCertificationsControllerArchiveResponse200 = {
+export function useUserCertificationsControllerListWeakAreas<
+  TData = Awaited<ReturnType<typeof userCertificationsControllerListWeakAreas>>,
+  TError = unknown,
+>(
+  id: MaybeRef<string>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof userCertificationsControllerListWeakAreas>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getUserCertificationsControllerListWeakAreasQueryOptions(id, options)
+
+  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey }
+
+  query.queryKey = unref(queryOptions).queryKey as QueryKey
+
+  return query
+}
+
+export type userCertificationsControllerArchiveResponse200 = {
   data: EnrollmentDetailResponseDto
   status: 200
 }
-    
-export type userCertificationsControllerArchiveResponseSuccess = (userCertificationsControllerArchiveResponse200) & {
-  headers: Headers;
-};
-;
 
-export type userCertificationsControllerArchiveResponse = (userCertificationsControllerArchiveResponseSuccess)
+export type userCertificationsControllerArchiveResponseSuccess =
+  userCertificationsControllerArchiveResponse200 & {
+    headers: Headers
+  }
 
-export const getUserCertificationsControllerArchiveUrl = (id: string,) => {
+export type userCertificationsControllerArchiveResponse =
+  userCertificationsControllerArchiveResponseSuccess
 
-
-  
-
+export const getUserCertificationsControllerArchiveUrl = (id: string) => {
   return `/api/v1/user-certifications/${id}/archive`
 }
 
-export const userCertificationsControllerArchive = async (id: string, options?: RequestInit): Promise<userCertificationsControllerArchiveResponse> => {
-  
-  return readionFetch<userCertificationsControllerArchiveResponse>(getUserCertificationsControllerArchiveUrl(id),
-  {      
-    ...options,
-    method: 'POST'
-    
-    
+export const userCertificationsControllerArchive = async (
+  id: string,
+  options?: RequestInit,
+): Promise<userCertificationsControllerArchiveResponse> => {
+  return readionFetch<userCertificationsControllerArchiveResponse>(
+    getUserCertificationsControllerArchiveUrl(id),
+    {
+      ...options,
+      method: 'POST',
+    },
+  )
+}
+
+export const getUserCertificationsControllerArchiveMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userCertificationsControllerArchive>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof userCertificationsControllerArchive>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ['userCertificationsControllerArchive']
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof userCertificationsControllerArchive>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return userCertificationsControllerArchive(id, requestOptions)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type UserCertificationsControllerArchiveMutationResult = NonNullable<
+  Awaited<ReturnType<typeof userCertificationsControllerArchive>>
+>
 
+export type UserCertificationsControllerArchiveMutationError = unknown
 
-export const getUserCertificationsControllerArchiveMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userCertificationsControllerArchive>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof readionFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof userCertificationsControllerArchive>>, TError,{id: string}, TContext> => {
+export const useUserCertificationsControllerArchive = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userCertificationsControllerArchive>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationReturnType<
+  Awaited<ReturnType<typeof userCertificationsControllerArchive>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions = getUserCertificationsControllerArchiveMutationOptions(options)
 
-const mutationKey = ['userCertificationsControllerArchive'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userCertificationsControllerArchive>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  userCertificationsControllerArchive(id,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UserCertificationsControllerArchiveMutationResult = NonNullable<Awaited<ReturnType<typeof userCertificationsControllerArchive>>>
-    
-    export type UserCertificationsControllerArchiveMutationError = unknown
-
-    export const useUserCertificationsControllerArchive = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userCertificationsControllerArchive>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof readionFetch>}
- ): UseMutationReturnType<
-        Awaited<ReturnType<typeof userCertificationsControllerArchive>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getUserCertificationsControllerArchiveMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-    export type userCertificationsControllerRestoreResponse200 = {
+  return useMutation(mutationOptions)
+}
+export type userCertificationsControllerRestoreResponse200 = {
   data: EnrollmentDetailResponseDto
   status: 200
 }
-    
-export type userCertificationsControllerRestoreResponseSuccess = (userCertificationsControllerRestoreResponse200) & {
-  headers: Headers;
-};
-;
 
-export type userCertificationsControllerRestoreResponse = (userCertificationsControllerRestoreResponseSuccess)
+export type userCertificationsControllerRestoreResponseSuccess =
+  userCertificationsControllerRestoreResponse200 & {
+    headers: Headers
+  }
 
-export const getUserCertificationsControllerRestoreUrl = (id: string,) => {
+export type userCertificationsControllerRestoreResponse =
+  userCertificationsControllerRestoreResponseSuccess
 
-
-  
-
+export const getUserCertificationsControllerRestoreUrl = (id: string) => {
   return `/api/v1/user-certifications/${id}/restore`
 }
 
-export const userCertificationsControllerRestore = async (id: string, options?: RequestInit): Promise<userCertificationsControllerRestoreResponse> => {
-  
-  return readionFetch<userCertificationsControllerRestoreResponse>(getUserCertificationsControllerRestoreUrl(id),
-  {      
-    ...options,
-    method: 'POST'
-    
-    
+export const userCertificationsControllerRestore = async (
+  id: string,
+  options?: RequestInit,
+): Promise<userCertificationsControllerRestoreResponse> => {
+  return readionFetch<userCertificationsControllerRestoreResponse>(
+    getUserCertificationsControllerRestoreUrl(id),
+    {
+      ...options,
+      method: 'POST',
+    },
+  )
+}
+
+export const getUserCertificationsControllerRestoreMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userCertificationsControllerRestore>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof userCertificationsControllerRestore>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ['userCertificationsControllerRestore']
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof userCertificationsControllerRestore>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return userCertificationsControllerRestore(id, requestOptions)
   }
-);}
 
+  return { mutationFn, ...mutationOptions }
+}
 
+export type UserCertificationsControllerRestoreMutationResult = NonNullable<
+  Awaited<ReturnType<typeof userCertificationsControllerRestore>>
+>
 
+export type UserCertificationsControllerRestoreMutationError = unknown
 
-export const getUserCertificationsControllerRestoreMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userCertificationsControllerRestore>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof readionFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof userCertificationsControllerRestore>>, TError,{id: string}, TContext> => {
+export const useUserCertificationsControllerRestore = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof userCertificationsControllerRestore>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationReturnType<
+  Awaited<ReturnType<typeof userCertificationsControllerRestore>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationOptions = getUserCertificationsControllerRestoreMutationOptions(options)
 
-const mutationKey = ['userCertificationsControllerRestore'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof userCertificationsControllerRestore>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  userCertificationsControllerRestore(id,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UserCertificationsControllerRestoreMutationResult = NonNullable<Awaited<ReturnType<typeof userCertificationsControllerRestore>>>
-    
-    export type UserCertificationsControllerRestoreMutationError = unknown
-
-    export const useUserCertificationsControllerRestore = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof userCertificationsControllerRestore>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof readionFetch>}
- ): UseMutationReturnType<
-        Awaited<ReturnType<typeof userCertificationsControllerRestore>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-
-      const mutationOptions = getUserCertificationsControllerRestoreMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-    
+  return useMutation(mutationOptions)
+}

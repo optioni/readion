@@ -4,205 +4,208 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import {
-  useQuery
-} from '@tanstack/vue-query';
+
 import type {
   QueryFunction,
   QueryKey,
   UseQueryOptions,
-  UseQueryReturnType
-} from '@tanstack/vue-query';
-
-import {
-  computed,
-  unref
-} from 'vue';
-import type {
-  MaybeRef
-} from 'vue';
-
+  UseQueryReturnType,
+} from '@tanstack/vue-query'
+import { useQuery } from '@tanstack/vue-query'
+import type { MaybeRef } from 'vue'
+import { computed, unref } from 'vue'
+import { readionFetch } from '../../../app/api/mutator'
 import type {
   CertificationDetailResponseDto,
   CertificationListResponseDto,
-  CertificationsControllerListParams
-} from '.././model';
+  CertificationsControllerListParams,
+} from '.././model'
 
-import { readionFetch } from '../../../app/api/mutator';
-
-
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 
 export type certificationsControllerListResponse200 = {
   data: CertificationListResponseDto
   status: 200
 }
-    
-export type certificationsControllerListResponseSuccess = (certificationsControllerListResponse200) & {
-  headers: Headers;
-};
-;
 
-export type certificationsControllerListResponse = (certificationsControllerListResponseSuccess)
+export type certificationsControllerListResponseSuccess =
+  certificationsControllerListResponse200 & {
+    headers: Headers
+  }
 
-export const getCertificationsControllerListUrl = (params?: CertificationsControllerListParams,) => {
-  const normalizedParams = new URLSearchParams();
+export type certificationsControllerListResponse = certificationsControllerListResponseSuccess
+
+export const getCertificationsControllerListUrl = (params?: CertificationsControllerListParams) => {
+  const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
       normalizedParams.append(key, value === null ? 'null' : value.toString())
     }
-  });
+  })
 
-  const stringifiedParams = normalizedParams.toString();
+  const stringifiedParams = normalizedParams.toString()
 
-  return stringifiedParams.length > 0 ? `/api/v1/certifications?${stringifiedParams}` : `/api/v1/certifications`
+  return stringifiedParams.length > 0
+    ? `/api/v1/certifications?${stringifiedParams}`
+    : `/api/v1/certifications`
 }
 
-export const certificationsControllerList = async (params?: CertificationsControllerListParams, options?: RequestInit): Promise<certificationsControllerListResponse> => {
-  
-  return readionFetch<certificationsControllerListResponse>(getCertificationsControllerListUrl(params),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-);}
+export const certificationsControllerList = async (
+  params?: CertificationsControllerListParams,
+  options?: RequestInit,
+): Promise<certificationsControllerListResponse> => {
+  return readionFetch<certificationsControllerListResponse>(
+    getCertificationsControllerListUrl(params),
+    {
+      ...options,
+      method: 'GET',
+    },
+  )
+}
 
-
-
-
-
-export const getCertificationsControllerListQueryKey = (params?: MaybeRef<CertificationsControllerListParams>,) => {
-    return [
-    'api','v1','certifications', ...(params ? [params]: [])
-    ] as const;
-    }
-
-    
-export const getCertificationsControllerListQueryOptions = <TData = Awaited<ReturnType<typeof certificationsControllerList>>, TError = unknown>(params?: MaybeRef<CertificationsControllerListParams>, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof certificationsControllerList>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
+export const getCertificationsControllerListQueryKey = (
+  params?: MaybeRef<CertificationsControllerListParams>,
 ) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  getCertificationsControllerListQueryKey(params);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof certificationsControllerList>>> = ({ signal }) => certificationsControllerList(unref(params), { signal, ...requestOptions });
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof certificationsControllerList>>, TError, TData> 
+  return ['api', 'v1', 'certifications', ...(params ? [params] : [])] as const
 }
 
-export type CertificationsControllerListQueryResult = NonNullable<Awaited<ReturnType<typeof certificationsControllerList>>>
+export const getCertificationsControllerListQueryOptions = <
+  TData = Awaited<ReturnType<typeof certificationsControllerList>>,
+  TError = unknown,
+>(
+  params?: MaybeRef<CertificationsControllerListParams>,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof certificationsControllerList>>, TError, TData>
+    request?: SecondParameter<typeof readionFetch>
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = getCertificationsControllerListQueryKey(params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof certificationsControllerList>>> = ({
+    signal,
+  }) => certificationsControllerList(unref(params), { signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof certificationsControllerList>>,
+    TError,
+    TData
+  >
+}
+
+export type CertificationsControllerListQueryResult = NonNullable<
+  Awaited<ReturnType<typeof certificationsControllerList>>
+>
 export type CertificationsControllerListQueryError = unknown
 
+export function useCertificationsControllerList<
+  TData = Awaited<ReturnType<typeof certificationsControllerList>>,
+  TError = unknown,
+>(
+  params?: MaybeRef<CertificationsControllerListParams>,
+  options?: {
+    query?: UseQueryOptions<Awaited<ReturnType<typeof certificationsControllerList>>, TError, TData>
+    request?: SecondParameter<typeof readionFetch>
+  },
+): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getCertificationsControllerListQueryOptions(params, options)
 
+  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey }
 
-export function useCertificationsControllerList<TData = Awaited<ReturnType<typeof certificationsControllerList>>, TError = unknown>(
- params?: MaybeRef<CertificationsControllerListParams>, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof certificationsControllerList>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
-  
- ): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  query.queryKey = unref(queryOptions).queryKey as QueryKey
 
-  const queryOptions = getCertificationsControllerListQueryOptions(params,options)
-
-  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = unref(queryOptions).queryKey as QueryKey;
-
-  return query;
+  return query
 }
-
-
-
 
 export type certificationsControllerDetailResponse200 = {
   data: CertificationDetailResponseDto
   status: 200
 }
-    
-export type certificationsControllerDetailResponseSuccess = (certificationsControllerDetailResponse200) & {
-  headers: Headers;
-};
-;
 
-export type certificationsControllerDetailResponse = (certificationsControllerDetailResponseSuccess)
+export type certificationsControllerDetailResponseSuccess =
+  certificationsControllerDetailResponse200 & {
+    headers: Headers
+  }
 
-export const getCertificationsControllerDetailUrl = (id: string,) => {
+export type certificationsControllerDetailResponse = certificationsControllerDetailResponseSuccess
 
-
-  
-
+export const getCertificationsControllerDetailUrl = (id: string) => {
   return `/api/v1/certifications/${id}`
 }
 
-export const certificationsControllerDetail = async (id: string, options?: RequestInit): Promise<certificationsControllerDetailResponse> => {
-  
-  return readionFetch<certificationsControllerDetailResponse>(getCertificationsControllerDetailUrl(id),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
-
-
-
-export const getCertificationsControllerDetailQueryKey = (id?: MaybeRef<string>,) => {
-    return [
-    'api','v1','certifications',id
-    ] as const;
-    }
-
-    
-export const getCertificationsControllerDetailQueryOptions = <TData = Awaited<ReturnType<typeof certificationsControllerDetail>>, TError = unknown>(id: MaybeRef<string>, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof certificationsControllerDetail>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  getCertificationsControllerDetailQueryKey(id);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof certificationsControllerDetail>>> = ({ signal }) => certificationsControllerDetail(unref(id), { signal, ...requestOptions });
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: computed(() => !!(unref(id))), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof certificationsControllerDetail>>, TError, TData> 
+export const certificationsControllerDetail = async (
+  id: string,
+  options?: RequestInit,
+): Promise<certificationsControllerDetailResponse> => {
+  return readionFetch<certificationsControllerDetailResponse>(
+    getCertificationsControllerDetailUrl(id),
+    {
+      ...options,
+      method: 'GET',
+    },
+  )
 }
 
-export type CertificationsControllerDetailQueryResult = NonNullable<Awaited<ReturnType<typeof certificationsControllerDetail>>>
+export const getCertificationsControllerDetailQueryKey = (id?: MaybeRef<string>) => {
+  return ['api', 'v1', 'certifications', id] as const
+}
+
+export const getCertificationsControllerDetailQueryOptions = <
+  TData = Awaited<ReturnType<typeof certificationsControllerDetail>>,
+  TError = unknown,
+>(
+  id: MaybeRef<string>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof certificationsControllerDetail>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = getCertificationsControllerDetailQueryKey(id)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof certificationsControllerDetail>>> = ({
+    signal,
+  }) => certificationsControllerDetail(unref(id), { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: computed(() => !!unref(id)),
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof certificationsControllerDetail>>, TError, TData>
+}
+
+export type CertificationsControllerDetailQueryResult = NonNullable<
+  Awaited<ReturnType<typeof certificationsControllerDetail>>
+>
 export type CertificationsControllerDetailQueryError = unknown
 
+export function useCertificationsControllerDetail<
+  TData = Awaited<ReturnType<typeof certificationsControllerDetail>>,
+  TError = unknown,
+>(
+  id: MaybeRef<string>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof certificationsControllerDetail>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getCertificationsControllerDetailQueryOptions(id, options)
 
+  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey }
 
-export function useCertificationsControllerDetail<TData = Awaited<ReturnType<typeof certificationsControllerDetail>>, TError = unknown>(
- id: MaybeRef<string>, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof certificationsControllerDetail>>, TError, TData>, request?: SecondParameter<typeof readionFetch>}
-  
- ): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  query.queryKey = unref(queryOptions).queryKey as QueryKey
 
-  const queryOptions = getCertificationsControllerDetailQueryOptions(id,options)
-
-  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = unref(queryOptions).queryKey as QueryKey;
-
-  return query;
+  return query
 }
-
-
-
-
