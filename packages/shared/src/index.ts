@@ -23,6 +23,17 @@ export {
   roles,
 } from './auth'
 export type {
+  CoverageEvaluation,
+  CoverageThresholds,
+  DomainCoverage,
+  DomainStat,
+} from './cert-coverage'
+export {
+  DEFAULT_MIN_CHUNKS_PER_DOMAIN,
+  DEFAULT_TOTAL_CHUNK_MULTIPLE,
+  evaluateCoverage,
+} from './cert-coverage'
+export type {
   CertificationDomain,
   CertificationFieldCitation,
   CertificationProvenance,
