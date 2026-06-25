@@ -123,24 +123,26 @@ export class ContentChunkRepository {
       params,
     )
 
-    return rows.map((row: ChunkRow): ChunkSearchResult => ({
-      id: row.id,
-      contentSourceId: row.content_source_id,
-      certificationId: row.certification_id,
-      text: row.text,
-      contentHash: row.content_hash,
-      embedding:
-        typeof row.embedding === 'string'
-          ? (JSON.parse(row.embedding) as number[])
-          : (row.embedding as unknown as number[] | null),
-      domainTags: (Array.isArray(row.domain_tags)
-        ? row.domain_tags
-        : JSON.parse(row.domain_tags)) as DomainTag[],
-      primaryDomain: row.primary_domain,
-      metadata: (typeof row.metadata === 'object' && row.metadata !== null
-        ? row.metadata
-        : JSON.parse(row.metadata)) as ChunkMetadata,
-      sourceUrl: row.source_url,
-    }))
+    return rows.map(
+      (row: ChunkRow): ChunkSearchResult => ({
+        id: row.id,
+        contentSourceId: row.content_source_id,
+        certificationId: row.certification_id,
+        text: row.text,
+        contentHash: row.content_hash,
+        embedding:
+          typeof row.embedding === 'string'
+            ? (JSON.parse(row.embedding) as number[])
+            : (row.embedding as unknown as number[] | null),
+        domainTags: (Array.isArray(row.domain_tags)
+          ? row.domain_tags
+          : JSON.parse(row.domain_tags)) as DomainTag[],
+        primaryDomain: row.primary_domain,
+        metadata: (typeof row.metadata === 'object' && row.metadata !== null
+          ? row.metadata
+          : JSON.parse(row.metadata)) as ChunkMetadata,
+        sourceUrl: row.source_url,
+      }),
+    )
   }
 }

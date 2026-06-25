@@ -97,7 +97,9 @@ describe('IngestionService (integration)', () => {
   })
 
   it('logs a warning and returns without error when source is not found', async () => {
-    await expect(service.ingest('00000000-0000-0000-0000-000000000999', [])).resolves.toBeUndefined()
+    await expect(
+      service.ingest('00000000-0000-0000-0000-000000000999', []),
+    ).resolves.toBeUndefined()
   })
 
   it('updates lastFetchedAt and returns when fetch returns no content', async () => {

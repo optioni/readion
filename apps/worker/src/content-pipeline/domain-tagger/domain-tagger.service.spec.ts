@@ -90,7 +90,9 @@ describe('DomainTaggerService', () => {
     const { ConfigService } = await import('@nestjs/config')
     const { LlmService: LocalLlmService } = await import('../../llm/llm.service')
 
-    const mockLlm = { tagDomains: vi.fn().mockResolvedValue([{ domain: 'Security', confidence: 0.6 }]) }
+    const mockLlm = {
+      tagDomains: vi.fn().mockResolvedValue([{ domain: 'Security', confidence: 0.6 }]),
+    }
 
     const moduleRef = await NestTest.createTestingModule({
       providers: [

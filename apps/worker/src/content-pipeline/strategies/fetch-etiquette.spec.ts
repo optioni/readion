@@ -1,10 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  USER_AGENT,
-  extractDomain,
-  isAllowedByRobots,
-  throttleForDomain,
-} from './fetch-etiquette'
+import { extractDomain, isAllowedByRobots, throttleForDomain, USER_AGENT } from './fetch-etiquette'
 
 describe('fetch-etiquette', () => {
   afterEach(() => {
@@ -83,8 +78,7 @@ describe('fetch-etiquette', () => {
         'fetch',
         vi.fn().mockResolvedValue({
           ok: true,
-          text: () =>
-            Promise.resolve('User-agent: Readion-Ingestion\nDisallow: /internal/\n'),
+          text: () => Promise.resolve('User-agent: Readion-Ingestion\nDisallow: /internal/\n'),
         }),
       )
       const result = await isAllowedByRobots('https://example.com/internal/docs')

@@ -43,10 +43,7 @@ describe('LlmService', () => {
   describe('with openai provider', () => {
     beforeEach(async () => {
       const moduleRef = await Test.createTestingModule({
-        providers: [
-          LlmService,
-          { provide: ConfigService, useValue: makeConfig('openai') },
-        ],
+        providers: [LlmService, { provide: ConfigService, useValue: makeConfig('openai') }],
       }).compile()
       service = moduleRef.get(LlmService)
     })
@@ -87,10 +84,7 @@ describe('LlmService', () => {
   describe('with anthropic provider', () => {
     beforeEach(async () => {
       const moduleRef = await Test.createTestingModule({
-        providers: [
-          LlmService,
-          { provide: ConfigService, useValue: makeConfig('anthropic') },
-        ],
+        providers: [LlmService, { provide: ConfigService, useValue: makeConfig('anthropic') }],
       }).compile()
       service = moduleRef.get(LlmService)
     })

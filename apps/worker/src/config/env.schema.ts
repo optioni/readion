@@ -1,8 +1,8 @@
 import {
   CHUNK_OVERLAP_DEFAULT,
   CHUNK_SIZE_DEFAULT,
-  databaseUrlFragment,
   DOMAIN_CONFIDENCE_THRESHOLD_DEFAULT,
+  databaseUrlFragment,
   EMBEDDING_DIMENSION,
   observabilityEnvFragment,
   redisUrlFragment,
