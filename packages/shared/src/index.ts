@@ -87,6 +87,27 @@ export { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from './pagination'
 export type { ProblemDetails, ValidationErrorItem } from './problem-details'
 export { ERROR_TYPES } from './problem-details'
 export type {
+  ExplanationRequest,
+  ExplanationResponse,
+  GenerateQuizRequest,
+  InsufficientMaterialResponse,
+  QuestionFormat,
+  QuizDifficulty,
+  QuizGenerationResult,
+  QuizQuestionResponse,
+  ReportRequest,
+  SubmitAnswerRequest,
+  SubmitAnswerResponse,
+} from './quiz'
+export {
+  explanationRequestSchema,
+  generateQuizRequestSchema,
+  questionFormats,
+  quizDifficulties,
+  reportRequestSchema,
+  submitAnswerRequestSchema,
+} from './quiz'
+export type {
   EnrollCertificationRequest,
   EnrollmentResponse,
   EnrollmentSessionOverrides,
