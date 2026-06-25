@@ -18,6 +18,7 @@ export {
   UserCertificationSchema,
   userCertificationStatuses,
 } from './entities/user-certification.entity'
+export { WeakArea, WeakAreaSchema } from './entities/weak-area.entity'
 export { default as mikroOrmConfig } from './mikro-orm.config'
 export { PluralUnderscoreNamingStrategy } from './naming-strategy'
 export { type CoverageStats, queryCoverageStats } from './queries/coverage-stats.query'

@@ -6,6 +6,7 @@ import { ContentSourceSchema } from './entities/content-source.entity'
 import { QuizResponseSchema } from './entities/quiz-response.entity'
 import { UserSchema } from './entities/user.entity'
 import { UserCertificationSchema } from './entities/user-certification.entity'
+import { WeakAreaSchema } from './entities/weak-area.entity'
 import { PluralUnderscoreNamingStrategy } from './naming-strategy'
 
 export default defineConfig({
@@ -16,6 +17,7 @@ export default defineConfig({
     ContentSourceSchema,
     ContentChunkSchema,
     QuizResponseSchema,
+    WeakAreaSchema,
   ],
   discovery: { warnWhenNoEntities: false },
   dbName: process.env.DB_NAME ?? 'readion',
