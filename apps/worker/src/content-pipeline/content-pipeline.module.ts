@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { queryCoverageStats } from '@readion/db'
 import { LlmModule } from '../llm/llm.module'
 import { StaleSourceCron } from './cron/stale-source.cron'
 import { SupersededChunkCleanupCron } from './cron/superseded-chunk-cleanup.cron'
@@ -7,6 +8,7 @@ import { EmbedderService } from './embedder/embedder.service'
 import { IngestionMetricService } from './metrics/ingestion-metric.service'
 import { IngestionService } from './processor/ingestion.service'
 import { INGESTION_PROCESSORS } from './processor/typed-ingestion-processors'
+import { CertPromotionService, COVERAGE_STATS_QUERY } from './promotion/cert-promotion.service'
 import { ContentQueuesModule } from './queues/content-queues.module'
 import { ContentQueuesService } from './queues/content-queues.service'
 import { ChunkReconciliationService } from './reconciliation/chunk-reconciliation.service'
@@ -46,6 +48,11 @@ import { ChunkSupersessionService } from './supersession/chunk-supersession.serv
     ChunkReconciliationService,
     SupersededChunkCleanupCron,
     ...INGESTION_PROCESSORS,
+    CertPromotionService,
+    {
+      provide: COVERAGE_STATS_QUERY,
+      useValue: queryCoverageStats,
+    },
     {
       provide: 'StrategyRegistry',
       useExisting: StrategyRegistry,

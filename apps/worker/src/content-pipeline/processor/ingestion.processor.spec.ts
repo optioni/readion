@@ -4,6 +4,7 @@ import { SOURCE_RECHECK_INTERVALS } from '@readion/shared'
 import type { StartedTestContainer } from 'testcontainers'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WorkerConfigModule } from '../../config/config.module'
+import { CertPromotionService, COVERAGE_STATS_QUERY } from '../promotion/cert-promotion.service'
 import { ChunkReconciliationService } from '../reconciliation/chunk-reconciliation.service'
 import { ContentChunkRepository } from '../repository/content-chunk.repository'
 import { ContentSourceRepository } from '../repository/content-source.repository'
@@ -43,6 +44,10 @@ describe('IngestionService (integration)', () => {
     reconcile: vi.fn().mockResolvedValue(undefined),
   }
 
+  const mockCertPromotion = {
+    evaluateAndPromote: vi.fn().mockResolvedValue(undefined),
+  }
+
   beforeAll(async () => {
     const [dbHarness, redis] = await Promise.all([createDbHarness(), startRedisContainer()])
     harness = dbHarness
@@ -60,6 +65,11 @@ describe('IngestionService (integration)', () => {
         { provide: 'EmbedderService', useValue: mockEmbedder },
         { provide: 'IngestionMetricService', useValue: mockMetrics },
         { provide: ChunkReconciliationService, useValue: mockReconciliation },
+        {
+          provide: COVERAGE_STATS_QUERY,
+          useValue: vi.fn().mockResolvedValue({ domains: [], totalChunks: 0 }),
+        },
+        { provide: CertPromotionService, useValue: mockCertPromotion },
       ],
     }).compile()
     await moduleRef.init()

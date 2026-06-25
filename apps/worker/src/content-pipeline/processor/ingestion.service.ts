@@ -7,6 +7,7 @@ import { chunkText } from '../chunker/chunker'
 import type { DomainTaggerService } from '../domain-tagger/domain-tagger.service'
 import type { EmbedderService } from '../embedder/embedder.service'
 import type { IngestionMetricService } from '../metrics/ingestion-metric.service'
+import { CertPromotionService } from '../promotion/cert-promotion.service'
 import { ChunkReconciliationService } from '../reconciliation/chunk-reconciliation.service'
 import { ContentChunkRepository } from '../repository/content-chunk.repository'
 import { ContentSourceRepository } from '../repository/content-source.repository'
@@ -25,6 +26,7 @@ export class IngestionService {
     private readonly config: ConfigService<WorkerEnvConfig>,
     @Inject('IngestionMetricService') private readonly metrics: IngestionMetricService,
     private readonly reconciliation: ChunkReconciliationService,
+    private readonly certPromotion: CertPromotionService,
   ) {}
 
   async ingest(sourceId: string, domains: string[]): Promise<void> {
@@ -75,5 +77,7 @@ export class IngestionService {
 
     await this.sourceRepo.updateLastFetchedAt(sourceId, new Date())
     this.logger.log(`Source ${sourceId} ingested successfully`)
+
+    await this.certPromotion.evaluateAndPromote(source.certificationId)
   }
 }
