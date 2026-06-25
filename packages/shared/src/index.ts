@@ -29,6 +29,16 @@ export type {
   CertificationResponse,
   CertificationState,
 } from './certifications'
+export type { ChunkMetadata, ContentSourceType, DomainTag } from './content-pipeline'
+export {
+  CHUNK_OVERLAP_DEFAULT,
+  CHUNK_SIZE_DEFAULT,
+  contentSourceTypes,
+  DOMAIN_CONFIDENCE_THRESHOLD_DEFAULT,
+  EMBEDDING_DIMENSION,
+  SIMILARITY_THRESHOLD_DEFAULT,
+  SOURCE_RECHECK_INTERVALS,
+} from './content-pipeline'
 export {
   AI_MAX_TOKENS_DEFAULTS,
   type AiProvider,
