@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config'
 import { startRedisContainer } from '@readion/db'
+import { chunkReverseIndexKey, evictByChunkId } from '@readion/shared'
 import Redis from 'ioredis'
 import type { StartedTestContainer } from 'testcontainers'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
@@ -51,7 +52,7 @@ describe('LlmResponseCacheService (real Redis)', () => {
 
   it('stores a verified payload and retrieves it by key', async () => {
     const key = buildCacheKey(BASE_KEY_INPUT)
-    await service.set(key, VERIFIED)
+    await service.set(key, BASE_KEY_INPUT.chunkIds, VERIFIED)
     const result = await service.get(key)
 
     expect(result).not.toBeNull()
@@ -63,7 +64,7 @@ describe('LlmResponseCacheService (real Redis)', () => {
     const key = buildCacheKey(BASE_KEY_INPUT)
 
     // @ts-expect-error deliberate type violation to test runtime guard
-    await expect(service.set(key, { ...VERIFIED, verified: false })).rejects.toThrow()
+    await expect(service.set(key, [], { ...VERIFIED, verified: false })).rejects.toThrow()
 
     const result = await service.get(key)
     expect(result).toBeNull()
@@ -78,13 +79,13 @@ describe('LlmResponseCacheService (real Redis)', () => {
     const key1 = buildCacheKey(BASE_KEY_INPUT)
     const key2 = buildCacheKey({ ...BASE_KEY_INPUT, difficulty: 'hard' })
 
-    await service.set(key1, VERIFIED)
+    await service.set(key1, BASE_KEY_INPUT.chunkIds, VERIFIED)
     expect(await service.get(key2)).toBeNull()
   })
 
   it('evicts an entry so subsequent reads return null within TTL', async () => {
     const key = buildCacheKey(BASE_KEY_INPUT)
-    await service.set(key, VERIFIED)
+    await service.set(key, BASE_KEY_INPUT.chunkIds, VERIFIED)
     await service.evict(key)
     expect(await service.get(key)).toBeNull()
   })
@@ -94,10 +95,45 @@ describe('LlmResponseCacheService (real Redis)', () => {
     const shortTtlService = new LlmResponseCacheService(redis, makeConfigService(SHORT_TTL))
     const key = buildCacheKey({ ...BASE_KEY_INPUT, chunkIds: ['ttl-test'] })
 
-    await shortTtlService.set(key, VERIFIED)
+    await shortTtlService.set(key, ['ttl-test'], VERIFIED)
     expect(await shortTtlService.get(key)).not.toBeNull()
 
     await new Promise((resolve) => setTimeout(resolve, SHORT_TTL * 1000 + 500))
     expect(await shortTtlService.get(key)).toBeNull()
   }, 10_000)
+
+  describe('reverse index — write-through and evict-by-chunk-id', () => {
+    it('write-through records the cache key under each constituent chunk id', async () => {
+      const key = buildCacheKey({ ...BASE_KEY_INPUT, chunkIds: ['c1', 'c2'] })
+      await service.set(key, ['c1', 'c2'], VERIFIED)
+
+      expect(await redis.smembers(chunkReverseIndexKey('c1'))).toContain(key)
+      expect(await redis.smembers(chunkReverseIndexKey('c2'))).toContain(key)
+    })
+
+    it('evict-by-chunk-id removes every derived entry and prunes the index', async () => {
+      const key1 = buildCacheKey({ ...BASE_KEY_INPUT, chunkIds: ['evict-c1'], difficulty: 'easy' })
+      const key2 = buildCacheKey({ ...BASE_KEY_INPUT, chunkIds: ['evict-c1'], difficulty: 'hard' })
+      await service.set(key1, ['evict-c1'], VERIFIED)
+      await service.set(key2, ['evict-c1'], VERIFIED)
+
+      await evictByChunkId(redis, 'evict-c1')
+
+      expect(await service.get(key1)).toBeNull()
+      expect(await service.get(key2)).toBeNull()
+      expect(await redis.smembers(chunkReverseIndexKey('evict-c1'))).toHaveLength(0)
+    })
+
+    it('evicting an already-absent chunk id is a no-op', async () => {
+      await expect(evictByChunkId(redis, 'never-indexed-chunk')).resolves.not.toThrow()
+    })
+
+    it('write-through with no chunk ids stores payload but does not populate index', async () => {
+      const key = buildCacheKey({ ...BASE_KEY_INPUT, chunkIds: ['no-index-test'] })
+      await service.set(key, [], VERIFIED)
+
+      const result = await service.get(key)
+      expect(result).not.toBeNull()
+    })
+  })
 })

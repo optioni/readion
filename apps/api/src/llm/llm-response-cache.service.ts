@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { chunkReverseIndexKey } from '@readion/shared'
 import type Redis from 'ioredis'
 import type { EnvConfig } from '../config/env.schema'
 import { REDIS_CLIENT } from '../redis/redis.module'
@@ -18,11 +19,17 @@ export class LlmResponseCacheService {
     this.ttl = this.config.get<number>('AI_RESPONSE_CACHE_TTL_SECONDS') ?? 86_400
   }
 
-  async set(key: string, payload: VerifiedPayload): Promise<void> {
+  async set(key: string, chunkIds: string[], payload: VerifiedPayload): Promise<void> {
     if (!payload.verified) {
       throw new Error('Cannot cache an unverified payload')
     }
-    await this.redis.set(key, JSON.stringify(payload), 'EX', this.ttl)
+    const pipeline = this.redis.pipeline()
+    pipeline.set(key, JSON.stringify(payload), 'EX', this.ttl)
+    for (const chunkId of chunkIds) {
+      pipeline.sadd(chunkReverseIndexKey(chunkId), key)
+      pipeline.expire(chunkReverseIndexKey(chunkId), this.ttl)
+    }
+    await pipeline.exec()
   }
 
   async get(key: string): Promise<VerifiedPayload | null> {
@@ -32,6 +39,12 @@ export class LlmResponseCacheService {
   }
 
   async evict(key: string): Promise<void> {
-    await this.redis.del(key)
+    await this.del(key)
+  }
+
+  private async del(...keys: string[]): Promise<void> {
+    if (keys.length > 0) {
+      await this.redis.del(keys[0]!, ...keys.slice(1))
+    }
   }
 }
