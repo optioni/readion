@@ -29,10 +29,12 @@ export type {
   CertificationResponse,
   CertificationState,
 } from './certifications'
-export type { ChunkMetadata, ContentSourceType, DomainTag } from './content-pipeline'
+export { chunkReverseIndexKey, evictByChunkId, type RedisEvictClient } from './chunk-lifecycle'
+export type { ChunkMetadata, ChunkState, ContentSourceType, DomainTag } from './content-pipeline'
 export {
   CHUNK_OVERLAP_DEFAULT,
   CHUNK_SIZE_DEFAULT,
+  chunkStates,
   contentSourceTypes,
   DOMAIN_CONFIDENCE_THRESHOLD_DEFAULT,
   EMBEDDING_DIMENSION,

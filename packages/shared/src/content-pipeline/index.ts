@@ -1,3 +1,6 @@
+export const chunkStates = ['active', 'superseded'] as const
+export type ChunkState = (typeof chunkStates)[number]
+
 export const contentSourceTypes = [
   'web',
   'pdf',
