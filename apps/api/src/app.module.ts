@@ -7,6 +7,7 @@ import { CertificationsModule } from './certifications/certifications.module'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { ApiConfigModule } from './config/config.module'
 import { HealthModule } from './health/health.module'
+import { LlmModule } from './llm/llm.module'
 import { MailModule } from './mail/mail.module'
 import { ApiObservabilityModule } from './observability/observability.module'
 import { RedisModule } from './redis/redis.module'
@@ -20,6 +21,7 @@ import { UsersModule } from './users/users.module'
     ApiObservabilityModule.forRoot(),
     DbModule,
     RedisModule,
+    LlmModule,
     ApiThrottlerModule,
     HealthModule,
     MailModule,

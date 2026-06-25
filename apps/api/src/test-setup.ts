@@ -24,6 +24,19 @@ process.env.JWT_REFRESH_TOKEN_EXPIRES_IN_SECONDS =
 process.env.WEB_BASE_URL = process.env.WEB_BASE_URL ?? 'http://localhost:3000'
 process.env.BCRYPT_COST = process.env.BCRYPT_COST ?? '4'
 
+process.env.AI_PROVIDER = process.env.AI_PROVIDER ?? 'anthropic'
+process.env.AI_MODEL_QUIZ_GENERATION = process.env.AI_MODEL_QUIZ_GENERATION ?? 'claude-haiku-4-5'
+process.env.AI_MODEL_ANSWER_VERIFICATION =
+  process.env.AI_MODEL_ANSWER_VERIFICATION ?? 'claude-haiku-4-5'
+process.env.AI_MODEL_DOMAIN_TAGGING = process.env.AI_MODEL_DOMAIN_TAGGING ?? 'claude-haiku-4-5'
+process.env.AI_MODEL_AGENT_QA = process.env.AI_MODEL_AGENT_QA ?? 'claude-sonnet-4-6'
+process.env.AI_MODEL_CERTIFICATION_PREFILL =
+  process.env.AI_MODEL_CERTIFICATION_PREFILL ?? 'claude-sonnet-4-6'
+process.env.AI_MODEL_MATERIAL_GENERATION =
+  process.env.AI_MODEL_MATERIAL_GENERATION ?? 'claude-sonnet-4-6'
+process.env.AI_MODEL_COMPLEX_REASONING =
+  process.env.AI_MODEL_COMPLEX_REASONING ?? 'claude-sonnet-4-6'
+
 // Clear prom-client registry after each test file to prevent duplicate-registration errors
 // across test app instances.
 afterAll(() => {
