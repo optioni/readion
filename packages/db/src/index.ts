@@ -5,6 +5,8 @@ export {
   CertificationSchema,
   certificationStates,
 } from './entities/certification.entity'
+export { ContentChunk, ContentChunkSchema } from './entities/content-chunk.entity'
+export { ContentSource, ContentSourceSchema } from './entities/content-source.entity'
 export { User, UserRole, type UserRoleValue, UserSchema } from './entities/user.entity'
 export {
   UserCertification,
