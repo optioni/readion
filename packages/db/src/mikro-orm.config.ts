@@ -3,6 +3,7 @@ import { defineConfig } from '@mikro-orm/postgresql'
 import { CertificationSchema } from './entities/certification.entity'
 import { ContentChunkSchema } from './entities/content-chunk.entity'
 import { ContentSourceSchema } from './entities/content-source.entity'
+import { QuizResponseSchema } from './entities/quiz-response.entity'
 import { UserSchema } from './entities/user.entity'
 import { UserCertificationSchema } from './entities/user-certification.entity'
 import { PluralUnderscoreNamingStrategy } from './naming-strategy'
@@ -14,6 +15,7 @@ export default defineConfig({
     UserCertificationSchema,
     ContentSourceSchema,
     ContentChunkSchema,
+    QuizResponseSchema,
   ],
   discovery: { warnWhenNoEntities: false },
   dbName: process.env.DB_NAME ?? 'readion',

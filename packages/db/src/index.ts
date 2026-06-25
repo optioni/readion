@@ -7,6 +7,11 @@ export {
 } from './entities/certification.entity'
 export { ContentChunk, ContentChunkSchema } from './entities/content-chunk.entity'
 export { ContentSource, ContentSourceSchema } from './entities/content-source.entity'
+export {
+  type QuestionSnapshot,
+  QuizResponse,
+  QuizResponseSchema,
+} from './entities/quiz-response.entity'
 export { User, UserRole, type UserRoleValue, UserSchema } from './entities/user.entity'
 export {
   UserCertification,
