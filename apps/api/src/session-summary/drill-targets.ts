@@ -1,4 +1,5 @@
 import type { ReviewTarget } from '../sessions/sessions.service'
+import { reviewQualifies } from '../review/review-qualifies'
 
 export type SessionResponseTarget = {
   correct: boolean
@@ -18,7 +19,7 @@ export function sessionResponseQualifies(
   response: { correct: boolean; confidence: number },
   unsureThreshold: number,
 ): boolean {
-  return !response.correct || response.confidence <= unsureThreshold
+  return reviewQualifies(response, unsureThreshold)
 }
 
 export function mockQuestionQualifies(question: {

@@ -7,6 +7,7 @@ import type { QuizAnsweredEvent } from '@readion/shared'
 import { LEITNER_INTERVALS_DAYS_DEFAULT, QUIZ_ANSWERED_EVENT } from '@readion/shared'
 import type { EnvConfig } from '../config/env.schema'
 import { applyLeitner, type LeitnerAnswer, nextDueAt } from './leitner'
+import { reviewQualifies } from './review-qualifies'
 
 @Injectable()
 export class ReviewAccrualService {
@@ -34,7 +35,7 @@ export class ReviewAccrualService {
       if (existing.state === 'suppressed') return
 
       const fromBox = existing.state === 'mastered' ? 1 : existing.box
-      if (existing.state === 'mastered' && !qualifies(answer)) return
+      if (existing.state === 'mastered' && !reviewQualifies(answer)) return
 
       const outcome = applyLeitner({ box: fromBox, state: 'active' }, answer, intervals)
       existing.box = outcome.box
@@ -47,7 +48,7 @@ export class ReviewAccrualService {
       return
     }
 
-    if (!qualifies(answer)) return
+    if (!reviewQualifies(answer)) return
 
     const outcome = applyLeitner({ box: 1, state: 'active' }, answer, intervals)
     const item = em.create(ReviewItem, {
@@ -67,6 +68,3 @@ export class ReviewAccrualService {
   }
 }
 
-function qualifies(answer: LeitnerAnswer): boolean {
-  return !answer.correct || answer.confidence <= 2
-}
