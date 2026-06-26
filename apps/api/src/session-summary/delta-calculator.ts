@@ -1,7 +1,7 @@
-import { computeDomainScore } from '../weak-areas/domain-scoring'
 import { isCalibrated } from '../readiness/calibration'
-import { computeReadiness } from '../readiness/readiness.calculator'
 import type { ReadinessDomainSignal } from '../readiness/readiness.calculator'
+import { computeReadiness } from '../readiness/readiness.calculator'
+import { computeDomainScore } from '../weak-areas/domain-scoring'
 
 export type DeltaInput = {
   domain: string

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { computeDeltas } from './delta-calculator'
 import type { DeltaInput, DomainWeightInput } from './delta-calculator'
+import { computeDeltas } from './delta-calculator'
 
 const NOW = new Date('2024-01-15T12:00:00Z')
 const BEFORE_SESSION = new Date('2024-01-14T10:00:00Z')
@@ -82,9 +82,12 @@ describe('computeDeltas', () => {
       now: NOW,
     })
 
-    expect(result.readiness.before).not.toBeNull()
-    expect(result.readiness.after).not.toBeNull()
-    expect(result.readiness.delta).toBe(result.readiness.after! - result.readiness.before!)
+    const { before, after, delta } = result.readiness
+    expect(before).not.toBeNull()
+    expect(after).not.toBeNull()
+    expect(delta).not.toBeNull()
+    if (before === null || after === null || delta === null) return
+    expect(delta).toBe(after - before)
   })
 
   it('returns null delta when before is not calibrated but after is', () => {
