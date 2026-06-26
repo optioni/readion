@@ -65,10 +65,6 @@ export class MockExamGenerationService {
 
     const slots = this.planSlots(cert.questionCount, cert.domains)
 
-    if (!attempt.questions) {
-      attempt.questions = []
-    }
-
     const pendingSlots = this.filterPendingSlots(slots, attempt.questions)
 
     for (const slot of pendingSlots) {

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core'
 import { EventEmitterModule } from '@nestjs/event-emitter'
+import { ScheduleModule } from '@nestjs/schedule'
 import { ThrottlerGuard } from '@nestjs/throttler'
 import { DbModule } from '@readion/db'
 import { AuthModule } from './auth/auth.module'
@@ -27,6 +28,7 @@ import { WeakAreasModule } from './weak-areas/weak-areas.module'
     ApiConfigModule,
     ApiObservabilityModule.forRoot(),
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     DbModule,
     RedisModule,
     QueueModule,

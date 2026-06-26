@@ -141,7 +141,7 @@ export class MockExamService {
     attempt.passed = result.passed
     attempt.domainBreakdown = result.domainBreakdown
 
-    const neutralConfidence = this.config.get('MOCK_EXAM_NEUTRAL_CONFIDENCE') ?? 3
+    const neutralConfidence = this.config.get('MOCK_EXAM_NEUTRAL_CONFIDENCE')
 
     for (const q of attempt.questions) {
       const correct = q.selectedAnswer !== null && q.selectedAnswer === q.correctAnswer
