@@ -8,6 +8,7 @@ import {
   isSupportedTimeZone,
   LEITNER_INTERVALS_DAYS_DEFAULT,
   observabilityEnvFragment,
+  READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT,
   REVIEW_SESSION_QUESTION_CAP_DEFAULT,
   redisUrlFragment,
   zodCoerceNumber,
@@ -105,6 +106,11 @@ const envSchema = z
     MOCK_EXAM_AUTO_SUBMIT_GRACE_SECONDS: zodCoerceNumber()
       .refine((n) => n >= 0, { message: 'Must be a non-negative number' })
       .default(120),
+    READINESS_CALIBRATION_MIN_ANSWERS: zodCoerceNumber()
+      .refine((n) => Number.isInteger(n) && n > 0, {
+        message: 'Must be a positive integer',
+      })
+      .default(READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'production') {

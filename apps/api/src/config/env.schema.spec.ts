@@ -380,3 +380,27 @@ describe('env schema — cert coverage thresholds', () => {
     )
   })
 })
+
+describe('env schema — readiness', () => {
+  it('READINESS_CALIBRATION_MIN_ANSWERS defaults to 10', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.READINESS_CALIBRATION_MIN_ANSWERS).toBe(10)
+  })
+
+  it('accepts a READINESS_CALIBRATION_MIN_ANSWERS override', () => {
+    const result = parseEnv({ ...VALID_ENV, READINESS_CALIBRATION_MIN_ANSWERS: '25' })
+    expect(result.READINESS_CALIBRATION_MIN_ANSWERS).toBe(25)
+  })
+
+  it('rejects non-positive READINESS_CALIBRATION_MIN_ANSWERS', () => {
+    expect(() => parseEnv({ ...VALID_ENV, READINESS_CALIBRATION_MIN_ANSWERS: '0' })).toThrow(
+      /READINESS_CALIBRATION_MIN_ANSWERS/,
+    )
+  })
+
+  it('rejects a non-integer READINESS_CALIBRATION_MIN_ANSWERS', () => {
+    expect(() => parseEnv({ ...VALID_ENV, READINESS_CALIBRATION_MIN_ANSWERS: '3.5' })).toThrow(
+      /READINESS_CALIBRATION_MIN_ANSWERS/,
+    )
+  })
+})
