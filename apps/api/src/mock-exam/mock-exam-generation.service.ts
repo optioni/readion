@@ -2,7 +2,12 @@ import { EntityManager } from '@mikro-orm/core'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { MockExam } from '@readion/db'
-import type { ExtractiveItem, MockExamQuestion, Provenance } from '@readion/shared'
+import type {
+  ExtractiveItem,
+  GenerateQuizRequest,
+  MockExamQuestion,
+  Provenance,
+} from '@readion/shared'
 import { v4 } from 'uuid'
 import type { EnvConfig } from '../config/env.schema'
 import type { VerifiedPayload } from '../llm/llm-response-cache.service'
@@ -69,14 +74,14 @@ export class MockExamGenerationService {
     let shortfall = 0
 
     for (const slot of pendingSlots) {
-      const quizDifficulty =
+      const quizDifficulty: GenerateQuizRequest['difficulty'] =
         slot.difficulty === 'calibration' ? 'beginner' : slot.difficulty
       const genResult = await this.quiz.generate(
         userId,
         {
           userCertificationId: enrollment.id,
           domain: slot.domain,
-          difficulty: quizDifficulty as Parameters<QuizService['generate']>[1]['difficulty'],
+          difficulty: quizDifficulty,
         },
         { excludeChunkIds: Array.from(usedSourceChunkIds) },
       )
