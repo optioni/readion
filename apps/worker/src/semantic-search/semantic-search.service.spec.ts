@@ -1,4 +1,4 @@
-import { Test } from '@nestjs/testing'
+import { Test, type TestingModule } from '@nestjs/testing'
 import { createDbHarness, type DbHarness, DbModule, startRedisContainer } from '@readion/db'
 import { EMBEDDING_DIMENSION, SOURCE_RECHECK_INTERVALS } from '@readion/shared'
 import type { StartedTestContainer } from 'testcontainers'
@@ -25,6 +25,7 @@ function normalize(v: number[]): number[] {
 describe('SemanticSearchService (integration with real pgvector)', () => {
   let harness: DbHarness
   let redisContainer: StartedTestContainer
+  let moduleRef: TestingModule
   let service: SemanticSearchService
   let chunkRepo: ContentChunkRepository
   let sourceRepo: ContentSourceRepository
@@ -35,7 +36,7 @@ describe('SemanticSearchService (integration with real pgvector)', () => {
     redisContainer = redis
     process.env.REDIS_URL = `redis://${redis.getHost()}:${redis.getMappedPort(6379)}`
 
-    const moduleRef = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       imports: [WorkerConfigModule, DbModule],
       providers: [ContentChunkRepository, ContentSourceRepository, SemanticSearchService],
     }).compile()
@@ -47,6 +48,7 @@ describe('SemanticSearchService (integration with real pgvector)', () => {
   }, 120_000)
 
   afterAll(async () => {
+    await moduleRef?.close()
     await harness?.teardown()
     await redisContainer?.stop()
   })

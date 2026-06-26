@@ -1,5 +1,5 @@
 import { EntityManager } from '@mikro-orm/core'
-import { Test } from '@nestjs/testing'
+import { Test, type TestingModule } from '@nestjs/testing'
 import { createDbHarness, type DbHarness, DbModule, startRedisContainer } from '@readion/db'
 import { chunkReverseIndexKey, SOURCE_RECHECK_INTERVALS } from '@readion/shared'
 import Redis from 'ioredis'
@@ -20,6 +20,7 @@ function makeEmbedding(): number[] {
 describe('ChunkSupersessionService (integration)', () => {
   let harness: DbHarness
   let redisContainer: StartedTestContainer
+  let moduleRef: TestingModule
   let redis: Redis
   let service: ChunkSupersessionService
   let chunkRepo: ContentChunkRepository
@@ -32,7 +33,7 @@ describe('ChunkSupersessionService (integration)', () => {
     redisContainer = redisCtr
     process.env.REDIS_URL = `redis://${redisCtr.getHost()}:${redisCtr.getMappedPort(6379)}`
 
-    const moduleRef = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       imports: [WorkerConfigModule, DbModule, RedisModule],
       providers: [ContentChunkRepository, ContentSourceRepository, ChunkSupersessionService],
     }).compile()
@@ -46,6 +47,7 @@ describe('ChunkSupersessionService (integration)', () => {
   }, 120_000)
 
   afterAll(async () => {
+    await moduleRef?.close()
     await harness?.teardown()
     await redisContainer?.stop()
   })

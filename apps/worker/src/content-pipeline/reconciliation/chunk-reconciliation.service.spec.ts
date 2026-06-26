@@ -1,5 +1,5 @@
 import { EntityManager } from '@mikro-orm/core'
-import { Test } from '@nestjs/testing'
+import { Test, type TestingModule } from '@nestjs/testing'
 import { createDbHarness, type DbHarness, DbModule, startRedisContainer } from '@readion/db'
 import { SOURCE_RECHECK_INTERVALS } from '@readion/shared'
 import type { StartedTestContainer } from 'testcontainers'
@@ -20,6 +20,7 @@ function makeEmbedding(): number[] {
 describe('ChunkReconciliationService (integration)', () => {
   let harness: DbHarness
   let redisContainer: StartedTestContainer
+  let moduleRef: TestingModule
   let service: ChunkReconciliationService
   let chunkRepo: ContentChunkRepository
   let sourceRepo: ContentSourceRepository
@@ -31,7 +32,7 @@ describe('ChunkReconciliationService (integration)', () => {
     redisContainer = redisCtr
     process.env.REDIS_URL = `redis://${redisCtr.getHost()}:${redisCtr.getMappedPort(6379)}`
 
-    const moduleRef = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       imports: [WorkerConfigModule, DbModule, RedisModule],
       providers: [
         ContentChunkRepository,
@@ -49,6 +50,7 @@ describe('ChunkReconciliationService (integration)', () => {
   }, 120_000)
 
   afterAll(async () => {
+    await moduleRef?.close()
     await harness?.teardown()
     await redisContainer?.stop()
   })

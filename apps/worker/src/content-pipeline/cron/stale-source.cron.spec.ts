@@ -1,5 +1,5 @@
 import { EntityManager } from '@mikro-orm/core'
-import { Test } from '@nestjs/testing'
+import { Test, type TestingModule } from '@nestjs/testing'
 import { createDbHarness, type DbHarness, DbModule, startRedisContainer } from '@readion/db'
 import { SOURCE_RECHECK_INTERVALS } from '@readion/shared'
 import type { StartedTestContainer } from 'testcontainers'
@@ -15,6 +15,7 @@ const CERT_ID = '00000000-0000-0000-0000-000000000001'
 describe('StaleSourceCron (integration)', () => {
   let harness: DbHarness
   let redisContainer: StartedTestContainer
+  let moduleRef: TestingModule
   let cron: StaleSourceCron
   let sourceRepo: ContentSourceRepository
   let mockQueuesService: { enqueue: ReturnType<typeof vi.fn> }
@@ -27,7 +28,7 @@ describe('StaleSourceCron (integration)', () => {
 
     mockQueuesService = { enqueue: vi.fn().mockResolvedValue(undefined) }
 
-    const moduleRef = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       imports: [WorkerConfigModule, DbModule],
       providers: [
         ContentSourceRepository,
@@ -47,6 +48,7 @@ describe('StaleSourceCron (integration)', () => {
   }, 120_000)
 
   afterAll(async () => {
+    await moduleRef?.close()
     await harness?.teardown()
     await redisContainer?.stop()
   })

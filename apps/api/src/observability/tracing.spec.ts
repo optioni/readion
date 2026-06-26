@@ -72,7 +72,7 @@ describe('distributed tracing integration', () => {
     app = moduleRef.createNestApplication()
     await bootstrapApp(app)
     await app.init()
-  })
+  }, 120_000)
 
   afterAll(async () => {
     await app?.close()
