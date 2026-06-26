@@ -44,11 +44,7 @@ function makeService(weakAreas: WeakArea[], mocks: MockExam[]): ReadinessService
     recompute: vi.fn().mockResolvedValue(undefined),
   } as unknown as WeakAreasService
 
-  return new ReadinessService(
-    em as unknown as EntityManager,
-    config,
-    weakAreasService,
-  )
+  return new ReadinessService(em as unknown as EntityManager, config, weakAreasService)
 }
 
 describe('ReadinessService — diagnostic weight exclusion', () => {

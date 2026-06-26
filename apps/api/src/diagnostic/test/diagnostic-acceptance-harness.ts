@@ -6,9 +6,9 @@ import {
   Certification,
   QuizResponse,
   ReviewItem,
-  WeakArea,
   startPostgresContainer,
   startRedisContainer,
+  WeakArea,
 } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import type { MockExamGenerationJobPayload } from '@readion/shared'
@@ -21,12 +21,12 @@ import { bootstrapApp } from '../../bootstrap'
 import { ProviderAdapter } from '../../llm/provider-adapter'
 import { MockExamAutoSubmitCron } from '../../mock-exam/mock-exam-auto-submit.cron'
 import { MockExamGenerationProcessor } from '../../mock-exam/mock-exam-generation.processor'
-import { REDIS_CLIENT } from '../../redis/redis.module'
 import {
   configureTestEnv,
   createMockProviderValue,
   truncateTables,
 } from '../../mock-exam/test/mock-exam-test-utils'
+import { REDIS_CLIENT } from '../../redis/redis.module'
 
 export { CORRECT_ANSWER as DIAGNOSTIC_CORRECT_ANSWER } from '../../mock-exam/test/mock-exam-test-utils'
 
