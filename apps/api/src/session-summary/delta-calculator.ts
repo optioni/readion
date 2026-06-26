@@ -54,10 +54,12 @@ function buildScores(byDomain: Map<string, DeltaInput[]>): {
   const scoreByDomain = new Map<string, number>()
 
   for (const [domain, responses] of byDomain) {
+    const [firstResponse] = responses
+    if (firstResponse === undefined) continue
     const { score } = computeDomainScore(responses)
     const lastActivityAt = responses.reduce(
       (max, r) => (r.createdAt > max ? r.createdAt : max),
-      responses[0].createdAt,
+      firstResponse.createdAt,
     )
     perDomain.push({ domain, score, lastActivityAt })
     scoreByDomain.set(domain, score)

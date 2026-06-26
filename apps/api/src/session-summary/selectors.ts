@@ -26,8 +26,9 @@ export function selectWeakest(responses: GradedResponse[]): QuestionRef | null {
     return a.createdAt.getTime() - b.createdAt.getTime()
   })
 
-  const { responseId, question } = sorted[0]
-  return { responseId, question }
+  const [first] = sorted
+  if (first === undefined) return null
+  return { responseId: first.responseId, question: first.question }
 }
 
 export function selectStrongest(responses: GradedResponse[]): QuestionRef | null {
@@ -39,8 +40,9 @@ export function selectStrongest(responses: GradedResponse[]): QuestionRef | null
     return a.timeTakenMs - b.timeTakenMs
   })
 
-  const { responseId, question } = sorted[0]
-  return { responseId, question }
+  const [first] = sorted
+  if (first === undefined) return null
+  return { responseId: first.responseId, question: first.question }
 }
 
 export function selectNextFocus(weakAreas: WeakAreaScore[]): { domain: string } | null {
@@ -51,5 +53,7 @@ export function selectNextFocus(weakAreas: WeakAreaScore[]): { domain: string } 
     return a.domain.localeCompare(b.domain)
   })
 
-  return { domain: sorted[0].domain }
+  const [first] = sorted
+  if (first === undefined) return null
+  return { domain: first.domain }
 }
