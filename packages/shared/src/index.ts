@@ -87,6 +87,7 @@ export type {
   MockExamDomainStat,
   MockExamGenerationJobPayload,
   MockExamQuestion,
+  MockExamResponse,
   MockExamStatus,
   MockExamType,
 } from './mock-exam'

@@ -30,3 +30,16 @@ export interface MockExamDomainStat {
 }
 
 export type MockExamDomainBreakdown = Record<string, MockExamDomainStat>
+
+export interface MockExamResponse {
+  id: string
+  userCertificationId: string
+  type: MockExamType
+  status: MockExamStatus
+  startedAt: string | null
+  deadline: string | null
+  score: number | null
+  passed: boolean | null
+  domainBreakdown: MockExamDomainBreakdown
+  questions: MockExamQuestion[]
+}
