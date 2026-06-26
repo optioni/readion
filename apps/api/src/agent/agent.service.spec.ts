@@ -8,6 +8,7 @@ import { EntityManager, MikroORM } from '@mikro-orm/core'
 import { Test, type TestingModule } from '@nestjs/testing'
 import {
   Certification,
+  DbModule,
   StudySession,
   startPostgresContainer,
   startRedisContainer,
@@ -16,9 +17,9 @@ import {
   WeakArea,
 } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
+import { MockEmbeddingModelV3, MockLanguageModelV3 } from 'ai/test'
 import type { Queue } from 'bullmq'
 import { Worker } from 'bullmq'
-import { MockEmbeddingModelV3, MockLanguageModelV3 } from 'ai/test'
 import type { StartedTestContainer } from 'testcontainers'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiConfigModule } from '../config/config.module'
@@ -183,6 +184,7 @@ describe('AgentService (integration)', () => {
       imports: [
         ApiConfigModule,
         ApiObservabilityModule.forRoot(),
+        DbModule,
         RedisModule,
         QueueModule,
         LlmModule,
@@ -347,9 +349,7 @@ describe('AgentService (integration)', () => {
     const otherId = await seedUser()
 
     await expect(
-      collect(
-        service.runTurn({ userId: otherId, conversationId: conversation.id, content: 'hi' }),
-      ),
+      collect(service.runTurn({ userId: otherId, conversationId: conversation.id, content: 'hi' })),
     ).rejects.toMatchObject({ status: 404 })
   })
 
@@ -374,11 +374,9 @@ describe('AgentService (integration)', () => {
   })
 
   it('bridges a material-ingestion job completion onto the SSE channel', async () => {
-    const worker = new Worker(
-      AGENT_MATERIAL_QUEUE_NAME,
-      async () => ({ done: true }),
-      { connection: materialQueue.opts.connection },
-    )
+    const worker = new Worker(AGENT_MATERIAL_QUEUE_NAME, async () => ({ done: true }), {
+      connection: materialQueue.opts.connection,
+    })
     await worker.waitUntilReady()
     try {
       const job = await materialQueue.add('ingest-on-demand', {
