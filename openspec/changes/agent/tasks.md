@@ -37,9 +37,9 @@
 
 ## 6. Controller, SSE endpoint & ownership scoping
 
-- [ ] 6.1 RED: Integration-test the REST/SSE surface — create in-session conversation (`POST /sessions/:id/agent-conversations`), create standalone (`POST /agent-conversations`), stream message turn (`POST /agent-conversations/:id/messages`, `text/event-stream`), get conversation with `?include=messages`, and that cross-user access returns `404` via repository-layer `userId` scoping
-- [ ] 6.2 GREEN: Implement the controller + SSE response, `{ data, relationships }` envelopes via the global interceptor, RFC 7807 errors via the global filter, and the agent success/error Prometheus metric
-- [ ] 6.3 REFACTOR: Tidy DTOs/validation and `?include=` handling
+- [x] 6.1 RED: Integration-test the REST/SSE surface — create in-session conversation (`POST /sessions/:id/agent-conversations`), create standalone (`POST /agent-conversations`), stream message turn (`POST /agent-conversations/:id/messages`, `text/event-stream`), get conversation with `?include=messages`, and that cross-user access returns `404` via repository-layer `userId` scoping
+- [x] 6.2 GREEN: Implement the controller + SSE response, `{ data, relationships }` envelopes via the global interceptor, RFC 7807 errors via the global filter, and the agent success/error Prometheus metric
+- [x] 6.3 REFACTOR: Tidy DTOs/validation and `?include=` handling
 
 ## 7. Worker TTL-cleanup cron & metric
 
@@ -51,22 +51,22 @@
 
 ## 8. API client regeneration
 
-- [ ] 8.1 GREEN: Run `yarn codegen` against the running API and commit the regenerated Orval client for the new agent endpoints
+- [x] 8.1 GREEN: Run `yarn codegen` against the running API and commit the regenerated Orval client for the new agent endpoints
 
 ## 9. Acceptance Test — Outer Loop GREEN
 
-- [ ] 9.1 Confirm the in-session and standalone acceptance tests pass end-to-end
-- [ ] 9.2 Verify all affected apps start in the local environment (smoke test) — boot `apps/api` and `apps/worker` and confirm no startup/config errors
-- [ ] 9.3 REFACTOR: Clean up test setup and mocks if needed
+- [x] 9.1 Confirm the in-session and standalone acceptance tests pass end-to-end
+- [x] 9.2 Verify all affected apps start in the local environment (smoke test) — boot `apps/api` and `apps/worker` and confirm no startup/config errors
+- [x] 9.3 REFACTOR: Clean up test setup and mocks if needed
 
 ## 10. Change Review — Subagent Verification
 
-- [ ] 10.1 Dispatch a subagent to review the change against proposal.md, the spec scenarios, and design.md (reviewer reports findings only, does not edit code)
-- [ ] 10.2 Triage findings: fix every CRITICAL, resolve or accept each WARNING, note SUGGESTIONs; re-run affected tests
+- [x] 10.1 Dispatch a subagent to review the change against proposal.md, the spec scenarios, and design.md (reviewer reports findings only, does not edit code)
+- [x] 10.2 Triage findings: fix every CRITICAL, resolve or accept each WARNING, note SUGGESTIONs; re-run affected tests
 
 ## 11. Polish
 
-- [ ] 11.1 Run linter and fix all errors (`yarn lint`)
-- [ ] 11.2 Run formatter and apply fixes (`yarn format:fix`)
-- [ ] 11.3 Run type checker with zero errors (`apps/api`, `apps/worker`, `packages/db`)
-- [ ] 11.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn test:coverage`)
+- [x] 11.1 Run linter and fix all errors (`yarn lint`)
+- [x] 11.2 Run formatter and apply fixes (`yarn format:fix`)
+- [x] 11.3 Run type checker with zero errors (`apps/api`, `apps/worker`, `packages/db`)
+- [x] 11.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn test:coverage`)
