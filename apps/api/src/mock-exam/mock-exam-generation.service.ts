@@ -1,32 +1,14 @@
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { MockExam } from '@readion/db'
-import type {
-  CertificationDomain,
-  ExtractiveItem,
-  MockExamQuestion,
-  Provenance,
-} from '@readion/shared'
+import type { ExtractiveItem, MockExamQuestion, Provenance } from '@readion/shared'
 import { v4 } from 'uuid'
 import type { VerifiedPayload } from '../llm/llm-response-cache.service'
 import { LlmResponseCacheService } from '../llm/llm-response-cache.service'
 import { QuizService } from '../quiz/quiz.service'
+import type { MockDomainSlot } from './mock-exam-slot-planner'
+import { planMockSlots } from './mock-exam-slot-planner'
 
-interface DomainSlot {
-  domain: string
-  difficulty: 'exam-ready'
-}
-
-/**
- * Domain allocation uses the largest-remainder (Hamilton's) method:
- * each domain receives floor(weight/totalWeight * questionCount) questions,
- * then the remaining slots are given one-by-one to the domains with the
- * largest fractional remainders. This ensures the sum always equals
- * questionCount with no rounding divergence.
- *
- * Difficulty is fixed at 'exam-ready' for all slots since mock exams
- * simulate real examination conditions.
- */
 @Injectable()
 export class MockExamGenerationService {
   constructor(
@@ -67,7 +49,7 @@ export class MockExamGenerationService {
     const cert = enrollment.certification
     const userId = attempt.user.id
 
-    const slots = this.planSlots(cert.questionCount, cert.domains)
+    const slots = planMockSlots(cert.domains, cert.questionCount)
 
     const pendingSlots = this.filterPendingSlots(slots, attempt.questions)
 
@@ -130,13 +112,13 @@ export class MockExamGenerationService {
    * re-invoking the job on a partially-generated attempt resumes without
    * duplicating questions already persisted to the array.
    */
-  private filterPendingSlots(slots: DomainSlot[], existing: MockExamQuestion[]): DomainSlot[] {
+  private filterPendingSlots(slots: MockDomainSlot[], existing: MockExamQuestion[]): MockDomainSlot[] {
     const existingByDomain = new Map<string, number>()
     for (const q of existing) {
       existingByDomain.set(q.domain, (existingByDomain.get(q.domain) ?? 0) + 1)
     }
 
-    const pending: DomainSlot[] = []
+    const pending: MockDomainSlot[] = []
     for (const slot of slots) {
       const count = existingByDomain.get(slot.domain) ?? 0
       if (count > 0) {
@@ -147,40 +129,6 @@ export class MockExamGenerationService {
     }
 
     return pending
-  }
-
-  /**
-   * Distributes questionCount across domains proportional to their weights
-   * using the largest-remainder method so the total always sums exactly to
-   * questionCount.
-   */
-  private planSlots(questionCount: number, domains: CertificationDomain[]): DomainSlot[] {
-    const totalWeight = domains.reduce((sum, d) => sum + d.weight, 0)
-
-    const entries = domains.map((d) => {
-      const raw = (d.weight / totalWeight) * questionCount
-      const floored = Math.floor(raw)
-      return { domain: d.name, count: floored, remainder: raw - floored }
-    })
-
-    const totalFloored = entries.reduce((sum, e) => sum + e.count, 0)
-    let remaining = questionCount - totalFloored
-
-    const sorted = [...entries].sort((a, b) => b.remainder - a.remainder)
-    for (const entry of sorted) {
-      if (remaining <= 0) break
-      entry.count++
-      remaining--
-    }
-
-    const slots: DomainSlot[] = []
-    for (const entry of entries) {
-      for (let i = 0; i < entry.count; i++) {
-        slots.push({ domain: entry.domain, difficulty: 'exam-ready' })
-      }
-    }
-
-    return slots
   }
 
   private async generateExplanation(
