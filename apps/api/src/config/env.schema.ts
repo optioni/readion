@@ -6,7 +6,9 @@ import {
   databaseUrlFragment,
   groundingEnvFragment,
   isSupportedTimeZone,
+  LEITNER_INTERVALS_DAYS_DEFAULT,
   observabilityEnvFragment,
+  REVIEW_SESSION_QUESTION_CAP_DEFAULT,
   redisUrlFragment,
   zodCoerceNumber,
   zodRequiredUrl,
@@ -87,6 +89,16 @@ const envSchema = z
     CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE: zodCoerceNumber()
       .refine((n) => n > 0, { message: 'Must be a positive number' })
       .default(DEFAULT_TOTAL_CHUNK_MULTIPLE),
+    REVIEW_LEITNER_INTERVALS_DAYS: z
+      .string()
+      .default(LEITNER_INTERVALS_DAYS_DEFAULT.join(','))
+      .transform((raw) => raw.split(',').map((part) => Number(part.trim())))
+      .refine((days) => days.length > 0 && days.every((d) => Number.isFinite(d) && d > 0), {
+        message: 'Must be a comma-separated list of positive numbers',
+      }),
+    REVIEW_SESSION_QUESTION_CAP: zodCoerceNumber()
+      .refine((n) => n > 0, { message: 'Must be a positive number' })
+      .default(REVIEW_SESSION_QUESTION_CAP_DEFAULT),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'production') {
