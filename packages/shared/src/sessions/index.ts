@@ -90,6 +90,7 @@ export interface SessionItemPlan {
   type: 'reading' | 'quiz'
   domain: string
   format?: 'multiple_choice' | 'true_false' | 'scenario'
+  anchorChunkId?: string
 }
 
 export interface SessionFillJobPayload {

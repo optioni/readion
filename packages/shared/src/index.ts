@@ -92,6 +92,7 @@ export type {
   GenerateQuizRequest,
   InsufficientMaterialResponse,
   QuestionFormat,
+  QuizAnsweredEvent,
   QuizDifficulty,
   QuizGenerationResult,
   QuizQuestionResponse,
@@ -102,11 +103,27 @@ export type {
 export {
   explanationRequestSchema,
   generateQuizRequestSchema,
+  QUIZ_ANSWERED_EVENT,
   questionFormats,
   quizDifficulties,
   reportRequestSchema,
   submitAnswerRequestSchema,
 } from './quiz'
+export type {
+  ReviewItemResponse,
+  ReviewItemState,
+  ReviewQueueMeta,
+  StartReviewResponse,
+  SuppressDomainRequest,
+  SuppressDomainResponse,
+} from './review'
+export {
+  LEITNER_CONFIDENT_THRESHOLD,
+  LEITNER_INTERVALS_DAYS_DEFAULT,
+  REVIEW_SESSION_QUESTION_CAP_DEFAULT,
+  reviewItemStates,
+  suppressDomainRequestSchema,
+} from './review'
 export type {
   CreateSessionRequest,
   SessionConfig,

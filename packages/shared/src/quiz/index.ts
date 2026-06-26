@@ -65,3 +65,14 @@ export interface InsufficientMaterialResponse {
 export type QuizGenerationResult =
   | { type: 'question'; data: QuizQuestionResponse }
   | InsufficientMaterialResponse
+
+export const QUIZ_ANSWERED_EVENT = 'quiz.answered'
+
+export interface QuizAnsweredEvent {
+  userId: string
+  userCertificationId: string
+  certificationId: string
+  sourceChunkIds: string[]
+  correct: boolean
+  confidence: number
+}
