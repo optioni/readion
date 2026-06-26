@@ -10,12 +10,8 @@ export interface OfferParams {
 
 export function deriveOffer(params: OfferParams): DiagnosticOffer {
   if (!params.certLive) return 'none'
-  if (!params.hasCompletedDiagnostic) return 'onboarding'
-  if (
-    params.completedSessionCount >= params.repromptAfterSessions &&
-    params.diagnosticRePromptedAt === null
-  ) {
-    return 're-prompt'
-  }
+  if (params.hasCompletedDiagnostic) return 'none'
+  if (params.completedSessionCount < params.repromptAfterSessions) return 'onboarding'
+  if (params.diagnosticRePromptedAt === null) return 're-prompt'
   return 'none'
 }
