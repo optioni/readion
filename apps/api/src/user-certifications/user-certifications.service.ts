@@ -16,12 +16,16 @@ import {
 } from '@readion/shared'
 import type { z } from 'zod'
 import type { CollectionResult } from '../common/interceptors/response.interceptor'
+import { ReadinessService } from '../readiness/readiness.service'
 import { resolveEnrollmentDecision } from './enrollment-decision'
 import { mapUserCertificationToDto } from './user-certifications.mapper'
 
 @Injectable()
 export class UserCertificationsService {
-  constructor(private readonly em: EntityManager) {}
+  constructor(
+    private readonly em: EntityManager,
+    private readonly readiness: ReadinessService,
+  ) {}
 
   async enroll(
     userId: string,
@@ -84,8 +88,14 @@ export class UserCertificationsService {
       { populate: ['certification'], orderBy: { enrolledAt: 'ASC' } },
     )
 
+    const scores = await Promise.all(
+      enrollments.map((enrollment) => this.resolveReadinessScore(enrollment.id)),
+    )
+
     return {
-      items: enrollments.map(mapUserCertificationToDto),
+      items: enrollments.map((enrollment, index) =>
+        mapUserCertificationToDto(enrollment, scores[index] ?? null),
+      ),
       meta: { total, page: 1, limit: total },
     }
   }
@@ -102,7 +112,12 @@ export class UserCertificationsService {
       throw new NotFoundException('Enrollment not found')
     }
 
-    return mapUserCertificationToDto(enrollment)
+    return mapUserCertificationToDto(enrollment, await this.resolveReadinessScore(enrollment.id))
+  }
+
+  private async resolveReadinessScore(userCertificationId: string): Promise<number | null> {
+    const readiness = await this.readiness.compute(userCertificationId)
+    return readiness.calibrated ? readiness.score : null
   }
 
   async updateOverrides(userId: string, id: string, body: unknown): Promise<EnrollmentResponse> {

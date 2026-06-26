@@ -54,6 +54,8 @@ class EnrollmentResponseDto {
   enrolledAt!: string
   @ApiProperty({ type: EnrollmentSessionOverridesDto })
   sessionDefaults!: EnrollmentSessionOverrides
+  @ApiProperty({ nullable: true, type: Number })
+  readinessScore!: number | null
 }
 
 class WeakAreaResponseDto {

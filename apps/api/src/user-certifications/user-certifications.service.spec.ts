@@ -10,8 +10,13 @@ import {
 } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import { startPostgresContainer } from '@readion/db/src/test-helpers/containers'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ReadinessService } from '../readiness/readiness.service'
 import { UserCertificationsService } from './user-certifications.service'
+
+const readinessStub = {
+  compute: vi.fn().mockResolvedValue({ calibrated: false, score: null, trajectory: null }),
+} as unknown as ReadinessService
 
 describe('UserCertificationsService', () => {
   let orm: MikroORM
@@ -28,7 +33,7 @@ describe('UserCertificationsService', () => {
       dbName: 'readion_test',
     })
     await orm.migrator.up()
-    service = new UserCertificationsService(orm.em)
+    service = new UserCertificationsService(orm.em, readinessStub)
   }, 120_000)
 
   afterAll(async () => {

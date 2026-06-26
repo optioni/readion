@@ -1,7 +1,10 @@
 import type { UserCertification } from '@readion/db'
 import type { EnrollmentResponse } from '@readion/shared'
 
-export function mapUserCertificationToDto(enrollment: UserCertification): EnrollmentResponse {
+export function mapUserCertificationToDto(
+  enrollment: UserCertification,
+  readinessScore: number | null = null,
+): EnrollmentResponse {
   return {
     id: enrollment.id,
     certificationId: enrollment.certification.id,
@@ -14,5 +17,6 @@ export function mapUserCertificationToDto(enrollment: UserCertification): Enroll
       focusArea: enrollment.sessionOverrideFocusArea,
       learningStyle: enrollment.sessionOverrideLearningStyle,
     },
+    readinessScore,
   }
 }
