@@ -19,6 +19,7 @@ import { SessionsModule } from './sessions/sessions.module'
 import { ApiThrottlerModule } from './throttler/throttler.module'
 import { UserCertificationsModule } from './user-certifications/user-certifications.module'
 import { UsersModule } from './users/users.module'
+import { MockExamModule } from './mock-exam/mock-exam.module'
 import { WeakAreasModule } from './weak-areas/weak-areas.module'
 
 @Module({
@@ -41,6 +42,7 @@ import { WeakAreasModule } from './weak-areas/weak-areas.module'
     WeakAreasModule,
     SessionsModule,
     ReviewModule,
+    MockExamModule,
   ],
   providers: [
     {

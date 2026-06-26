@@ -17,7 +17,14 @@ import { REDIS_CLIENT } from '../../redis/redis.module'
 
 const FINISH_REASON_STOP: LanguageModelV3FinishReason = { unified: 'stop', raw: 'stop' }
 
-export const MOCK_EXAM_CORRECT_ANSWER = 'Option A'
+/**
+ * 'key concepts' is a verbatim substring of every seeded chunk's text
+ * ("Study content for <domain>: key concepts, best practices, and real-world
+ * examples."), and it also appears inside SUPPORTING_SPAN. Both checks in
+ * validateExtractiveContract (span-in-chunk and answerBacked) therefore pass,
+ * allowing the real GroundedGenerationService pipeline to succeed in tests.
+ */
+export const MOCK_EXAM_CORRECT_ANSWER = 'key concepts'
 
 const MOCK_VERIFIER_VERDICT = JSON.stringify({
   pass: true,
@@ -31,10 +38,10 @@ const MOCK_VERIFIER_VERDICT = JSON.stringify({
 
 function buildMockQuizQuestion(sourceChunkId: string): string {
   return JSON.stringify({
-    question: 'What is the main purpose of this service?',
+    question: 'What is the primary concept in this domain?',
     options: [MOCK_EXAM_CORRECT_ANSWER, 'Option B', 'Option C', 'Option D'],
     correctAnswer: MOCK_EXAM_CORRECT_ANSWER,
-    supportingSpans: ['Key concept about this service from the study material.'],
+    supportingSpans: ['key concepts, best practices, and real-world examples.'],
     sourceChunkIds: [sourceChunkId],
   })
 }
