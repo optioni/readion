@@ -1,5 +1,7 @@
 import { join } from 'node:path'
 import { defineConfig } from '@mikro-orm/postgresql'
+import { AgentConversationSchema } from './entities/agent-conversation.entity'
+import { AgentMessageSchema } from './entities/agent-message.entity'
 import { CertificationSchema } from './entities/certification.entity'
 import { ContentChunkSchema } from './entities/content-chunk.entity'
 import { ContentSourceSchema } from './entities/content-source.entity'
@@ -15,6 +17,8 @@ import { PluralUnderscoreNamingStrategy } from './naming-strategy'
 
 export default defineConfig({
   entities: [
+    AgentConversationSchema,
+    AgentMessageSchema,
     UserSchema,
     CertificationSchema,
     UserCertificationSchema,

@@ -1,4 +1,9 @@
 export { DbModule } from './db.module'
+export {
+  AgentConversation,
+  AgentConversationSchema,
+} from './entities/agent-conversation.entity'
+export { AgentMessage, AgentMessageSchema } from './entities/agent-message.entity'
 export { BaseEntity, BaseSchema } from './entities/base.entity'
 export {
   Certification,
