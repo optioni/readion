@@ -8,12 +8,92 @@ import {
   Put,
   UnprocessableEntityException,
 } from '@nestjs/common'
-import { ApiParam, ApiResponse } from '@nestjs/swagger'
-import type { MockExamResponse, ValidationErrorItem } from '@readion/shared'
+import { ApiParam, ApiProperty, ApiPropertyOptional, ApiResponse } from '@nestjs/swagger'
+import type {
+  MockExamGeneration,
+  MockExamResponse,
+  MockExamStatus,
+  MockExamType,
+  ValidationErrorItem,
+} from '@readion/shared'
 import { saveAnswerRequestSchema } from '@readion/shared'
 import { CurrentUser, type CurrentUserPrincipal } from '../auth/auth.guards'
 import type { CollectionResult } from '../common/interceptors/response.interceptor'
 import { MockExamService } from './mock-exam.service'
+
+class MockExamCitationDto {
+  @ApiProperty()
+  chunkId!: string
+  @ApiProperty()
+  text!: string
+}
+
+class MockExamQuestionResponseDto {
+  @ApiProperty()
+  id!: string
+  @ApiProperty()
+  question!: string
+  @ApiProperty({ type: [String] })
+  options!: string[]
+  @ApiProperty()
+  domain!: string
+  @ApiPropertyOptional({ nullable: true })
+  userAnswer!: string | null
+  @ApiPropertyOptional()
+  correctAnswer?: string
+  @ApiPropertyOptional()
+  explanation?: string
+  @ApiPropertyOptional({ type: [MockExamCitationDto] })
+  citations?: MockExamCitationDto[]
+}
+
+class MockExamResponseDto {
+  @ApiProperty()
+  id!: string
+  @ApiProperty()
+  userCertificationId!: string
+  @ApiProperty()
+  type!: MockExamType
+  @ApiProperty()
+  status!: MockExamStatus
+  @ApiProperty()
+  generation!: MockExamGeneration
+  @ApiPropertyOptional({ nullable: true })
+  startedAt!: string | null
+  @ApiPropertyOptional({ nullable: true })
+  deadline!: string | null
+  @ApiPropertyOptional({ nullable: true })
+  remainingSeconds!: number | null
+  @ApiPropertyOptional({ nullable: true })
+  score!: number | null
+  @ApiPropertyOptional({ nullable: true })
+  passed!: boolean | null
+  @ApiProperty({ type: 'object', additionalProperties: true })
+  domainBreakdown!: Record<string, unknown>
+  @ApiProperty({ type: [MockExamQuestionResponseDto] })
+  questions!: MockExamQuestionResponseDto[]
+}
+
+class MockExamDetailResponseDto {
+  @ApiProperty({ type: MockExamResponseDto })
+  data!: MockExamResponseDto
+}
+
+class MockExamListMetaDto {
+  @ApiProperty()
+  total!: number
+  @ApiProperty()
+  page!: number
+  @ApiProperty()
+  limit!: number
+}
+
+class MockExamListResponseDto {
+  @ApiProperty({ type: [MockExamResponseDto] })
+  data!: MockExamResponseDto[]
+  @ApiProperty({ type: MockExamListMetaDto })
+  meta!: MockExamListMetaDto
+}
 
 @Controller('user-certifications')
 export class EnrollmentMockExamController {
@@ -21,7 +101,7 @@ export class EnrollmentMockExamController {
 
   @Post(':id/mock-exams')
   @ApiParam({ name: 'id', description: 'UserCertification id' })
-  @ApiResponse({ status: 201, description: 'Mock exam attempt created and generation enqueued' })
+  @ApiResponse({ status: 201, type: MockExamDetailResponseDto })
   async create(
     @CurrentUser() user: CurrentUserPrincipal,
     @Param('id') enrollmentId: string,
@@ -31,7 +111,7 @@ export class EnrollmentMockExamController {
 
   @Get(':id/mock-exams')
   @ApiParam({ name: 'id', description: 'UserCertification id' })
-  @ApiResponse({ status: 200, description: "List of the enrollment's mock exam attempts" })
+  @ApiResponse({ status: 200, type: MockExamListResponseDto })
   @ApiResponse({ status: 404, description: 'Enrollment not found or not owned by the user' })
   async list(
     @CurrentUser() user: CurrentUserPrincipal,
@@ -47,10 +127,7 @@ export class MockExamController {
 
   @Get(':id')
   @ApiParam({ name: 'id', description: 'MockExam id' })
-  @ApiResponse({
-    status: 200,
-    description: 'Mock exam attempt with generation status and questions',
-  })
+  @ApiResponse({ status: 200, type: MockExamDetailResponseDto })
   @ApiResponse({ status: 404, description: 'Not found' })
   async findOne(
     @CurrentUser() user: CurrentUserPrincipal,
@@ -62,7 +139,7 @@ export class MockExamController {
   @Post(':id/submit')
   @HttpCode(200)
   @ApiParam({ name: 'id', description: 'MockExam id' })
-  @ApiResponse({ status: 200, description: 'Attempt scored and transitioned to submitted' })
+  @ApiResponse({ status: 200, type: MockExamDetailResponseDto })
   @ApiResponse({ status: 404, description: 'Not found' })
   @ApiResponse({ status: 409, description: 'Attempt is already submitted or expired' })
   async submit(
@@ -79,7 +156,7 @@ export class MockExamController {
     name: 'questionIndex',
     description: 'Zero-based index of the question in the attempt',
   })
-  @ApiResponse({ status: 200, description: 'Answer saved; returns the updated attempt' })
+  @ApiResponse({ status: 200, type: MockExamDetailResponseDto })
   @ApiResponse({ status: 404, description: 'Attempt or question not found' })
   @ApiResponse({ status: 409, description: 'Attempt is terminal or past its deadline' })
   async saveAnswer(
