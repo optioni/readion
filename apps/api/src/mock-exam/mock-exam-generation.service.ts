@@ -69,7 +69,9 @@ export class MockExamGenerationService {
       attempt.questions = []
     }
 
-    for (const slot of slots) {
+    const pendingSlots = this.filterPendingSlots(slots, attempt.questions)
+
+    for (const slot of pendingSlots) {
       const genResult = await this.quiz.generate(userId, {
         userCertificationId: enrollment.id,
         domain: slot.domain,
@@ -101,6 +103,30 @@ export class MockExamGenerationService {
       attempt.questions = [...attempt.questions, question]
       await em.flush()
     }
+  }
+
+  /**
+   * Returns only the slots not yet satisfied by existing questions so that
+   * re-invoking the job on a partially-generated attempt resumes without
+   * duplicating questions already persisted to the array.
+   */
+  private filterPendingSlots(slots: DomainSlot[], existing: MockExamQuestion[]): DomainSlot[] {
+    const existingByDomain = new Map<string, number>()
+    for (const q of existing) {
+      existingByDomain.set(q.domain, (existingByDomain.get(q.domain) ?? 0) + 1)
+    }
+
+    const pending: DomainSlot[] = []
+    for (const slot of slots) {
+      const count = existingByDomain.get(slot.domain) ?? 0
+      if (count > 0) {
+        existingByDomain.set(slot.domain, count - 1)
+      } else {
+        pending.push(slot)
+      }
+    }
+
+    return pending
   }
 
   /**

@@ -345,6 +345,80 @@ describe('MockExamGenerationProcessor (integration)', () => {
       }
     })
   })
+
+  describe('Idempotency: re-running does not duplicate', () => {
+    it('re-invoking on a partially-generated attempt fills remaining slots without duplicates', async () => {
+      const cert = await seedCert('PROC-IDEM-01')
+      for (const domain of ['Security', 'Networking']) {
+        await seedChunk(cert.id, domain)
+        await seedChunk(cert.id, domain)
+      }
+      const { attemptId } = await seedAttempt(cert)
+
+      const fork = em.fork()
+      const conn = fork.getConnection()
+
+      const partialQuestions = [
+        {
+          id: '11111111-1111-1111-1111-111111111111',
+          question: 'Pre-existing question',
+          options: ['key concepts', 'B', 'C', 'D'],
+          correctAnswer: 'key concepts',
+          explanation: '',
+          selectedAnswer: null,
+          domain: 'Security',
+          provenance: {
+            sourceChunkIds: ['00000000-0000-0000-0000-000000000099'],
+            supportingSpans: ['key concepts'],
+            verdict: { pass: true, score: 1.0, distractorFindings: [] },
+            score: 1.0,
+          },
+        },
+      ]
+      await conn.execute(`UPDATE mock_exams SET questions = ?::jsonb WHERE id = ?`, [
+        JSON.stringify(partialQuestions),
+        attemptId,
+      ])
+
+      await processor.process(fakeJob({ attemptId }))
+
+      const attempt = await em.fork().findOneOrFail(MockExam, { id: attemptId })
+
+      expect(attempt.questions).toHaveLength(cert.questionCount)
+
+      const ids = attempt.questions.map((q) => q.id)
+      const uniqueIds = new Set(ids)
+      expect(uniqueIds.size).toBe(cert.questionCount)
+      expect(uniqueIds.has('11111111-1111-1111-1111-111111111111')).toBe(true)
+
+      expect(attempt.startedAt).not.toBeNull()
+      expect(attempt.deadline).not.toBeNull()
+    })
+
+    it('re-running a completed attempt is a no-op: deadline unchanged, no extra questions', async () => {
+      const cert = await seedCert('PROC-NOOP-01')
+      for (const domain of ['Security', 'Networking']) {
+        await seedChunk(cert.id, domain)
+        await seedChunk(cert.id, domain)
+      }
+      const { attemptId } = await seedAttempt(cert)
+
+      await processor.process(fakeJob({ attemptId }))
+
+      const fork1 = em.fork()
+      const first = await fork1.findOneOrFail(MockExam, { id: attemptId })
+      const originalDeadline = first.deadline!.toISOString()
+      const originalQuestionCount = first.questions.length
+
+      await processor.process(fakeJob({ attemptId }))
+
+      const fork2 = em.fork()
+      const second = await fork2.findOneOrFail(MockExam, { id: attemptId })
+
+      expect(second.deadline!.toISOString()).toBe(originalDeadline)
+      expect(second.questions).toHaveLength(originalQuestionCount)
+    })
+  })
 })
 
 async function truncateTables(em: EntityManager): Promise<void> {

@@ -3,9 +3,12 @@ import type { EmbeddingModelV3Result, LanguageModelV3FinishReason } from '@ai-sd
 import { EntityManager, MikroORM } from '@mikro-orm/core'
 import type { INestApplication } from '@nestjs/common'
 import { Test, type TestingModule } from '@nestjs/testing'
-import { Certification, MockExam, startPostgresContainer, startRedisContainer } from '@readion/db'
+import { Certification, startPostgresContainer, startRedisContainer } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
+import type { MockExamGenerationJobPayload } from '@readion/shared'
+import { MOCK_EXAM_GENERATION_QUEUE } from '@readion/shared'
 import { MockEmbeddingModelV3, MockLanguageModelV3 } from 'ai/test'
+import type { Job } from 'bullmq'
 import type Redis from 'ioredis'
 import supertest from 'supertest'
 import type { StartedTestContainer } from 'testcontainers'
@@ -14,7 +17,7 @@ import { AppModule } from '../../app.module'
 import { bootstrapApp } from '../../bootstrap'
 import { ProviderAdapter } from '../../llm/provider-adapter'
 import { REDIS_CLIENT } from '../../redis/redis.module'
-import { MockExamGenerationService } from '../mock-exam-generation.service'
+import { MockExamGenerationProcessor } from '../mock-exam-generation.processor'
 
 const FINISH_REASON_STOP: LanguageModelV3FinishReason = { unified: 'stop', raw: 'stop' }
 
@@ -237,20 +240,19 @@ export async function createMockExamAcceptanceHarness(): Promise<MockExamAccepta
       return result[0]!.id
     },
     runGenerationJob: async (mockExamId: string): Promise<void> => {
-      const generationService = moduleRef.get(MockExamGenerationService)
-      await generationService.generateQuestionsForAttempt(mockExamId)
-
-      const fork = em.fork()
-      const attempt = await fork.findOneOrFail(
-        MockExam,
-        { id: mockExamId },
-        { populate: ['userCertification', 'userCertification.certification'] },
-      )
-      const timeLimitMs = attempt.userCertification.certification.timeLimitMinutes * 60 * 1000
-      const startedAt = new Date()
-      attempt.startedAt = startedAt
-      attempt.deadline = new Date(startedAt.getTime() + timeLimitMs)
-      await fork.flush()
+      const processor = moduleRef.get(MockExamGenerationProcessor)
+      const job = {
+        id: 'harness-1',
+        queueName: MOCK_EXAM_GENERATION_QUEUE,
+        name: 'mock-exam-generation',
+        data: { attemptId: mockExamId },
+        opts: {},
+        timestamp: Date.now(),
+        attemptsMade: 0,
+        stacktrace: [],
+        returnvalue: null,
+      } as Partial<Job<MockExamGenerationJobPayload>> as Job<MockExamGenerationJobPayload>
+      await processor.process(job)
     },
     runAutoSubmitCron: async (_now?: Date): Promise<void> => {
       throw new Error(
