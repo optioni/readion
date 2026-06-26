@@ -1,4 +1,8 @@
-import type { AgentMessageContent, AgentMessageContentPart, AgentMessageRole } from '@readion/shared'
+import type {
+  AgentMessageContent,
+  AgentMessageContentPart,
+  AgentMessageRole,
+} from '@readion/shared'
 import type { AssistantContent, ModelMessage, ToolContent, UserContent } from 'ai'
 
 export type AgentMessageRowData = {

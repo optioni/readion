@@ -111,14 +111,24 @@ describe('agent message serializer', () => {
       const row: AgentMessageRowData = {
         role: 'assistant',
         content: [
-          { type: 'tool-call', toolCallId: 'call-9', toolName: 'semanticSearch', input: { q: 'x' } },
+          {
+            type: 'tool-call',
+            toolCallId: 'call-9',
+            toolName: 'semanticSearch',
+            input: { q: 'x' },
+          },
         ],
       }
 
       expect(deserializeMessageRow(row)).toEqual({
         role: 'assistant',
         content: [
-          { type: 'tool-call', toolCallId: 'call-9', toolName: 'semanticSearch', input: { q: 'x' } },
+          {
+            type: 'tool-call',
+            toolCallId: 'call-9',
+            toolName: 'semanticSearch',
+            input: { q: 'x' },
+          },
         ],
       })
     })
