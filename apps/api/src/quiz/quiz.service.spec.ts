@@ -1,6 +1,7 @@
 import { EntityManager, MikroORM } from '@mikro-orm/core'
 import { NotFoundException, UnprocessableEntityException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import {
   Certification,
   startPostgresContainer,
@@ -141,6 +142,7 @@ describe('QuizService (integration)', () => {
       cacheService,
       embeddingService,
       llmService,
+      { emitAsync: vi.fn().mockResolvedValue([]) } as unknown as EventEmitter2,
     )
   }, 120_000)
 

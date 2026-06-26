@@ -1,5 +1,6 @@
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { QuizResponse, UserCertification } from '@readion/db'
 import type {
   ExplanationRequest,
@@ -14,6 +15,7 @@ import type {
   SubmitAnswerRequest,
   SubmitAnswerResponse,
 } from '@readion/shared'
+import { QUIZ_ANSWERED_EVENT } from '@readion/shared'
 import { z } from 'zod'
 import type { GenerationFn, GroundedChunk } from '../grounding/grounded-generation.service'
 import { GroundedGenerationService } from '../grounding/grounded-generation.service'
@@ -53,6 +55,7 @@ export class QuizService {
     private readonly cache: LlmResponseCacheService,
     private readonly embedding: EmbeddingService,
     private readonly llm: LlmService,
+    private readonly events: EventEmitter2,
   ) {}
 
   async generate(userId: string, request: GenerateQuizRequest): Promise<GenerateResult> {
@@ -131,6 +134,85 @@ export class QuizService {
     }
   }
 
+  async generateFromChunk(
+    userId: string,
+    request: {
+      userCertificationId: string
+      anchorChunkId: string
+      difficulty: GenerateQuizRequest['difficulty']
+      format?: QuestionFormat
+    },
+  ): Promise<GenerateResult> {
+    const em = this.em.fork()
+
+    const enrollment = await em.findOne(
+      UserCertification,
+      { id: request.userCertificationId, user: userId },
+      { populate: ['certification'] },
+    )
+    if (!enrollment) {
+      throw new NotFoundException('Enrollment not found')
+    }
+
+    const cert = enrollment.certification
+    if (cert.state !== 'live') {
+      throw new UnprocessableEntityException(
+        'Certification is not yet available for quiz generation',
+      )
+    }
+
+    const chunks = await this.loadChunksByIds(em, [request.anchorChunkId])
+    if (chunks.length === 0) {
+      return { type: 'insufficient_material', certificationId: cert.id, domain: '' }
+    }
+
+    const primaryChunk = chunks[0]!
+    const domain = primaryChunk.primaryDomain
+    const format =
+      request.format ??
+      planFormat({ id: primaryChunk.id, primaryDomain: domain }, request.difficulty)
+    const chunkIds = chunks.map((c) => c.id)
+    const cacheKey = buildCacheKey({
+      certificationId: cert.id,
+      chunkIds,
+      difficulty: request.difficulty,
+      format,
+    })
+
+    const cached = await this.cache.get(cacheKey)
+    if (cached) {
+      const { item, provenance } = this.readQuizPayload(cached)
+      return {
+        type: 'question',
+        data: { id: cacheKey, format, question: item.question, options: item.options, provenance },
+      }
+    }
+
+    const generationFn = this.buildQuizGenerationFn(format)
+    const result = await this.groundedGeneration.generate(generationFn, chunks, {
+      cacheKey,
+      certificationId: cert.id,
+      domain,
+    })
+
+    if (!result.success) {
+      return { type: 'insufficient_material', certificationId: cert.id, domain }
+    }
+
+    await this.writeQuizCache(cacheKey, chunkIds, result.item, result.provenance, format)
+
+    return {
+      type: 'question',
+      data: {
+        id: cacheKey,
+        format,
+        question: result.item.question,
+        options: result.item.options,
+        provenance: result.provenance,
+      },
+    }
+  }
+
   async submitAnswer(
     userId: string,
     questionId: string,
@@ -172,6 +254,15 @@ export class QuizService {
 
     em.persist(responseEntity)
     await em.flush()
+
+    await this.events.emitAsync(QUIZ_ANSWERED_EVENT, {
+      userId,
+      userCertificationId: enrollment.id,
+      certificationId: enrollment.certification.id,
+      sourceChunkIds: provenance.sourceChunkIds,
+      correct,
+      confidence: request.confidence,
+    })
 
     return {
       id: responseEntity.id,
