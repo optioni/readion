@@ -52,6 +52,7 @@ export interface EnrollmentResponse {
   status: EnrollmentStatus
   enrolledAt: string
   sessionDefaults: EnrollmentSessionOverrides
+  readinessScore: number | null
 }
 
 export type EnrollCertificationRequest = z.infer<typeof enrollCertificationRequestSchema>
