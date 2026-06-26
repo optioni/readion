@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { selectNextFocus, selectStrongest, selectWeakest } from './selectors'
 import type { GradedResponse, WeakAreaScore } from './selectors'
+import { selectNextFocus, selectStrongest, selectWeakest } from './selectors'
 
-const makeResponse = (overrides: Partial<GradedResponse> & { responseId: string }): GradedResponse => ({
+const makeResponse = (
+  overrides: Partial<GradedResponse> & { responseId: string },
+): GradedResponse => ({
   question: `Question for ${overrides.responseId}`,
   correct: false,
   confidence: 3,
@@ -85,8 +87,18 @@ describe('selectStrongest', () => {
   })
 
   it('breaks confidence tie by fastest timeTakenMs (ascending)', () => {
-    const slow = makeResponse({ responseId: 'slow', correct: true, confidence: 5, timeTakenMs: 10000 })
-    const fast = makeResponse({ responseId: 'fast', correct: true, confidence: 5, timeTakenMs: 2000 })
+    const slow = makeResponse({
+      responseId: 'slow',
+      correct: true,
+      confidence: 5,
+      timeTakenMs: 10000,
+    })
+    const fast = makeResponse({
+      responseId: 'fast',
+      correct: true,
+      confidence: 5,
+      timeTakenMs: 2000,
+    })
     const result = selectStrongest([slow, fast])
     expect(result?.responseId).toBe('fast')
   })
