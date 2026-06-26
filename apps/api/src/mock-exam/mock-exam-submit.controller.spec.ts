@@ -3,11 +3,7 @@ import type { EmbeddingModelV3Result, LanguageModelV3FinishReason } from '@ai-sd
 import { EntityManager, MikroORM } from '@mikro-orm/core'
 import type { INestApplication } from '@nestjs/common'
 import { Test, type TestingModule } from '@nestjs/testing'
-import {
-  QuizResponse,
-  startPostgresContainer,
-  startRedisContainer,
-} from '@readion/db'
+import { QuizResponse, startPostgresContainer, startRedisContainer } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import type { MockExamGenerationJobPayload } from '@readion/shared'
 import { MOCK_EXAM_GENERATION_QUEUE } from '@readion/shared'
@@ -480,8 +476,9 @@ describe('POST /api/v1/mock-exams/:id/submit (integration)', () => {
       // Both domains should have weak area rows
       expect(rows.length).toBeGreaterThanOrEqual(2)
 
-      const securityRow = rows.find((r) => r.domain === 'Security')
-      const networkingRow = rows.find((r) => r.domain === 'Networking')
+      type WeakAreaRow = { domain: string; accuracy: number; response_count: number }
+      const securityRow = rows.find((r: WeakAreaRow) => r.domain === 'Security')
+      const networkingRow = rows.find((r: WeakAreaRow) => r.domain === 'Networking')
 
       expect(securityRow).toBeDefined()
       expect(securityRow!.response_count).toBe(2)

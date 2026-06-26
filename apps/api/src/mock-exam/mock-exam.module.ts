@@ -22,6 +22,11 @@ import { MockExamScorer } from './mock-exam-scorer'
     MockExamGenerationProcessor,
     MockExamService,
   ],
-  exports: [MockExamScorer, MockExamGenerationService, MockExamGenerationProcessor],
+  exports: [
+    MockExamScorer,
+    MockExamGenerationService,
+    MockExamGenerationProcessor,
+    MockExamService,
+  ],
 })
 export class MockExamModule {}

@@ -89,14 +89,40 @@ export class MockExamService {
       throw new ConflictException('Attempt is already submitted or expired')
     }
 
-    const cert = attempt.userCertification.certification
-    const result = this.scorer.score(
-      attempt.questions,
-      cert.domains,
-      cert.passingScore / 1000,
-    )
+    await this.finalizeAttempt(em, attempt, 'submitted')
 
-    attempt.status = 'submitted'
+    return mapMockExamToResponse(attempt)
+  }
+
+  /**
+   * Scores, persists the result, emits QuizResponses, and drives weak-area
+   * recompute for a completed attempt. Parameterised by terminalStatus so
+   * both the manual submit path ('submitted') and the auto-submit cron path
+   * ('expired') share identical scoring behaviour.
+   *
+   * Worker boundary note (Group 9):
+   * The auto-submit cron lives in apps/worker which cannot import apps/api/src.
+   * Group 9 therefore has two clean options:
+   *   (a) Move MockExamScorer to packages/shared (it is pure — no I/O, no NestJS
+   *       runtime dependency beyond @Injectable which the worker can also use),
+   *       replicate the QuizResponse emission + recompute logic in the worker
+   *       using packages/db entities (already available there) and a worker-local
+   *       WeakAreasService that has the same em-based aggregation logic.
+   *   (b) Add an HTTP action endpoint POST /api/v1/mock-exams/:id/expire (api-key
+   *       guarded) that the worker calls back to the API to trigger finalize.
+   * Option (a) is preferred: it keeps the worker DB-direct and avoids cross-process
+   * HTTP coupling. MockExamScorer is already a candidate for packages/ since it is
+   * pure logic with no I/O.
+   */
+  async finalizeAttempt(
+    em: EntityManager,
+    attempt: MockExam,
+    terminalStatus: 'submitted' | 'expired',
+  ): Promise<void> {
+    const cert = attempt.userCertification.certification
+    const result = this.scorer.score(attempt.questions, cert.domains, cert.passingScore / 1000)
+
+    attempt.status = terminalStatus
     attempt.score = result.score
     attempt.passed = result.passed
     attempt.domainBreakdown = result.domainBreakdown
@@ -125,8 +151,6 @@ export class MockExamService {
     await em.flush()
 
     await this.weakAreas.recompute(attempt.userCertification.id)
-
-    return mapMockExamToResponse(attempt)
   }
 
   async saveAnswer(
