@@ -3,7 +3,7 @@ import type { EmbeddingModelV3Result, LanguageModelV3FinishReason } from '@ai-sd
 import { EntityManager, MikroORM } from '@mikro-orm/core'
 import type { INestApplication } from '@nestjs/common'
 import { Test, type TestingModule } from '@nestjs/testing'
-import { Certification, startPostgresContainer, startRedisContainer } from '@readion/db'
+import { Certification, MockExam, startPostgresContainer, startRedisContainer } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import { MockEmbeddingModelV3, MockLanguageModelV3 } from 'ai/test'
 import type Redis from 'ioredis'
@@ -14,6 +14,7 @@ import { AppModule } from '../../app.module'
 import { bootstrapApp } from '../../bootstrap'
 import { ProviderAdapter } from '../../llm/provider-adapter'
 import { REDIS_CLIENT } from '../../redis/redis.module'
+import { MockExamGenerationService } from '../mock-exam-generation.service'
 
 const FINISH_REASON_STOP: LanguageModelV3FinishReason = { unified: 'stop', raw: 'stop' }
 
@@ -235,10 +236,21 @@ export async function createMockExamAcceptanceHarness(): Promise<MockExamAccepta
       )
       return result[0]!.id
     },
-    runGenerationJob: async (_mockExamId: string): Promise<void> => {
-      throw new Error(
-        'MockExam generation job not yet implemented — MockExamModule (Group 1) must be added before this method becomes available',
+    runGenerationJob: async (mockExamId: string): Promise<void> => {
+      const generationService = moduleRef.get(MockExamGenerationService)
+      await generationService.generateQuestionsForAttempt(mockExamId)
+
+      const fork = em.fork()
+      const attempt = await fork.findOneOrFail(
+        MockExam,
+        { id: mockExamId },
+        { populate: ['userCertification', 'userCertification.certification'] },
       )
+      const timeLimitMs = attempt.userCertification.certification.timeLimitMinutes * 60 * 1000
+      const startedAt = new Date()
+      attempt.startedAt = startedAt
+      attempt.deadline = new Date(startedAt.getTime() + timeLimitMs)
+      await fork.flush()
     },
     runAutoSubmitCron: async (_now?: Date): Promise<void> => {
       throw new Error(
