@@ -13,6 +13,7 @@ import type {
 } from '@readion/shared'
 import { MOCK_EXAM_GENERATION_QUEUE } from '@readion/shared'
 import type { Queue } from 'bullmq'
+import type { CollectionResult } from '../common/interceptors/response.interceptor'
 import type { EnvConfig } from '../config/env.schema'
 import { WeakAreasService } from '../weak-areas/weak-areas.service'
 import { MockExamScorer } from './mock-exam-scorer'
@@ -71,6 +72,34 @@ export class MockExamService {
     }
 
     return mapMockExamToResponse(attempt)
+  }
+
+  async listForEnrollment(
+    userId: string,
+    enrollmentId: string,
+    page = 1,
+    limit = 25,
+  ): Promise<CollectionResult<MockExamResponse>> {
+    const em = this.em.fork()
+
+    const enrollment = await em.findOne(UserCertification, { id: enrollmentId, user: userId })
+    if (enrollment === null) {
+      throw new NotFoundException('Enrollment not found')
+    }
+
+    const effectiveLimit = Math.min(limit, 100)
+    const offset = (page - 1) * effectiveLimit
+
+    const [attempts, total] = await em.findAndCount(
+      MockExam,
+      { userCertification: enrollmentId },
+      { orderBy: { id: 'DESC' }, limit: effectiveLimit, offset },
+    )
+
+    return {
+      items: attempts.map(mapMockExamToResponse),
+      meta: { total, page, limit: effectiveLimit },
+    }
   }
 
   async submit(userId: string, attemptId: string): Promise<MockExamResponse> {

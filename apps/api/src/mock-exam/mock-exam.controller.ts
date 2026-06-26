@@ -12,6 +12,7 @@ import { ApiParam, ApiResponse } from '@nestjs/swagger'
 import type { MockExamResponse, ValidationErrorItem } from '@readion/shared'
 import { saveAnswerRequestSchema } from '@readion/shared'
 import { CurrentUser, type CurrentUserPrincipal } from '../auth/auth.guards'
+import type { CollectionResult } from '../common/interceptors/response.interceptor'
 import { MockExamService } from './mock-exam.service'
 
 @Controller('user-certifications')
@@ -26,6 +27,17 @@ export class EnrollmentMockExamController {
     @Param('id') enrollmentId: string,
   ): Promise<MockExamResponse> {
     return this.service.create(user.id, enrollmentId)
+  }
+
+  @Get(':id/mock-exams')
+  @ApiParam({ name: 'id', description: 'UserCertification id' })
+  @ApiResponse({ status: 200, description: "List of the enrollment's mock exam attempts" })
+  @ApiResponse({ status: 404, description: 'Enrollment not found or not owned by the user' })
+  async list(
+    @CurrentUser() user: CurrentUserPrincipal,
+    @Param('id') enrollmentId: string,
+  ): Promise<CollectionResult<MockExamResponse>> {
+    return this.service.listForEnrollment(user.id, enrollmentId)
   }
 }
 
