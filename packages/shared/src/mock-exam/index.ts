@@ -70,3 +70,10 @@ export const saveAnswerRequestSchema = z.object({
   answer: z.string().min(1),
 })
 export type SaveAnswerRequest = z.infer<typeof saveAnswerRequestSchema>
+
+export const diagnosticOffers = ['onboarding', 're-prompt', 'none'] as const
+export type DiagnosticOffer = (typeof diagnosticOffers)[number]
+
+export interface DiagnosticOfferResponse {
+  offer: DiagnosticOffer
+}

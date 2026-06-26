@@ -83,6 +83,8 @@ export type {
   VerifierVerdict,
 } from './grounding'
 export type {
+  DiagnosticOffer,
+  DiagnosticOfferResponse,
   MockExamCitation,
   MockExamDomainBreakdown,
   MockExamDomainStat,
@@ -96,6 +98,7 @@ export type {
   SaveAnswerRequest,
 } from './mock-exam'
 export {
+  diagnosticOffers,
   MOCK_EXAM_GENERATION_QUEUE,
   mockExamGenerations,
   mockExamStatuses,
