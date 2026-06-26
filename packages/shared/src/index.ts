@@ -129,6 +129,8 @@ export {
   reportRequestSchema,
   submitAnswerRequestSchema,
 } from './quiz'
+export type { ReadinessResponse, ReadinessTrajectory } from './readiness'
+export { READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT } from './readiness'
 export type {
   ReviewItemResponse,
   ReviewItemState,
