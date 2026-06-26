@@ -83,15 +83,23 @@ export type {
   VerifierVerdict,
 } from './grounding'
 export type {
+  MockExamCitation,
   MockExamDomainBreakdown,
   MockExamDomainStat,
+  MockExamGeneration,
   MockExamGenerationJobPayload,
   MockExamQuestion,
+  MockExamQuestionResponse,
   MockExamResponse,
   MockExamStatus,
   MockExamType,
 } from './mock-exam'
-export { MOCK_EXAM_GENERATION_QUEUE, mockExamStatuses, mockExamTypes } from './mock-exam'
+export {
+  MOCK_EXAM_GENERATION_QUEUE,
+  mockExamGenerations,
+  mockExamStatuses,
+  mockExamTypes,
+} from './mock-exam'
 export type { PaginationQueryParams } from './pagination'
 export { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from './pagination'
 export type { ProblemDetails, ValidationErrorItem } from './problem-details'

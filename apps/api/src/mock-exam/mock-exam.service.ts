@@ -2,7 +2,14 @@ import { EntityManager } from '@mikro-orm/core'
 import { InjectQueue } from '@nestjs/bullmq'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { MockExam, User, UserCertification } from '@readion/db'
-import type { MockExamGenerationJobPayload, MockExamResponse } from '@readion/shared'
+import type {
+  MockExamCitation,
+  MockExamGeneration,
+  MockExamGenerationJobPayload,
+  MockExamQuestion,
+  MockExamQuestionResponse,
+  MockExamResponse,
+} from '@readion/shared'
 import { MOCK_EXAM_GENERATION_QUEUE } from '@readion/shared'
 import type { Queue } from 'bullmq'
 
@@ -47,9 +54,64 @@ export class MockExamService {
 
     return mapMockExamToResponse(attempt)
   }
+
+  async findOne(userId: string, attemptId: string): Promise<MockExamResponse> {
+    const em = this.em.fork()
+
+    const attempt = await em.findOne(MockExam, { id: attemptId, user: userId })
+    if (attempt === null) {
+      throw new NotFoundException('Mock exam not found')
+    }
+
+    return mapMockExamToResponse(attempt)
+  }
+}
+
+function deriveGeneration(attempt: MockExam): MockExamGeneration {
+  return attempt.deadline === null ? 'preparing' : 'ready'
+}
+
+function deriveRemainingSeconds(attempt: MockExam): number | null {
+  if (attempt.deadline === null) {
+    return null
+  }
+  const ms = attempt.deadline.getTime() - Date.now()
+  return Math.max(0, Math.floor(ms / 1000))
+}
+
+function buildCitations(provenance: MockExamQuestion['provenance']): MockExamCitation[] {
+  const { sourceChunkIds, supportingSpans } = provenance
+  const length = Math.max(sourceChunkIds.length, supportingSpans.length)
+  return Array.from({ length }, (_, i) => ({
+    chunkId: sourceChunkIds[i] ?? '',
+    text: supportingSpans[i] ?? '',
+  }))
+}
+
+function mapQuestion(q: MockExamQuestion, isTerminal: boolean): MockExamQuestionResponse {
+  const base: MockExamQuestionResponse = {
+    id: q.id,
+    question: q.question,
+    options: q.options,
+    domain: q.domain,
+    userAnswer: q.selectedAnswer,
+  }
+
+  if (!isTerminal) {
+    return base
+  }
+
+  return {
+    ...base,
+    correctAnswer: q.correctAnswer,
+    explanation: q.explanation,
+    citations: buildCitations(q.provenance),
+  }
 }
 
 function mapMockExamToResponse(attempt: MockExam): MockExamResponse {
+  const isTerminal = attempt.status === 'submitted' || attempt.status === 'expired'
+
   return {
     id: attempt.id,
     userCertificationId:
@@ -58,11 +120,13 @@ function mapMockExamToResponse(attempt: MockExam): MockExamResponse {
         : attempt.userCertification.id,
     type: attempt.type,
     status: attempt.status,
+    generation: deriveGeneration(attempt),
     startedAt: attempt.startedAt ? attempt.startedAt.toISOString() : null,
     deadline: attempt.deadline ? attempt.deadline.toISOString() : null,
+    remainingSeconds: deriveRemainingSeconds(attempt),
     score: attempt.score,
     passed: attempt.passed,
     domainBreakdown: attempt.domainBreakdown,
-    questions: attempt.questions,
+    questions: (attempt.questions ?? []).map((q) => mapQuestion(q, isTerminal)),
   }
 }
