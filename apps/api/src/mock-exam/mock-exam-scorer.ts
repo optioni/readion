@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common'
-import type { CertificationDomain } from '@readion/shared'
-import type { MockExamDomainBreakdown, MockExamQuestion } from '@readion/shared'
+import type {
+  CertificationDomain,
+  MockExamDomainBreakdown,
+  MockExamQuestion,
+} from '@readion/shared'
 
 export interface ScoreResult {
   score: number
@@ -16,7 +19,7 @@ export class MockExamScorer {
    * - score: fraction 0..1 = (correct answers) / (total questions)
    * - passed: score >= passingScore (inclusive; real cert semantics)
    * - unanswered questions (selectedAnswer === null) count as incorrect
-   * - passingScore must be in the same 0..1 fraction scale as score;
+   * - passingScore must be on the same 0..1 fraction scale as score;
    *   callers normalise Certification.passingScore (0-1000 scale) by dividing by 1000
    * - domainWeights pre-seeds the breakdown so all cert domains appear,
    *   even if no questions were allocated to that domain
@@ -52,19 +55,19 @@ export class MockExamScorer {
     }
 
     for (const question of questions) {
-      const domain = question.domain
+      const { domain } = question
       if (!breakdown[domain]) {
         breakdown[domain] = { correct: 0, total: 0, accuracy: 0 }
       }
 
-      const stat = breakdown[domain]!
+      const stat = breakdown[domain]
       stat.total += 1
 
       if (question.selectedAnswer !== null && question.selectedAnswer === question.correctAnswer) {
         stat.correct += 1
       }
 
-      stat.accuracy = stat.total === 0 ? 0 : stat.correct / stat.total
+      stat.accuracy = stat.correct / stat.total
     }
 
     return breakdown

@@ -1,5 +1,4 @@
-import type { CertificationDomain } from '@readion/shared'
-import type { MockExamQuestion } from '@readion/shared'
+import type { CertificationDomain, MockExamQuestion } from '@readion/shared'
 import { describe, expect, it } from 'vitest'
 import { MockExamScorer } from './mock-exam-scorer'
 
@@ -83,10 +82,7 @@ describe('MockExamScorer', () => {
         makeQuestion('q2', 'Security', 'Option B', null), // unanswered → incorrect
       ]
       const result = scorer.score(questions, DOMAINS, 0.7)
-      const secDomain = result.domainBreakdown['Security']
-      expect(secDomain).toBeDefined()
-      expect(secDomain!.correct).toBe(1)
-      expect(secDomain!.total).toBe(2)
+      expect(result.domainBreakdown.Security).toEqual({ correct: 1, total: 2, accuracy: 0.5 })
     })
   })
 
@@ -160,16 +156,8 @@ describe('MockExamScorer', () => {
       ]
       const result = scorer.score(questions, DOMAINS, 0.7)
 
-      expect(result.domainBreakdown['Security']).toEqual({
-        correct: 1,
-        total: 2,
-        accuracy: 0.5,
-      })
-      expect(result.domainBreakdown['Networking']).toEqual({
-        correct: 2,
-        total: 2,
-        accuracy: 1,
-      })
+      expect(result.domainBreakdown.Security).toEqual({ correct: 1, total: 2, accuracy: 0.5 })
+      expect(result.domainBreakdown.Networking).toEqual({ correct: 2, total: 2, accuracy: 1 })
     })
 
     it('includes cert domains with zero questions as empty stats', () => {
@@ -178,17 +166,11 @@ describe('MockExamScorer', () => {
         { name: 'Networking', weight: 40 },
         { name: 'Compute', weight: 20 },
       ]
-      const questions = [
-        makeQuestion('q1', 'Security', 'Option A', 'Option A'),
-      ]
+      const questions = [makeQuestion('q1', 'Security', 'Option A', 'Option A')]
       const result = scorer.score(questions, domainsWithExtra, 0.7)
       // Compute domain appears even with 0 questions
       expect(result.domainBreakdown).toHaveProperty('Compute')
-      expect(result.domainBreakdown['Compute']).toEqual({
-        correct: 0,
-        total: 0,
-        accuracy: 0,
-      })
+      expect(result.domainBreakdown.Compute).toEqual({ correct: 0, total: 0, accuracy: 0 })
     })
 
     it('is deterministic — same inputs always produce same outputs', () => {
