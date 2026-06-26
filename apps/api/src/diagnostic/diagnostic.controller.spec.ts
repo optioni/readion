@@ -230,7 +230,7 @@ describe('DiagnosticController (integration)', () => {
         durationMinutes: 30,
         contentMix: 'balanced',
         difficulty: 'medium',
-        focusArea: { type: 'weakest' },
+        focusArea: { mode: 'auto' },
         learningStyle: 'visual',
         startedAt: new Date(),
         endedAt: new Date(),
@@ -282,7 +282,6 @@ describe('DiagnosticController (integration)', () => {
       const certId = await seedLiveCert('DIAG-OFFER-03')
       const enrollmentId = await enroll(token, certId)
 
-      await seedSubmittedDiagnostic(userId, enrollmentId)
       await seedCompletedSession(userId, enrollmentId)
 
       const res = await supertest(app.getHttpServer())
@@ -336,7 +335,7 @@ describe('DiagnosticController (integration)', () => {
         durationMinutes: 30,
         contentMix: 'balanced',
         difficulty: 'medium',
-        focusArea: { type: 'weakest' },
+        focusArea: { mode: 'auto' },
         learningStyle: 'visual',
         startedAt: new Date(),
         endedAt: new Date(),
@@ -355,7 +354,6 @@ describe('DiagnosticController (integration)', () => {
       const certId = await seedLiveCert('DIAG-OFFER-05')
       const enrollmentId = await enroll(token, certId)
 
-      await seedSubmittedDiagnostic(userId, enrollmentId)
       await seedCompletedSession(userId, enrollmentId)
 
       const offerBefore = await supertest(app.getHttpServer())

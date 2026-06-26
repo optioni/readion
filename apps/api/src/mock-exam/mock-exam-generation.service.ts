@@ -57,7 +57,7 @@ export class MockExamGenerationService {
     const cert = enrollment.certification
     const userId = attempt.user.id
 
-    const slots =
+    const slots: Array<DiagnosticDomainSlot | MockDomainSlot> =
       attempt.type === 'diagnostic'
         ? planBreadthSlots(
             cert.domains,
