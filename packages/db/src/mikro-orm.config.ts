@@ -4,6 +4,7 @@ import { CertificationSchema } from './entities/certification.entity'
 import { ContentChunkSchema } from './entities/content-chunk.entity'
 import { ContentSourceSchema } from './entities/content-source.entity'
 import { QuizResponseSchema } from './entities/quiz-response.entity'
+import { ReviewItemSchema } from './entities/review-item.entity'
 import { SessionItemSchema } from './entities/session-item.entity'
 import { StudySessionSchema } from './entities/study-session.entity'
 import { UserSchema } from './entities/user.entity'
@@ -22,6 +23,7 @@ export default defineConfig({
     WeakAreaSchema,
     StudySessionSchema,
     SessionItemSchema,
+    ReviewItemSchema,
   ],
   discovery: { warnWhenNoEntities: false },
   dbName: process.env.DB_NAME ?? 'readion',
