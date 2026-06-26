@@ -1,11 +1,10 @@
-import { BullModule } from '@nestjs/bullmq'
 import { Module } from '@nestjs/common'
-import { MOCK_EXAM_GENERATION_QUEUE } from '@readion/shared'
+import { MockExamQueueModule } from '../mock-exam/mock-exam-queue.module'
 import { DiagnosticController } from './diagnostic.controller'
 import { DiagnosticService } from './diagnostic.service'
 
 @Module({
-  imports: [BullModule.registerQueue({ name: MOCK_EXAM_GENERATION_QUEUE })],
+  imports: [MockExamQueueModule],
   controllers: [DiagnosticController],
   providers: [DiagnosticService],
 })
