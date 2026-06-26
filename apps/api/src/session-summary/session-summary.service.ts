@@ -3,11 +3,11 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { ConfigService } from '@nestjs/config'
 import { ContentChunk, MockExam, QuizResponse, StudySession, UserCertification } from '@readion/db'
 import {
+  type DrillResultResponse,
   READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT,
+  type SessionSummaryResponse,
   SUMMARY_DRILL_MAX_QUESTIONS,
   SUMMARY_UNSURE_CONFIDENCE_THRESHOLD,
-  type DrillResultResponse,
-  type SessionSummaryResponse,
 } from '@readion/shared'
 import type { EnvConfig } from '../config/env.schema'
 import { SessionsService } from '../sessions/sessions.service'
@@ -16,8 +16,8 @@ import { summarizeResponses } from './accuracy-rollup'
 import { computeDeltas, type DeltaInput, type MockResultInput } from './delta-calculator'
 import {
   type MockQuestionTarget,
-  selectDrillTargets,
   type SessionResponseTarget,
+  selectDrillTargets,
 } from './drill-targets'
 import type { ResponseWithDomain } from './response-domain-mapper'
 import { type GradedResponse, selectNextFocus, selectStrongest, selectWeakest } from './selectors'
@@ -32,6 +32,7 @@ type DomainedResponse = {
   timeTakenMs: number
   createdAt: Date
   domain: string
+  anchorChunkId?: string
 }
 
 @Injectable()
@@ -133,14 +134,16 @@ export class SessionSummaryService {
     )
     const domained = await this.attachDomains(em, inWindow)
 
-    const targets: SessionResponseTarget[] = inWindow
-      .map((r, index) => {
-        const anchorChunkId = r.questionSnapshot.provenance.sourceChunkIds[0]
-        const domain = domained.find((d) => d.id === r.id)?.domain
-        if (anchorChunkId === undefined || domain === undefined) return null
-        return { correct: r.correct, confidence: r.confidence, domain, anchorChunkId }
-      })
-      .filter((t): t is SessionResponseTarget => t !== null)
+    const targets: SessionResponseTarget[] = domained
+      .filter(
+        (r): r is DomainedResponse & { anchorChunkId: string } => r.anchorChunkId !== undefined,
+      )
+      .map((r) => ({
+        correct: r.correct,
+        confidence: r.confidence,
+        domain: r.domain,
+        anchorChunkId: r.anchorChunkId,
+      }))
 
     return this.runDrill(userId, enrollmentId, targets, 'session')
   }
@@ -301,16 +304,15 @@ export class SessionSummaryService {
     const chunkIds = [
       ...new Set(responses.flatMap((r) => r.questionSnapshot.provenance.sourceChunkIds)),
     ]
-    const chunks =
-      chunkIds.length > 0 ? await em.find(ContentChunk, { id: { $in: chunkIds } }) : []
+    const chunks = chunkIds.length > 0 ? await em.find(ContentChunk, { id: { $in: chunkIds } }) : []
     const chunkDomainMap = new Map(chunks.map((c) => [c.id, c.primaryDomain]))
 
     const result: DomainedResponse[] = []
     for (const r of responses) {
-      const domain = r.questionSnapshot.provenance.sourceChunkIds
-        .map((id) => chunkDomainMap.get(id))
-        .find((d) => d !== undefined)
-      if (domain === undefined) continue
+      const sourceChunkIds = r.questionSnapshot.provenance.sourceChunkIds
+      const domain = sourceChunkIds.map((id) => chunkDomainMap.get(id)).find((d) => d !== undefined)
+      const anchorChunkId = sourceChunkIds[0]
+      if (domain === undefined || anchorChunkId === undefined) continue
       result.push({
         id: r.id,
         question: r.questionSnapshot.question,
@@ -319,6 +321,7 @@ export class SessionSummaryService {
         timeTakenMs: r.timeTakenMs,
         createdAt: r.createdAt,
         domain,
+        anchorChunkId,
       })
     }
     return result
@@ -339,10 +342,7 @@ export class SessionSummaryService {
       .map((m) => ({ score: m.score as number, at: m.updatedAt }))
   }
 
-  private async hasCompletedDiagnostic(
-    em: EntityManager,
-    enrollmentId: string,
-  ): Promise<boolean> {
+  private async hasCompletedDiagnostic(em: EntityManager, enrollmentId: string): Promise<boolean> {
     const diagnostic = await em.findOne(MockExam, {
       userCertification: enrollmentId,
       type: 'diagnostic',

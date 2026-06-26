@@ -1,9 +1,9 @@
 import { EntityManager } from '@mikro-orm/core'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
+  createSessionSummaryAcceptanceHarness,
   SESSION_SUMMARY_CORRECT_ANSWER,
   SESSION_SUMMARY_WRONG_ANSWER,
-  createSessionSummaryAcceptanceHarness,
   type SessionSummaryAcceptanceHarness,
 } from './test/session-summary-acceptance-harness'
 
@@ -112,6 +112,65 @@ describe('session summary integration (groups 7-9)', () => {
 
     const after = await countWeakAreas()
     expect(after).toBe(before)
+  })
+
+  it('drill returns the existing active session when the one-active invariant is triggered', async () => {
+    const cert = await harness.seedCertification('SUM-ACTIVE-INV-01')
+    for (const domain of ['Security', 'Security', 'Networking']) {
+      await harness.seedChunk(cert.id, domain)
+    }
+
+    const token = await harness.registerAndLogin('sum-active-inv-01@example.com', 'correcthorse')
+    const auth = `Bearer ${token}`
+    const enrollmentId = await harness.enroll(token, cert.id)
+
+    const create = await harness
+      .getRequest()
+      .post(`/api/v1/user-certifications/${enrollmentId}/sessions`)
+      .set('Authorization', auth)
+      .send({ durationMinutes: 30, contentMix: 'quiz-heavy', difficulty: 'intermediate' })
+    expect(create.status).toBe(201)
+    const sessionId = create.body.data.id as string
+
+    const getItems = await harness
+      .getRequest()
+      .get(`/api/v1/sessions/${sessionId}?include=items`)
+      .set('Authorization', auth)
+    const items = getItems.body.data.items as SessionItemPayload[]
+    const quizItems = items.filter((i) => i.type === 'quiz')
+
+    for (const item of quizItems) {
+      const parsed = JSON.parse(item.content) as QuizContent
+      await harness
+        .getRequest()
+        .post(`/api/v1/quiz/${parsed.questionId}/submit`)
+        .set('Authorization', auth)
+        .send({
+          userCertificationId: enrollmentId,
+          answer: SESSION_SUMMARY_WRONG_ANSWER,
+          confidence: 1,
+          timeTakenMs: 1500,
+        })
+    }
+
+    await harness.getRequest().post(`/api/v1/sessions/${sessionId}/end`).set('Authorization', auth)
+
+    const drill1 = await harness
+      .getRequest()
+      .post(`/api/v1/sessions/${sessionId}/drill`)
+      .set('Authorization', auth)
+    expect([200, 201]).toContain(drill1.status)
+    expect(drill1.body.data.status).toBe('started')
+    const reviewSessionId = drill1.body.data.session.id as string
+
+    // Second drill hits the one-active invariant and returns the already-active session
+    const drill2 = await harness
+      .getRequest()
+      .post(`/api/v1/sessions/${sessionId}/drill`)
+      .set('Authorization', auth)
+    expect([200, 201]).toContain(drill2.status)
+    expect(drill2.body.data.status).toBe('started')
+    expect(drill2.body.data.session.id).toBe(reviewSessionId)
   })
 
   it('returns 404 for all four endpoints when the resource belongs to another user', async () => {
