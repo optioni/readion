@@ -192,24 +192,26 @@ artifacts:
       - **Open Questions**: Outstanding decisions or unknowns to resolve
 
 
-      **Frontend/UI changes — capture the visual design source.** When this
-      change builds or modifies user-facing views, the visual source of truth
-      lives in the team's Claude Design project(s) at claude.ai/design, reachable
-      via the DesignSync tool (`list_projects`, `list_files`, `get_file`). Do the
-      following so the actual designed views are pulled into the change rather
-      than reinvented:
+      **Frontend/UI and email changes — capture the visual design source.**
+      When this change builds or modifies user-facing views OR email templates,
+      the visual source of truth lives in the team's Claude Design project(s) at
+      claude.ai/design, reachable via the DesignSync tool (`list_projects`,
+      `list_files`, `get_file`). Do the following so the actual designed views
+      and templates are pulled into the change rather than reinvented:
 
       - Confirm the design connector is reachable. If it needs authorization,
       tell the user to run `/design-login` before continuing.
 
-      - Identify which screens/views THIS change owns and import ONLY those:
-      read each relevant file via DesignSync `get_file` and save it into the
-      change at `design/<view>.html`. Leave screens owned by other changes to
-      their own changes — do not bulk-import the whole project.
+      - Identify which screens/views AND email templates THIS change owns and
+      import ONLY those: read each relevant file via DesignSync `get_file` and
+      save it into the change at `design/<view>.html` (for UI screens) or
+      `design/email/<template>.html` (for email templates). Leave assets owned
+      by other changes to their own changes — do not bulk-import the whole
+      project.
 
       - Add a **Visual Design** section to design.md with a table mapping each
-      imported artboard/screen to the page/view/component it drives, and call out
-      the shared layout(s) to build once and reuse.
+      imported artboard/screen/email template to the page/view/component/email
+      it drives, and call out the shared layout(s) to build once and reuse.
 
       - Add a **Design ↔ contract reconciliation** subsection. The mockups are
       usually drawn ahead of the implemented API/spec, so list every place the
@@ -218,8 +220,9 @@ artifacts:
       disclosures — and state how each resolves. The behavioral specs always win;
       record what to keep from the design and what to drop or adjust.
 
-      - If the change is non-UI, or no design source exists for these views, say
-      so explicitly and skip this section rather than inventing one.
+      - If the change is non-UI with no email templates, or no design source
+      exists for these views or templates, say so explicitly and skip this
+      section rather than inventing one.
 
 
       Focus on architecture and approach, not line-by-line implementation.
@@ -435,12 +438,14 @@ artifacts:
       correct inside-out ordering of component groups.
 
 
-      For frontend/UI changes, the view-building task groups MUST point at the
-      design mockups imported into the change (`design/<view>.html`, see
-      design.md → Visual Design) and apply the Design ↔ contract reconciliation
-      recorded in design.md — e.g. build the shared layout first, then each page
-      to its named artboard, dropping or adjusting the elements flagged as
-      diverging from the contract.
+      For frontend/UI and email changes, the view- and template-building task
+      groups MUST point at the design assets imported into the change
+      (`design/<view>.html` for screens, `design/email/<template>.html` for
+      email templates, see design.md → Visual Design) and apply the Design ↔
+      contract reconciliation recorded in design.md — e.g. build the shared
+      layout first, then each page to its named artboard or each email to its
+      named template, dropping or adjusting the elements flagged as diverging
+      from the contract.
     requires:
       - specs
       - design
