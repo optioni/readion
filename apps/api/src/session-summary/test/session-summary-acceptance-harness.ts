@@ -16,13 +16,13 @@ import { bootstrapApp } from '../../bootstrap'
 import { ProviderAdapter } from '../../llm/provider-adapter'
 import { MockExamGenerationProcessor } from '../../mock-exam/mock-exam-generation.processor'
 import {
-  CORRECT_ANSWER,
-  FINISH_REASON_STOP,
-  PASS_VERDICT,
   buildMockQuestion,
+  CORRECT_ANSWER,
   configureTestEnv,
   createMockEmbeddingModel,
   extractMessageText,
+  FINISH_REASON_STOP,
+  PASS_VERDICT,
   truncateTables,
 } from '../../mock-exam/test/mock-exam-test-utils'
 import { REDIS_CLIENT } from '../../redis/redis.module'
@@ -221,4 +221,3 @@ export async function createSessionSummaryAcceptanceHarness(): Promise<SessionSu
     getRequest: () => supertest(app.getHttpServer()),
   }
 }
-

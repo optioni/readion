@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
+  createSessionSummaryAcceptanceHarness,
   SESSION_SUMMARY_CORRECT_ANSWER,
   SESSION_SUMMARY_WRONG_ANSWER,
-  createSessionSummaryAcceptanceHarness,
   type SessionSummaryAcceptanceHarness,
 } from './test/session-summary-acceptance-harness'
 
@@ -114,7 +114,10 @@ describe('session summary acceptance', () => {
       expect(res.body.data.domains.length).toBeGreaterThanOrEqual(1)
       expect(Array.isArray(res.body.data.weakAreaDeltas)).toBe(true)
       expect(res.body.data.readiness).toBeDefined()
-      expect(typeof res.body.data.readiness.before === 'number' || res.body.data.readiness.before === null).toBe(true)
+      expect(
+        typeof res.body.data.readiness.before === 'number' ||
+          res.body.data.readiness.before === null,
+      ).toBe(true)
       // after/delta are null when not yet calibrated
       expect('strongestQuestion' in res.body.data).toBe(true)
       expect('weakestQuestion' in res.body.data).toBe(true)

@@ -1,5 +1,5 @@
-import type { ReviewTarget } from '../sessions/sessions.service'
 import { reviewQualifies } from '../review/review-qualifies'
+import type { ReviewTarget } from '../sessions/sessions.service'
 
 export type SessionResponseTarget = {
   correct: boolean
@@ -40,7 +40,10 @@ export function selectDrillTargets(
   const qualifying = targets.filter((t) => {
     if (type === 'session') {
       const r = t as SessionResponseTarget
-      return sessionResponseQualifies({ correct: r.correct, confidence: r.confidence }, params.unsureThreshold)
+      return sessionResponseQualifies(
+        { correct: r.correct, confidence: r.confidence },
+        params.unsureThreshold,
+      )
     }
     const q = t as MockQuestionTarget
     return mockQuestionQualifies(q)

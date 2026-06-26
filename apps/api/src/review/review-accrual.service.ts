@@ -67,4 +67,3 @@ export class ReviewAccrualService {
     return this.config.get('REVIEW_LEITNER_INTERVALS_DAYS') ?? [...LEITNER_INTERVALS_DAYS_DEFAULT]
   }
 }
-

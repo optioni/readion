@@ -150,6 +150,18 @@ export {
   suppressDomainRequestSchema,
 } from './review'
 export type {
+  DrillResultResponse,
+  SessionQuestionRef,
+  SessionReadinessChange,
+  SessionSummaryDomainStat,
+  SessionSummaryResponse,
+  WeakAreaDelta,
+} from './session-summary'
+export {
+  SUMMARY_DRILL_MAX_QUESTIONS,
+  SUMMARY_UNSURE_CONFIDENCE_THRESHOLD,
+} from './session-summary'
+export type {
   CreateSessionRequest,
   SessionConfig,
   SessionContentMix,
@@ -191,18 +203,6 @@ export {
   enrollmentStatuses,
   updateEnrollmentRequestSchema,
 } from './user-certifications'
-export type {
-  DrillResultResponse,
-  SessionQuestionRef,
-  SessionReadinessChange,
-  SessionSummaryDomainStat,
-  SessionSummaryResponse,
-  WeakAreaDelta,
-} from './session-summary'
-export {
-  SUMMARY_DRILL_MAX_QUESTIONS,
-  SUMMARY_UNSURE_CONFIDENCE_THRESHOLD,
-} from './session-summary'
 export type { SessionDefaults, UpdateUserProfileRequest, UserProfileResponse } from './users'
 export {
   DEFAULT_DISPLAY_TIMEZONE,

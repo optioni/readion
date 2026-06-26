@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  type MockQuestionTarget,
   mockQuestionQualifies,
+  type SessionResponseTarget,
   selectDrillTargets,
   sessionResponseQualifies,
-  type MockQuestionTarget,
-  type SessionResponseTarget,
 } from './drill-targets'
 
 describe('sessionResponseQualifies', () => {
@@ -70,7 +70,12 @@ describe('selectDrillTargets (session type)', () => {
 
   it('one wrong response returns a single ReviewTarget', () => {
     const targets: SessionResponseTarget[] = [
-      sessionTarget({ correct: false, confidence: 5, domain: 'networking', anchorChunkId: 'chunk-x' }),
+      sessionTarget({
+        correct: false,
+        confidence: 5,
+        domain: 'networking',
+        anchorChunkId: 'chunk-x',
+      }),
     ]
     const result = selectDrillTargets(targets, 'session', { unsureThreshold: 2, maxTargets: 7 })
     expect(result).toEqual([{ domain: 'networking', anchorChunkId: 'chunk-x' }])
@@ -78,8 +83,18 @@ describe('selectDrillTargets (session type)', () => {
 
   it('deduplicates: two wrong answers with same anchorChunkId yield only one target', () => {
     const targets: SessionResponseTarget[] = [
-      sessionTarget({ correct: false, confidence: 1, domain: 'compute', anchorChunkId: 'chunk-shared' }),
-      sessionTarget({ correct: false, confidence: 2, domain: 'compute', anchorChunkId: 'chunk-shared' }),
+      sessionTarget({
+        correct: false,
+        confidence: 1,
+        domain: 'compute',
+        anchorChunkId: 'chunk-shared',
+      }),
+      sessionTarget({
+        correct: false,
+        confidence: 2,
+        domain: 'compute',
+        anchorChunkId: 'chunk-shared',
+      }),
     ]
     const result = selectDrillTargets(targets, 'session', { unsureThreshold: 2, maxTargets: 7 })
     expect(result).toHaveLength(1)
@@ -88,7 +103,12 @@ describe('selectDrillTargets (session type)', () => {
 
   it('caps at maxTargets when more targets qualify', () => {
     const targets: SessionResponseTarget[] = Array.from({ length: 10 }, (_, i) =>
-      sessionTarget({ correct: false, confidence: 1, domain: 'compute', anchorChunkId: `chunk-${i}` }),
+      sessionTarget({
+        correct: false,
+        confidence: 1,
+        domain: 'compute',
+        anchorChunkId: `chunk-${i}`,
+      }),
     )
     const result = selectDrillTargets(targets, 'session', { unsureThreshold: 2, maxTargets: 3 })
     expect(result).toHaveLength(3)
@@ -96,9 +116,24 @@ describe('selectDrillTargets (session type)', () => {
 
   it('mixed: only qualifying responses are included', () => {
     const targets: SessionResponseTarget[] = [
-      sessionTarget({ correct: true, confidence: 5, domain: 'storage', anchorChunkId: 'chunk-pass-1' }),
-      sessionTarget({ correct: false, confidence: 3, domain: 'compute', anchorChunkId: 'chunk-fail-1' }),
-      sessionTarget({ correct: true, confidence: 4, domain: 'networking', anchorChunkId: 'chunk-pass-2' }),
+      sessionTarget({
+        correct: true,
+        confidence: 5,
+        domain: 'storage',
+        anchorChunkId: 'chunk-pass-1',
+      }),
+      sessionTarget({
+        correct: false,
+        confidence: 3,
+        domain: 'compute',
+        anchorChunkId: 'chunk-fail-1',
+      }),
+      sessionTarget({
+        correct: true,
+        confidence: 4,
+        domain: 'networking',
+        anchorChunkId: 'chunk-pass-2',
+      }),
       sessionTarget({ correct: true, confidence: 2, domain: 'iam', anchorChunkId: 'chunk-fail-2' }),
     ]
     const result = selectDrillTargets(targets, 'session', { unsureThreshold: 2, maxTargets: 7 })
@@ -132,7 +167,12 @@ describe('selectDrillTargets (mock type)', () => {
 
   it('unanswered question (selectedAnswer=null) qualifies', () => {
     const targets: MockQuestionTarget[] = [
-      mockTarget({ selectedAnswer: null, correctAnswer: 'A', domain: 'storage', anchorChunkId: 'chunk-unanswered' }),
+      mockTarget({
+        selectedAnswer: null,
+        correctAnswer: 'A',
+        domain: 'storage',
+        anchorChunkId: 'chunk-unanswered',
+      }),
     ]
     const result = selectDrillTargets(targets, 'mock', { unsureThreshold: 2, maxTargets: 7 })
     expect(result).toEqual([{ domain: 'storage', anchorChunkId: 'chunk-unanswered' }])
@@ -140,7 +180,12 @@ describe('selectDrillTargets (mock type)', () => {
 
   it('wrong answer qualifies', () => {
     const targets: MockQuestionTarget[] = [
-      mockTarget({ selectedAnswer: 'B', correctAnswer: 'A', domain: 'networking', anchorChunkId: 'chunk-wrong' }),
+      mockTarget({
+        selectedAnswer: 'B',
+        correctAnswer: 'A',
+        domain: 'networking',
+        anchorChunkId: 'chunk-wrong',
+      }),
     ]
     const result = selectDrillTargets(targets, 'mock', { unsureThreshold: 2, maxTargets: 7 })
     expect(result).toEqual([{ domain: 'networking', anchorChunkId: 'chunk-wrong' }])
@@ -148,8 +193,18 @@ describe('selectDrillTargets (mock type)', () => {
 
   it('deduplicates: two qualifying questions with same anchorChunkId yield only one target', () => {
     const targets: MockQuestionTarget[] = [
-      mockTarget({ selectedAnswer: 'B', correctAnswer: 'A', domain: 'compute', anchorChunkId: 'chunk-shared' }),
-      mockTarget({ selectedAnswer: null, correctAnswer: 'C', domain: 'compute', anchorChunkId: 'chunk-shared' }),
+      mockTarget({
+        selectedAnswer: 'B',
+        correctAnswer: 'A',
+        domain: 'compute',
+        anchorChunkId: 'chunk-shared',
+      }),
+      mockTarget({
+        selectedAnswer: null,
+        correctAnswer: 'C',
+        domain: 'compute',
+        anchorChunkId: 'chunk-shared',
+      }),
     ]
     const result = selectDrillTargets(targets, 'mock', { unsureThreshold: 2, maxTargets: 7 })
     expect(result).toHaveLength(1)
@@ -158,7 +213,12 @@ describe('selectDrillTargets (mock type)', () => {
 
   it('caps at maxTargets when more qualifying questions than cap', () => {
     const targets: MockQuestionTarget[] = Array.from({ length: 10 }, (_, i) =>
-      mockTarget({ selectedAnswer: 'X', correctAnswer: 'A', domain: 'compute', anchorChunkId: `chunk-${i}` }),
+      mockTarget({
+        selectedAnswer: 'X',
+        correctAnswer: 'A',
+        domain: 'compute',
+        anchorChunkId: `chunk-${i}`,
+      }),
     )
     const result = selectDrillTargets(targets, 'mock', { unsureThreshold: 2, maxTargets: 5 })
     expect(result).toHaveLength(5)
