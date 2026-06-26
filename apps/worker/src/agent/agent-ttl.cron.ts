@@ -21,10 +21,31 @@ export class AgentTtlCron {
 
   @Cron(CronExpression.EVERY_HOUR)
   async cleanupStaleStandaloneConversations(now = new Date()): Promise<void> {
-    // stub for RED
-    void now
-    void this.em
-    void this.config
-    void this.activeStandaloneGauge
+    const ttlHours = 4
+    const cutoff = new Date(now.getTime() - ttlHours * 60 * 60 * 1000)
+    const conn = this.em.fork().getConnection()
+
+    const result = await conn.execute<{ id: string }[]>(
+      `UPDATE agent_conversations
+       SET deleted_at = ?
+       WHERE mode = 'standalone' AND deleted_at IS NULL AND last_activity_at < ?
+       RETURNING id`,
+      [now.toISOString(), cutoff.toISOString()],
+    )
+
+    if (result.length > 0) {
+      this.logger.log(`Soft-deleted ${result.length} stale standalone conversation(s)`)
+    }
+
+    await this.refreshGauge()
+  }
+
+  private async refreshGauge(): Promise<void> {
+    const conn = this.em.fork().getConnection()
+    const rows = await conn.execute<{ count: string }[]>(
+      `SELECT COUNT(*) as count FROM agent_conversations WHERE mode = 'standalone' AND deleted_at IS NULL`,
+    )
+    const count = Number.parseInt(rows[0]!.count, 10)
+    this.activeStandaloneGauge.set(count)
   }
 }

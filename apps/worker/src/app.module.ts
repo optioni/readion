@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { ScheduleModule } from '@nestjs/schedule'
 import { DbModule } from '@readion/db'
+import { AgentWorkerModule } from './agent/agent.module'
 import { WorkerConfigModule } from './config/config.module'
 import { ContentPipelineModule } from './content-pipeline/content-pipeline.module'
 import { WorkerObservabilityModule } from './observability/observability.module'
@@ -24,6 +25,7 @@ import { UsersModule } from './users/users.module'
     ContentPipelineModule,
     SemanticSearchModule,
     SessionsWorkerModule,
+    AgentWorkerModule,
   ],
 })
 export class AppModule {}
