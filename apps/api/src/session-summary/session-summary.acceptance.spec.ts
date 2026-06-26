@@ -124,6 +124,83 @@ describe('session summary acceptance', () => {
       expect('nextFocus' in res.body.data).toBe(true)
     })
 
+    it('reports a negative weak-area delta for a domain where the session answers were worse than the prior baseline', async () => {
+      const cert = await harness.seedCertification('SUM-DELTA-01')
+      const securityChunkIds: string[] = []
+      for (let i = 0; i < 4; i++) {
+        securityChunkIds.push(await harness.seedChunk(cert.id, 'Security'))
+      }
+      await harness.seedChunk(cert.id, 'Networking')
+      await harness.seedChunk(cert.id, 'Networking')
+
+      const token = await harness.registerAndLogin('sum-delta-01@example.com', 'correcthorse')
+      const auth = `Bearer ${token}`
+      const enrollmentId = await harness.enroll(token, cert.id)
+
+      // Seed a strong Security baseline (all correct, high confidence) before the session starts
+      await harness.seedPriorResponses(
+        enrollmentId,
+        securityChunkIds.map((chunkId) => ({ chunkId, correct: true, confidence: 5 })),
+      )
+
+      const create = await harness
+        .getRequest()
+        .post(`/api/v1/user-certifications/${enrollmentId}/sessions`)
+        .set('Authorization', auth)
+        .send({ durationMinutes: 30, contentMix: 'quiz-heavy', difficulty: 'intermediate' })
+      expect(create.status).toBe(201)
+      const sessionId = create.body.data.id as string
+
+      const getItems = await harness
+        .getRequest()
+        .get(`/api/v1/sessions/${sessionId}?include=items`)
+        .set('Authorization', auth)
+      expect(getItems.status).toBe(200)
+      const items = getItems.body.data.items as SessionItemPayload[]
+      const quizItems = items.filter((i) => i.type === 'quiz')
+
+      // Answer ALL session quiz items incorrectly with low confidence (worse than the baseline)
+      for (const item of quizItems) {
+        const parsed = JSON.parse(item.content) as QuizContent
+        await harness
+          .getRequest()
+          .post(`/api/v1/quiz/${parsed.questionId}/submit`)
+          .set('Authorization', auth)
+          .send({
+            userCertificationId: enrollmentId,
+            answer: SESSION_SUMMARY_WRONG_ANSWER,
+            confidence: 1,
+            timeTakenMs: 1000,
+          })
+      }
+
+      for (const item of items) {
+        await harness
+          .getRequest()
+          .post(`/api/v1/sessions/${sessionId}/items/${item.index}/complete`)
+          .set('Authorization', auth)
+      }
+
+      const end = await harness
+        .getRequest()
+        .post(`/api/v1/sessions/${sessionId}/end`)
+        .set('Authorization', auth)
+      expect(end.status).toBe(200)
+
+      const res = await harness
+        .getRequest()
+        .get(`/api/v1/sessions/${sessionId}/summary`)
+        .set('Authorization', auth)
+      expect(res.status).toBe(200)
+
+      const deltas = res.body.data.weakAreaDeltas as Array<{ domain: string; delta: number }>
+      const securityDelta = deltas.find((d) => d.domain === 'Security')
+      // Security baseline was strong (all correct, conf=5 → score=100);
+      // session answers were all wrong (conf=1) → combined score decreases → delta < 0.
+      expect(securityDelta).toBeDefined()
+      expect(securityDelta!.delta).toBeLessThan(0)
+    })
+
     it('returns 409 when the session is still active', async () => {
       const cert = await harness.seedCertification('SUM-ACTIVE-01')
       await harness.seedChunk(cert.id, 'Security')

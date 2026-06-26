@@ -67,6 +67,12 @@ function createCombinedMockLangModel(): MockLanguageModelV3 {
   })
 }
 
+export type PriorResponseSeed = {
+  chunkId: string
+  correct: boolean
+  confidence: number
+}
+
 export type SessionSummaryAcceptanceHarness = {
   app: INestApplication
   moduleRef: TestingModule
@@ -75,6 +81,7 @@ export type SessionSummaryAcceptanceHarness = {
   registerAndLogin: (email: string, password: string) => Promise<string>
   seedCertification: (code: string) => Promise<Certification>
   seedChunk: (certId: string, domain: string) => Promise<string>
+  seedPriorResponses: (enrollmentId: string, responses: PriorResponseSeed[]) => Promise<void>
   enroll: (token: string, certificationId: string) => Promise<string>
   getUserIdFromToken: (token: string) => Promise<string>
   runGenerationJob: (mockExamId: string) => Promise<void>
@@ -189,6 +196,30 @@ export async function createSessionSummaryAcceptanceHarness(): Promise<SessionSu
         ],
       )
       return chunkResult[0]!.id
+    },
+    seedPriorResponses: async (
+      enrollmentId: string,
+      responses: PriorResponseSeed[],
+    ): Promise<void> => {
+      const fork = em.fork()
+      const conn = fork.getConnection()
+      for (const r of responses) {
+        const snapshot = {
+          question: 'Prior seeded question',
+          options: ['Option A', 'Option B', 'Option C', 'Option D'],
+          correctAnswer: CORRECT_ANSWER,
+          provenance: { sourceChunkIds: [r.chunkId], supportingSpans: [] },
+        }
+        const answer = r.correct ? CORRECT_ANSWER : SESSION_SUMMARY_WRONG_ANSWER
+        await conn.execute(
+          `INSERT INTO quiz_responses
+            (id, user_certification_id, answer, correct, confidence, time_taken_ms,
+             question_snapshot, format, created_at, updated_at)
+           VALUES (gen_random_uuid(), ?, ?, ?, ?, 2000, ?::jsonb,
+                   'multiple-choice', now() - interval '2 hours', now() - interval '2 hours')`,
+          [enrollmentId, answer, r.correct, r.confidence, JSON.stringify(snapshot)],
+        )
+      }
     },
     enroll: async (token: string, certificationId: string) => {
       const res = await supertest(app.getHttpServer())
