@@ -27,6 +27,7 @@ export const UserCertificationSchema = defineEntity({
     sessionOverrideDifficulty: p.enum([...sessionDefaultDifficulties]).nullable(),
     sessionOverrideFocusArea: p.enum([...sessionDefaultFocusAreas]).nullable(),
     sessionOverrideLearningStyle: p.enum([...sessionDefaultLearningStyles]).nullable(),
+    diagnosticRePromptedAt: p.datetime().nullable(),
   },
 })
 
@@ -39,6 +40,7 @@ export class UserCertification extends UserCertificationSchema.class {
     | 'sessionOverrideDifficulty'
     | 'sessionOverrideFocusArea'
     | 'sessionOverrideLearningStyle'
+    | 'diagnosticRePromptedAt'
 
   override id: string = v4()
   override user!: User
@@ -50,6 +52,7 @@ export class UserCertification extends UserCertificationSchema.class {
   override sessionOverrideDifficulty: SessionDefaults['difficulty'] | null = null
   override sessionOverrideFocusArea: SessionDefaults['focusArea'] | null = null
   override sessionOverrideLearningStyle: SessionDefaults['learningStyle'] | null = null
+  override diagnosticRePromptedAt: Date | null = null
 }
 
 UserCertificationSchema.setClass(UserCertification)
