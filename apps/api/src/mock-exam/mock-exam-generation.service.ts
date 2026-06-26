@@ -71,14 +71,22 @@ export class MockExamGenerationService {
 
     const pendingSlots = this.filterPendingSlots(slots, attempt.questions)
 
+    const usedSourceChunkIds = new Set<string>(
+      attempt.questions.flatMap((q) => q.provenance.sourceChunkIds),
+    )
+
     let shortfall = 0
 
     for (const slot of pendingSlots) {
-      const genResult = await this.quiz.generate(userId, {
-        userCertificationId: enrollment.id,
-        domain: slot.domain,
-        difficulty: slot.difficulty,
-      })
+      const genResult = await this.quiz.generate(
+        userId,
+        {
+          userCertificationId: enrollment.id,
+          domain: slot.domain,
+          difficulty: slot.difficulty,
+        },
+        { excludeChunkIds: Array.from(usedSourceChunkIds) },
+      )
 
       if (genResult.type === 'insufficient_material') {
         shortfall++
@@ -104,6 +112,10 @@ export class MockExamGenerationService {
         selectedAnswer: null,
         domain: slot.domain,
         provenance: genResult.data.provenance,
+      }
+
+      for (const id of genResult.data.provenance.sourceChunkIds) {
+        usedSourceChunkIds.add(id)
       }
 
       attempt.questions = [...attempt.questions, question]

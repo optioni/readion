@@ -58,7 +58,11 @@ export class QuizService {
     private readonly events: EventEmitter2,
   ) {}
 
-  async generate(userId: string, request: GenerateQuizRequest): Promise<GenerateResult> {
+  async generate(
+    userId: string,
+    request: GenerateQuizRequest,
+    options?: { excludeChunkIds?: string[] },
+  ): Promise<GenerateResult> {
     const em = this.em.fork()
 
     const enrollment = await em.findOne(
@@ -79,7 +83,14 @@ export class QuizService {
     }
 
     const queryEmbedding = await this.embedding.embed(request.domain)
-    const chunks = await this.searchChunks(em, cert.id, queryEmbedding, request.domain)
+    const chunks = await this.searchChunks(
+      em,
+      cert.id,
+      queryEmbedding,
+      request.domain,
+      5,
+      options?.excludeChunkIds ?? [],
+    )
 
     if (chunks.length === 0) {
       return { type: 'insufficient_material', certificationId: cert.id, domain: request.domain }
@@ -392,10 +403,16 @@ export class QuizService {
     queryEmbedding: number[],
     domain: string,
     limit = 5,
+    excludeChunkIds: string[] = [],
   ): Promise<GroundedChunk[]> {
     const vectorLiteral = `[${queryEmbedding.join(',')}]`
 
     type ChunkRow = { id: string; text: string; primary_domain: string; similarity: number }
+
+    const excludeClause =
+      excludeChunkIds.length > 0
+        ? `AND id NOT IN (${excludeChunkIds.map(() => '?').join(', ')})`
+        : ''
 
     const rows = await em.getConnection().execute<ChunkRow[]>(
       `
@@ -408,10 +425,11 @@ export class QuizService {
           SELECT 1 FROM jsonb_array_elements(domain_tags) AS tag
           WHERE tag->>'domain' = ?
         )
+        ${excludeClause}
       ORDER BY embedding <=> ?::vector
       LIMIT ?
       `,
-      [vectorLiteral, certificationId, domain, vectorLiteral, limit],
+      [vectorLiteral, certificationId, domain, ...excludeChunkIds, vectorLiteral, limit],
     )
 
     return rows.map(
