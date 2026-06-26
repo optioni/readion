@@ -376,4 +376,94 @@ describe('GET /api/v1/mock-exams/:id (integration)', () => {
       expect(otherRes.status).toBe(404)
     })
   })
+
+  describe('(g) generation derivation: startedAt as the readiness signal', () => {
+    async function createAttemptWithTimestamps(
+      enrollmentId: string,
+      options: {
+        type?: 'mock' | 'diagnostic'
+        startedAt: Date | null
+        deadline: Date | null
+      },
+    ): Promise<string> {
+      const fork = em.fork()
+      const conn = fork.getConnection()
+      const rows = await conn.execute<{ user_id: string }[]>(
+        'SELECT user_id FROM user_certifications WHERE id = ?',
+        [enrollmentId],
+      )
+      const userId = rows[0]!.user_id
+      const attempt = fork.create(MockExam, {
+        user: fork.getReference(User, userId),
+        userCertification: fork.getReference(UserCertification, enrollmentId),
+        type: options.type ?? 'mock',
+        startedAt: options.startedAt,
+        deadline: options.deadline,
+        questions: [],
+        domainBreakdown: {},
+      })
+      fork.persist(attempt)
+      await fork.flush()
+      return attempt.id
+    }
+
+    it('diagnostic attempt with startedAt set and deadline null reports generation:ready and null remainingSeconds', async () => {
+      const cert = await seedCert('GEN-DIAG-01')
+      const token = await registerAndLogin('gen-diag-01@example.com')
+      const enrollmentId = await enroll(token, cert.id)
+
+      const mockId = await createAttemptWithTimestamps(enrollmentId, {
+        type: 'diagnostic',
+        startedAt: new Date(),
+        deadline: null,
+      })
+
+      const res = await supertest(app.getHttpServer())
+        .get(`/api/v1/mock-exams/${mockId}`)
+        .set('Authorization', `Bearer ${token}`)
+
+      expect(res.status).toBe(200)
+      expect(res.body.data.generation).toBe('ready')
+      expect(res.body.data.remainingSeconds).toBeNull()
+    })
+
+    it('attempt with startedAt null and deadline null reports generation:preparing', async () => {
+      const cert = await seedCert('GEN-PREP-02')
+      const token = await registerAndLogin('gen-prep-02@example.com')
+      const enrollmentId = await enroll(token, cert.id)
+
+      const mockId = await createAttemptWithTimestamps(enrollmentId, {
+        startedAt: null,
+        deadline: null,
+      })
+
+      const res = await supertest(app.getHttpServer())
+        .get(`/api/v1/mock-exams/${mockId}`)
+        .set('Authorization', `Bearer ${token}`)
+
+      expect(res.status).toBe(200)
+      expect(res.body.data.generation).toBe('preparing')
+      expect(res.body.data.remainingSeconds).toBeNull()
+    })
+
+    it('mock attempt with both startedAt and deadline set reports generation:ready with a countdown', async () => {
+      const cert = await seedCert('GEN-MOCK-01')
+      const token = await registerAndLogin('gen-mock-01@example.com')
+      const enrollmentId = await enroll(token, cert.id)
+
+      const mockId = await createAttemptWithTimestamps(enrollmentId, {
+        type: 'mock',
+        startedAt: new Date(),
+        deadline: new Date(Date.now() + 10 * 60 * 1000),
+      })
+
+      const res = await supertest(app.getHttpServer())
+        .get(`/api/v1/mock-exams/${mockId}`)
+        .set('Authorization', `Bearer ${token}`)
+
+      expect(res.status).toBe(200)
+      expect(res.body.data.generation).toBe('ready')
+      expect(res.body.data.remainingSeconds).toBeGreaterThan(0)
+    })
+  })
 })
