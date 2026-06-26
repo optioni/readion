@@ -89,8 +89,9 @@ describe('agent controller', () => {
     expect(turn.status).toBe(200)
     expect(turn.headers['content-type']).toContain('text/event-stream')
     const events = parseSseEvents(turn.text)
-    expect(events.filter((e) => typeof e.type === 'string' && e.type.includes('text-delta')).length)
-      .toBeGreaterThan(0)
+    expect(
+      events.filter((e) => typeof e.type === 'string' && e.type.includes('text-delta')).length,
+    ).toBeGreaterThan(0)
   })
 
   it('returns 422 on an empty message body', async () => {

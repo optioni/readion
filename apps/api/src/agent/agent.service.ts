@@ -1,7 +1,7 @@
 import { EntityManager } from '@mikro-orm/core'
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { AgentConversation, Certification, StudySession } from '@readion/db'
+import { AgentConversation, AgentMessage, Certification, StudySession } from '@readion/db'
 import type { ModelMessage } from 'ai'
 import { stepCountIs } from 'ai'
 import type { Queue } from 'bullmq'
@@ -49,6 +49,40 @@ export class AgentService {
     private readonly readiness: ReadinessService,
     @Inject(AGENT_MATERIAL_QUEUE) private readonly materialQueue: Queue,
   ) {}
+
+  async createInSessionConversation(userId: string, sessionId: string): Promise<AgentConversation> {
+    const em = this.em.fork()
+    const session = await em.findOne(
+      StudySession,
+      { id: sessionId, user: userId },
+      { populate: ['userCertification.certification'] },
+    )
+    if (session === null) {
+      throw new NotFoundException('Session not found')
+    }
+    return this.conversations.createConversation({
+      userId,
+      mode: 'in_session',
+      studySessionId: sessionId,
+      certificationId: session.userCertification.certification.id,
+    })
+  }
+
+  async createStandaloneConversation(userId: string): Promise<AgentConversation> {
+    return this.conversations.createConversation({ userId, mode: 'standalone' })
+  }
+
+  async getConversation(
+    userId: string,
+    conversationId: string,
+    includeMessages: boolean,
+  ): Promise<{ conversation: AgentConversation; messages: AgentMessage[] }> {
+    if (includeMessages) {
+      return this.conversations.getWithMessages(userId, conversationId)
+    }
+    const { conversation } = await this.conversations.getWithMessages(userId, conversationId)
+    return { conversation, messages: [] }
+  }
 
   async *runTurn(input: RunTurnInput): AsyncGenerator<SseEvent> {
     const { conversation, messages } = await this.conversations.getWithMessages(

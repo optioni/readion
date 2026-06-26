@@ -7,6 +7,8 @@ import { ReadinessModule } from '../readiness/readiness.module'
 import { ReadinessService } from '../readiness/readiness.service'
 import { WeakAreasModule } from '../weak-areas/weak-areas.module'
 import { WeakAreasService } from '../weak-areas/weak-areas.service'
+import { AgentController, SessionAgentConversationsController } from './agent.controller'
+import { agentMetricProviders } from './agent.metrics'
 import { AgentConversationRepository } from './agent.repository'
 import { AgentService } from './agent.service'
 import { AgentRetrievalService } from './tools/agent-retrieval.service'
@@ -32,7 +34,9 @@ import { SessionItemProvenanceReader } from './tools/session-item-provenance.rea
     WeakAreasModule,
     ReadinessModule,
   ],
+  controllers: [AgentController, SessionAgentConversationsController],
   providers: [
+    ...agentMetricProviders(),
     AgentService,
     AgentConversationRepository,
     AgentToolsFactory,
