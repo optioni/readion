@@ -43,10 +43,14 @@ export class MockExamGenerationService {
    * concurrent GET can observe incremental fill progress.
    *
    * startedAt and deadline are intentionally NOT stamped here — that is the
-   * worker processor's responsibility (Group 4). This service only fills the
-   * question set.
+   * worker processor's responsibility. This service only fills the question set.
+   *
+   * Returns shortfall: the number of pending slots that could not produce a
+   * verified question. The processor uses this to stamp the deadline even when
+   * a domain has insufficient content — the attempt is not stranded in
+   * "preparing" just because some slots yielded no question.
    */
-  async generateQuestionsForAttempt(attemptId: string): Promise<void> {
+  async generateQuestionsForAttempt(attemptId: string): Promise<{ shortfall: number }> {
     const em = this.em.fork()
 
     const attempt = await em.findOne(
@@ -67,6 +71,8 @@ export class MockExamGenerationService {
 
     const pendingSlots = this.filterPendingSlots(slots, attempt.questions)
 
+    let shortfall = 0
+
     for (const slot of pendingSlots) {
       const genResult = await this.quiz.generate(userId, {
         userCertificationId: enrollment.id,
@@ -75,12 +81,16 @@ export class MockExamGenerationService {
       })
 
       if (genResult.type === 'insufficient_material') {
+        shortfall++
         continue
       }
 
       const questionId = genResult.data.id
       const cached = await this.cache.get(questionId)
-      if (!cached) continue
+      if (!cached) {
+        shortfall++
+        continue
+      }
 
       const payload = this.parseCachePayload(cached)
       const explanation = await this.generateExplanation(userId, questionId, enrollment.id)
@@ -99,6 +109,8 @@ export class MockExamGenerationService {
       attempt.questions = [...attempt.questions, question]
       await em.flush()
     }
+
+    return { shortfall }
   }
 
   /**

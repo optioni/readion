@@ -33,13 +33,13 @@ export class MockExamGenerationProcessor extends WorkerHost {
       return
     }
 
-    await this.generationService.generateQuestionsForAttempt(attemptId)
-    await this.stampDeadlineIfComplete(attemptId)
+    const { shortfall } = await this.generationService.generateQuestionsForAttempt(attemptId)
+    await this.stampDeadlineIfComplete(attemptId, shortfall)
 
     this.logger.log(`Generation complete for attempt ${attemptId}`)
   }
 
-  private async stampDeadlineIfComplete(attemptId: string): Promise<void> {
+  private async stampDeadlineIfComplete(attemptId: string, shortfall: number): Promise<void> {
     const em = this.em.fork()
     const attempt = await em.findOne(
       MockExam,
@@ -50,8 +50,9 @@ export class MockExamGenerationProcessor extends WorkerHost {
     if (!attempt) return
 
     const cert = attempt.userCertification.certification
+    const allSlotsProcessed = attempt.questions.length + shortfall === cert.questionCount
 
-    if (attempt.questions.length === cert.questionCount && attempt.startedAt === null) {
+    if (allSlotsProcessed && attempt.startedAt === null) {
       const startedAt = new Date()
       attempt.startedAt = startedAt
       attempt.deadline = new Date(startedAt.getTime() + cert.timeLimitMinutes * 60 * 1000)
