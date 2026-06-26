@@ -1,5 +1,11 @@
 import type { Provenance } from '../grounding'
 
+export const MOCK_EXAM_GENERATION_QUEUE = 'mock-exam-generation'
+
+export interface MockExamGenerationJobPayload {
+  attemptId: string
+}
+
 export const mockExamTypes = ['mock', 'diagnostic'] as const
 export type MockExamType = (typeof mockExamTypes)[number]
 
