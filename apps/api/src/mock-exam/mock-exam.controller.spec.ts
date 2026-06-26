@@ -169,6 +169,58 @@ describe('EnrollmentMockExamController (integration)', () => {
       expect(res.status).toBe(404)
     })
   })
+
+  describe('GET /api/v1/user-certifications/:id/mock-exams', () => {
+    it('returns 200 with { data[], meta } containing only the owner attempts for that enrollment', async () => {
+      const certId = await seedCert('MOCK-LIST-01')
+      const token1 = await registerAndLogin('mock-list-owner@example.com')
+      const token2 = await registerAndLogin('mock-list-other@example.com')
+      const enrollment1 = await enroll(token1, certId)
+      const enrollment2 = await enroll(token2, certId)
+
+      await supertest(app.getHttpServer())
+        .post(`/api/v1/user-certifications/${enrollment1}/mock-exams`)
+        .set('Authorization', `Bearer ${token1}`)
+
+      await supertest(app.getHttpServer())
+        .post(`/api/v1/user-certifications/${enrollment1}/mock-exams`)
+        .set('Authorization', `Bearer ${token1}`)
+
+      await supertest(app.getHttpServer())
+        .post(`/api/v1/user-certifications/${enrollment2}/mock-exams`)
+        .set('Authorization', `Bearer ${token2}`)
+
+      const res = await supertest(app.getHttpServer())
+        .get(`/api/v1/user-certifications/${enrollment1}/mock-exams`)
+        .set('Authorization', `Bearer ${token1}`)
+
+      expect(res.status).toBe(200)
+      expect(Array.isArray(res.body.data)).toBe(true)
+      expect(res.body.meta).toBeDefined()
+      expect(res.body.meta.total).toBe(2)
+      expect(res.body.meta.page).toBe(1)
+      expect(res.body.meta.limit).toBe(25)
+      expect(res.body.data).toHaveLength(2)
+      for (const item of res.body.data as Array<{ id: string; status: string; type: string }>) {
+        expect(item.id).toBeDefined()
+        expect(item.status).toBe('in_progress')
+        expect(item.type).toBe('mock')
+      }
+    })
+
+    it("returns 404 when listing mock exams for another user's enrollment", async () => {
+      const certId = await seedCert('MOCK-LIST-02')
+      const token1 = await registerAndLogin('mock-list-404-owner@example.com')
+      const token2 = await registerAndLogin('mock-list-404-other@example.com')
+      const enrollment1 = await enroll(token1, certId)
+
+      const res = await supertest(app.getHttpServer())
+        .get(`/api/v1/user-certifications/${enrollment1}/mock-exams`)
+        .set('Authorization', `Bearer ${token2}`)
+
+      expect(res.status).toBe(404)
+    })
+  })
 })
 
 function makeMockProvider() {
