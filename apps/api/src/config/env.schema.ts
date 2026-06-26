@@ -102,6 +102,9 @@ const envSchema = z
     MOCK_EXAM_NEUTRAL_CONFIDENCE: zodCoerceNumber()
       .refine((n) => n >= 1 && n <= 5, { message: 'Must be between 1 and 5' })
       .default(3),
+    MOCK_EXAM_AUTO_SUBMIT_GRACE_SECONDS: zodCoerceNumber()
+      .refine((n) => n >= 0, { message: 'Must be a non-negative number' })
+      .default(120),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'production') {
