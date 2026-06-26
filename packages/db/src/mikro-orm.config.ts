@@ -3,6 +3,7 @@ import { defineConfig } from '@mikro-orm/postgresql'
 import { CertificationSchema } from './entities/certification.entity'
 import { ContentChunkSchema } from './entities/content-chunk.entity'
 import { ContentSourceSchema } from './entities/content-source.entity'
+import { MockExamSchema } from './entities/mock-exam.entity'
 import { QuizResponseSchema } from './entities/quiz-response.entity'
 import { ReviewItemSchema } from './entities/review-item.entity'
 import { SessionItemSchema } from './entities/session-item.entity'
@@ -24,6 +25,7 @@ export default defineConfig({
     StudySessionSchema,
     SessionItemSchema,
     ReviewItemSchema,
+    MockExamSchema,
   ],
   discovery: { warnWhenNoEntities: false },
   dbName: process.env.DB_NAME ?? 'readion',

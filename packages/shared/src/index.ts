@@ -82,6 +82,14 @@ export type {
   SubstitutionSignal,
   VerifierVerdict,
 } from './grounding'
+export type {
+  MockExamDomainBreakdown,
+  MockExamDomainStat,
+  MockExamQuestion,
+  MockExamStatus,
+  MockExamType,
+} from './mock-exam'
+export { mockExamStatuses, mockExamTypes } from './mock-exam'
 export type { PaginationQueryParams } from './pagination'
 export { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from './pagination'
 export type { ProblemDetails, ValidationErrorItem } from './problem-details'

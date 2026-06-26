@@ -12,6 +12,7 @@ export {
   QuizResponse,
   QuizResponseSchema,
 } from './entities/quiz-response.entity'
+export { MockExam, MockExamSchema } from './entities/mock-exam.entity'
 export { ReviewItem, ReviewItemSchema } from './entities/review-item.entity'
 export { SessionItem, SessionItemSchema } from './entities/session-item.entity'
 export { StudySession, StudySessionSchema } from './entities/study-session.entity'
