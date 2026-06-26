@@ -107,7 +107,10 @@ export class MockExamService {
       throw new ConflictException('Attempt is already submitted or expired')
     }
 
-    await this.finalizeAttempt(em, attempt, 'submitted')
+    const acted = await this.finalizeAttempt(em, attempt, 'submitted')
+    if (!acted) {
+      throw new ConflictException('Attempt is already submitted or expired')
+    }
 
     return mapMockExamToResponse(attempt)
   }
@@ -127,10 +130,10 @@ export class MockExamService {
     em: EntityManager,
     attempt: MockExam,
     terminalStatus: 'submitted' | 'expired',
-  ): Promise<void> {
+  ): Promise<boolean> {
     await em.refresh(attempt)
     if (attempt.status !== 'in_progress') {
-      return
+      return false
     }
 
     const cert = attempt.userCertification.certification
@@ -165,6 +168,7 @@ export class MockExamService {
     await em.flush()
 
     await this.weakAreas.recompute(attempt.userCertification.id)
+    return true
   }
 
   async saveAnswer(
