@@ -1,6 +1,6 @@
 import { EntityManager } from '@mikro-orm/core'
-import { Logger } from '@nestjs/common'
 import { Processor, WorkerHost } from '@nestjs/bullmq'
+import { Logger } from '@nestjs/common'
 import { MockExam } from '@readion/db'
 import type { MockExamGenerationJobPayload } from '@readion/shared'
 import { MOCK_EXAM_GENERATION_QUEUE } from '@readion/shared'

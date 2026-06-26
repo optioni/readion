@@ -1,5 +1,5 @@
-import { getQueueToken } from '@nestjs/bullmq'
 import { MikroORM } from '@mikro-orm/core'
+import { getQueueToken } from '@nestjs/bullmq'
 import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { Certification, startPostgresContainer, startRedisContainer } from '@readion/db'
@@ -156,7 +156,7 @@ describe('EnrollmentMockExamController (integration)', () => {
       addSpy.mockRestore()
     })
 
-    it('returns 404 when creating a mock exam for another user\'s enrollment', async () => {
+    it("returns 404 when creating a mock exam for another user's enrollment", async () => {
       const certId = await seedCert('MOCK-CTRL-02')
       const owner = await registerAndLogin('mock-ctrl-owner@example.com')
       const other = await registerAndLogin('mock-ctrl-other@example.com')
