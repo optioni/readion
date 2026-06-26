@@ -31,9 +31,9 @@
 
 ## 5. Agent service & streaming turn
 
-- [ ] 5.1 RED: Integration-test a turn through `AgentService` — runs the SDK `streamText` tool loop with mode-appropriate model/tools, persists user/tool-call/tool-result/assistant rows in order, refreshes `lastActivityAt`, replays prior ordered messages on a follow-up turn, and emits an SSE error event (not a silent hang) when the gateway errors
-- [ ] 5.2 GREEN: Implement `AgentService` (mode-based tool/prompt selection via `llm-foundation` gateway, persist-on-finalize, resume by replay) and the slow-path BullMQ-event → SSE bridge
-- [ ] 5.3 REFACTOR: Consolidate streaming-event shaping and per-message persistence
+- [x] 5.1 RED: Integration-test a turn through `AgentService` — runs the SDK `streamText` tool loop with mode-appropriate model/tools, persists user/tool-call/tool-result/assistant rows in order, refreshes `lastActivityAt`, replays prior ordered messages on a follow-up turn, and emits an SSE error event (not a silent hang) when the gateway errors
+- [x] 5.2 GREEN: Implement `AgentService` (mode-based tool/prompt selection via `llm-foundation` gateway, persist-on-finalize, resume by replay) and the slow-path BullMQ-event → SSE bridge
+- [x] 5.3 REFACTOR: Consolidate streaming-event shaping and per-message persistence
 
 ## 6. Controller, SSE endpoint & ownership scoping
 

@@ -3,11 +3,18 @@ export const APP_VERSION = '0.1.0'
 
 export type {
   AgentConversationMode,
+  AgentConversationResponse,
   AgentMessageContent,
   AgentMessageContentPart,
+  AgentMessageRequest,
+  AgentMessageResponse,
   AgentMessageRole,
 } from './agent'
-export { agentConversationModes, agentMessageRoles } from './agent'
+export {
+  agentConversationModes,
+  agentMessageRequestSchema,
+  agentMessageRoles,
+} from './agent'
 export type {
   AuthSessionResponse,
   AuthUser,
