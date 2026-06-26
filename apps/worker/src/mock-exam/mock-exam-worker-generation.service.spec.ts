@@ -122,6 +122,106 @@ describe('MockExamWorkerGenerationService (integration)', () => {
     )
     expect(rows[0]?.deadline).not.toBeNull()
   })
+
+  it('re-running on a partially-filled attempt completes the set without duplicating questions', async () => {
+    const attemptId = await seedAttempt(em)
+
+    const conn = em.fork().getConnection()
+    const enrollmentResult = await conn.execute<{ id: string }[]>(
+      `SELECT id FROM user_certifications WHERE user_id = ? AND certification_id = ? LIMIT 1`,
+      [USER_ID, CERT_ID],
+    )
+    const enrollmentId = enrollmentResult[0]!.id
+
+    const partialQuestions = [
+      {
+        id: '11111111-1111-1111-1111-111111111111',
+        question: 'Pre-existing question',
+        options: ['key concepts', 'B', 'C', 'D'],
+        correctAnswer: 'key concepts',
+        explanation: '',
+        selectedAnswer: null,
+        domain: 'Security',
+        provenance: {
+          sourceChunkIds: [],
+          supportingSpans: [],
+          verdict: { pass: true, score: 1.0, distractorFindings: [] },
+          score: 1.0,
+        },
+      },
+      {
+        id: '22222222-2222-2222-2222-222222222222',
+        question: 'Another pre-existing question',
+        options: ['key concepts', 'B', 'C', 'D'],
+        correctAnswer: 'key concepts',
+        explanation: '',
+        selectedAnswer: null,
+        domain: 'Networking',
+        provenance: {
+          sourceChunkIds: [],
+          supportingSpans: [],
+          verdict: { pass: true, score: 1.0, distractorFindings: [] },
+          score: 1.0,
+        },
+      },
+    ]
+
+    await conn.execute(
+      `UPDATE mock_exams SET questions = ?::jsonb WHERE id = ?`,
+      [JSON.stringify(partialQuestions), attemptId],
+    )
+
+    await service.generateAndStamp(attemptId)
+
+    const rows = await conn.execute<{ questions: string; started_at: string | null }[]>(
+      `SELECT questions, started_at FROM mock_exams WHERE id = ?`,
+      [attemptId],
+    )
+
+    const questions = typeof rows[0]!.questions === 'string'
+      ? JSON.parse(rows[0]!.questions)
+      : rows[0]!.questions as unknown[]
+
+    expect(questions).toHaveLength(4)
+
+    const ids = (questions as Array<{ id: string }>).map((q) => q.id)
+    const uniqueIds = new Set(ids)
+    expect(uniqueIds.size).toBe(4)
+
+    const preExistingIds = new Set(['11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222'])
+    for (const preId of preExistingIds) {
+      expect(uniqueIds.has(preId)).toBe(true)
+    }
+
+    expect(rows[0]!.started_at).not.toBeNull()
+  })
+
+  it('re-running a completed attempt does not alter the deadline', async () => {
+    const attemptId = await seedAttempt(em)
+
+    await service.generateAndStamp(attemptId)
+
+    const conn = em.fork().getConnection()
+    const before = await conn.execute<{ deadline: string }[]>(
+      `SELECT deadline FROM mock_exams WHERE id = ?`,
+      [attemptId],
+    )
+    const originalDeadline = before[0]!.deadline
+
+    await service.generateAndStamp(attemptId)
+
+    const after = await conn.execute<{ deadline: string; questions: string }[]>(
+      `SELECT deadline, questions FROM mock_exams WHERE id = ?`,
+      [attemptId],
+    )
+
+    expect(after[0]!.deadline).toBe(originalDeadline)
+
+    const questions = typeof after[0]!.questions === 'string'
+      ? JSON.parse(after[0]!.questions)
+      : after[0]!.questions as unknown[]
+    expect(questions).toHaveLength(4)
+  })
 })
 
 async function seedRequiredFkRows(em: EntityManager): Promise<void> {
