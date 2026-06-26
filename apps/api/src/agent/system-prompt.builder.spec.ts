@@ -34,9 +34,7 @@ const weakAreas: SystemPromptWeakArea[] = [
 const readiness: SystemPromptReadiness = { calibrated: true, score: 0.58 }
 
 const collectText = (messages: ModelMessage[]): string =>
-  messages
-    .map((m) => (typeof m.content === 'string' ? m.content : ''))
-    .join('\n\n')
+  messages.map((m) => (typeof m.content === 'string' ? m.content : '')).join('\n\n')
 
 describe('buildSystemPrompt', () => {
   describe('in-session mode', () => {
