@@ -8,5 +8,6 @@ import { QuizService } from './quiz.service'
   imports: [GroundingModule, LlmModule],
   controllers: [QuizController],
   providers: [QuizService],
+  exports: [QuizService],
 })
 export class QuizModule {}

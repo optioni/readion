@@ -83,10 +83,12 @@ export class QuizService {
     }
 
     const primaryChunk = chunks[0]!
-    const format = planFormat(
-      { id: primaryChunk.id, primaryDomain: primaryChunk.primaryDomain },
-      request.difficulty,
-    )
+    const format =
+      request.format ??
+      planFormat(
+        { id: primaryChunk.id, primaryDomain: primaryChunk.primaryDomain },
+        request.difficulty,
+      )
     const chunkIds = chunks.map((c) => c.id)
     const cacheKey = buildCacheKey({
       certificationId: cert.id,
