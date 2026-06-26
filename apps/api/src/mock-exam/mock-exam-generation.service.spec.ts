@@ -309,5 +309,34 @@ describe('MockExamGenerationService (integration)', () => {
         expect(q.provenance.verdict.pass).toBe(true)
       }
     })
+
+    it('generates distinct questions for multiple slots of the same domain (no cache collision)', async () => {
+      const cert = await seedCert('GEN-DISTINCT-01')
+      // Two chunks per domain — enough for two distinct questions per domain
+      await seedChunk(cert.id, 'Security')
+      await seedChunk(cert.id, 'Security')
+      await seedChunk(cert.id, 'Networking')
+      await seedChunk(cert.id, 'Networking')
+      const userId = await seedUser()
+      const { attemptId } = await seedAttempt(userId, cert)
+
+      // RED: both Security slots currently hit the same cache key and return the
+      // same cached question, so provenance.sourceChunkIds[0] is identical for
+      // both Security questions. After the fix, the second slot excludes the
+      // first slot's source chunks, producing a different cache key and thus a
+      // distinct question.
+      await service.generateQuestionsForAttempt(attemptId)
+
+      const fork = em.fork()
+      const attempt = await fork.findOneOrFail(MockExam, { id: attemptId })
+
+      expect(attempt.questions).toHaveLength(4)
+
+      const securityQuestions = attempt.questions.filter((q) => q.domain === 'Security')
+      expect(securityQuestions).toHaveLength(2)
+
+      const sourceChunkIds = securityQuestions.map((q) => q.provenance.sourceChunkIds[0])
+      expect(new Set(sourceChunkIds).size).toBe(2)
+    })
   })
 })
