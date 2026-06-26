@@ -13,8 +13,8 @@ import { AppModule } from '../app.module'
 import { bootstrapApp } from '../bootstrap'
 import { ProviderAdapter } from '../llm/provider-adapter'
 import { REDIS_CLIENT } from '../redis/redis.module'
-import { MockExamGenerationProcessor } from './mock-exam-generation.processor'
 import { MockExamService } from './mock-exam.service'
+import { MockExamGenerationProcessor } from './mock-exam-generation.processor'
 import {
   buildMockQuestion,
   CORRECT_ANSWER,
