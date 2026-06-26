@@ -1,7 +1,6 @@
 import { NotFoundException } from '@nestjs/common'
 import { describe, expect, it, vi } from 'vitest'
 import { AgentToolsFactory } from './agent-tools.factory'
-import { AGENT_TOOL_NAMES, isInternalTool } from './agent-tools.types'
 import type {
   AgentToolsConfig,
   EmbeddingPort,
@@ -15,6 +14,7 @@ import type {
   SessionHistoryPort,
   WeakAreasPort,
 } from './agent-tools.types'
+import { AGENT_TOOL_NAMES, isInternalTool } from './agent-tools.types'
 
 const ctx: InSessionToolContext = {
   userId: 'user-1',
@@ -26,7 +26,7 @@ const ctx: InSessionToolContext = {
 const config: AgentToolsConfig = {
   similarityThreshold: 0.75,
   semanticSearchLimit: 5,
-  abstentionGuidance: "abstain rather than guess: say \"I don't have enough material on that\"",
+  abstentionGuidance: 'abstain rather than guess: say "I don\'t have enough material on that"',
 }
 
 const chunk = (overrides: Partial<RetrievedChunk> = {}): RetrievedChunk => ({
@@ -60,7 +60,7 @@ function buildPorts(overrides: Partial<Ports> = {}): Ports {
     provenance: { findOwnedProvenance: vi.fn().mockResolvedValue(null) },
     weakAreas: { listForEnrollment: vi.fn().mockResolvedValue([]) },
     readiness: {
-      readForOwner: vi.fn().mockResolvedValue({ calibrated: false, score: null, trajectory: null }),
+      readForOwner: vi.fn().mockResolvedValue({ calibrated: false, score: null }),
     },
     history: { read: vi.fn().mockResolvedValue({ sessions: [], mockExams: [] }) },
     queue: { add: vi.fn().mockResolvedValue({ id: 'job-1' }) },
@@ -107,7 +107,10 @@ describe('semanticSearch', () => {
       retrieval: {
         searchChunks: vi
           .fn()
-          .mockResolvedValue([chunk({ id: 'a', similarity: 0.95 }), chunk({ id: 'b', similarity: 0.8 })]),
+          .mockResolvedValue([
+            chunk({ id: 'a', similarity: 0.95 }),
+            chunk({ id: 'b', similarity: 0.8 }),
+          ]),
         getChunksByIds: vi.fn().mockResolvedValue([]),
       },
     })
@@ -183,12 +186,16 @@ describe('explainAnswer', () => {
       },
       retrieval: {
         searchChunks: vi.fn().mockResolvedValue([]),
-        getChunksByIds: vi.fn().mockResolvedValue([
-          chunk({ id: 'chunk-1', sourceUrl: 'https://docs.aws.amazon.com/lambda' }),
-          chunk({ id: 'chunk-2', sourceUrl: 'https://docs.aws.amazon.com/fargate' }),
-        ]),
+        getChunksByIds: vi
+          .fn()
+          .mockResolvedValue([
+            chunk({ id: 'chunk-1', sourceUrl: 'https://docs.aws.amazon.com/lambda' }),
+            chunk({ id: 'chunk-2', sourceUrl: 'https://docs.aws.amazon.com/fargate' }),
+          ]),
       },
-      llm: { generateText: vi.fn().mockResolvedValue({ text: 'Lambda is the serverless option.' }) },
+      llm: {
+        generateText: vi.fn().mockResolvedValue({ text: 'Lambda is the serverless option.' }),
+      },
     })
 
     const result = await factory.runExplainAnswer(ctx, { itemIndex: 3 })
@@ -217,14 +224,26 @@ describe('getUserProgress', () => {
   it('returns readiness plus ranked per-domain weak-area scores and confidence', async () => {
     const { factory } = buildFactory({
       readiness: {
-        readForOwner: vi
-          .fn()
-          .mockResolvedValue({ calibrated: true, score: 0.62, trajectory: 'improving' }),
+        readForOwner: vi.fn().mockResolvedValue({ calibrated: true, score: 0.62 }),
       },
       weakAreas: {
         listForEnrollment: vi.fn().mockResolvedValue([
-          { id: 'w1', domain: 'security', score: 0.3, accuracy: 0.4, meanConfidence: 2, responseCount: 10 },
-          { id: 'w2', domain: 'compute', score: 0.7, accuracy: 0.8, meanConfidence: 4, responseCount: 12 },
+          {
+            id: 'w1',
+            domain: 'security',
+            score: 0.3,
+            accuracy: 0.4,
+            meanConfidence: 2,
+            responseCount: 10,
+          },
+          {
+            id: 'w2',
+            domain: 'compute',
+            score: 0.7,
+            accuracy: 0.8,
+            meanConfidence: 4,
+            responseCount: 12,
+          },
         ]),
       },
     })
@@ -306,7 +325,10 @@ describe('examStrategy', () => {
       llm: { generateText: vi.fn().mockResolvedValue({ text: 'Eliminate wrong options first.' }) },
     })
 
-    const result = await factory.runExamStrategy(ctx, { domain: 'security', questionType: 'scenario' })
+    const result = await factory.runExamStrategy(ctx, {
+      domain: 'security',
+      questionType: 'scenario',
+    })
 
     expect(result.tool).toBe('examStrategy')
     expect(result.domain).toBe('security')
