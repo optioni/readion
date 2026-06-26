@@ -65,12 +65,7 @@ export class MockExamService {
 
   async findOne(userId: string, attemptId: string): Promise<MockExamResponse> {
     const em = this.em.fork()
-
-    const attempt = await em.findOne(MockExam, { id: attemptId, user: userId })
-    if (attempt === null) {
-      throw new NotFoundException('Mock exam not found')
-    }
-
+    const attempt = await this.findOwnedAttempt(em, userId, attemptId)
     return mapMockExamToResponse(attempt)
   }
 
@@ -105,14 +100,8 @@ export class MockExamService {
   async submit(userId: string, attemptId: string): Promise<MockExamResponse> {
     const em = this.em.fork()
 
-    const attempt = await em.findOne(
-      MockExam,
-      { id: attemptId, user: userId },
-      { populate: ['userCertification', 'userCertification.certification'] },
-    )
-    if (attempt === null) {
-      throw new NotFoundException('Mock exam not found')
-    }
+    const attempt = await this.findOwnedAttempt(em, userId, attemptId)
+    await em.populate(attempt, ['userCertification', 'userCertification.certification'])
 
     if (attempt.status !== 'in_progress') {
       throw new ConflictException('Attempt is already submitted or expired')
@@ -186,10 +175,7 @@ export class MockExamService {
   ): Promise<MockExamResponse> {
     const em = this.em.fork()
 
-    const attempt = await em.findOne(MockExam, { id: attemptId, user: userId })
-    if (attempt === null) {
-      throw new NotFoundException('Mock exam not found')
-    }
+    const attempt = await this.findOwnedAttempt(em, userId, attemptId)
 
     const isTerminal = attempt.status !== 'in_progress'
     const isPastDeadline = attempt.deadline !== null && new Date() > attempt.deadline
@@ -207,6 +193,18 @@ export class MockExamService {
     await em.flush()
 
     return mapMockExamToResponse(attempt)
+  }
+
+  private async findOwnedAttempt(
+    em: EntityManager,
+    userId: string,
+    attemptId: string,
+  ): Promise<MockExam> {
+    const attempt = await em.findOne(MockExam, { id: attemptId, user: userId })
+    if (attempt === null) {
+      throw new NotFoundException('Mock exam not found')
+    }
+    return attempt
   }
 }
 
