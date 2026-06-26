@@ -111,6 +111,16 @@ const envSchema = z
         message: 'Must be a positive integer',
       })
       .default(READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT),
+    DIAGNOSTIC_QUESTION_COUNT: zodCoerceNumber()
+      .refine((n) => Number.isInteger(n) && n >= 10 && n <= 15, {
+        message: 'Must be an integer between 10 and 15',
+      })
+      .default(12),
+    DIAGNOSTIC_REPROMPT_AFTER_SESSIONS: zodCoerceNumber()
+      .refine((n) => Number.isInteger(n) && n >= 0, {
+        message: 'Must be a non-negative integer',
+      })
+      .default(1),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'production') {
