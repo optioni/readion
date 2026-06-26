@@ -404,3 +404,37 @@ describe('env schema — readiness', () => {
     )
   })
 })
+
+describe('env schema — diagnostic', () => {
+  it('DIAGNOSTIC_QUESTION_COUNT defaults to 12', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.DIAGNOSTIC_QUESTION_COUNT).toBe(12)
+  })
+
+  it('accepts a DIAGNOSTIC_QUESTION_COUNT override (e.g. 15)', () => {
+    const result = parseEnv({ ...VALID_ENV, DIAGNOSTIC_QUESTION_COUNT: '15' })
+    expect(result.DIAGNOSTIC_QUESTION_COUNT).toBe(15)
+  })
+
+  it('rejects DIAGNOSTIC_QUESTION_COUNT when non-numeric', () => {
+    expect(() => parseEnv({ ...VALID_ENV, DIAGNOSTIC_QUESTION_COUNT: 'abc' })).toThrow(
+      /DIAGNOSTIC_QUESTION_COUNT/,
+    )
+  })
+
+  it('DIAGNOSTIC_REPROMPT_AFTER_SESSIONS defaults to 1', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.DIAGNOSTIC_REPROMPT_AFTER_SESSIONS).toBe(1)
+  })
+
+  it('accepts a DIAGNOSTIC_REPROMPT_AFTER_SESSIONS override (e.g. 3)', () => {
+    const result = parseEnv({ ...VALID_ENV, DIAGNOSTIC_REPROMPT_AFTER_SESSIONS: '3' })
+    expect(result.DIAGNOSTIC_REPROMPT_AFTER_SESSIONS).toBe(3)
+  })
+
+  it('rejects DIAGNOSTIC_REPROMPT_AFTER_SESSIONS when non-numeric', () => {
+    expect(() => parseEnv({ ...VALID_ENV, DIAGNOSTIC_REPROMPT_AFTER_SESSIONS: 'abc' })).toThrow(
+      /DIAGNOSTIC_REPROMPT_AFTER_SESSIONS/,
+    )
+  })
+})
