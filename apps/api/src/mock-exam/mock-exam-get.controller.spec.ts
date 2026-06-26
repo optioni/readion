@@ -21,8 +21,8 @@ import { ProviderAdapter } from '../llm/provider-adapter'
 import { REDIS_CLIENT } from '../redis/redis.module'
 import { MockExamGenerationProcessor } from './mock-exam-generation.processor'
 import {
-  configureTestEnv,
   CORRECT_ANSWER,
+  configureTestEnv,
   createMockProviderValue,
   fakeJob,
   SUPPORTING_SPAN,

@@ -22,8 +22,8 @@ import { REDIS_CLIENT } from '../redis/redis.module'
 import { MockExamGenerationService } from './mock-exam-generation.service'
 import {
   buildMockQuestion,
-  configureTestEnv,
   CORRECT_ANSWER,
+  configureTestEnv,
   createMockEmbeddingModel,
   extractMessageText,
   FINISH_REASON_STOP,

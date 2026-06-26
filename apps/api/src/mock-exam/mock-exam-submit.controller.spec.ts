@@ -16,12 +16,12 @@ import { REDIS_CLIENT } from '../redis/redis.module'
 import { MockExamGenerationProcessor } from './mock-exam-generation.processor'
 import {
   buildMockQuestion,
-  configureTestEnv,
   CORRECT_ANSWER,
+  configureTestEnv,
   createMockEmbeddingModel,
   extractMessageText,
-  fakeJob,
   FINISH_REASON_STOP,
+  fakeJob,
   PASS_VERDICT,
   SUPPORTING_SPAN,
   truncateTables,

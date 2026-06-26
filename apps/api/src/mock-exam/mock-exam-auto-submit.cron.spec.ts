@@ -16,8 +16,8 @@ import { MockExamService } from './mock-exam.service'
 import { MockExamAutoSubmitCron } from './mock-exam-auto-submit.cron'
 import { MockExamGenerationProcessor } from './mock-exam-generation.processor'
 import {
-  configureTestEnv,
   CORRECT_ANSWER,
+  configureTestEnv,
   createMockProviderValue,
   fakeJob,
   truncateTables,

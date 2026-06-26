@@ -17,8 +17,8 @@ import { REDIS_CLIENT } from '../../redis/redis.module'
 import { MockExamAutoSubmitCron } from '../mock-exam-auto-submit.cron'
 import { MockExamGenerationProcessor } from '../mock-exam-generation.processor'
 import {
-  configureTestEnv,
   CORRECT_ANSWER,
+  configureTestEnv,
   createMockProviderValue,
   truncateTables,
 } from './mock-exam-test-utils'
