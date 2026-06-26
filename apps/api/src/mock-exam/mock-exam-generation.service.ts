@@ -1,7 +1,12 @@
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { MockExam } from '@readion/db'
-import type { CertificationDomain, ExtractiveItem, MockExamQuestion, Provenance } from '@readion/shared'
+import type {
+  CertificationDomain,
+  ExtractiveItem,
+  MockExamQuestion,
+  Provenance,
+} from '@readion/shared'
 import { v4 } from 'uuid'
 import type { VerifiedPayload } from '../llm/llm-response-cache.service'
 import { LlmResponseCacheService } from '../llm/llm-response-cache.service'
@@ -103,7 +108,7 @@ export class MockExamGenerationService {
    * using the largest-remainder method so the total always sums exactly to
    * questionCount.
    */
-  planSlots(questionCount: number, domains: CertificationDomain[]): DomainSlot[] {
+  private planSlots(questionCount: number, domains: CertificationDomain[]): DomainSlot[] {
     const totalWeight = domains.reduce((sum, d) => sum + d.weight, 0)
 
     const entries = domains.map((d) => {
@@ -147,7 +152,10 @@ export class MockExamGenerationService {
     }
   }
 
-  private parseCachePayload(cached: VerifiedPayload): { item: ExtractiveItem; provenance: Provenance } {
+  private parseCachePayload(cached: VerifiedPayload): {
+    item: ExtractiveItem
+    provenance: Provenance
+  } {
     return JSON.parse(cached.text) as { item: ExtractiveItem; provenance: Provenance }
   }
 }
