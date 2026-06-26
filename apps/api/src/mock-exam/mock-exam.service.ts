@@ -110,7 +110,12 @@ export class MockExamService {
       throw new ConflictException('Attempt is already submitted or expired')
     }
 
-    const acted = await this.finalizeAttempt(em, attempt, 'submitted', attempt.type === 'diagnostic')
+    const acted = await this.finalizeAttempt(
+      em,
+      attempt,
+      'submitted',
+      attempt.type === 'diagnostic',
+    )
     if (!acted) {
       throw new ConflictException('Attempt is already submitted or expired')
     }

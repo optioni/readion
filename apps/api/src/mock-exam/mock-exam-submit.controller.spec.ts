@@ -6,10 +6,10 @@ import {
   MockExam,
   QuizResponse,
   ReviewItem,
-  User,
-  UserCertification,
   startPostgresContainer,
   startRedisContainer,
+  User,
+  UserCertification,
 } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import { MockLanguageModelV3 } from 'ai/test'
@@ -555,7 +555,9 @@ describe('POST /api/v1/mock-exams/:id/submit (integration)', () => {
    * - no QUIZ_ANSWERED_EVENT is emitted, so no ReviewItems are created
    */
   describe('(f) Diagnostic submit: passed=null + review seeding', () => {
-    async function registerAndGetSession(email: string): Promise<{ token: string; userId: string }> {
+    async function registerAndGetSession(
+      email: string,
+    ): Promise<{ token: string; userId: string }> {
       const res = await supertest(app.getHttpServer())
         .post('/api/v1/auth/register')
         .send({ email, password: 'correcthorse' })
