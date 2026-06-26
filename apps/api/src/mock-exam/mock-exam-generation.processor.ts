@@ -1,10 +1,12 @@
 import { EntityManager } from '@mikro-orm/core'
 import { Processor, WorkerHost } from '@nestjs/bullmq'
 import { Logger } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { MockExam } from '@readion/db'
 import type { MockExamGenerationJobPayload } from '@readion/shared'
 import { MOCK_EXAM_GENERATION_QUEUE } from '@readion/shared'
 import type { Job } from 'bullmq'
+import type { EnvConfig } from '../config/env.schema'
 import { MockExamGenerationService } from './mock-exam-generation.service'
 
 @Processor(MOCK_EXAM_GENERATION_QUEUE)
@@ -14,6 +16,7 @@ export class MockExamGenerationProcessor extends WorkerHost {
   constructor(
     private readonly generationService: MockExamGenerationService,
     private readonly em: EntityManager,
+    private readonly config: ConfigService<EnvConfig>,
   ) {
     super()
   }
@@ -34,12 +37,12 @@ export class MockExamGenerationProcessor extends WorkerHost {
     }
 
     const { shortfall } = await this.generationService.generateQuestionsForAttempt(attemptId)
-    await this.stampDeadlineIfComplete(attemptId, shortfall)
+    await this.stampCompletionIfDone(attemptId, shortfall)
 
     this.logger.log(`Generation complete for attempt ${attemptId}`)
   }
 
-  private async stampDeadlineIfComplete(attemptId: string, shortfall: number): Promise<void> {
+  private async stampCompletionIfDone(attemptId: string, shortfall: number): Promise<void> {
     const em = this.em.fork()
     const attempt = await em.findOne(
       MockExam,
@@ -50,12 +53,17 @@ export class MockExamGenerationProcessor extends WorkerHost {
     if (!attempt) return
 
     const cert = attempt.userCertification.certification
-    const allSlotsProcessed = attempt.questions.length + shortfall === cert.questionCount
+    const targetCount =
+      attempt.type === 'diagnostic'
+        ? (this.config.get('DIAGNOSTIC_QUESTION_COUNT', { infer: true }) ?? 12)
+        : cert.questionCount
+    const allSlotsProcessed = attempt.questions.length + shortfall === targetCount
 
     if (allSlotsProcessed && attempt.startedAt === null) {
-      const startedAt = new Date()
-      attempt.startedAt = startedAt
-      attempt.deadline = new Date(startedAt.getTime() + cert.timeLimitMinutes * 60 * 1000)
+      attempt.startedAt = new Date()
+      if (attempt.type === 'mock') {
+        attempt.deadline = new Date(attempt.startedAt.getTime() + cert.timeLimitMinutes * 60 * 1000)
+      }
       await em.flush()
     }
   }

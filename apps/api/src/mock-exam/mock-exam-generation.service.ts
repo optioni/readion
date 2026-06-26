@@ -1,13 +1,15 @@
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable, NotFoundException } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { MockExam } from '@readion/db'
 import type { ExtractiveItem, MockExamQuestion, Provenance } from '@readion/shared'
 import { v4 } from 'uuid'
+import type { EnvConfig } from '../config/env.schema'
 import type { VerifiedPayload } from '../llm/llm-response-cache.service'
 import { LlmResponseCacheService } from '../llm/llm-response-cache.service'
 import { QuizService } from '../quiz/quiz.service'
-import type { MockDomainSlot } from './mock-exam-slot-planner'
-import { planMockSlots } from './mock-exam-slot-planner'
+import type { DiagnosticDomainSlot, MockDomainSlot } from './mock-exam-slot-planner'
+import { planBreadthSlots, planMockSlots } from './mock-exam-slot-planner'
 
 @Injectable()
 export class MockExamGenerationService {
@@ -15,6 +17,7 @@ export class MockExamGenerationService {
     private readonly em: EntityManager,
     private readonly quiz: QuizService,
     private readonly cache: LlmResponseCacheService,
+    private readonly config: ConfigService<EnvConfig>,
   ) {}
 
   /**
@@ -49,7 +52,13 @@ export class MockExamGenerationService {
     const cert = enrollment.certification
     const userId = attempt.user.id
 
-    const slots = planMockSlots(cert.domains, cert.questionCount)
+    const slots =
+      attempt.type === 'diagnostic'
+        ? planBreadthSlots(
+            cert.domains,
+            this.config.get('DIAGNOSTIC_QUESTION_COUNT', { infer: true }) ?? 12,
+          )
+        : planMockSlots(cert.domains, cert.questionCount)
 
     const pendingSlots = this.filterPendingSlots(slots, attempt.questions)
 
@@ -60,12 +69,14 @@ export class MockExamGenerationService {
     let shortfall = 0
 
     for (const slot of pendingSlots) {
+      const quizDifficulty =
+        slot.difficulty === 'calibration' ? 'beginner' : slot.difficulty
       const genResult = await this.quiz.generate(
         userId,
         {
           userCertificationId: enrollment.id,
           domain: slot.domain,
-          difficulty: slot.difficulty,
+          difficulty: quizDifficulty as Parameters<QuizService['generate']>[1]['difficulty'],
         },
         { excludeChunkIds: Array.from(usedSourceChunkIds) },
       )
@@ -112,13 +123,16 @@ export class MockExamGenerationService {
    * re-invoking the job on a partially-generated attempt resumes without
    * duplicating questions already persisted to the array.
    */
-  private filterPendingSlots(slots: MockDomainSlot[], existing: MockExamQuestion[]): MockDomainSlot[] {
+  private filterPendingSlots<T extends MockDomainSlot | DiagnosticDomainSlot>(
+    slots: T[],
+    existing: MockExamQuestion[],
+  ): T[] {
     const existingByDomain = new Map<string, number>()
     for (const q of existing) {
       existingByDomain.set(q.domain, (existingByDomain.get(q.domain) ?? 0) + 1)
     }
 
-    const pending: MockDomainSlot[] = []
+    const pending: T[] = []
     for (const slot of slots) {
       const count = existingByDomain.get(slot.domain) ?? 0
       if (count > 0) {
