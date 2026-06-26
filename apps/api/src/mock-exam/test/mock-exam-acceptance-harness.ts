@@ -17,6 +17,7 @@ import { AppModule } from '../../app.module'
 import { bootstrapApp } from '../../bootstrap'
 import { ProviderAdapter } from '../../llm/provider-adapter'
 import { REDIS_CLIENT } from '../../redis/redis.module'
+import { MockExamAutoSubmitCron } from '../mock-exam-auto-submit.cron'
 import { MockExamGenerationProcessor } from '../mock-exam-generation.processor'
 
 const FINISH_REASON_STOP: LanguageModelV3FinishReason = { unified: 'stop', raw: 'stop' }
@@ -254,10 +255,9 @@ export async function createMockExamAcceptanceHarness(): Promise<MockExamAccepta
       } as Partial<Job<MockExamGenerationJobPayload>> as Job<MockExamGenerationJobPayload>
       await processor.process(job)
     },
-    runAutoSubmitCron: async (_now?: Date): Promise<void> => {
-      throw new Error(
-        'MockExam auto-submit cron not yet implemented — MockExamModule (Group 1) must be added before this method becomes available',
-      )
+    runAutoSubmitCron: async (now?: Date): Promise<void> => {
+      const cron = moduleRef.get(MockExamAutoSubmitCron)
+      await cron.sweep(now)
     },
     getRequest: () => supertest(app.getHttpServer()),
   }

@@ -100,25 +100,21 @@ export class MockExamService {
    * both the manual submit path ('submitted') and the auto-submit cron path
    * ('expired') share identical scoring behaviour.
    *
-   * Worker boundary note (Group 9):
-   * The auto-submit cron lives in apps/worker which cannot import apps/api/src.
-   * Group 9 therefore has two clean options:
-   *   (a) Move MockExamScorer to packages/shared (it is pure — no I/O, no NestJS
-   *       runtime dependency beyond @Injectable which the worker can also use),
-   *       replicate the QuizResponse emission + recompute logic in the worker
-   *       using packages/db entities (already available there) and a worker-local
-   *       WeakAreasService that has the same em-based aggregation logic.
-   *   (b) Add an HTTP action endpoint POST /api/v1/mock-exams/:id/expire (api-key
-   *       guarded) that the worker calls back to the API to trigger finalize.
-   * Option (a) is preferred: it keeps the worker DB-direct and avoids cross-process
-   * HTTP coupling. MockExamScorer is already a candidate for packages/ since it is
-   * pure logic with no I/O.
+   * Race guard: re-reads the attempt status from DB before transitioning so that
+   * a concurrent manual submit (which commits before the cron's finalizeAttempt
+   * executes) is detected and the second writer no-ops — preventing duplicate
+   * QuizResponse emission and double weak-area recompute.
    */
   async finalizeAttempt(
     em: EntityManager,
     attempt: MockExam,
     terminalStatus: 'submitted' | 'expired',
   ): Promise<void> {
+    await em.refresh(attempt)
+    if (attempt.status !== 'in_progress') {
+      return
+    }
+
     const cert = attempt.userCertification.certification
     const result = this.scorer.score(attempt.questions, cert.domains, cert.passingScore / 1000)
 

@@ -3,7 +3,7 @@ import type { EmbeddingModelV3Result, LanguageModelV3FinishReason } from '@ai-sd
 import { EntityManager, MikroORM } from '@mikro-orm/core'
 import type { INestApplication } from '@nestjs/common'
 import { Test, type TestingModule } from '@nestjs/testing'
-import { QuizResponse, startPostgresContainer, startRedisContainer } from '@readion/db'
+import { MockExam, QuizResponse, startPostgresContainer, startRedisContainer } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import type { MockExamGenerationJobPayload } from '@readion/shared'
 import { MOCK_EXAM_GENERATION_QUEUE } from '@readion/shared'
@@ -17,6 +17,7 @@ import { AppModule } from '../app.module'
 import { bootstrapApp } from '../bootstrap'
 import { ProviderAdapter } from '../llm/provider-adapter'
 import { REDIS_CLIENT } from '../redis/redis.module'
+import { MockExamService } from './mock-exam.service'
 import { MockExamAutoSubmitCron } from './mock-exam-auto-submit.cron'
 import { MockExamGenerationProcessor } from './mock-exam-generation.processor'
 
@@ -84,6 +85,7 @@ describe('MockExamAutoSubmitCron (integration)', () => {
   let moduleRef: TestingModule
   let app: INestApplication
   let cron: MockExamAutoSubmitCron
+  let service: MockExamService
   let processor: MockExamGenerationProcessor
   let em: EntityManager
   let redis: Redis
@@ -175,6 +177,7 @@ describe('MockExamAutoSubmitCron (integration)', () => {
     await app.init()
 
     cron = moduleRef.get(MockExamAutoSubmitCron)
+    service = moduleRef.get(MockExamService)
     processor = moduleRef.get(MockExamGenerationProcessor)
     em = moduleRef.get(EntityManager)
     redis = moduleRef.get<Redis>(REDIS_CLIENT)
@@ -378,6 +381,102 @@ describe('MockExamAutoSubmitCron (integration)', () => {
 
       const status = await getMockStatus(mockId)
       expect(status).toBe('in_progress')
+    })
+  })
+
+  /**
+   * (c) Race guard: finalizing an already-terminal attempt is a no-op.
+   *
+   * Simulates the cron/manual-submit race: the attempt is loaded into memory
+   * as in_progress, then status is updated to 'submitted' in the DB by a
+   * concurrent writer (bypassing the EM). When finalizeAttempt is called with
+   * the stale in-memory entity, em.refresh detects the terminal status and
+   * returns early — no duplicate QuizResponses emitted, no double recompute.
+   */
+  describe('(c) Race guard: double-finalize is a no-op', () => {
+    it('does not emit duplicate QuizResponses when finalizeAttempt is called on a stale entity', async () => {
+      const certId = await seedCert('CRON-RACE-01')
+      await seedChunks(certId)
+
+      const token = await registerAndLogin('cron-race-01@example.com')
+      const enrollmentId = await enroll(token, certId)
+      const mockId = await createMockExam(token, enrollmentId)
+      await runGeneration(mockId)
+
+      // Step 1: Load the attempt into memory (status = in_progress)
+      const loadFork = em.fork()
+      const attempt = await loadFork.findOne(
+        MockExam,
+        { id: mockId },
+        { populate: ['userCertification', 'userCertification.certification'] },
+      )
+      expect(attempt).not.toBeNull()
+      expect(attempt!.status).toBe('in_progress')
+
+      // Step 2: A concurrent manual submit finalizes the attempt in the DB
+      // (simulated via a separate EM fork — the loadFork entity is now stale)
+      const submitRes = await supertest(app.getHttpServer())
+        .post(`/api/v1/mock-exams/${mockId}/submit`)
+        .set('Authorization', `Bearer ${token}`)
+      expect(submitRes.status).toBe(200)
+
+      // Step 3: Count QuizResponses after the first finalization
+      const afterSubmitFork = em.fork()
+      const responsesAfterSubmit = await afterSubmitFork.find(QuizResponse, {
+        userCertification: enrollmentId,
+      })
+      const countAfterSubmit = responsesAfterSubmit.length
+
+      // Step 4: Call finalizeAttempt with the stale entity (still shows in_progress in memory)
+      // The race guard (em.refresh) should detect the real status = 'submitted' and no-op
+      await service.finalizeAttempt(loadFork, attempt!, 'expired')
+
+      // Step 5: QuizResponse count must not have increased (no duplicate emission)
+      const afterCronFork = em.fork()
+      const responsesAfterCron = await afterCronFork.find(QuizResponse, {
+        userCertification: enrollmentId,
+      })
+      expect(responsesAfterCron.length).toBe(countAfterSubmit)
+
+      // Step 6: Attempt status remains 'submitted', not overwritten to 'expired'
+      const finalStatus = await getMockStatus(mockId)
+      expect(finalStatus).toBe('submitted')
+    })
+
+    it('skips a cron sweep that finds only terminal attempts (no re-scoring via SELECT)', async () => {
+      const certId = await seedCert('CRON-RACE-02')
+      await seedChunks(certId)
+
+      const token = await registerAndLogin('cron-race-02@example.com')
+      const enrollmentId = await enroll(token, certId)
+      const mockId = await createMockExam(token, enrollmentId)
+      await runGeneration(mockId)
+
+      // Submit manually (status → submitted)
+      const submitRes = await supertest(app.getHttpServer())
+        .post(`/api/v1/mock-exams/${mockId}/submit`)
+        .set('Authorization', `Bearer ${token}`)
+      expect(submitRes.status).toBe(200)
+
+      const afterSubmitFork = em.fork()
+      const responsesAfterSubmit = await afterSubmitFork.find(QuizResponse, {
+        userCertification: enrollmentId,
+      })
+      const countAfterSubmit = responsesAfterSubmit.length
+
+      // Cron sweep runs with a far-future now → would pick up this attempt IF it were in_progress
+      // But since it's 'submitted', the cron's SELECT excludes it
+      await setDeadlineInPast(mockId, 300_000)
+      await cron.sweep()
+
+      const afterCronFork = em.fork()
+      const responsesAfterCron = await afterCronFork.find(QuizResponse, {
+        userCertification: enrollmentId,
+      })
+      expect(responsesAfterCron.length).toBe(countAfterSubmit)
+
+      const finalStatus = await getMockStatus(mockId)
+      expect(finalStatus).toBe('submitted')
     })
   })
 })
