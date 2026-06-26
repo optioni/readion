@@ -5,6 +5,14 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './agentControllerDetailParams'
+export * from './agentConversationDetailResponseDto'
+export * from './agentConversationRelationshipsDto'
+export * from './agentConversationRelationshipsDtoMessages'
+export * from './agentConversationResponseDto'
+export * from './agentConversationResponseDtoCertificationId'
+export * from './agentConversationResponseDtoMode'
+export * from './agentConversationResponseDtoStudySessionId'
 export * from './certificationDetailResponseDto'
 export * from './certificationDetailResponseDtoRelationships'
 export * from './certificationDomainDto'
