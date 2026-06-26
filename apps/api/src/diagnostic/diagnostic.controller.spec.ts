@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing'
 import {
   Certification,
   MockExam,
+  QuizResponse,
   StudySession,
   startPostgresContainer,
   startRedisContainer,
@@ -372,6 +373,185 @@ describe('DiagnosticController (integration)', () => {
         .set('Authorization', `Bearer ${token}`)
       expect(offerAfter.status).toBe(200)
       expect(offerAfter.body.data.offer).toBe('none')
+    })
+  })
+
+  describe('(i) Re-take: second diagnostic preserves accumulated responses', () => {
+    async function seedChunk(certId: string, domain: string): Promise<string> {
+      const fork = app.get(MikroORM).em.fork()
+      const conn = fork.getConnection()
+
+      const sourceResult = await conn.execute<{ id: string }[]>(
+        `INSERT INTO content_sources (id, certification_id, type, url, recheck_interval_minutes, created_at, updated_at)
+         VALUES (gen_random_uuid(), ?, 'web', ?, 60, now(), now())
+         RETURNING id`,
+        [certId, `https://test.example.com/${Math.random()}`],
+      )
+      const sourceId = sourceResult[0]!.id
+
+      const vectorLiteral = `[${new Array(1536).fill(0.1).join(',')}]`
+      const chunkResult = await conn.execute<{ id: string }[]>(
+        `INSERT INTO content_chunks (id, content_source_id, certification_id, text, content_hash, embedding, domain_tags, primary_domain, metadata, state, created_at, updated_at)
+         VALUES (gen_random_uuid(), ?, ?, ?, ?, ?::vector, ?::jsonb, ?, '{}', 'active', now(), now())
+         RETURNING id`,
+        [
+          sourceId,
+          certId,
+          `Study content for ${domain}: key concepts, best practices, and real-world examples.`,
+          `hash-${Math.random()}`,
+          vectorLiteral,
+          JSON.stringify([{ domain, confidence: 1.0 }]),
+          domain,
+        ],
+      )
+      return chunkResult[0]!.id
+    }
+
+    it('completing a second diagnostic preserves prior QuizResponses and updates WeakAreas from both', async () => {
+      const certId = await seedLiveCert('DIAG-RETAKE-01')
+
+      const chunkId1 = await seedChunk(certId, 'Security')
+      const chunkId2 = await seedChunk(certId, 'Networking')
+      const chunkId3 = await seedChunk(certId, 'Security')
+      const chunkId4 = await seedChunk(certId, 'Networking')
+
+      const registerRes = await supertest(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email: 'diag-retake-01@example.com', password: 'correcthorse' })
+      const token = registerRes.body.data.accessToken as string
+      const userId = registerRes.body.data.user.id as string
+
+      const enrollmentId = await enroll(token, certId)
+
+      const em = app.get(MikroORM).em
+
+      const fork1 = em.fork()
+      const attempt1 = fork1.create(MockExam, {
+        user: fork1.getReference(User, userId),
+        userCertification: fork1.getReference(UserCertification, enrollmentId),
+        type: 'diagnostic',
+        status: 'in_progress',
+        startedAt: new Date(),
+        deadline: null,
+        score: null,
+        passed: null,
+        domainBreakdown: {},
+        questions: [
+          {
+            id: 'q1',
+            question: 'Q1?',
+            options: ['A', 'B', 'C', 'D'],
+            correctAnswer: 'A',
+            selectedAnswer: 'A',
+            domain: 'Security',
+            explanation: 'Exp1',
+            provenance: {
+              sourceChunkIds: [chunkId1],
+              supportingSpans: ['span1'],
+              verdict: { pass: true, score: 1.0, distractorFindings: [] },
+              score: 1.0,
+            },
+          },
+          {
+            id: 'q2',
+            question: 'Q2?',
+            options: ['A', 'B', 'C', 'D'],
+            correctAnswer: 'B',
+            selectedAnswer: 'C',
+            domain: 'Networking',
+            explanation: 'Exp2',
+            provenance: {
+              sourceChunkIds: [chunkId2],
+              supportingSpans: ['span2'],
+              verdict: { pass: true, score: 1.0, distractorFindings: [] },
+              score: 1.0,
+            },
+          },
+        ],
+      })
+      fork1.persist(attempt1)
+      await fork1.flush()
+
+      const res1 = await supertest(app.getHttpServer())
+        .post(`/api/v1/mock-exams/${attempt1.id}/submit`)
+        .set('Authorization', `Bearer ${token}`)
+      expect(res1.status).toBe(200)
+      expect(res1.body.data.passed).toBeNull()
+
+      const checkFork1 = em.fork()
+      const responses1 = await checkFork1.find(QuizResponse, { userCertification: enrollmentId })
+      expect(responses1).toHaveLength(2)
+
+      const conn1 = checkFork1.getConnection()
+      const weakAreas1 = await conn1.execute<{ domain: string }[]>(
+        'SELECT domain FROM weak_areas WHERE user_certification_id = ?',
+        [enrollmentId],
+      )
+      expect(weakAreas1.length).toBeGreaterThanOrEqual(1)
+
+      const fork2 = em.fork()
+      const attempt2 = fork2.create(MockExam, {
+        user: fork2.getReference(User, userId),
+        userCertification: fork2.getReference(UserCertification, enrollmentId),
+        type: 'diagnostic',
+        status: 'in_progress',
+        startedAt: new Date(),
+        deadline: null,
+        score: null,
+        passed: null,
+        domainBreakdown: {},
+        questions: [
+          {
+            id: 'q3',
+            question: 'Q3?',
+            options: ['A', 'B', 'C', 'D'],
+            correctAnswer: 'A',
+            selectedAnswer: 'A',
+            domain: 'Security',
+            explanation: 'Exp3',
+            provenance: {
+              sourceChunkIds: [chunkId3],
+              supportingSpans: ['span3'],
+              verdict: { pass: true, score: 1.0, distractorFindings: [] },
+              score: 1.0,
+            },
+          },
+          {
+            id: 'q4',
+            question: 'Q4?',
+            options: ['A', 'B', 'C', 'D'],
+            correctAnswer: 'B',
+            selectedAnswer: 'B',
+            domain: 'Networking',
+            explanation: 'Exp4',
+            provenance: {
+              sourceChunkIds: [chunkId4],
+              supportingSpans: ['span4'],
+              verdict: { pass: true, score: 1.0, distractorFindings: [] },
+              score: 1.0,
+            },
+          },
+        ],
+      })
+      fork2.persist(attempt2)
+      await fork2.flush()
+
+      const res2 = await supertest(app.getHttpServer())
+        .post(`/api/v1/mock-exams/${attempt2.id}/submit`)
+        .set('Authorization', `Bearer ${token}`)
+      expect(res2.status).toBe(200)
+      expect(res2.body.data.passed).toBeNull()
+
+      const checkFork2 = em.fork()
+      const responses2 = await checkFork2.find(QuizResponse, { userCertification: enrollmentId })
+      expect(responses2).toHaveLength(4)
+
+      const conn2 = checkFork2.getConnection()
+      const weakAreas2 = await conn2.execute<{ domain: string }[]>(
+        'SELECT domain FROM weak_areas WHERE user_certification_id = ?',
+        [enrollmentId],
+      )
+      expect(weakAreas2.length).toBeGreaterThanOrEqual(1)
     })
   })
 })
