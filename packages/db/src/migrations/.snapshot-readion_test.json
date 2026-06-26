@@ -2064,6 +2064,23 @@
           "enumItems": [],
           "mappedType": "datetime"
         },
+        "diagnostic_re_prompted_at": {
+          "name": "diagnostic_re_prompted_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
         "enrolled_at": {
           "name": "enrolled_at",
           "type": "timestamptz(6)",
