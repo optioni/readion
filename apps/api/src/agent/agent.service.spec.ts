@@ -370,7 +370,7 @@ describe('AgentService (integration)', () => {
       })(),
     ).rejects.toThrow()
 
-    expect(events.some((e) => e.type === 'error')).toBe(true)
+    expect(events.filter((e) => e.type === 'error')).toHaveLength(1)
   })
 
   it('bridges a material-ingestion job completion onto the SSE channel', async () => {

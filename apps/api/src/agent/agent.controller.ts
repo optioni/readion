@@ -141,19 +141,25 @@ export class AgentController {
     res.setHeader('Connection', 'keep-alive')
     res.flushHeaders?.()
 
+    let lastType: string | undefined
     try {
       let result = first
       while (!result.done) {
         writeEvent(res, result.value)
+        lastType = result.value.type
         result = await generator.next()
       }
       this.turnsCounter.inc({ outcome: 'success' })
     } catch (error) {
       this.turnsCounter.inc({ outcome: 'error' })
-      writeEvent(res, {
-        type: 'error',
-        error: error instanceof Error ? error.message : String(error),
-      })
+      // The service is the single source of truth for the error event; only
+      // synthesize one here if it threw before emitting its own.
+      if (lastType !== 'error') {
+        writeEvent(res, {
+          type: 'error',
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
     }
 
     res.write('data: [DONE]\n\n')

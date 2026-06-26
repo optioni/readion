@@ -122,10 +122,11 @@ export class AgentService {
     let streamError: unknown
     try {
       for await (const part of result.fullStream) {
-        yield part as SseEvent
         if (part.type === 'error') {
           streamError = part.error
+          break
         }
+        yield part as SseEvent
         if (part.type === 'tool-result') {
           const jobId = enqueuedJobId(part)
           if (jobId !== null) {
@@ -139,6 +140,7 @@ export class AgentService {
     }
 
     if (streamError !== undefined) {
+      yield this.errorEvent(streamError)
       throw streamError instanceof Error ? streamError : new Error(String(streamError))
     }
 

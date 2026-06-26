@@ -1,10 +1,23 @@
+import type { Counter } from 'prom-client'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { AGENT_TURNS_METRIC } from './agent.metrics'
 import {
   type AgentAcceptanceHarness,
   createAgentAcceptanceHarness,
+  FAIL_MARKER,
 } from './test/agent-acceptance-harness'
 
 type SseEvent = { type?: string; [key: string]: unknown }
+
+function getCounterToken(name: string): string {
+  return `PROM_METRIC_${name.toUpperCase()}`
+}
+
+async function readErrorCount(counter: Counter): Promise<number> {
+  const metric = await counter.get()
+  const sample = metric.values.find((v) => v.labels.outcome === 'error')
+  return sample?.value ?? 0
+}
 
 function parseSseEvents(raw: string): SseEvent[] {
   return raw
@@ -92,6 +105,34 @@ describe('agent controller', () => {
     expect(
       events.filter((e) => typeof e.type === 'string' && e.type.includes('text-delta')).length,
     ).toBeGreaterThan(0)
+  })
+
+  it('emits one SSE error event and increments the error metric on a failed turn', async () => {
+    const token = await harness.registerAndLogin('ctl-error@example.com', 'correcthorse')
+    const create = await harness
+      .getRequest()
+      .post('/api/v1/agent-conversations')
+      .set('Authorization', `Bearer ${token}`)
+      .send({})
+    const conversationId = create.body.data.id as string
+
+    const counter = harness.moduleRef.get<Counter>(getCounterToken(AGENT_TURNS_METRIC))
+    const before = await readErrorCount(counter)
+
+    const turn = await harness
+      .getRequest()
+      .post(`/api/v1/agent-conversations/${conversationId}/messages`)
+      .set('Authorization', `Bearer ${token}`)
+      .set('Accept', 'text/event-stream')
+      .send({ content: FAIL_MARKER })
+
+    expect(turn.status).toBe(200)
+    const events = parseSseEvents(turn.text)
+    const errorEvents = events.filter((e) => e.type === 'error')
+    expect(errorEvents).toHaveLength(1)
+
+    const after = await readErrorCount(counter)
+    expect(after - before).toBe(1)
   })
 
   it('returns 422 on an empty message body', async () => {

@@ -69,6 +69,8 @@ type StreamArgs = {
   tools?: Array<{ name: string }>
 }
 
+export const FAIL_MARKER = '__FAIL__'
+
 export type AgentMessageRow = {
   id: string
   role: string
@@ -140,6 +142,15 @@ export async function createAgentAcceptanceHarness(): Promise<AgentAcceptanceHar
     doStream: async ({ prompt, tools }: StreamArgs) => {
       const hasTools = Array.isArray(tools) && tools.length > 0
       const hasToolResult = prompt.some((msg) => msg.role === 'tool')
+
+      if (JSON.stringify(prompt).includes(FAIL_MARKER)) {
+        return {
+          stream: streamFromParts([
+            { type: 'stream-start', warnings: [] },
+            { type: 'error', error: new Error('mock stream failure') },
+          ]),
+        }
+      }
 
       if (hasTools && !hasToolResult) {
         return { stream: streamFromParts(toolCallParts('getUserProgress', '{}')) }
