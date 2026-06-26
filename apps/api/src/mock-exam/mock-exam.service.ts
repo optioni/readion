@@ -213,7 +213,7 @@ export class MockExamService {
 }
 
 function deriveGeneration(attempt: MockExam): MockExamGeneration {
-  return attempt.deadline === null ? 'preparing' : 'ready'
+  return attempt.startedAt !== null ? 'ready' : 'preparing'
 }
 
 function deriveRemainingSeconds(attempt: MockExam): number | null {
