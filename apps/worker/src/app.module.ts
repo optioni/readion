@@ -8,6 +8,7 @@ import { QueueModule } from './queue/queue.module'
 import { RedisModule } from './redis/redis.module'
 import { ScrapperModule } from './scrapper/scrapper.module'
 import { SemanticSearchModule } from './semantic-search/semantic-search.module'
+import { SessionsWorkerModule } from './sessions/sessions.module'
 import { UsersModule } from './users/users.module'
 
 @Module({
@@ -22,6 +23,7 @@ import { UsersModule } from './users/users.module'
     UsersModule,
     ContentPipelineModule,
     SemanticSearchModule,
+    SessionsWorkerModule,
   ],
 })
 export class AppModule {}

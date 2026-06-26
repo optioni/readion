@@ -18,6 +18,7 @@ import { z } from 'zod'
 
 export const LIFECYCLE_DELETION_GRACE_DAYS_DEFAULT = 14
 export const SUPERSEDED_CHUNK_RETENTION_DAYS_DEFAULT = 30
+export const SESSION_ABANDONMENT_THRESHOLD_HOURS_DEFAULT = 24
 
 const AI_PROVIDERS = ['anthropic', 'openai'] as const
 
@@ -37,6 +38,7 @@ const envSchema = z.object({
   AI_PROVIDER: z.enum(AI_PROVIDERS).default('openai'),
   AI_API_KEY: z.string().min(1).optional(),
   AI_MODEL_DOMAIN_TAGGING: z.string().min(1).default('gpt-4o-mini'),
+  AI_MODEL_SESSION_FILL: z.string().min(1).default('gpt-4o'),
   AI_EMBEDDING_MODEL: z.string().min(1).default('text-embedding-3-small'),
   AI_EMBEDDING_DIMENSION: zodCoerceNumber().default(EMBEDDING_DIMENSION),
 
@@ -57,6 +59,11 @@ const envSchema = z.object({
   CONTENT_RECHECK_PODCAST_MINUTES: zodCoerceNumber().default(SOURCE_RECHECK_INTERVALS.podcast),
   CONTENT_RECHECK_ANKI_MINUTES: zodCoerceNumber().default(SOURCE_RECHECK_INTERVALS.anki),
   CONTENT_RECHECK_QUIZLET_MINUTES: zodCoerceNumber().default(SOURCE_RECHECK_INTERVALS.quizlet),
+
+  // Session abandonment
+  SESSION_ABANDONMENT_THRESHOLD_HOURS: zodCoerceNumber().default(
+    SESSION_ABANDONMENT_THRESHOLD_HOURS_DEFAULT,
+  ),
 
   // Coverage thresholds for cert go-live promotion
   CERT_COVERAGE_MIN_CHUNKS_PER_DOMAIN: zodCoerceNumber()
