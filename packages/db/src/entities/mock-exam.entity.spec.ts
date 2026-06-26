@@ -12,14 +12,14 @@ async function seedUserAndEnrollment(
      VALUES (gen_random_uuid(), 'mock-${rnd}@example.com', 'hash', 'user', now(), now())
      RETURNING id`,
   )
-  const userId = userResult[0]!.id
+  const userId = userResult[0]?.id
 
   const certResult = await conn.execute<{ id: string }[]>(
     `INSERT INTO certifications (id, name, provider, code, domains, question_count, passing_score, time_limit_minutes, provenance, state, created_at, updated_at)
      VALUES (gen_random_uuid(), 'Mock Cert', 'AWS', 'MOCK-${rnd}', '[]'::jsonb, 65, 700, 90, '"verified"'::jsonb, 'live', now(), now())
      RETURNING id`,
   )
-  const certId = certResult[0]!.id
+  const certId = certResult[0]?.id
 
   const enrollResult = await conn.execute<{ id: string }[]>(
     `INSERT INTO user_certifications (id, user_id, certification_id, status, enrolled_at, created_at, updated_at)
@@ -27,7 +27,7 @@ async function seedUserAndEnrollment(
      RETURNING id`,
     [userId, certId],
   )
-  const enrollmentId = enrollResult[0]!.id
+  const enrollmentId = enrollResult[0]?.id
 
   return { userId, enrollmentId }
 }
@@ -67,21 +67,21 @@ describe('MockExam entity', () => {
       ]),
     )
 
-    expect(columns['id']).toBeDefined()
-    expect(columns['user_id']).toBeDefined()
-    expect(columns['user_certification_id']).toBeDefined()
-    expect(columns['type']).toBeDefined()
-    expect(columns['status']).toBeDefined()
-    expect(columns['started_at']).toBeDefined()
-    expect(columns['started_at']!.is_nullable).toBe('YES')
-    expect(columns['deadline']).toBeDefined()
-    expect(columns['deadline']!.is_nullable).toBe('YES')
-    expect(columns['score']).toBeDefined()
-    expect(columns['passed']).toBeDefined()
-    expect(columns['domain_breakdown']).toBeDefined()
-    expect(columns['domain_breakdown']!.data_type).toBe('jsonb')
-    expect(columns['questions']).toBeDefined()
-    expect(columns['questions']!.data_type).toBe('jsonb')
+    expect(columns.id).toBeDefined()
+    expect(columns.user_id).toBeDefined()
+    expect(columns.user_certification_id).toBeDefined()
+    expect(columns.type).toBeDefined()
+    expect(columns.status).toBeDefined()
+    expect(columns.started_at).toBeDefined()
+    expect(columns.started_at?.is_nullable).toBe('YES')
+    expect(columns.deadline).toBeDefined()
+    expect(columns.deadline?.is_nullable).toBe('YES')
+    expect(columns.score).toBeDefined()
+    expect(columns.passed).toBeDefined()
+    expect(columns.domain_breakdown).toBeDefined()
+    expect(columns.domain_breakdown?.data_type).toBe('jsonb')
+    expect(columns.questions).toBeDefined()
+    expect(columns.questions?.data_type).toBe('jsonb')
   })
 
   it('migration creates FK constraints to users and user_certifications', async () => {
@@ -156,7 +156,12 @@ describe('MockExam entity', () => {
     )
 
     const row = (
-      result as { status: string; type: string; started_at: string | null; deadline: string | null }[]
+      result as {
+        status: string
+        type: string
+        started_at: string | null
+        deadline: string | null
+      }[]
     )[0]!
     expect(row.status).toBe('in_progress')
     expect(row.type).toBe('mock')

@@ -7,12 +7,12 @@ export {
 } from './entities/certification.entity'
 export { ContentChunk, ContentChunkSchema } from './entities/content-chunk.entity'
 export { ContentSource, ContentSourceSchema } from './entities/content-source.entity'
+export { MockExam, MockExamSchema } from './entities/mock-exam.entity'
 export {
   type QuestionSnapshot,
   QuizResponse,
   QuizResponseSchema,
 } from './entities/quiz-response.entity'
-export { MockExam, MockExamSchema } from './entities/mock-exam.entity'
 export { ReviewItem, ReviewItemSchema } from './entities/review-item.entity'
 export { SessionItem, SessionItemSchema } from './entities/session-item.entity'
 export { StudySession, StudySessionSchema } from './entities/study-session.entity'
