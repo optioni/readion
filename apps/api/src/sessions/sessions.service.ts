@@ -1,5 +1,11 @@
 import { EntityManager, UniqueConstraintViolationException } from '@mikro-orm/core'
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  Optional,
+} from '@nestjs/common'
 import { SessionItem, StudySession, User, UserCertification } from '@readion/db'
 import type {
   CreateSessionRequest,
@@ -14,10 +20,16 @@ import type {
 import type { CollectionResult } from '../common/interceptors/response.interceptor'
 import { QuizService } from '../quiz/quiz.service'
 import { WeakAreasService } from '../weak-areas/weak-areas.service'
+import { DUE_ITEMS_PROVIDER, type DueItemsProvider } from './due-items.port'
 import { ReadingBlockComposerService } from './reading-block-composer.service'
 import { SessionFillQueueService } from './session-fill-queue.service'
 import type { ItemPlan, SavedSessionConfig } from './session-planner'
-import { buildItemPlan, resolveSessionConfig, resolveTargetDomains } from './session-planner'
+import {
+  buildItemPlan,
+  frontLoadReviewItems,
+  resolveSessionConfig,
+  resolveTargetDomains,
+} from './session-planner'
 
 const SYNC_ITEM_COUNT = 3
 
@@ -28,6 +40,8 @@ export type SessionListFilters = {
   limit?: number
 }
 
+export type ReviewTarget = { domain: string; anchorChunkId: string }
+
 @Injectable()
 export class SessionsService {
   constructor(
@@ -36,6 +50,9 @@ export class SessionsService {
     private readonly composer: ReadingBlockComposerService,
     private readonly quiz: QuizService,
     private readonly fillQueue: SessionFillQueueService,
+    @Optional()
+    @Inject(DUE_ITEMS_PROVIDER)
+    private readonly dueItems: DueItemsProvider | null = null,
   ) {}
 
   async create(
@@ -70,13 +87,18 @@ export class SessionsService {
     const certDomains = enrollment.certification.domains.map((d) => d.name)
     const targetDomains = resolveTargetDomains(config.focusArea, weakAreaList, certDomains)
 
-    const itemPlan = buildItemPlan({
+    let itemPlan = buildItemPlan({
       durationMinutes: config.durationMinutes,
       contentMix: config.contentMix,
       difficulty: config.difficulty,
       targetDomains,
       certificationId: enrollment.certification.id,
     })
+
+    if (config.learningStyle === 'spaced-repetition' && this.dueItems !== null) {
+      const dueTargets = await this.dueItems.getDueTargets(userId, enrollmentId)
+      itemPlan = frontLoadReviewItems(itemPlan, dueTargets)
+    }
 
     const session = em.create(StudySession, {
       userCertification: enrollment,
@@ -132,6 +154,84 @@ export class SessionsService {
         config.contentMix,
       )
     }
+
+    return { session: mapSessionToDto(session), statusCode: 201 }
+  }
+
+  async createReviewSession(
+    userId: string,
+    enrollmentId: string,
+    targets: ReviewTarget[],
+  ): Promise<{ session: SessionResponse; statusCode: 200 | 201 }> {
+    const em = this.em.fork()
+
+    const enrollment = await em.findOne(
+      UserCertification,
+      { id: enrollmentId, user: userId },
+      { populate: ['certification'] },
+    )
+    if (enrollment === null) {
+      throw new NotFoundException('Enrollment not found')
+    }
+
+    const existing = await em.findOne(StudySession, {
+      userCertification: enrollmentId,
+      status: 'active',
+    })
+    if (existing !== null) {
+      return { session: mapSessionToDto(existing), statusCode: 200 }
+    }
+
+    const difficulty: SessionDifficulty =
+      (enrollment.sessionOverrideDifficulty as SessionDifficulty | null) ?? 'intermediate'
+
+    const session = em.create(StudySession, {
+      userCertification: enrollment,
+      user: em.getReference(User, userId),
+      kind: 'review',
+      status: 'active',
+      durationMinutes: 5,
+      contentMix: 'quiz-heavy',
+      difficulty,
+      focusArea: { mode: 'auto' },
+      learningStyle: 'spaced-repetition',
+      lastItemIndex: 0,
+      startedAt: new Date(),
+      endedAt: null,
+    })
+
+    try {
+      em.persist(session)
+      await em.flush()
+    } catch (e) {
+      if (e instanceof UniqueConstraintViolationException) {
+        const active = await em.findOne(StudySession, {
+          userCertification: enrollmentId,
+          status: 'active',
+        })
+        if (active !== null) {
+          return { session: mapSessionToDto(active), statusCode: 200 }
+        }
+      }
+      throw e
+    }
+
+    const itemPlan: ItemPlan[] = targets.map((target, index) => ({
+      index,
+      type: 'quiz',
+      domain: target.domain,
+      anchorChunkId: target.anchorChunkId,
+    }))
+
+    await this.generateItems(
+      userId,
+      session.id,
+      itemPlan,
+      enrollment.certification.id,
+      enrollment.id,
+      difficulty,
+      'quiz-heavy',
+    )
 
     return { session: mapSessionToDto(session), statusCode: 201 }
   }
@@ -363,12 +463,20 @@ export class SessionsService {
           em.persist(item)
         }
       } else {
-        const result = await this.quiz.generate(userId, {
-          userCertificationId: enrollmentId,
-          domain: itemPlan.domain,
-          difficulty,
-          format: itemPlan.format,
-        })
+        const result =
+          itemPlan.anchorChunkId !== undefined
+            ? await this.quiz.generateFromChunk(userId, {
+                userCertificationId: enrollmentId,
+                anchorChunkId: itemPlan.anchorChunkId,
+                difficulty,
+                format: itemPlan.format,
+              })
+            : await this.quiz.generate(userId, {
+                userCertificationId: enrollmentId,
+                domain: itemPlan.domain,
+                difficulty,
+                format: itemPlan.format,
+              })
 
         const content =
           result.type === 'question'

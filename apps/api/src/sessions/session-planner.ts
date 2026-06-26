@@ -14,7 +14,10 @@ export type ItemPlan = {
   type: 'reading' | 'quiz'
   domain: string
   format?: QuestionFormat
+  anchorChunkId?: string
 }
+
+export type ReviewFrontLoadTarget = { domain: string; anchorChunkId: string }
 
 export type BuildItemPlanInput = {
   durationMinutes: number
@@ -60,6 +63,22 @@ export function buildItemPlan(input: BuildItemPlanInput): ItemPlan[] {
   }
 
   return plan
+}
+
+export function frontLoadReviewItems(
+  plan: ItemPlan[],
+  dueTargets: ReviewFrontLoadTarget[],
+): ItemPlan[] {
+  if (dueTargets.length === 0) return plan
+
+  const reviewItems: ItemPlan[] = dueTargets.map((target, index) => ({
+    index,
+    type: 'quiz',
+    domain: target.domain,
+    anchorChunkId: target.anchorChunkId,
+  }))
+  const shifted = plan.map((item) => ({ ...item, index: item.index + reviewItems.length }))
+  return [...reviewItems, ...shifted]
 }
 
 function planQuizFormat(
