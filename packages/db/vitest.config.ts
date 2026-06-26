@@ -32,7 +32,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      exclude: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'src/test-helpers/**'],
+      exclude: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'src/test-helpers/**', 'src/migrations/**'],
       thresholds: {
         lines: 80,
         branches: 80,

@@ -19,10 +19,10 @@ export async function createDbHarness(schemas: EntitySchema[] = []): Promise<DbH
   process.env.DB_PORT = String(port)
   process.env.DB_NAME = 'readion_test'
 
+  const customSchemas = schemas.length > 0
   const orm = await MikroORM.init({
     ...mikroOrmConfig,
-    entities: schemas,
-    discovery: { warnWhenNoEntities: false },
+    ...(customSchemas ? { entities: schemas, discovery: { warnWhenNoEntities: false } } : {}),
     host,
     port,
     dbName: 'readion_test',
@@ -30,7 +30,7 @@ export async function createDbHarness(schemas: EntitySchema[] = []): Promise<DbH
 
   await orm.migrator.up()
 
-  if (schemas.length > 0) {
+  if (customSchemas) {
     await orm.schema.update({ safe: true })
   }
 
