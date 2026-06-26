@@ -15,6 +15,7 @@ import { MockExamModule } from './mock-exam/mock-exam.module'
 import { ApiObservabilityModule } from './observability/observability.module'
 import { QueueModule } from './queue/queue.module'
 import { QuizModule } from './quiz/quiz.module'
+import { ReadinessModule } from './readiness/readiness.module'
 import { RedisModule } from './redis/redis.module'
 import { ReviewModule } from './review/review.module'
 import { SessionsModule } from './sessions/sessions.module'
@@ -45,6 +46,7 @@ import { WeakAreasModule } from './weak-areas/weak-areas.module'
     SessionsModule,
     ReviewModule,
     MockExamModule,
+    ReadinessModule,
   ],
   providers: [
     {
