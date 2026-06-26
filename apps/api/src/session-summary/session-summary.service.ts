@@ -22,8 +22,6 @@ import {
 import type { ResponseWithDomain } from './response-domain-mapper'
 import { type GradedResponse, selectNextFocus, selectStrongest, selectWeakest } from './selectors'
 
-const MOCK_NEUTRAL_CONFIDENCE = 3
-
 type DomainedResponse = {
   id: string
   question: string
@@ -90,7 +88,7 @@ export class SessionSummaryService {
       id: q.id,
       question: q.question,
       correct: q.selectedAnswer === q.correctAnswer,
-      confidence: MOCK_NEUTRAL_CONFIDENCE,
+      confidence: this.mockNeutralConfidence(),
       timeTakenMs: 0,
       createdAt: boundary,
       domain: q.domain,
@@ -383,6 +381,10 @@ export class SessionSummaryService {
       this.config.get('READINESS_CALIBRATION_MIN_ANSWERS', { infer: true }) ??
       READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT
     )
+  }
+
+  private mockNeutralConfidence(): number {
+    return this.config.get('MOCK_EXAM_NEUTRAL_CONFIDENCE', { infer: true }) ?? 3
   }
 }
 
