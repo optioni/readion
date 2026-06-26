@@ -79,7 +79,7 @@ export class ReadinessService {
       lastActivityAt: w.updatedAt,
     }))
     const mockResults: ReadinessMockResult[] = mocks
-      .filter((m) => m.score !== null)
+      .filter((m) => m.score !== null && m.type === 'mock')
       .map((m) => ({ score: m.score as number, at: m.updatedAt }))
 
     const now = new Date()
