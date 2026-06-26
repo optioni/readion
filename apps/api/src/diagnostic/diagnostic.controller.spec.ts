@@ -4,6 +4,8 @@ import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import {
   Certification,
+  MockExam,
+  StudySession,
   startPostgresContainer,
   startRedisContainer,
   User,
@@ -19,10 +21,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { AppModule } from '../app.module'
 import { bootstrapApp } from '../bootstrap'
 import { ProviderAdapter } from '../llm/provider-adapter'
-import {
-  configureTestEnv,
-  createMockProviderValue,
-} from '../mock-exam/test/mock-exam-test-utils'
+import { configureTestEnv, createMockProviderValue } from '../mock-exam/test/mock-exam-test-utils'
 import { REDIS_CLIENT } from '../redis/redis.module'
 
 describe('DiagnosticController (integration)', () => {
@@ -198,6 +197,181 @@ describe('DiagnosticController (integration)', () => {
         .set('Authorization', `Bearer ${otherToken}`)
 
       expect(res.status).toBe(404)
+    })
+  })
+
+  describe('GET /api/v1/user-certifications/:id/diagnostic-offer', () => {
+    async function seedSubmittedDiagnostic(userId: string, enrollmentId: string): Promise<void> {
+      const em = app.get(MikroORM).em.fork()
+      const attempt = em.create(MockExam, {
+        user: em.getReference(User, userId),
+        userCertification: em.getReference(UserCertification, enrollmentId),
+        type: 'diagnostic',
+        status: 'submitted',
+        startedAt: new Date(),
+        deadline: null,
+        score: 0.8,
+        passed: null,
+        domainBreakdown: {},
+        questions: [],
+      })
+      em.persist(attempt)
+      await em.flush()
+    }
+
+    async function seedCompletedSession(userId: string, enrollmentId: string): Promise<void> {
+      const em = app.get(MikroORM).em.fork()
+      const session = em.create(StudySession, {
+        user: em.getReference(User, userId),
+        userCertification: em.getReference(UserCertification, enrollmentId),
+        kind: 'study',
+        status: 'completed',
+        durationMinutes: 30,
+        contentMix: 'balanced',
+        difficulty: 'medium',
+        focusArea: { type: 'weakest' },
+        learningStyle: 'visual',
+        startedAt: new Date(),
+        endedAt: new Date(),
+      })
+      em.persist(session)
+      await em.flush()
+    }
+
+    it('(d) returns onboarding offer when cert is live and no completed diagnostic', async () => {
+      const certId = await seedLiveCert('DIAG-OFFER-01')
+      const token = await registerAndLogin('diag-offer-onboarding@example.com')
+      const enrollmentId = await enroll(token, certId)
+
+      const res = await supertest(app.getHttpServer())
+        .get(`/api/v1/user-certifications/${enrollmentId}/diagnostic-offer`)
+        .set('Authorization', `Bearer ${token}`)
+
+      expect(res.status).toBe(200)
+      expect(res.body.data.offer).toBe('onboarding')
+    })
+
+    it('(e) returns none when diagnostic is completed but session count is below threshold', async () => {
+      const registerRes = await supertest(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email: 'diag-offer-none@example.com', password: 'correcthorse' })
+      const token = registerRes.body.data.accessToken as string
+      const userId = registerRes.body.data.user.id as string
+
+      const certId = await seedLiveCert('DIAG-OFFER-02')
+      const enrollmentId = await enroll(token, certId)
+
+      await seedSubmittedDiagnostic(userId, enrollmentId)
+
+      const res = await supertest(app.getHttpServer())
+        .get(`/api/v1/user-certifications/${enrollmentId}/diagnostic-offer`)
+        .set('Authorization', `Bearer ${token}`)
+
+      expect(res.status).toBe(200)
+      expect(res.body.data.offer).toBe('none')
+    })
+
+    it('(f) returns re-prompt after completing enough sessions', async () => {
+      const registerRes = await supertest(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email: 'diag-offer-reprompt@example.com', password: 'correcthorse' })
+      const token = registerRes.body.data.accessToken as string
+      const userId = registerRes.body.data.user.id as string
+
+      const certId = await seedLiveCert('DIAG-OFFER-03')
+      const enrollmentId = await enroll(token, certId)
+
+      await seedSubmittedDiagnostic(userId, enrollmentId)
+      await seedCompletedSession(userId, enrollmentId)
+
+      const res = await supertest(app.getHttpServer())
+        .get(`/api/v1/user-certifications/${enrollmentId}/diagnostic-offer`)
+        .set('Authorization', `Bearer ${token}`)
+
+      expect(res.status).toBe(200)
+      expect(res.body.data.offer).toBe('re-prompt')
+    })
+
+    it("(h) returns 404 when accessing another user's enrollment", async () => {
+      const certId = await seedLiveCert('DIAG-OFFER-04')
+      const ownerToken = await registerAndLogin('diag-offer-owner@example.com')
+      const otherToken = await registerAndLogin('diag-offer-other@example.com')
+      const enrollmentId = await enroll(ownerToken, certId)
+
+      const res = await supertest(app.getHttpServer())
+        .get(`/api/v1/user-certifications/${enrollmentId}/diagnostic-offer`)
+        .set('Authorization', `Bearer ${otherToken}`)
+
+      expect(res.status).toBe(404)
+    })
+  })
+
+  describe('POST /api/v1/user-certifications/:id/diagnostic-offer/dismiss', () => {
+    async function seedSubmittedDiagnostic(userId: string, enrollmentId: string): Promise<void> {
+      const em = app.get(MikroORM).em.fork()
+      const attempt = em.create(MockExam, {
+        user: em.getReference(User, userId),
+        userCertification: em.getReference(UserCertification, enrollmentId),
+        type: 'diagnostic',
+        status: 'submitted',
+        startedAt: new Date(),
+        deadline: null,
+        score: 0.8,
+        passed: null,
+        domainBreakdown: {},
+        questions: [],
+      })
+      em.persist(attempt)
+      await em.flush()
+    }
+
+    async function seedCompletedSession(userId: string, enrollmentId: string): Promise<void> {
+      const em = app.get(MikroORM).em.fork()
+      const session = em.create(StudySession, {
+        user: em.getReference(User, userId),
+        userCertification: em.getReference(UserCertification, enrollmentId),
+        kind: 'study',
+        status: 'completed',
+        durationMinutes: 30,
+        contentMix: 'balanced',
+        difficulty: 'medium',
+        focusArea: { type: 'weakest' },
+        learningStyle: 'visual',
+        startedAt: new Date(),
+        endedAt: new Date(),
+      })
+      em.persist(session)
+      await em.flush()
+    }
+
+    it('(g) dismiss stamps diagnosticRePromptedAt and subsequent offer returns none', async () => {
+      const registerRes = await supertest(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email: 'diag-offer-dismiss@example.com', password: 'correcthorse' })
+      const token = registerRes.body.data.accessToken as string
+      const userId = registerRes.body.data.user.id as string
+
+      const certId = await seedLiveCert('DIAG-OFFER-05')
+      const enrollmentId = await enroll(token, certId)
+
+      await seedSubmittedDiagnostic(userId, enrollmentId)
+      await seedCompletedSession(userId, enrollmentId)
+
+      const offerBefore = await supertest(app.getHttpServer())
+        .get(`/api/v1/user-certifications/${enrollmentId}/diagnostic-offer`)
+        .set('Authorization', `Bearer ${token}`)
+      expect(offerBefore.body.data.offer).toBe('re-prompt')
+
+      const dismissRes = await supertest(app.getHttpServer())
+        .post(`/api/v1/user-certifications/${enrollmentId}/diagnostic-offer/dismiss`)
+        .set('Authorization', `Bearer ${token}`)
+      expect(dismissRes.status).toBe(200)
+
+      const offerAfter = await supertest(app.getHttpServer())
+        .get(`/api/v1/user-certifications/${enrollmentId}/diagnostic-offer`)
+        .set('Authorization', `Bearer ${token}`)
+      expect(offerAfter.status).toBe(200)
+      expect(offerAfter.body.data.offer).toBe('none')
     })
   })
 })
