@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { trace } from '@opentelemetry/api'
 import { InjectMetric } from '@willsoto/nestjs-prometheus'
-import type { ModelMessage, StreamTextResult, ToolSet } from 'ai'
+import type { ModelMessage, StopCondition, StreamTextResult, ToolSet } from 'ai'
 import { generateText, streamText } from 'ai'
 import type { Counter, Histogram } from 'prom-client'
 import { ModelRegistryService } from './model-registry.service'
@@ -16,6 +16,11 @@ export type LlmGenerateOptions = {
   taskType: TaskType
   messages: ModelMessage[]
   system?: string
+}
+
+export type LlmStreamOptions = LlmGenerateOptions & {
+  tools?: ToolSet
+  stopWhen?: StopCondition<ToolSet> | Array<StopCondition<ToolSet>>
 }
 
 @Injectable()
@@ -80,7 +85,7 @@ export class LlmService {
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: Output generic requires the 'output' namespace which is not a regular type
-  async streamText(options: LlmGenerateOptions): Promise<StreamTextResult<ToolSet, any>> {
+  async streamText(options: LlmStreamOptions): Promise<StreamTextResult<ToolSet, any>> {
     const { modelId, maxOutputTokens } = this.modelRegistry.resolve(options.taskType)
     const model = this.providerAdapter.getChatModel(modelId)
 
@@ -94,6 +99,8 @@ export class LlmService {
             messages: options.messages,
             system: options.system,
             maxOutputTokens,
+            tools: options.tools,
+            stopWhen: options.stopWhen,
           })
           span.end()
           return result

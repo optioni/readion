@@ -36,13 +36,13 @@ Otherwise, spawn a subagent **using the `opus` model**:
 
 If the subagent reports an inconsistency, missing dependency, or any error: **surface the full report and ask for instructions**. Do not continue until the user responds. They may say: fix it, skip this change, or abort. Follow their instruction exactly.
 
-### 2b. Implementation (opsx:apply)
+### 2b. Implementation (apply-orchestrator)
 
-Spawn a subagent **using the `opus` model**:
+Spawn an **`apply-orchestrator`** subagent **using the `opus` model**:
 
-> Invoke the `opsx:apply` skill for change `"<change-name>"`. Work through all tasks until all are complete or you are blocked. Report the final status using the opsx:apply output format.
+> You are implementing the change `"<change-name>"`. Its artifacts exist under `openspec/changes/<change-name>/`. Work through all task groups in order until all are complete or you are blocked. Report the final status as either "Apply complete" or "Apply paused" with the reason.
 
-If the subagent reports `Implementation Paused` or any blocker: **surface the full status output and ask for instructions**. Options to offer:
+If the subagent reports `Apply paused` or any blocker: **surface the full status output and ask for instructions**. Options to offer:
 1. Retry (after the user resolves the issue)
 2. Skip this change and continue with the next
 3. Abort the orchestration entirely

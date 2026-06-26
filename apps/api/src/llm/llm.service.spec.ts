@@ -5,9 +5,11 @@ import type {
 } from '@ai-sdk/provider'
 import { InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base'
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node'
+import { stepCountIs, tool } from 'ai'
 import { MockLanguageModelV3 } from 'ai/test'
 import type { Counter, Histogram } from 'prom-client'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { z } from 'zod'
 import { LlmService } from './llm.service'
 import { ModelRegistryService } from './model-registry.service'
 import type { ProviderAdapter } from './provider-adapter'
@@ -250,5 +252,52 @@ describe('LlmService — streamText', () => {
       chunks.push(chunk)
     }
     expect(chunks.join('')).toBe('Hello')
+  })
+
+  it('passes tools and a multi-step stop condition through to the SDK', async () => {
+    const model = new MockLanguageModelV3({
+      doStream: async () => ({
+        stream: new ReadableStream({
+          start(controller) {
+            controller.enqueue({ type: 'stream-start', warnings: [] })
+            controller.enqueue({ type: 'text-start', id: 'id-1' })
+            controller.enqueue({ type: 'text-delta', id: 'id-1', delta: 'ok' })
+            controller.enqueue({ type: 'text-end', id: 'id-1' })
+            controller.enqueue({
+              type: 'finish',
+              finishReason: FINISH_REASON_STOP,
+              usage: {
+                inputTokens: { total: 5, noCache: 5, cacheRead: 0, cacheWrite: 0 },
+                outputTokens: { total: 10, text: 10, reasoning: 0 },
+              },
+            })
+            controller.close()
+          },
+        }),
+      }),
+    })
+    const { svc } = makeService(model)
+
+    const tools = {
+      lookup: tool({
+        description: 'Look something up',
+        inputSchema: z.object({ q: z.string() }),
+        execute: async () => ({ answer: 'x' }),
+      }),
+    }
+
+    const result = await svc.streamText({
+      taskType: 'agent-qa',
+      messages: [{ role: 'user', content: 'test' }],
+      tools,
+      stopWhen: stepCountIs(4),
+    })
+    for await (const _chunk of result.textStream) {
+      // drain
+    }
+
+    const passedTools = model.doStreamCalls[0]?.tools
+    expect(passedTools).toBeDefined()
+    expect(passedTools?.some((t) => t.name === 'lookup')).toBe(true)
   })
 })
