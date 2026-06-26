@@ -164,6 +164,45 @@ describe('UserCertification entity', () => {
     await expect(em.flush()).resolves.not.toThrow()
   })
 
+  it('persists diagnosticRePromptedAt as null by default', async () => {
+    const em = orm.em.fork()
+    const user = seedUser(em)
+    const cert = seedCert(em)
+    await em.flush()
+
+    const enrollment = em.create(UserCertification, {
+      user,
+      certification: cert,
+    })
+    em.persist(enrollment)
+    await em.flush()
+    em.clear()
+
+    const persisted = await em.findOneOrFail(UserCertification, { id: enrollment.id })
+    expect(persisted.diagnosticRePromptedAt).toBeNull()
+  })
+
+  it('persists a supplied diagnosticRePromptedAt timestamp', async () => {
+    const em = orm.em.fork()
+    const user = seedUser(em)
+    const cert = seedCert(em)
+    await em.flush()
+
+    const stamp = new Date('2026-06-01T10:00:00Z')
+    const enrollment = em.create(UserCertification, {
+      user,
+      certification: cert,
+      diagnosticRePromptedAt: stamp,
+    })
+    em.persist(enrollment)
+    await em.flush()
+    em.clear()
+
+    const persisted = await em.findOneOrFail(UserCertification, { id: enrollment.id })
+    expect(persisted.diagnosticRePromptedAt).toBeInstanceOf(Date)
+    expect(persisted.diagnosticRePromptedAt?.toISOString()).toBe(stamp.toISOString())
+  })
+
   it('preserves enrolledAt when status is updated', async () => {
     const em = orm.em.fork()
     const user = seedUser(em)
