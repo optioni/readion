@@ -12,6 +12,7 @@ import {
 } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import type Redis from 'ioredis'
+import supertest from 'supertest'
 import type { StartedTestContainer } from 'testcontainers'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AppModule } from '../app.module'
@@ -339,6 +340,124 @@ describe('MockExamGenerationProcessor (integration)', () => {
       expect(attempt.questions).toHaveLength(2)
       expect(attempt.startedAt).not.toBeNull()
       expect(attempt.deadline).not.toBeNull()
+    })
+  })
+
+  describe('diagnostic generation: breadth planner + null deadline', () => {
+    async function registerAndLoginDiag(email: string): Promise<string> {
+      const res = await supertest(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email, password: 'correcthorse' })
+      return res.body.data.accessToken as string
+    }
+
+    async function enrollViaApi(token: string, certId: string): Promise<string> {
+      const res = await supertest(app.getHttpServer())
+        .post('/api/v1/user-certifications')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ certificationId: certId })
+      return res.body.data.id as string
+    }
+
+    async function createDiagnosticAttemptInDb(enrollmentId: string): Promise<string> {
+      const fork = em.fork()
+      const conn = fork.getConnection()
+      const rows = await conn.execute<{ user_id: string }[]>(
+        'SELECT user_id FROM user_certifications WHERE id = ?',
+        [enrollmentId],
+      )
+      const userId = rows[0]!.user_id
+      const attempt = fork.create(MockExam, {
+        user: fork.getReference(User, userId),
+        userCertification: fork.getReference(UserCertification, enrollmentId),
+        type: 'diagnostic',
+        questions: [],
+        domainBreakdown: {},
+      })
+      fork.persist(attempt)
+      await fork.flush()
+      return attempt.id
+    }
+
+    async function seedDiagnosticAttemptDirect(
+      cert: Certification,
+    ): Promise<{ attemptId: string }> {
+      const fork = em.fork()
+      const user = fork.create(User, {
+        email: `diag-proc-${Math.random()}@example.com`,
+        passwordHash: '$2b$04$abcdefghijklmnopqrstuuF4Tw8dDGhl6G7y1aCyYx2eZP6Zxq6i2',
+      })
+      fork.persist(user)
+      await fork.flush()
+
+      const enrollment = fork.create(UserCertification, {
+        user: fork.getReference(User, user.id),
+        certification: fork.getReference(Certification, cert.id),
+      })
+      fork.persist(enrollment)
+      await fork.flush()
+
+      const attempt = fork.create(MockExam, {
+        user: fork.getReference(User, user.id),
+        userCertification: fork.getReference(UserCertification, enrollment.id),
+        type: 'diagnostic',
+        questions: [],
+        domainBreakdown: {},
+      })
+      fork.persist(attempt)
+      await fork.flush()
+
+      return { attemptId: attempt.id }
+    }
+
+    it('generates DIAGNOSTIC_QUESTION_COUNT (12) questions for a diagnostic attempt and stamps startedAt without deadline', async () => {
+      const cert = await seedCert('DIAG-GEN-01')
+      for (const domain of ['Security', 'Networking']) {
+        for (let i = 0; i < 6; i++) {
+          await seedChunk(cert.id, domain)
+        }
+      }
+      const { attemptId } = await seedDiagnosticAttemptDirect(cert)
+
+      await processor.process(fakeJob({ attemptId }))
+
+      const fork = em.fork()
+      const attempt = await fork.findOneOrFail(MockExam, { id: attemptId })
+
+      expect(attempt.questions).toHaveLength(12)
+      expect(attempt.startedAt).not.toBeNull()
+      expect(attempt.deadline).toBeNull()
+
+      for (const q of attempt.questions) {
+        expect(q.provenance.sourceChunkIds.length).toBeGreaterThan(0)
+        expect(q.provenance.supportingSpans.length).toBeGreaterThan(0)
+        expect(q.provenance.verdict.pass).toBe(true)
+      }
+    })
+
+    it('diagnostic attempt reports generation: ready with remainingSeconds: null after generation', async () => {
+      const cert = await seedCert('DIAG-HTTP-01')
+      for (const domain of ['Security', 'Networking']) {
+        for (let i = 0; i < 6; i++) {
+          await seedChunk(cert.id, domain)
+        }
+      }
+
+      const token = await registerAndLoginDiag('diag-http-01@example.com')
+      const enrollmentId = await enrollViaApi(token, cert.id)
+      const attemptId = await createDiagnosticAttemptInDb(enrollmentId)
+
+      await processor.process(fakeJob({ attemptId }))
+
+      const res = await supertest(app.getHttpServer())
+        .get(`/api/v1/mock-exams/${attemptId}`)
+        .set('Authorization', `Bearer ${token}`)
+
+      expect(res.status).toBe(200)
+      expect(res.body.data.generation).toBe('ready')
+      expect(res.body.data.remainingSeconds).toBeNull()
+      expect(res.body.data.deadline).toBeNull()
+      expect(res.body.data.startedAt).not.toBeNull()
     })
   })
 })
