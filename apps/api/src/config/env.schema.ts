@@ -11,6 +11,8 @@ import {
   READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT,
   REVIEW_SESSION_QUESTION_CAP_DEFAULT,
   redisUrlFragment,
+  SUMMARY_DRILL_MAX_QUESTIONS,
+  SUMMARY_UNSURE_CONFIDENCE_THRESHOLD,
   zodCoerceNumber,
   zodRequiredUrl,
 } from '@readion/shared'
@@ -121,6 +123,14 @@ const envSchema = z
         message: 'Must be a non-negative integer',
       })
       .default(1),
+    SUMMARY_DRILL_MAX_QUESTIONS: zodCoerceNumber()
+      .refine((n) => Number.isInteger(n) && n > 0, { message: 'Must be a positive integer' })
+      .default(SUMMARY_DRILL_MAX_QUESTIONS),
+    SUMMARY_UNSURE_CONFIDENCE_THRESHOLD: zodCoerceNumber()
+      .refine((n) => Number.isInteger(n) && n >= 1 && n <= 5, {
+        message: 'Must be between 1 and 5',
+      })
+      .default(SUMMARY_UNSURE_CONFIDENCE_THRESHOLD),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'production') {
