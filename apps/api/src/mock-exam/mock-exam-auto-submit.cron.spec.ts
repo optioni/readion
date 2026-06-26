@@ -2,7 +2,14 @@ import 'reflect-metadata'
 import { EntityManager, MikroORM } from '@mikro-orm/core'
 import type { INestApplication } from '@nestjs/common'
 import { Test, type TestingModule } from '@nestjs/testing'
-import { MockExam, QuizResponse, startPostgresContainer, startRedisContainer } from '@readion/db'
+import {
+  MockExam,
+  QuizResponse,
+  startPostgresContainer,
+  startRedisContainer,
+  User,
+  UserCertification,
+} from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import type Redis from 'ioredis'
 import supertest from 'supertest'
@@ -370,6 +377,48 @@ describe('MockExamAutoSubmitCron (integration)', () => {
 
       const finalStatus = await getMockStatus(mockId)
       expect(finalStatus).toBe('submitted')
+    })
+  })
+
+  /**
+   * (d) Diagnostic null-deadline: cron never touches it.
+   *
+   * Diagnostics have no deadline (deadline = null). The cron's WHERE clause
+   * filters on `deadline < cutoff`, which evaluates to NULL for null-deadline
+   * rows, so they are never selected. This test verifies that behaviour.
+   */
+  describe('(d) Diagnostic null-deadline: cron never touches it', () => {
+    it('leaves an in_progress diagnostic with null deadline untouched', async () => {
+      const certId = await seedCert('CRON-DIAG-NULL-01')
+
+      const token = await registerAndLogin('cron-diag-null-01@example.com')
+      const enrollmentId = await enroll(token, certId)
+
+      const fork = em.fork()
+      const conn = fork.getConnection()
+      const rows = await conn.execute<{ user_id: string }[]>(
+        'SELECT user_id FROM user_certifications WHERE id = ?',
+        [enrollmentId],
+      )
+      const userId = rows[0]!.user_id
+      const attempt = fork.create(MockExam, {
+        user: fork.getReference(User, userId),
+        userCertification: fork.getReference(UserCertification, enrollmentId),
+        type: 'diagnostic',
+        status: 'in_progress',
+        startedAt: null,
+        deadline: null,
+        domainBreakdown: {},
+        questions: [],
+      })
+      fork.persist(attempt)
+      await fork.flush()
+
+      const farFutureDate = new Date(Date.now() + 24 * 60 * 60 * 1000)
+      await cron.sweep(farFutureDate)
+
+      const status = await getMockStatus(attempt.id)
+      expect(status).toBe('in_progress')
     })
   })
 })

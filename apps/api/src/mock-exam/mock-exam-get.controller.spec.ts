@@ -375,6 +375,39 @@ describe('GET /api/v1/mock-exams/:id (integration)', () => {
         .set('Authorization', `Bearer ${other}`)
       expect(otherRes.status).toBe(404)
     })
+
+    it('returns 404 when accessing a diagnostic attempt belonging to another user', async () => {
+      const cert = await seedCert('GET-XUSER-DIAG-01')
+
+      const owner = await registerAndLogin('get-xuser-diag-owner@example.com')
+      const enrollmentId = await enroll(owner, cert.id)
+
+      const fork = em.fork()
+      const conn = fork.getConnection()
+      const rows = await conn.execute<{ user_id: string }[]>(
+        'SELECT user_id FROM user_certifications WHERE id = ?',
+        [enrollmentId],
+      )
+      const userId = rows[0]!.user_id
+      const attempt = fork.create(MockExam, {
+        user: fork.getReference(User, userId),
+        userCertification: fork.getReference(UserCertification, enrollmentId),
+        type: 'diagnostic',
+        status: 'in_progress',
+        startedAt: null,
+        deadline: null,
+        questions: [],
+        domainBreakdown: {},
+      })
+      fork.persist(attempt)
+      await fork.flush()
+
+      const other = await registerAndLogin('get-xuser-diag-other@example.com')
+      const otherRes = await supertest(app.getHttpServer())
+        .get(`/api/v1/mock-exams/${attempt.id}`)
+        .set('Authorization', `Bearer ${other}`)
+      expect(otherRes.status).toBe(404)
+    })
   })
 
   describe('(g) generation derivation: startedAt as the readiness signal', () => {
