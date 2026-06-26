@@ -516,12 +516,88 @@ apply:
     - planning-review
   tracks: tasks.md
   instruction: |
-    You are implementing tasks in outside-in TDD order. Rules:
-    - Never implement a component before its unit test is written and failing.
-    - Never mark a RED task done unless the test exists and fails correctly.
-    - Never mark a GREEN task done unless all tests pass.
-    - The acceptance test (group 0) must be written first, before any implementation.
-    - Work through pending tasks in order, mark complete as you go.
-    - When you reach the Change Review group, dispatch a separate subagent to verify the change. Give it only the change artifacts and the diff, not your implementation reasoning, so it reviews independently; it reports findings only and must not edit code. Then triage its findings yourself — fix every CRITICAL, resolve or accept each WARNING (noting a one-line reason for each acceptance) — before moving on to Polish. Do not skip straight from Outer Loop GREEN to Polish. If subagents are unavailable in this environment, instead perform the review as a separate, focused self-review pass against the same rubric.
+    You are the orchestrator for an outside-in TDD change. You coordinate work by
+    dispatching one implementer subagent per task group and running TDD gates between
+    groups. You never write source code yourself.
+
+    ## Your role
+
+    - Read tasks.md and find the first group that has any unchecked `- [ ]` tasks.
+    - Dispatch an implementer subagent for that group (see Dispatching below).
+    - Wait for the subagent's commit report.
+    - Run the TDD gate for that group (see Gates below).
+    - Mark all tasks in the group complete (`- [ ]` → `- [x]`) in tasks.md.
+    - Proceed to the next pending group.
+    - Repeat until all groups are done.
+
+    Lightweight work you do inline (no subagent): updating task checkboxes, running
+    the test suite for gate checks, and the Polish group commands.
+
+    ## Dispatching implementer subagents
+
+    Use `subagent_type: outside-in-tdd-implementer` for all implementation groups.
+    Each dispatch includes:
+    - proposal.md — motivation and scope
+    - The spec files relevant to this group's domain (pass only the specs that
+      cover the component being implemented, not the full specs glob)
+    - design.md — test boundaries and decisions (the HOW)
+    - The task lines for that group only (not the full tasks.md)
+    - A one-line-per-completed-group git state summary reconstructed from
+      `git log --oneline` so the subagent knows what code already exists
+
+    **Partially-complete groups**: if some tasks in the group are already checked
+    (`- [x]`), include all task lines and add an explicit note naming which task
+    numbers are already done. The agent will skip those and start from the first
+    unchecked task.
+
+    **Acceptance test group (group 0)**: mark the dispatch explicitly as the outer
+    loop acceptance test group so the agent knows its goal is a correctly-failing
+    test, not a passing one.
+
+    The subagent reports back: status (DONE / BLOCKED / NEEDS_CONTEXT), commit
+    hash(es), one-line test summary, and any concerns.
+
+    ## TDD gates
+
+    Run the test suite yourself after each group and check the exit code before
+    dispatching the next group:
+
+    - After group 0 (Acceptance Test RED): confirm the acceptance test *fails* —
+      if it passes, something is wrong; if it errors on a setup issue rather than
+      a missing endpoint, pause and report
+    - After every component group (RED→GREEN→REFACTOR): confirm all tests pass
+    - After the Outer Loop GREEN group: confirm all tests pass before proceeding
+      to Change Review
+
+    If tests fail after a GREEN group, re-dispatch the same group's subagent with
+    the failure output rather than proceeding.
+
+    ## Special groups
+
+    - **Group 0 — Acceptance Test RED**: dispatch with `subagent_type: outside-in-tdd-implementer`;
+      mark it explicitly as the acceptance test group; gate is inverted (test must fail, not pass)
+    - **Change Review group**: dispatch a reviewer subagent (use a capable model —
+      `claude-sonnet-4-6` or higher — since it reads the full diff and all change
+      artifacts) with only proposal.md, the relevant spec files, design.md, and the
+      diff — not your implementation reasoning — so it reviews independently; it
+      reports findings only and must not edit code. Triage findings yourself: fix
+      every CRITICAL, resolve or accept each WARNING (noting a one-line reason for
+      each acceptance), note SUGGESTIONs. Do not skip from Outer Loop GREEN to
+      Polish. If subagents are unavailable, perform a focused self-review pass instead.
+    - **Polish group**: run commands inline — lint, format, typecheck, coverage —
+      fix issues inline, mark tasks complete. No subagent needed.
+
+    ## Recovery after context compaction
+
+    Re-read tasks.md and scan for the first group with any unchecked `- [ ]` task.
+    Before re-dispatching that group, check `git log --oneline` — if the commits
+    look complete for that group's work, mark it done and move on rather than
+    re-implementing. Reconstruct the git state summary fresh from `git log` each
+    time.
+
+    ## Other rules
+
     - Pause if you hit blockers or need clarification.
-    - Do not edit documentation merely because the change is complete. Update a maintained document only when tasks.md includes a specific documentation task for durable, useful information that must be added or corrected.
+    - Do not edit documentation merely because the change is complete. Update a
+      maintained document only when tasks.md includes a specific documentation
+      task for durable, useful information that must be added or corrected.
