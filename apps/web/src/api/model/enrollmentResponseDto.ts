@@ -13,4 +13,6 @@ export interface EnrollmentResponseDto {
   status: EnrollmentResponseDtoStatus
   enrolledAt: string
   sessionDefaults: EnrollmentSessionOverridesDto
+  /** @nullable */
+  readinessScore: number | null
 }
