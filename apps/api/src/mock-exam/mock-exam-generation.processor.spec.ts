@@ -311,4 +311,34 @@ describe('MockExamGenerationProcessor (integration)', () => {
       expect(second.questions).toHaveLength(originalQuestionCount)
     })
   })
+
+  /**
+   * Shortfall handling: some domain slots cannot be filled.
+   *
+   * When a domain has no chunks, its slots return insufficient_material and are
+   * skipped. The attempt must still receive startedAt/deadline after all slots
+   * have been processed — it must not be stranded in the "preparing" state
+   * forever just because some slots yielded no question.
+   */
+  describe('Shortfall handling: partial content coverage', () => {
+    it('stamps deadline even when some domain slots return insufficient_material', async () => {
+      const cert = await seedCert('PROC-SHORTFALL-01')
+      // Only seed Networking chunks — Security slots will get insufficient_material
+      await seedChunk(cert.id, 'Networking')
+      await seedChunk(cert.id, 'Networking')
+      const { attemptId } = await seedAttempt(cert)
+
+      // RED: stampDeadlineIfComplete currently checks questions.length === questionCount
+      // so with only 2 Networking questions (shortfall of 2 Security), it never stamps.
+      await processor.process(fakeJob({ attemptId }))
+
+      const fork = em.fork()
+      const attempt = await fork.findOneOrFail(MockExam, { id: attemptId })
+
+      // Only 2 questions generated (Networking only), but deadline MUST be stamped
+      expect(attempt.questions).toHaveLength(2)
+      expect(attempt.startedAt).not.toBeNull()
+      expect(attempt.deadline).not.toBeNull()
+    })
+  })
 })
