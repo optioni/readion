@@ -81,6 +81,23 @@ describe('LlmService', () => {
     })
   })
 
+  describe('generateContent', () => {
+    beforeEach(async () => {
+      const moduleRef = await Test.createTestingModule({
+        providers: [LlmService, { provide: ConfigService, useValue: makeConfig('openai') }],
+      }).compile()
+      service = moduleRef.get(LlmService)
+    })
+
+    it('returns text from generateText', async () => {
+      const { generateText } = await import('ai')
+      vi.mocked(generateText).mockResolvedValueOnce({ text: 'generated content' } as any)
+
+      const result = await service.generateContent('some prompt')
+      expect(result).toBe('generated content')
+    })
+  })
+
   describe('with anthropic provider', () => {
     beforeEach(async () => {
       const moduleRef = await Test.createTestingModule({
@@ -95,6 +112,14 @@ describe('LlmService', () => {
 
       const result = await service.embedTexts(['text'])
       expect(result).toHaveLength(1)
+    })
+
+    it('generateContent uses anthropic model', async () => {
+      const { generateText } = await import('ai')
+      vi.mocked(generateText).mockResolvedValueOnce({ text: 'response' } as any)
+
+      const result = await service.generateContent('prompt')
+      expect(result).toBe('response')
     })
   })
 })

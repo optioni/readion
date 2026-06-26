@@ -64,6 +64,25 @@ export class LlmService {
     return output.tags.filter((tag) => tag.confidence >= confidenceThreshold)
   }
 
+  private getContentModel() {
+    const provider = this.config.get('AI_PROVIDER') ?? 'openai'
+    const apiKey = this.config.get('AI_API_KEY')
+    const modelId = this.config.get('AI_MODEL_SESSION_FILL') ?? 'gpt-4o'
+
+    if (provider === 'anthropic') {
+      return createAnthropic({ apiKey })(modelId)
+    }
+    return createOpenAI({ apiKey })(modelId)
+  }
+
+  async generateContent(prompt: string): Promise<string> {
+    const { text } = await generateText({
+      model: this.getContentModel(),
+      prompt,
+    })
+    return text
+  }
+
   async embedTexts(texts: string[], batchSize = 100): Promise<number[][]> {
     const model = this.getEmbeddingModel()
     const results: number[][] = []
