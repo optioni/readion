@@ -19,6 +19,7 @@ import { QuizModule } from './quiz/quiz.module'
 import { ReadinessModule } from './readiness/readiness.module'
 import { RedisModule } from './redis/redis.module'
 import { ReviewModule } from './review/review.module'
+import { SessionSummaryModule } from './session-summary/session-summary.module'
 import { SessionsModule } from './sessions/sessions.module'
 import { ApiThrottlerModule } from './throttler/throttler.module'
 import { UserCertificationsModule } from './user-certifications/user-certifications.module'
@@ -45,6 +46,7 @@ import { WeakAreasModule } from './weak-areas/weak-areas.module'
     QuizModule,
     WeakAreasModule,
     SessionsModule,
+    SessionSummaryModule,
     ReviewModule,
     MockExamModule,
     DiagnosticModule,
