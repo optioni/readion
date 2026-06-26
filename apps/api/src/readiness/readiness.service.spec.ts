@@ -69,4 +69,29 @@ describe('ReadinessService — diagnostic weight exclusion', () => {
     // The threshold 75 sits safely between these two ranges.
     expect(result.score).toBeLessThan(75)
   })
+
+  it('a diagnostic alongside a real mock yields the same score as the real mock alone', async () => {
+    // responseCount exceeds the calibration threshold so both variants are calibrated
+    const weakAreas = [stubWeakArea('Cloud Concepts', 60, 15)]
+    const mockOnly = [stubMockExam('mock', 80)]
+    const mixedExams = [stubMockExam('diagnostic', 100), stubMockExam('mock', 80)]
+
+    const withMockOnly = await makeService(weakAreas, mockOnly).compute(ENROLLMENT_ID)
+    const withMixed = await makeService(weakAreas, mixedExams).compute(ENROLLMENT_ID)
+
+    // The diagnostic contributes to calibration only — it must not shift the score
+    expect(withMixed.calibrated).toBe(true)
+    expect(withMockOnly.calibrated).toBe(true)
+    if (!withMixed.calibrated || !withMockOnly.calibrated) return
+
+    expect(withMixed.score).toBe(withMockOnly.score)
+  })
+
+  it('returns not-calibrated when the answer threshold is not met and no diagnostic is present', async () => {
+    const weakAreas = [stubWeakArea('Cloud Concepts', 60, 5)]
+    // No mocks at all — threshold default is 10, responseCount is 5
+    const result = await makeService(weakAreas, []).compute(ENROLLMENT_ID)
+
+    expect(result.calibrated).toBe(false)
+  })
 })
