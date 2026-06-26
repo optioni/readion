@@ -11,6 +11,7 @@ import {
   READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT,
   REVIEW_SESSION_QUESTION_CAP_DEFAULT,
   redisUrlFragment,
+  SIMILARITY_THRESHOLD_DEFAULT,
   SUMMARY_DRILL_MAX_QUESTIONS,
   SUMMARY_UNSURE_CONFIDENCE_THRESHOLD,
   zodCoerceNumber,
@@ -28,6 +29,7 @@ export const JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS_DEFAULT = 900
 export const JWT_REFRESH_TOKEN_EXPIRES_IN_SECONDS_DEFAULT = 604_800
 export const BCRYPT_COST_DEFAULT = 12
 export const LIFECYCLE_DELETION_GRACE_DAYS_DEFAULT = 14
+export const AGENT_SEMANTIC_SEARCH_LIMIT_DEFAULT = 8
 
 function parseMailbox(value: string) {
   const displayNameMatch = value.match(/<([^<>]+)>$/)
@@ -131,6 +133,12 @@ const envSchema = z
         message: 'Must be between 1 and 5',
       })
       .default(SUMMARY_UNSURE_CONFIDENCE_THRESHOLD),
+    AGENT_SIMILARITY_THRESHOLD: zodCoerceNumber()
+      .refine((n) => n > 0 && n <= 1, { message: 'Must be between 0 and 1' })
+      .default(SIMILARITY_THRESHOLD_DEFAULT),
+    AGENT_SEMANTIC_SEARCH_LIMIT: zodCoerceNumber()
+      .refine((n) => Number.isInteger(n) && n > 0, { message: 'Must be a positive integer' })
+      .default(AGENT_SEMANTIC_SEARCH_LIMIT_DEFAULT),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'production') {
