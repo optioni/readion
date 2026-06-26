@@ -1,5 +1,5 @@
 import { createDbHarness, type DbHarness } from '@readion/db'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { SessionItemProvenanceReader } from './session-item-provenance.reader'
 
 async function seedUser(harness: DbHarness, email: string): Promise<string> {
@@ -72,7 +72,7 @@ describe('SessionItemProvenanceReader', () => {
     harness = await createDbHarness()
   }, 120_000)
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await harness?.resetState()
   })
 

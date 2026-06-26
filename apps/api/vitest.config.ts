@@ -31,6 +31,10 @@ export default defineConfig({
     globals: true,
     include: ['src/**/*.{spec,test}.ts'],
     setupFiles: ['./src/test-setup.ts'],
+    globalSetup: ['./src/test/global-setup.ts'],
+    // Specs share one Postgres + Redis pair (see global-setup.ts). Running serially keeps
+    // that sharing safe — concurrent specs would otherwise clobber each other's reset.
+    fileParallelism: false,
     testTimeout: 120_000,
     coverage: {
       provider: 'v8',

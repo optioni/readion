@@ -2,7 +2,7 @@ import type { EntitySchema } from '@mikro-orm/core'
 import { defineEntity, p } from '@mikro-orm/core'
 import { NotFoundException } from '@nestjs/common'
 import { BaseEntity, BaseSchema, createDbHarness, type DbHarness } from '@readion/db'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { UserScopedRepository } from './user-scoped-repository'
 
 const ScopedDocumentSchema = defineEntity({
@@ -28,7 +28,7 @@ describe('UserScopedRepository', () => {
     harness = await createDbHarness([ScopedDocumentSchema])
   }, 120_000)
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await harness?.resetState()
   })
 

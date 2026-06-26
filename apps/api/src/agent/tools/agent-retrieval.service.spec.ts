@@ -1,5 +1,5 @@
 import { createDbHarness, type DbHarness } from '@readion/db'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AgentRetrievalService } from './agent-retrieval.service'
 
 const SIMILAR = new Array(1536).fill(0.1)
@@ -66,7 +66,7 @@ describe('AgentRetrievalService', () => {
     harness = await createDbHarness()
   }, 120_000)
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await harness?.resetState()
   })
 

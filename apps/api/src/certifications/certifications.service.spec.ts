@@ -3,7 +3,7 @@ import { NotFoundException } from '@nestjs/common'
 import { Certification, CertificationSchema } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import { startPostgresContainer } from '@readion/db/src/test-helpers/containers'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { CertificationsService } from './certifications.service'
 
 describe('CertificationsService', () => {
@@ -29,7 +29,7 @@ describe('CertificationsService', () => {
     await container?.stop()
   })
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await orm.em.getConnection().execute('TRUNCATE TABLE certifications CASCADE')
   })
 

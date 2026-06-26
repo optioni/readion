@@ -1,6 +1,7 @@
 import 'reflect-metadata'
+import Redis from 'ioredis'
 import { register } from 'prom-client'
-import { afterAll } from 'vitest'
+import { afterAll, beforeEach, inject } from 'vitest'
 
 // Set placeholder env vars so ConfigModule.forRoot validation passes at import time.
 // Integration tests override these in beforeAll after starting real containers.
@@ -45,4 +46,22 @@ process.env.GROUNDING_SIMILARITY_THRESHOLD = process.env.GROUNDING_SIMILARITY_TH
 // across test app instances.
 afterAll(() => {
   register.clear()
+})
+
+// The whole suite shares one Redis (see test/global-setup.ts) and runs serially. Reset it
+// before every test so cross-file state can't bleed — chiefly the rate-limit counters,
+// whose TTL outlives the run and would otherwise accumulate across files and trip random
+// throttle failures. Specs seed their own Redis state in beforeEach/the test body, which
+// runs after this hook, so nothing they rely on is wiped.
+let sharedRedis: Redis | undefined
+beforeEach(async () => {
+  const url = inject('readionRedisUrl')
+  if (url === undefined) return
+  sharedRedis ??= new Redis(url)
+  await sharedRedis.flushall()
+})
+
+afterAll(async () => {
+  await sharedRedis?.quit()
+  sharedRedis = undefined
 })
