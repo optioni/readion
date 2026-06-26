@@ -411,6 +411,57 @@ describe('GET /api/v1/mock-exams/:id (integration)', () => {
     })
   })
 
+  describe('(f) Review citations remain faithful after chunk supersession', () => {
+    it('resolves citations from the persisted provenance snapshot even after the source chunk is superseded', async () => {
+      const cert = await seedCert('GET-SUPERSEDE-01')
+      for (const domain of ['Security', 'Security', 'Networking', 'Networking']) {
+        await seedChunk(cert.id, domain)
+      }
+
+      const token = await registerAndLogin('get-supersede-01@example.com')
+      const enrollmentId = await enroll(token, cert.id)
+      const mockId = await createMockExam(token, enrollmentId)
+      await runGeneration(mockId)
+
+      const fork = em.fork()
+      const attempt = await fork.findOneOrFail(MockExam, { id: mockId })
+
+      const originalChunkId = attempt.questions[0]!.provenance.sourceChunkIds[0]!
+      const originalSpan = attempt.questions[0]!.provenance.supportingSpans[0]!
+
+      attempt.status = 'submitted'
+      await fork.flush()
+
+      const conn = fork.getConnection()
+      await conn.execute(
+        `UPDATE content_chunks SET superseded_at = now() WHERE id = ?`,
+        [originalChunkId],
+      )
+
+      const res = await supertest(app.getHttpServer())
+        .get(`/api/v1/mock-exams/${mockId}`)
+        .set('Authorization', `Bearer ${token}`)
+
+      expect(res.status).toBe(200)
+      expect(res.body.data.status).toBe('submitted')
+
+      const firstQuestion = (
+        res.body.data.questions as Array<{
+          citations: Array<{ chunkId: string; text: string }>
+        }>
+      )[0]!
+
+      expect(firstQuestion.citations).toBeDefined()
+      expect(firstQuestion.citations.length).toBeGreaterThan(0)
+
+      const citationForSuperseded = firstQuestion.citations.find(
+        (c) => c.chunkId === originalChunkId,
+      )
+      expect(citationForSuperseded).toBeDefined()
+      expect(citationForSuperseded!.text).toBe(originalSpan)
+    })
+  })
+
   describe('(e) cross-user: 404', () => {
     it("returns 200 for the owner but 404 when fetching another user's attempt", async () => {
       const cert = await seedCert('GET-XUSER-01')
