@@ -93,12 +93,14 @@ export type {
   MockExamResponse,
   MockExamStatus,
   MockExamType,
+  SaveAnswerRequest,
 } from './mock-exam'
 export {
   MOCK_EXAM_GENERATION_QUEUE,
   mockExamGenerations,
   mockExamStatuses,
   mockExamTypes,
+  saveAnswerRequestSchema,
 } from './mock-exam'
 export type { PaginationQueryParams } from './pagination'
 export { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from './pagination'

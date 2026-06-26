@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import type { Provenance } from '../grounding'
 
 export const MOCK_EXAM_GENERATION_QUEUE = 'mock-exam-generation'
@@ -64,3 +65,8 @@ export interface MockExamResponse {
   domainBreakdown: MockExamDomainBreakdown
   questions: MockExamQuestionResponse[]
 }
+
+export const saveAnswerRequestSchema = z.object({
+  answer: z.string().min(1),
+})
+export type SaveAnswerRequest = z.infer<typeof saveAnswerRequestSchema>
