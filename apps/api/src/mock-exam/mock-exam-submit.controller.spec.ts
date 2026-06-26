@@ -2,7 +2,7 @@ import 'reflect-metadata'
 import { EntityManager, MikroORM } from '@mikro-orm/core'
 import type { INestApplication } from '@nestjs/common'
 import { Test, type TestingModule } from '@nestjs/testing'
-import { QuizResponse, startPostgresContainer, startRedisContainer } from '@readion/db'
+import { MockExam, QuizResponse, startPostgresContainer, startRedisContainer } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import { MockLanguageModelV3 } from 'ai/test'
 import type Redis from 'ioredis'
@@ -14,6 +14,7 @@ import { bootstrapApp } from '../bootstrap'
 import { ProviderAdapter } from '../llm/provider-adapter'
 import { REDIS_CLIENT } from '../redis/redis.module'
 import { MockExamGenerationProcessor } from './mock-exam-generation.processor'
+import { MockExamService } from './mock-exam.service'
 import {
   buildMockQuestion,
   CORRECT_ANSWER,
@@ -85,6 +86,7 @@ describe('POST /api/v1/mock-exams/:id/submit (integration)', () => {
   let moduleRef: TestingModule
   let app: INestApplication
   let processor: MockExamGenerationProcessor
+  let service: MockExamService
   let em: EntityManager
   let redis: Redis
 
@@ -120,6 +122,7 @@ describe('POST /api/v1/mock-exams/:id/submit (integration)', () => {
     await app.init()
 
     processor = moduleRef.get(MockExamGenerationProcessor)
+    service = moduleRef.get(MockExamService)
     em = moduleRef.get(EntityManager)
     redis = moduleRef.get<Redis>(REDIS_CLIENT)
   }, 180_000)
@@ -484,6 +487,50 @@ describe('POST /api/v1/mock-exams/:id/submit (integration)', () => {
         .post(`/api/v1/mock-exams/${mockId}/submit`)
         .set('Authorization', `Bearer ${token}`)
       expect(res.status).toBe(409)
+    })
+  })
+
+  /**
+   * (e) Concurrent race guard — finalizeAttempt returns false on no-op.
+   *
+   * Simulates the concurrent submit race: entity is loaded in-memory as
+   * in_progress, a concurrent writer commits the submission to DB, then
+   * finalizeAttempt is called with the stale entity. The em.refresh detects the
+   * terminal DB status and returns false (no-op). The manual submit endpoint must
+   * propagate this as a 409 ConflictException.
+   */
+  describe('(e) Concurrent race guard — finalizeAttempt returns false on no-op', () => {
+    it('finalizeAttempt returns false when the attempt has been committed as terminal by a concurrent writer', async () => {
+      const certId = await seedCert('SUBMIT-RACE-01')
+      await seedChunks(certId)
+
+      const token = await registerAndLogin('submit-race-01@example.com')
+      const enrollmentId = await enroll(token, certId)
+      const mockId = await createMockExam(token, enrollmentId)
+      await runGeneration(mockId)
+
+      // Load the attempt into a fork before the first writer commits
+      // (simulates the second concurrent request that read in_progress)
+      const staleFork = em.fork()
+      const staleAttempt = await staleFork.findOne(
+        MockExam,
+        { id: mockId },
+        { populate: ['userCertification', 'userCertification.certification'] },
+      )
+      expect(staleAttempt).not.toBeNull()
+      expect(staleAttempt!.status).toBe('in_progress')
+
+      // First writer commits via HTTP submit
+      const first = await supertest(app.getHttpServer())
+        .post(`/api/v1/mock-exams/${mockId}/submit`)
+        .set('Authorization', `Bearer ${token}`)
+      expect(first.status).toBe(200)
+
+      // Call finalizeAttempt with the stale in-memory entity.
+      // em.refresh sees DB status = 'submitted' and must return false (no-op).
+      // RED: currently finalizeAttempt returns void (undefined), so toBe(false) fails.
+      const acted = await service.finalizeAttempt(staleFork, staleAttempt!, 'submitted')
+      expect(acted).toBe(false)
     })
   })
 })
