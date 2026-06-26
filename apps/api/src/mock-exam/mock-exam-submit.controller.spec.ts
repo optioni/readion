@@ -2,7 +2,15 @@ import 'reflect-metadata'
 import { EntityManager, MikroORM } from '@mikro-orm/core'
 import type { INestApplication } from '@nestjs/common'
 import { Test, type TestingModule } from '@nestjs/testing'
-import { MockExam, QuizResponse, startPostgresContainer, startRedisContainer } from '@readion/db'
+import {
+  MockExam,
+  QuizResponse,
+  ReviewItem,
+  User,
+  UserCertification,
+  startPostgresContainer,
+  startRedisContainer,
+} from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import { MockLanguageModelV3 } from 'ai/test'
 import type Redis from 'ioredis'
@@ -531,6 +539,157 @@ describe('POST /api/v1/mock-exams/:id/submit (integration)', () => {
       // RED: currently finalizeAttempt returns void (undefined), so toBe(false) fails.
       const acted = await service.finalizeAttempt(staleFork, staleAttempt!, 'submitted')
       expect(acted).toBe(false)
+    })
+  })
+
+  /**
+   * (f) Diagnostic submit: passed=null + review seeding.
+   *
+   * When finalizing a diagnostic attempt:
+   * - passed is set to null (no pass/fail verdict)
+   * - QUIZ_ANSWERED_EVENT is emitted per question, seeding ReviewItems for
+   *   incorrect answers via ReviewAccrualService
+   *
+   * When finalizing a regular mock attempt:
+   * - passed is a boolean
+   * - no QUIZ_ANSWERED_EVENT is emitted, so no ReviewItems are created
+   */
+  describe('(f) Diagnostic submit: passed=null + review seeding', () => {
+    async function registerAndGetSession(email: string): Promise<{ token: string; userId: string }> {
+      const res = await supertest(app.getHttpServer())
+        .post('/api/v1/auth/register')
+        .send({ email, password: 'correcthorse' })
+      return {
+        token: res.body.data.accessToken as string,
+        userId: res.body.data.user.id as string,
+      }
+    }
+
+    function buildDiagnosticQuestion(
+      id: string,
+      chunkId: string,
+      domain: string,
+      correctAnswer: string,
+      selectedAnswer: string | null,
+    ) {
+      return {
+        id,
+        question: `What is ${id}?`,
+        options: ['A', 'B', 'C', 'D'],
+        correctAnswer,
+        selectedAnswer,
+        domain,
+        explanation: `Because ${correctAnswer}`,
+        provenance: {
+          sourceChunkIds: [chunkId],
+          supportingSpans: [`span for ${id}`],
+          verdict: { pass: true, score: 1.0, distractorFindings: [] },
+          score: 1.0,
+        },
+      }
+    }
+
+    it('(f1) sets passed=null for a diagnostic submit', async () => {
+      const certId = await seedCert('DIAG-NULL-01')
+      const chunkId1 = await seedChunk(certId, 'compute')
+      const chunkId2 = await seedChunk(certId, 'storage')
+
+      const { token, userId } = await registerAndGetSession('diag-null-01@example.com')
+      const enrollmentId = await enroll(token, certId)
+
+      const fork = em.fork()
+      const attempt = fork.create(MockExam, {
+        user: fork.getReference(User, userId),
+        userCertification: fork.getReference(UserCertification, enrollmentId),
+        type: 'diagnostic',
+        status: 'in_progress',
+        startedAt: new Date(),
+        deadline: null,
+        domainBreakdown: {},
+        questions: [
+          buildDiagnosticQuestion('q1', chunkId1, 'compute', 'A', 'A'),
+          buildDiagnosticQuestion('q2', chunkId2, 'storage', 'B', 'C'),
+        ],
+      })
+      fork.persist(attempt)
+      await fork.flush()
+
+      const res = await supertest(app.getHttpServer())
+        .post(`/api/v1/mock-exams/${attempt.id}/submit`)
+        .set('Authorization', `Bearer ${token}`)
+
+      expect(res.status).toBe(200)
+      expect(res.body.data.passed).toBeNull()
+      expect(typeof res.body.data.score).toBe('number')
+      expect(res.body.data.status).toBe('submitted')
+    })
+
+    it('(f2) seeds a review item for each incorrect diagnostic answer', async () => {
+      const certId = await seedCert('DIAG-REVIEW-01')
+      const chunkId1 = await seedChunk(certId, 'compute')
+      const chunkId2 = await seedChunk(certId, 'storage')
+
+      const { token, userId } = await registerAndGetSession('diag-review-01@example.com')
+      const enrollmentId = await enroll(token, certId)
+
+      const fork = em.fork()
+      const attempt = fork.create(MockExam, {
+        user: fork.getReference(User, userId),
+        userCertification: fork.getReference(UserCertification, enrollmentId),
+        type: 'diagnostic',
+        status: 'in_progress',
+        startedAt: new Date(),
+        deadline: null,
+        domainBreakdown: {},
+        questions: [
+          buildDiagnosticQuestion('q1', chunkId1, 'compute', 'A', 'A'), // correct
+          buildDiagnosticQuestion('q2', chunkId2, 'storage', 'B', 'C'), // wrong
+        ],
+      })
+      fork.persist(attempt)
+      await fork.flush()
+
+      const res = await supertest(app.getHttpServer())
+        .post(`/api/v1/mock-exams/${attempt.id}/submit`)
+        .set('Authorization', `Bearer ${token}`)
+      expect(res.status).toBe(200)
+
+      const reviewFork = em.fork()
+      const reviewItems = await reviewFork.find(ReviewItem, { userCertification: enrollmentId })
+      expect(reviewItems.length).toBeGreaterThanOrEqual(1)
+    })
+
+    it('(f3) mock submit does NOT emit QUIZ_ANSWERED_EVENT (passed is boolean)', async () => {
+      const certId = await seedCert('MOCK-NO-EVENT-01')
+      const chunkId = await seedChunk(certId, 'compute')
+
+      const { token, userId } = await registerAndGetSession('mock-no-event-01@example.com')
+      const enrollmentId = await enroll(token, certId)
+
+      const fork = em.fork()
+      const attempt = fork.create(MockExam, {
+        user: fork.getReference(User, userId),
+        userCertification: fork.getReference(UserCertification, enrollmentId),
+        type: 'mock',
+        status: 'in_progress',
+        startedAt: new Date(),
+        deadline: null,
+        domainBreakdown: {},
+        questions: [buildDiagnosticQuestion('q1', chunkId, 'compute', 'A', 'A')],
+      })
+      fork.persist(attempt)
+      await fork.flush()
+
+      const res = await supertest(app.getHttpServer())
+        .post(`/api/v1/mock-exams/${attempt.id}/submit`)
+        .set('Authorization', `Bearer ${token}`)
+
+      expect(res.status).toBe(200)
+      expect(typeof res.body.data.passed).toBe('boolean')
+
+      const reviewFork = em.fork()
+      const reviewItems = await reviewFork.find(ReviewItem, { userCertification: enrollmentId })
+      expect(reviewItems).toHaveLength(0)
     })
   })
 })
