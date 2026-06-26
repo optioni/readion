@@ -2,6 +2,13 @@ export const APP_NAME = 'Readion'
 export const APP_VERSION = '0.1.0'
 
 export type {
+  AgentConversationMode,
+  AgentMessageContent,
+  AgentMessageContentPart,
+  AgentMessageRole,
+} from './agent'
+export { agentConversationModes, agentMessageRoles } from './agent'
+export type {
   AuthSessionResponse,
   AuthUser,
   ForgotPasswordRequest,
