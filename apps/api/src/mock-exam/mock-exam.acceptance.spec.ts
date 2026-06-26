@@ -91,11 +91,13 @@ describe('MockExam acceptance', () => {
         .set('Authorization', auth)
       expect(submit.status).toBe(200)
       expect(submit.body.data.status).toBe('submitted')
+      // score is a 0..1 fraction (correct / total)
       expect(submit.body.data.score).toBeGreaterThanOrEqual(0)
-      expect(submit.body.data.score).toBeLessThanOrEqual(1000)
+      expect(submit.body.data.score).toBeLessThanOrEqual(1)
       expect(submit.body.data.passed).toBe(false)
+      // domainBreakdown is a Record<domain, {correct, total, accuracy}> object (not an array)
       expect(submit.body.data.domainBreakdown).toBeDefined()
-      expect(Array.isArray(submit.body.data.domainBreakdown)).toBe(true)
+      expect(typeof submit.body.data.domainBreakdown).toBe('object')
 
       // Submitting again is a conflict
       const resubmit = await h

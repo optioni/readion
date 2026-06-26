@@ -47,6 +47,19 @@ export class MockExamController {
     return this.service.findOne(user.id, id)
   }
 
+  @Post(':id/submit')
+  @HttpCode(200)
+  @ApiParam({ name: 'id', description: 'MockExam id' })
+  @ApiResponse({ status: 200, description: 'Attempt scored and transitioned to submitted' })
+  @ApiResponse({ status: 404, description: 'Not found' })
+  @ApiResponse({ status: 409, description: 'Attempt is already submitted or expired' })
+  async submit(
+    @CurrentUser() user: CurrentUserPrincipal,
+    @Param('id') id: string,
+  ): Promise<MockExamResponse> {
+    return this.service.submit(user.id, id)
+  }
+
   @Put(':id/answers/:questionIndex')
   @HttpCode(200)
   @ApiParam({ name: 'id', description: 'MockExam id' })

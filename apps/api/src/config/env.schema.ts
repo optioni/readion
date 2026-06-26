@@ -99,6 +99,9 @@ const envSchema = z
     REVIEW_SESSION_QUESTION_CAP: zodCoerceNumber()
       .refine((n) => n > 0, { message: 'Must be a positive number' })
       .default(REVIEW_SESSION_QUESTION_CAP_DEFAULT),
+    MOCK_EXAM_NEUTRAL_CONFIDENCE: zodCoerceNumber()
+      .refine((n) => n >= 1 && n <= 5, { message: 'Must be between 1 and 5' })
+      .default(3),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'production') {

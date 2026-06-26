@@ -1,7 +1,8 @@
 import { EntityManager } from '@mikro-orm/core'
 import { InjectQueue } from '@nestjs/bullmq'
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
-import { MockExam, User, UserCertification } from '@readion/db'
+import { ConfigService } from '@nestjs/config'
+import { MockExam, QuizResponse, User, UserCertification } from '@readion/db'
 import type {
   MockExamCitation,
   MockExamGeneration,
@@ -12,12 +13,18 @@ import type {
 } from '@readion/shared'
 import { MOCK_EXAM_GENERATION_QUEUE } from '@readion/shared'
 import type { Queue } from 'bullmq'
+import type { EnvConfig } from '../config/env.schema'
+import { WeakAreasService } from '../weak-areas/weak-areas.service'
+import { MockExamScorer } from './mock-exam-scorer'
 
 @Injectable()
 export class MockExamService {
   constructor(
     private readonly em: EntityManager,
     @InjectQueue(MOCK_EXAM_GENERATION_QUEUE) private readonly queue: Queue,
+    private readonly scorer: MockExamScorer,
+    private readonly weakAreas: WeakAreasService,
+    private readonly config: ConfigService<EnvConfig>,
   ) {}
 
   async create(userId: string, enrollmentId: string): Promise<MockExamResponse> {
@@ -62,6 +69,62 @@ export class MockExamService {
     if (attempt === null) {
       throw new NotFoundException('Mock exam not found')
     }
+
+    return mapMockExamToResponse(attempt)
+  }
+
+  async submit(userId: string, attemptId: string): Promise<MockExamResponse> {
+    const em = this.em.fork()
+
+    const attempt = await em.findOne(
+      MockExam,
+      { id: attemptId, user: userId },
+      { populate: ['userCertification', 'userCertification.certification'] },
+    )
+    if (attempt === null) {
+      throw new NotFoundException('Mock exam not found')
+    }
+
+    if (attempt.status !== 'in_progress') {
+      throw new ConflictException('Attempt is already submitted or expired')
+    }
+
+    const cert = attempt.userCertification.certification
+    const result = this.scorer.score(
+      attempt.questions,
+      cert.domains,
+      cert.passingScore / 1000,
+    )
+
+    attempt.status = 'submitted'
+    attempt.score = result.score
+    attempt.passed = result.passed
+    attempt.domainBreakdown = result.domainBreakdown
+
+    const neutralConfidence = this.config.get('MOCK_EXAM_NEUTRAL_CONFIDENCE') ?? 3
+
+    for (const q of attempt.questions) {
+      const correct = q.selectedAnswer !== null && q.selectedAnswer === q.correctAnswer
+      const response = em.create(QuizResponse, {
+        userCertification: attempt.userCertification,
+        answer: q.selectedAnswer ?? '',
+        correct,
+        confidence: neutralConfidence,
+        timeTakenMs: 0,
+        questionSnapshot: {
+          question: q.question,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          provenance: q.provenance,
+        },
+        format: 'multiple_choice',
+      })
+      em.persist(response)
+    }
+
+    await em.flush()
+
+    await this.weakAreas.recompute(attempt.userCertification.id)
 
     return mapMockExamToResponse(attempt)
   }
