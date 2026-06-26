@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module'
 import { CertificationsModule } from './certifications/certifications.module'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { ApiConfigModule } from './config/config.module'
+import { DiagnosticModule } from './diagnostic/diagnostic.module'
 import { HealthModule } from './health/health.module'
 import { LlmModule } from './llm/llm.module'
 import { MailModule } from './mail/mail.module'
@@ -46,6 +47,7 @@ import { WeakAreasModule } from './weak-areas/weak-areas.module'
     SessionsModule,
     ReviewModule,
     MockExamModule,
+    DiagnosticModule,
     ReadinessModule,
   ],
   providers: [
