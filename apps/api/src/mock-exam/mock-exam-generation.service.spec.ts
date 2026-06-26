@@ -6,10 +6,10 @@ import { Test, type TestingModule } from '@nestjs/testing'
 import {
   Certification,
   MockExam,
-  User,
-  UserCertification,
   startPostgresContainer,
   startRedisContainer,
+  User,
+  UserCertification,
 } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import { MockEmbeddingModelV3, MockLanguageModelV3 } from 'ai/test'
@@ -384,7 +384,7 @@ async function truncateTables(em: EntityManager): Promise<void> {
     AND tablename != 'mikro_orm_migrations'
   `)
   if (tables.length === 0) return
-  const names = tables.map((t) => `"${t.tablename}"`).join(', ')
+  const names = tables.map((t: { tablename: string }) => `"${t.tablename}"`).join(', ')
   await conn.execute(`TRUNCATE TABLE ${names} CASCADE`)
   fork.clear()
 }

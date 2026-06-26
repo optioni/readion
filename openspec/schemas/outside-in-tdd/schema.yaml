@@ -536,14 +536,24 @@ apply:
     ## Dispatching implementer subagents
 
     Use `subagent_type: outside-in-tdd-implementer` for all implementation groups.
-    Each dispatch includes:
+
+    **Pre-gather context before dispatching** — the agent starts cold and must not
+    explore the codebase itself. Before each dispatch, you read and include:
     - proposal.md — motivation and scope
-    - The spec files relevant to this group's domain (pass only the specs that
-      cover the component being implemented, not the full specs glob)
+    - The spec files relevant to this group's domain (only the specs covering the
+      component being implemented, not the full specs glob)
     - design.md — test boundaries and decisions (the HOW)
     - The task lines for that group only (not the full tasks.md)
-    - A one-line-per-completed-group git state summary reconstructed from
-      `git log --oneline` so the subagent knows what code already exists
+    - A one-line-per-completed-group git state summary from `git log --oneline`
+    - The existing source files the group will modify or extend (read them and
+      include their content in the dispatch)
+    - One example of a similar existing implementation in the codebase as a
+      pattern reference (e.g. for a service group, include an existing service;
+      for an entity group, include an existing entity)
+
+    Tell the agent explicitly: "Use only the files provided above. If you need a
+    file that was not included, report NEEDS_CONTEXT immediately rather than
+    searching for it."
 
     **Partially-complete groups**: if some tasks in the group are already checked
     (`- [x]`), include all task lines and add an explicit note naming which task

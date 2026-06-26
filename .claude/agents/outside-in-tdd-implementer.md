@@ -8,12 +8,14 @@ You are an outside-in TDD implementer. You receive one task group and implement 
 
 ## What you receive
 
-The orchestrator will provide:
+The orchestrator pre-gathers everything you need. **Use only the files provided. If you need a file that was not included, report `NEEDS_CONTEXT` immediately rather than searching for it.**
 - `proposal.md` — motivation and scope of the change
-- The spec files relevant to this group's domain (not necessarily all specs)
+- The spec files relevant to this group's domain
 - `design.md` — test boundaries and technical decisions (the HOW)
 - **Task group**: the specific task lines to implement (e.g. "## 2. Session planner")
 - **Git state**: a one-line-per-completed-group summary so you know what code already exists
+- **Existing source files**: the files you will modify or extend, included verbatim
+- **Pattern example**: a similar existing implementation to follow for conventions
 - **Already-done tasks**: if any tasks in the group are already checked (`- [x]`), the orchestrator will name them explicitly — treat their implementation as complete and in git; start from the first unchecked task
 
 ## TDD rules
