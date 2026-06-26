@@ -2,6 +2,7 @@ import { EntityManager } from '@mikro-orm/core'
 import { InjectQueue } from '@nestjs/bullmq'
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 import { MockExam, QuizResponse, User, UserCertification } from '@readion/db'
 import type {
   MockExamCitation,
@@ -10,8 +11,9 @@ import type {
   MockExamQuestion,
   MockExamQuestionResponse,
   MockExamResponse,
+  QuizAnsweredEvent,
 } from '@readion/shared'
-import { MOCK_EXAM_GENERATION_QUEUE } from '@readion/shared'
+import { MOCK_EXAM_GENERATION_QUEUE, QUIZ_ANSWERED_EVENT } from '@readion/shared'
 import type { Queue } from 'bullmq'
 import type { CollectionResult } from '../common/interceptors/response.interceptor'
 import type { EnvConfig } from '../config/env.schema'
@@ -26,6 +28,7 @@ export class MockExamService {
     private readonly scorer: MockExamScorer,
     private readonly weakAreas: WeakAreasService,
     private readonly config: ConfigService<EnvConfig>,
+    private readonly events: EventEmitter2,
   ) {}
 
   async create(userId: string, enrollmentId: string): Promise<MockExamResponse> {
@@ -107,7 +110,7 @@ export class MockExamService {
       throw new ConflictException('Attempt is already submitted or expired')
     }
 
-    const acted = await this.finalizeAttempt(em, attempt, 'submitted')
+    const acted = await this.finalizeAttempt(em, attempt, 'submitted', attempt.type === 'diagnostic')
     if (!acted) {
       throw new ConflictException('Attempt is already submitted or expired')
     }
@@ -130,6 +133,7 @@ export class MockExamService {
     em: EntityManager,
     attempt: MockExam,
     terminalStatus: 'submitted' | 'expired',
+    emitReviewEvents = false,
   ): Promise<boolean> {
     await em.refresh(attempt)
     if (attempt.status !== 'in_progress') {
@@ -141,10 +145,10 @@ export class MockExamService {
 
     attempt.status = terminalStatus
     attempt.score = result.score
-    attempt.passed = result.passed
+    attempt.passed = attempt.type === 'diagnostic' ? null : result.passed
     attempt.domainBreakdown = result.domainBreakdown
 
-    const neutralConfidence = this.config.get('MOCK_EXAM_NEUTRAL_CONFIDENCE')
+    const neutralConfidence = this.config.get('MOCK_EXAM_NEUTRAL_CONFIDENCE') ?? 0.5
 
     for (const q of attempt.questions) {
       const correct = q.selectedAnswer !== null && q.selectedAnswer === q.correctAnswer
@@ -168,6 +172,25 @@ export class MockExamService {
     await em.flush()
 
     await this.weakAreas.recompute(attempt.userCertification.id)
+
+    if (emitReviewEvents) {
+      const userId = attempt.user.id
+      const certId = attempt.userCertification.certification.id
+      const ucId = attempt.userCertification.id
+      for (const q of attempt.questions) {
+        const correct = q.selectedAnswer !== null && q.selectedAnswer === q.correctAnswer
+        const event: QuizAnsweredEvent = {
+          userId,
+          userCertificationId: ucId,
+          certificationId: certId,
+          sourceChunkIds: q.provenance.sourceChunkIds,
+          correct,
+          confidence: neutralConfidence,
+        }
+        await this.events.emitAsync(QUIZ_ANSWERED_EVENT, event)
+      }
+    }
+
     return true
   }
 
