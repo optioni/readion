@@ -11,6 +11,7 @@ export const generateQuizRequestSchema = z.object({
   userCertificationId: z.string().uuid(),
   domain: z.string().min(1),
   difficulty: z.enum(quizDifficulties),
+  format: z.enum(questionFormats).optional(),
 })
 export type GenerateQuizRequest = z.infer<typeof generateQuizRequestSchema>
 

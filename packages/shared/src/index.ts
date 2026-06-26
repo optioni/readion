@@ -108,6 +108,36 @@ export {
   submitAnswerRequestSchema,
 } from './quiz'
 export type {
+  CreateSessionRequest,
+  SessionConfig,
+  SessionContentMix,
+  SessionDifficulty,
+  SessionDurationMinutes,
+  SessionFillJobPayload,
+  SessionFocusArea,
+  SessionItemPlan,
+  SessionItemResponse,
+  SessionItemType,
+  SessionKind,
+  SessionLearningStyle,
+  SessionListMeta,
+  SessionResponse,
+  SessionStatus,
+  SessionWithItemsResponse,
+} from './sessions'
+export {
+  createSessionRequestSchema,
+  SESSION_FILL_QUEUE,
+  sessionContentMixes,
+  sessionDifficulties,
+  sessionDurationMinutes,
+  sessionFocusAreaSchema,
+  sessionItemTypes,
+  sessionKinds,
+  sessionLearningStyles,
+  sessionStatuses,
+} from './sessions'
+export type {
   EnrollCertificationRequest,
   EnrollmentResponse,
   EnrollmentSessionOverrides,
