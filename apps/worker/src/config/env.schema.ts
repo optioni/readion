@@ -19,6 +19,7 @@ import { z } from 'zod'
 export const LIFECYCLE_DELETION_GRACE_DAYS_DEFAULT = 14
 export const SUPERSEDED_CHUNK_RETENTION_DAYS_DEFAULT = 30
 export const SESSION_ABANDONMENT_THRESHOLD_HOURS_DEFAULT = 24
+export const AGENT_STANDALONE_TTL_HOURS_DEFAULT = 4
 
 const AI_PROVIDERS = ['anthropic', 'openai'] as const
 
@@ -64,6 +65,9 @@ const envSchema = z.object({
   SESSION_ABANDONMENT_THRESHOLD_HOURS: zodCoerceNumber().default(
     SESSION_ABANDONMENT_THRESHOLD_HOURS_DEFAULT,
   ),
+
+  // Standalone agent-conversation inactivity TTL
+  AGENT_STANDALONE_TTL_HOURS: zodCoerceNumber().default(AGENT_STANDALONE_TTL_HOURS_DEFAULT),
 
   // Coverage thresholds for cert go-live promotion
   CERT_COVERAGE_MIN_CHUNKS_PER_DOMAIN: zodCoerceNumber()

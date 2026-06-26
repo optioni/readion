@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config'
 import { Cron, CronExpression } from '@nestjs/schedule'
 import { InjectMetric } from '@willsoto/nestjs-prometheus'
 import type { Gauge } from 'prom-client'
-import type { WorkerEnvConfig } from '../config/env.schema'
+import { AGENT_STANDALONE_TTL_HOURS_DEFAULT, type WorkerEnvConfig } from '../config/env.schema'
 
 export const ACTIVE_STANDALONE_CONVERSATIONS_GAUGE = 'readion_active_standalone_conversations'
 
@@ -21,7 +21,8 @@ export class AgentTtlCron {
 
   @Cron(CronExpression.EVERY_HOUR)
   async cleanupStaleStandaloneConversations(now = new Date()): Promise<void> {
-    const ttlHours = 4
+    const ttlHours =
+      this.config.get('AGENT_STANDALONE_TTL_HOURS') ?? AGENT_STANDALONE_TTL_HOURS_DEFAULT
     const cutoff = new Date(now.getTime() - ttlHours * 60 * 60 * 1000)
     const conn = this.em.fork().getConnection()
 
