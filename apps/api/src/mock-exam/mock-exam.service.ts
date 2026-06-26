@@ -1,6 +1,6 @@
 import { EntityManager } from '@mikro-orm/core'
 import { InjectQueue } from '@nestjs/bullmq'
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { MockExam, User, UserCertification } from '@readion/db'
 import type {
   MockExamCitation,
@@ -62,6 +62,37 @@ export class MockExamService {
     if (attempt === null) {
       throw new NotFoundException('Mock exam not found')
     }
+
+    return mapMockExamToResponse(attempt)
+  }
+
+  async saveAnswer(
+    userId: string,
+    attemptId: string,
+    questionIndex: number,
+    answer: string,
+  ): Promise<MockExamResponse> {
+    const em = this.em.fork()
+
+    const attempt = await em.findOne(MockExam, { id: attemptId, user: userId })
+    if (attempt === null) {
+      throw new NotFoundException('Mock exam not found')
+    }
+
+    const isTerminal = attempt.status !== 'in_progress'
+    const isPastDeadline = attempt.deadline !== null && new Date() > attempt.deadline
+
+    if (isTerminal || isPastDeadline) {
+      throw new ConflictException('Attempt is no longer accepting answers')
+    }
+
+    const question = attempt.questions[questionIndex]
+    if (question === undefined) {
+      throw new NotFoundException('Question not found')
+    }
+
+    question.selectedAnswer = answer
+    await em.flush()
 
     return mapMockExamToResponse(attempt)
   }
