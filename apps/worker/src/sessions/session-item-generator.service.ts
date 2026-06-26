@@ -133,7 +133,10 @@ export class SessionItemGeneratorService {
     certificationId: string,
     difficulty: string,
   ): Promise<void> {
-    const chunks = await this.searchChunks(em, certificationId, itemPlan.domain)
+    const chunks =
+      itemPlan.anchorChunkId !== undefined
+        ? await this.loadChunksByIds(em, [itemPlan.anchorChunkId])
+        : await this.searchChunks(em, certificationId, itemPlan.domain)
     if (chunks.length === 0) {
       throw new Error('No content chunks found')
     }
@@ -178,6 +181,17 @@ export class SessionItemGeneratorService {
         sourceChunkIds: [],
         supportingSpans: [],
       }),
+    )
+  }
+
+  private async loadChunksByIds(em: EntityManager, chunkIds: string[]): Promise<ChunkRow[]> {
+    if (chunkIds.length === 0) return []
+    const placeholders = chunkIds.map(() => '?').join(', ')
+    return em.getConnection().execute<ChunkRow[]>(
+      `SELECT id, text, primary_domain
+       FROM content_chunks
+       WHERE id IN (${placeholders}) AND state = 'active'`,
+      chunkIds,
     )
   }
 

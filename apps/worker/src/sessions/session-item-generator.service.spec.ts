@@ -15,9 +15,7 @@ const VALID_QUIZ_JSON = JSON.stringify({
   sourceChunkIds: ['chunk-1'],
 })
 
-const CHUNK_ROWS = [
-  { id: 'chunk-1', text: 'Content about the topic', primary_domain: 'Security' },
-]
+const CHUNK_ROWS = [{ id: 'chunk-1', text: 'Content about the topic', primary_domain: 'Security' }]
 
 function makeEm(chunkRows: typeof CHUNK_ROWS = CHUNK_ROWS) {
   const persist = vi.fn()
@@ -178,9 +176,7 @@ describe('SessionItemGeneratorService', () => {
         'balanced',
       )
 
-      expect(llm.generateContent).toHaveBeenCalledWith(
-        expect.stringContaining('exam-ready'),
-      )
+      expect(llm.generateContent).toHaveBeenCalledWith(expect.stringContaining('exam-ready'))
     })
   })
 
@@ -235,9 +231,7 @@ describe('SessionItemGeneratorService', () => {
         'balanced',
       )
 
-      expect(llm.generateContent).toHaveBeenCalledWith(
-        expect.stringContaining('true-false'),
-      )
+      expect(llm.generateContent).toHaveBeenCalledWith(expect.stringContaining('true-false'))
     })
 
     it('falls back to placeholder when LLM returns malformed content', async () => {
