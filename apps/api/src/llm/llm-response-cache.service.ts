@@ -43,8 +43,8 @@ export class LlmResponseCacheService {
   }
 
   private async del(...keys: string[]): Promise<void> {
-    if (keys.length > 0) {
-      await this.redis.del(keys[0]!, ...keys.slice(1))
-    }
+    const [first, ...rest] = keys
+    if (first === undefined) return
+    await this.redis.del(first, ...rest)
   }
 }
