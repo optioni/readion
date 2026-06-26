@@ -35,7 +35,10 @@ export class MockExamController {
 
   @Get(':id')
   @ApiParam({ name: 'id', description: 'MockExam id' })
-  @ApiResponse({ status: 200, description: 'Mock exam attempt with generation status and questions' })
+  @ApiResponse({
+    status: 200,
+    description: 'Mock exam attempt with generation status and questions',
+  })
   @ApiResponse({ status: 404, description: 'Not found' })
   async findOne(
     @CurrentUser() user: CurrentUserPrincipal,
@@ -47,7 +50,10 @@ export class MockExamController {
   @Put(':id/answers/:questionIndex')
   @HttpCode(200)
   @ApiParam({ name: 'id', description: 'MockExam id' })
-  @ApiParam({ name: 'questionIndex', description: 'Zero-based index of the question in the attempt' })
+  @ApiParam({
+    name: 'questionIndex',
+    description: 'Zero-based index of the question in the attempt',
+  })
   @ApiResponse({ status: 200, description: 'Answer saved; returns the updated attempt' })
   @ApiResponse({ status: 404, description: 'Attempt or question not found' })
   @ApiResponse({ status: 409, description: 'Attempt is terminal or past its deadline' })

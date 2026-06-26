@@ -432,8 +432,8 @@ describe('PUT /api/v1/mock-exams/:id/answers/:questionIndex (integration)', () =
     })
   })
 
-  describe('(d) Cross-user ownership — answering another user\'s attempt returns 404', () => {
-    it('returns 404 when a user tries to answer another user\'s attempt', async () => {
+  describe("(d) Cross-user ownership — answering another user's attempt returns 404", () => {
+    it("returns 404 when a user tries to answer another user's attempt", async () => {
       const cert = await seedCert('ANSWER-XUSER-01')
       await seedChunks(cert.id)
 

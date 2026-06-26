@@ -433,10 +433,9 @@ describe('GET /api/v1/mock-exams/:id (integration)', () => {
       await fork.flush()
 
       const conn = fork.getConnection()
-      await conn.execute(
-        `UPDATE content_chunks SET superseded_at = now() WHERE id = ?`,
-        [originalChunkId],
-      )
+      await conn.execute(`UPDATE content_chunks SET superseded_at = now() WHERE id = ?`, [
+        originalChunkId,
+      ])
 
       const res = await supertest(app.getHttpServer())
         .get(`/api/v1/mock-exams/${mockId}`)
