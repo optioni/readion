@@ -31,8 +31,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { AuditLogService } from '../admin/audit-log.service'
 import { configureTestEnv } from '../mock-exam/test/mock-exam-test-utils'
 import { QueueModule } from '../queue/queue.module'
-import { REDIS_CLIENT } from '../redis/redis.module'
-import { RedisModule } from '../redis/redis.module'
+import { REDIS_CLIENT, RedisModule } from '../redis/redis.module'
 import { CertDiscoveryService } from './cert-discovery.service'
 import { CertSetupService } from './cert-setup.service'
 
@@ -71,7 +70,9 @@ const EXTRACTION_RETURN: CertExtractionResult = {
   },
 }
 
-function draftPayload(overrides: Partial<CreateCertificationRequest> = {}): CreateCertificationRequest {
+function draftPayload(
+  overrides: Partial<CreateCertificationRequest> = {},
+): CreateCertificationRequest {
   return {
     name: 'AWS Certified Cloud Practitioner',
     provider: 'AWS',
@@ -251,7 +252,9 @@ describe('CertSetupService', () => {
     })
 
     it('throws NotFoundException for an unknown job id', async () => {
-      await expect(service.readExtractionResult('does-not-exist')).rejects.toThrow(NotFoundException)
+      await expect(service.readExtractionResult('does-not-exist')).rejects.toThrow(
+        NotFoundException,
+      )
     })
   })
 
@@ -347,7 +350,9 @@ describe('CertSetupService', () => {
       expect(updated.provenance).toEqual({ domains: citation('updated') })
       expect(updated.verifiedAt?.getTime()).toBeGreaterThan(stale.getTime())
 
-      const audits = (await auditsFor(cert.id)).filter((a) => a.action === AuditAction.CertReverified)
+      const audits = (await auditsFor(cert.id)).filter(
+        (a) => a.action === AuditAction.CertReverified,
+      )
       expect(audits).toHaveLength(1)
       expect(audits[0].before).toMatchObject({ questionCount: 65 })
       expect(audits[0].after).toMatchObject({ questionCount: 70 })

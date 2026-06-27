@@ -1,5 +1,6 @@
 import {
   aiEnvFragment,
+  CERT_REVERIFICATION_INTERVAL_DAYS_DEFAULT,
   DEFAULT_DISPLAY_TIMEZONE,
   DEFAULT_MIN_CHUNKS_PER_DOMAIN,
   DEFAULT_TOTAL_CHUNK_MULTIPLE,
@@ -94,6 +95,9 @@ const envSchema = z
     CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE: zodCoerceNumber()
       .refine((n) => n > 0, { message: 'Must be a positive number' })
       .default(DEFAULT_TOTAL_CHUNK_MULTIPLE),
+    CERT_REVERIFICATION_INTERVAL_DAYS: zodCoerceNumber()
+      .refine((n) => Number.isInteger(n) && n > 0, { message: 'Must be a positive integer' })
+      .default(CERT_REVERIFICATION_INTERVAL_DAYS_DEFAULT),
     REVIEW_LEITNER_INTERVALS_DAYS: z
       .string()
       .default(LEITNER_INTERVALS_DAYS_DEFAULT.join(','))
