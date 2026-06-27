@@ -1,50 +1,21 @@
 import { randomUUID } from 'node:crypto'
-import type { INestApplication } from '@nestjs/common'
 import supertest from 'supertest'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import {
-  type ContentAcceptanceHarness,
-  createContentAcceptanceHarness,
-} from './test/content-acceptance-harness'
+import { describe, expect, it } from 'vitest'
+import { bootstrapAdmin, CONTENT_SOURCES_PATH, createWebSource } from './test/content-requests'
+import { useContentHarness } from './test/content-test-context'
 
 describe('ContentController routes', () => {
-  let harness: ContentAcceptanceHarness
-  let app: INestApplication
+  const ctx = useContentHarness()
 
-  beforeAll(async () => {
-    harness = await createContentAcceptanceHarness()
-    app = harness.app
-  }, 120_000)
-
-  beforeEach(async () => {
-    await harness.resetState()
-  })
-
-  afterAll(async () => {
-    await harness?.teardown()
-  })
-
-  async function bootstrapAdmin(): Promise<{ auth: string; certificationId: string }> {
-    const token = await harness.registerAndLogin('admin@example.com', 'correcthorse')
-    const certificationId = await harness.seedCertification(['Security', 'Architecture'])
-    return { auth: `Bearer ${token}`, certificationId }
-  }
-
-  async function createSource(auth: string, certificationId: string): Promise<string> {
-    const res = await supertest(app.getHttpServer())
-      .post('/api/v1/admin/content-sources')
-      .set('Authorization', auth)
-      .send({ certificationId, type: 'web', url: 'https://example.com/material' })
+  async function createSourceId(auth: string, certificationId: string): Promise<string> {
+    const res = await createWebSource(ctx.app, auth, certificationId)
     return res.body.data.id as string
   }
 
   it('creates a source with a 201 single-resource envelope', async () => {
-    const { auth, certificationId } = await bootstrapAdmin()
+    const { auth, certificationId } = await bootstrapAdmin(ctx.harness)
 
-    const res = await supertest(app.getHttpServer())
-      .post('/api/v1/admin/content-sources')
-      .set('Authorization', auth)
-      .send({ certificationId, type: 'web', url: 'https://example.com/material' })
+    const res = await createWebSource(ctx.app, auth, certificationId)
 
     expect(res.status).toBe(201)
     expect(res.body.data).toMatchObject({
@@ -57,10 +28,10 @@ describe('ContentController routes', () => {
   })
 
   it('rejects an invalid source type with 400 problem+json', async () => {
-    const { auth, certificationId } = await bootstrapAdmin()
+    const { auth, certificationId } = await bootstrapAdmin(ctx.harness)
 
-    const res = await supertest(app.getHttpServer())
-      .post('/api/v1/admin/content-sources')
+    const res = await supertest(ctx.app.getHttpServer())
+      .post(CONTENT_SOURCES_PATH)
       .set('Authorization', auth)
       .send({ certificationId, type: 'rss', url: 'https://example.com/material' })
 
@@ -69,11 +40,11 @@ describe('ContentController routes', () => {
   })
 
   it('lists sources with a collection envelope, certificationId filter, and default page size 25', async () => {
-    const { auth, certificationId } = await bootstrapAdmin()
-    const sourceId = await createSource(auth, certificationId)
+    const { auth, certificationId } = await bootstrapAdmin(ctx.harness)
+    const sourceId = await createSourceId(auth, certificationId)
 
-    const res = await supertest(app.getHttpServer())
-      .get('/api/v1/admin/content-sources')
+    const res = await supertest(ctx.app.getHttpServer())
+      .get(CONTENT_SOURCES_PATH)
       .query({ certificationId })
       .set('Authorization', auth)
 
@@ -84,10 +55,10 @@ describe('ContentController routes', () => {
   })
 
   it('caps the page size at 100', async () => {
-    const { auth, certificationId } = await bootstrapAdmin()
+    const { auth, certificationId } = await bootstrapAdmin(ctx.harness)
 
-    const res = await supertest(app.getHttpServer())
-      .get('/api/v1/admin/content-sources')
+    const res = await supertest(ctx.app.getHttpServer())
+      .get(CONTENT_SOURCES_PATH)
       .query({ certificationId, limit: 1000 })
       .set('Authorization', auth)
 
@@ -96,91 +67,89 @@ describe('ContentController routes', () => {
   })
 
   it('reads a single source and 404s for an unknown id', async () => {
-    const { auth, certificationId } = await bootstrapAdmin()
-    const sourceId = await createSource(auth, certificationId)
+    const { auth, certificationId } = await bootstrapAdmin(ctx.harness)
+    const sourceId = await createSourceId(auth, certificationId)
 
-    const read = await supertest(app.getHttpServer())
-      .get(`/api/v1/admin/content-sources/${sourceId}`)
+    const read = await supertest(ctx.app.getHttpServer())
+      .get(`${CONTENT_SOURCES_PATH}/${sourceId}`)
       .set('Authorization', auth)
     expect(read.status).toBe(200)
     expect(read.body.data).toMatchObject({ id: sourceId })
 
-    const missing = await supertest(app.getHttpServer())
-      .get(`/api/v1/admin/content-sources/${randomUUID()}`)
+    const missing = await supertest(ctx.app.getHttpServer())
+      .get(`${CONTENT_SOURCES_PATH}/${randomUUID()}`)
       .set('Authorization', auth)
     expect(missing.status).toBe(404)
   })
 
   it('disables and enables a source with 200 responses', async () => {
-    const { auth, certificationId } = await bootstrapAdmin()
-    const sourceId = await createSource(auth, certificationId)
+    const { auth, certificationId } = await bootstrapAdmin(ctx.harness)
+    const sourceId = await createSourceId(auth, certificationId)
 
-    const disable = await supertest(app.getHttpServer())
-      .post(`/api/v1/admin/content-sources/${sourceId}/disable`)
+    const disable = await supertest(ctx.app.getHttpServer())
+      .post(`${CONTENT_SOURCES_PATH}/${sourceId}/disable`)
       .set('Authorization', auth)
     expect(disable.status).toBe(200)
     expect(disable.body.data).toMatchObject({ id: sourceId, enabled: false })
 
-    const enable = await supertest(app.getHttpServer())
-      .post(`/api/v1/admin/content-sources/${sourceId}/enable`)
+    const enable = await supertest(ctx.app.getHttpServer())
+      .post(`${CONTENT_SOURCES_PATH}/${sourceId}/enable`)
       .set('Authorization', auth)
     expect(enable.status).toBe(200)
     expect(enable.body.data).toMatchObject({ id: sourceId, enabled: true })
   })
 
   it('reingests an enabled source with 202 and 409s a disabled source', async () => {
-    const { auth, certificationId } = await bootstrapAdmin()
-    const sourceId = await createSource(auth, certificationId)
+    const { auth, certificationId } = await bootstrapAdmin(ctx.harness)
+    const sourceId = await createSourceId(auth, certificationId)
 
-    const reingest = await supertest(app.getHttpServer())
-      .post(`/api/v1/admin/content-sources/${sourceId}/reingest`)
+    const reingest = await supertest(ctx.app.getHttpServer())
+      .post(`${CONTENT_SOURCES_PATH}/${sourceId}/reingest`)
       .set('Authorization', auth)
     expect(reingest.status).toBe(202)
     expect(reingest.body.data).toMatchObject({ contentSourceId: sourceId })
     expect(typeof reingest.body.data.jobId).toBe('string')
     const jobId = reingest.body.data.jobId as string
 
-    const jobs = await supertest(app.getHttpServer())
-      .get(`/api/v1/admin/content-sources/${sourceId}/jobs`)
+    const jobs = await supertest(ctx.app.getHttpServer())
+      .get(`${CONTENT_SOURCES_PATH}/${sourceId}/jobs`)
       .set('Authorization', auth)
     expect(jobs.status).toBe(200)
     expect(jobs.body.meta).toBeDefined()
     expect(jobs.body.data.some((j: { jobId: string }) => j.jobId === jobId)).toBe(true)
 
-    const jobStatus = await supertest(app.getHttpServer())
-      .get(`/api/v1/admin/content-sources/${sourceId}/jobs/${jobId}`)
+    const jobStatus = await supertest(ctx.app.getHttpServer())
+      .get(`${CONTENT_SOURCES_PATH}/${sourceId}/jobs/${jobId}`)
       .set('Authorization', auth)
     expect(jobStatus.status).toBe(200)
     expect(jobStatus.body.data).toMatchObject({ jobId })
 
-    const missingJob = await supertest(app.getHttpServer())
-      .get(`/api/v1/admin/content-sources/${sourceId}/jobs/${randomUUID()}`)
+    const missingJob = await supertest(ctx.app.getHttpServer())
+      .get(`${CONTENT_SOURCES_PATH}/${sourceId}/jobs/${randomUUID()}`)
       .set('Authorization', auth)
     expect(missingJob.status).toBe(404)
 
-    await supertest(app.getHttpServer())
-      .post(`/api/v1/admin/content-sources/${sourceId}/disable`)
+    await supertest(ctx.app.getHttpServer())
+      .post(`${CONTENT_SOURCES_PATH}/${sourceId}/disable`)
       .set('Authorization', auth)
 
-    const blocked = await supertest(app.getHttpServer())
-      .post(`/api/v1/admin/content-sources/${sourceId}/reingest`)
+    const blocked = await supertest(ctx.app.getHttpServer())
+      .post(`${CONTENT_SOURCES_PATH}/${sourceId}/reingest`)
       .set('Authorization', auth)
     expect(blocked.status).toBe(409)
   })
 
   it('forbids a non-admin caller and rejects an unauthenticated one', async () => {
-    await harness.registerAndLogin('admin@example.com', 'correcthorse')
-    const userToken = await harness.registerAndLogin('member@example.com', 'correcthorse')
+    await ctx.harness.registerAndLogin('admin@example.com', 'correcthorse')
+    const userToken = await ctx.harness.registerAndLogin('member@example.com', 'correcthorse')
 
-    const forbidden = await supertest(app.getHttpServer())
-      .get('/api/v1/admin/content-sources')
+    const forbidden = await supertest(ctx.app.getHttpServer())
+      .get(CONTENT_SOURCES_PATH)
       .set('Authorization', `Bearer ${userToken}`)
     expect(forbidden.status).toBe(403)
     expect(forbidden.headers['content-type']).toContain('application/problem+json')
 
-    const unauthenticated = await supertest(app.getHttpServer()).get(
-      '/api/v1/admin/content-sources',
-    )
+    const unauthenticated = await supertest(ctx.app.getHttpServer()).get(CONTENT_SOURCES_PATH)
     expect(unauthenticated.status).toBe(401)
   })
 })

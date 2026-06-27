@@ -1,12 +1,15 @@
 import { randomUUID } from 'node:crypto'
-import type { INestApplication } from '@nestjs/common'
 import type { Queue } from 'bullmq'
 import supertest from 'supertest'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-  type ContentAcceptanceHarness,
-  createContentAcceptanceHarness,
-} from './test/content-acceptance-harness'
+  bootstrapAdmin,
+  CONTENT_SOURCES_PATH,
+  createWebSource,
+  listAuditCount,
+  listAudits,
+} from './test/content-requests'
+import { useContentHarness } from './test/content-test-context'
 
 // Group 1 introduces `ingestionQueueName('web')` in @readion/shared; it resolves to this literal.
 // The acceptance harness asserts only the PRODUCER contract (job enqueued + readable state) — the
@@ -14,33 +17,17 @@ import {
 const INGESTION_WEB_QUEUE = 'ingestion-web'
 
 describe('content admin acceptance', () => {
-  let harness: ContentAcceptanceHarness
-  let app: INestApplication
-
-  beforeAll(async () => {
-    harness = await createContentAcceptanceHarness()
-    app = harness.app
-  }, 120_000)
-
-  beforeEach(async () => {
-    await harness.resetState()
-  })
-
-  afterAll(async () => {
-    await harness?.teardown()
-  })
+  const ctx = useContentHarness()
 
   it('drives the admin content-source lifecycle: register, list, read, disable/enable, reingest, jobs', async () => {
     // First registration in a fresh isolated DB yields an admin.
-    const adminToken = await harness.registerAndLogin('admin@example.com', 'correcthorse')
-    const adminAuth = `Bearer ${adminToken}`
-    const certificationId = await harness.seedCertification(['Security', 'Architecture'])
+    const { auth: adminAuth, certificationId } = await bootstrapAdmin(ctx.harness, [
+      'Security',
+      'Architecture',
+    ])
 
     // Register a web source: default recheck interval is 10080 minutes (weekly).
-    const create = await supertest(app.getHttpServer())
-      .post('/api/v1/admin/content-sources')
-      .set('Authorization', adminAuth)
-      .send({ certificationId, type: 'web', url: 'https://example.com/material' })
+    const create = await createWebSource(ctx.app, adminAuth, certificationId)
 
     expect(create.status).toBe(201)
     expect(create.body.data).toMatchObject({
@@ -54,12 +41,12 @@ describe('content admin acceptance', () => {
     const sourceId = create.body.data.id as string
 
     // `source.added` audit recorded.
-    const afterCreateAudits = await listAudits(app, adminAuth)
+    const afterCreateAudits = await listAudits(ctx.app, adminAuth)
     expect(afterCreateAudits.find((a) => a.action === 'source.added')?.targetId).toBe(sourceId)
 
     // List sources for the certification, newest-first with collection meta.
-    const list = await supertest(app.getHttpServer())
-      .get('/api/v1/admin/content-sources')
+    const list = await supertest(ctx.app.getHttpServer())
+      .get(CONTENT_SOURCES_PATH)
       .query({ certificationId })
       .set('Authorization', adminAuth)
 
@@ -69,65 +56,65 @@ describe('content admin acceptance', () => {
     expect(list.body.data.some((s: { id: string }) => s.id === sourceId)).toBe(true)
 
     // Read the single source.
-    const read = await supertest(app.getHttpServer())
-      .get(`/api/v1/admin/content-sources/${sourceId}`)
+    const read = await supertest(ctx.app.getHttpServer())
+      .get(`${CONTENT_SOURCES_PATH}/${sourceId}`)
       .set('Authorization', adminAuth)
 
     expect(read.status).toBe(200)
     expect(read.body.data).toMatchObject({ id: sourceId, enabled: true })
 
     // Disable flips enabled and writes `source.disabled`.
-    const disable = await supertest(app.getHttpServer())
-      .post(`/api/v1/admin/content-sources/${sourceId}/disable`)
+    const disable = await supertest(ctx.app.getHttpServer())
+      .post(`${CONTENT_SOURCES_PATH}/${sourceId}/disable`)
       .set('Authorization', adminAuth)
 
     expect(disable.status).toBe(200)
     expect(disable.body.data).toMatchObject({ id: sourceId, enabled: false })
 
-    const afterDisable = await listAudits(app, adminAuth)
+    const afterDisable = await listAudits(ctx.app, adminAuth)
     expect(afterDisable.filter((a) => a.action === 'source.disabled')).toHaveLength(1)
 
     // Disabling again is an idempotent no-op: still 200, no new audit.
-    const disableAgain = await supertest(app.getHttpServer())
-      .post(`/api/v1/admin/content-sources/${sourceId}/disable`)
+    const disableAgain = await supertest(ctx.app.getHttpServer())
+      .post(`${CONTENT_SOURCES_PATH}/${sourceId}/disable`)
       .set('Authorization', adminAuth)
 
     expect(disableAgain.status).toBe(200)
     expect(disableAgain.body.data).toMatchObject({ id: sourceId, enabled: false })
 
     // 409: a disabled source cannot be re-ingested (no job, no audit).
-    const reingestDisabled = await supertest(app.getHttpServer())
-      .post(`/api/v1/admin/content-sources/${sourceId}/reingest`)
+    const reingestDisabled = await supertest(ctx.app.getHttpServer())
+      .post(`${CONTENT_SOURCES_PATH}/${sourceId}/reingest`)
       .set('Authorization', adminAuth)
 
     expect(reingestDisabled.status).toBe(409)
 
-    const afterBlockedReingest = await listAudits(app, adminAuth)
+    const afterBlockedReingest = await listAudits(ctx.app, adminAuth)
     expect(afterBlockedReingest.filter((a) => a.action === 'source.reingested')).toHaveLength(0)
     expect(afterBlockedReingest.filter((a) => a.action === 'source.disabled')).toHaveLength(1)
 
     // Re-enable writes `source.enabled`.
-    const enable = await supertest(app.getHttpServer())
-      .post(`/api/v1/admin/content-sources/${sourceId}/enable`)
+    const enable = await supertest(ctx.app.getHttpServer())
+      .post(`${CONTENT_SOURCES_PATH}/${sourceId}/enable`)
       .set('Authorization', adminAuth)
 
     expect(enable.status).toBe(200)
     expect(enable.body.data).toMatchObject({ id: sourceId, enabled: true })
 
-    const afterEnable = await listAudits(app, adminAuth)
+    const afterEnable = await listAudits(ctx.app, adminAuth)
     expect(afterEnable.filter((a) => a.action === 'source.enabled')).toHaveLength(1)
 
     // Enabling again is an idempotent no-op: no new audit.
-    const enableAgain = await supertest(app.getHttpServer())
-      .post(`/api/v1/admin/content-sources/${sourceId}/enable`)
+    const enableAgain = await supertest(ctx.app.getHttpServer())
+      .post(`${CONTENT_SOURCES_PATH}/${sourceId}/enable`)
       .set('Authorization', adminAuth)
 
     expect(enableAgain.status).toBe(200)
-    expect(await listAuditCount(app, adminAuth, 'source.enabled')).toBe(1)
+    expect(await listAuditCount(ctx.app, adminAuth, 'source.enabled')).toBe(1)
 
     // Trigger a manual re-ingest: 202 with the job descriptor.
-    const reingest = await supertest(app.getHttpServer())
-      .post(`/api/v1/admin/content-sources/${sourceId}/reingest`)
+    const reingest = await supertest(ctx.app.getHttpServer())
+      .post(`${CONTENT_SOURCES_PATH}/${sourceId}/reingest`)
       .set('Authorization', adminAuth)
 
     expect(reingest.status).toBe(202)
@@ -137,7 +124,7 @@ describe('content admin acceptance', () => {
     const jobId = reingest.body.data.jobId as string
 
     // PRODUCER contract: a job named `ingest` lands on `ingestion-web` with the expected payload.
-    const queue = app.get<Queue>(`BullQueue_${INGESTION_WEB_QUEUE}`, { strict: false })
+    const queue = ctx.app.get<Queue>(`BullQueue_${INGESTION_WEB_QUEUE}`, { strict: false })
     const job = await queue.getJob(jobId)
     expect(job).toBeDefined()
     expect(job?.name).toBe('ingest')
@@ -147,14 +134,14 @@ describe('content admin acceptance', () => {
     })
 
     // `source.reingested` audit carries the jobId in `after`.
-    const afterReingest = await listAudits(app, adminAuth)
+    const afterReingest = await listAudits(ctx.app, adminAuth)
     const reingestAudit = afterReingest.find((a) => a.action === 'source.reingested')
     expect(reingestAudit?.targetId).toBe(sourceId)
     expect(reingestAudit?.after).toMatchObject({ jobId })
 
     // List jobs for the source, most recent first.
-    const jobs = await supertest(app.getHttpServer())
-      .get(`/api/v1/admin/content-sources/${sourceId}/jobs`)
+    const jobs = await supertest(ctx.app.getHttpServer())
+      .get(`${CONTENT_SOURCES_PATH}/${sourceId}/jobs`)
       .set('Authorization', adminAuth)
 
     expect(jobs.status).toBe(200)
@@ -162,8 +149,8 @@ describe('content admin acceptance', () => {
     expect(jobs.body.data.some((j: { jobId: string }) => j.jobId === jobId)).toBe(true)
 
     // Read a single job's status.
-    const jobStatus = await supertest(app.getHttpServer())
-      .get(`/api/v1/admin/content-sources/${sourceId}/jobs/${jobId}`)
+    const jobStatus = await supertest(ctx.app.getHttpServer())
+      .get(`${CONTENT_SOURCES_PATH}/${sourceId}/jobs/${jobId}`)
       .set('Authorization', adminAuth)
 
     expect(jobStatus.status).toBe(200)
@@ -174,64 +161,39 @@ describe('content admin acceptance', () => {
 
     // 404 paths for unknown source and unknown job.
     const unknownId = randomUUID()
-    const missingSource = await supertest(app.getHttpServer())
-      .get(`/api/v1/admin/content-sources/${unknownId}`)
+    const missingSource = await supertest(ctx.app.getHttpServer())
+      .get(`${CONTENT_SOURCES_PATH}/${unknownId}`)
       .set('Authorization', adminAuth)
     expect(missingSource.status).toBe(404)
 
-    const missingSourceDisable = await supertest(app.getHttpServer())
-      .post(`/api/v1/admin/content-sources/${unknownId}/disable`)
+    const missingSourceDisable = await supertest(ctx.app.getHttpServer())
+      .post(`${CONTENT_SOURCES_PATH}/${unknownId}/disable`)
       .set('Authorization', adminAuth)
     expect(missingSourceDisable.status).toBe(404)
 
-    const missingSourceReingest = await supertest(app.getHttpServer())
-      .post(`/api/v1/admin/content-sources/${unknownId}/reingest`)
+    const missingSourceReingest = await supertest(ctx.app.getHttpServer())
+      .post(`${CONTENT_SOURCES_PATH}/${unknownId}/reingest`)
       .set('Authorization', adminAuth)
     expect(missingSourceReingest.status).toBe(404)
 
-    const missingJob = await supertest(app.getHttpServer())
-      .get(`/api/v1/admin/content-sources/${sourceId}/jobs/${randomUUID()}`)
+    const missingJob = await supertest(ctx.app.getHttpServer())
+      .get(`${CONTENT_SOURCES_PATH}/${sourceId}/jobs/${randomUUID()}`)
       .set('Authorization', adminAuth)
     expect(missingJob.status).toBe(404)
   })
 
   it('rejects a non-admin caller with 403 problem+json and an unauthenticated caller with 401', async () => {
-    await harness.registerAndLogin('admin@example.com', 'correcthorse')
-    const userToken = await harness.registerAndLogin('member@example.com', 'correcthorse')
+    await ctx.harness.registerAndLogin('admin@example.com', 'correcthorse')
+    const userToken = await ctx.harness.registerAndLogin('member@example.com', 'correcthorse')
 
-    const forbidden = await supertest(app.getHttpServer())
-      .get('/api/v1/admin/content-sources')
+    const forbidden = await supertest(ctx.app.getHttpServer())
+      .get(CONTENT_SOURCES_PATH)
       .set('Authorization', `Bearer ${userToken}`)
 
     expect(forbidden.status).toBe(403)
     expect(forbidden.headers['content-type']).toContain('application/problem+json')
 
-    const unauthenticated = await supertest(app.getHttpServer()).get(
-      '/api/v1/admin/content-sources',
-    )
+    const unauthenticated = await supertest(ctx.app.getHttpServer()).get(CONTENT_SOURCES_PATH)
     expect(unauthenticated.status).toBe(401)
   })
 })
-
-type AuditEntry = {
-  action: string
-  targetId: string
-  after: Record<string, unknown> | null
-}
-
-async function listAudits(app: INestApplication, auth: string): Promise<AuditEntry[]> {
-  const res = await supertest(app.getHttpServer())
-    .get('/api/v1/admin/audit-logs')
-    .query({ limit: 100 })
-    .set('Authorization', auth)
-  return res.body.data as AuditEntry[]
-}
-
-async function listAuditCount(
-  app: INestApplication,
-  auth: string,
-  action: string,
-): Promise<number> {
-  const audits = await listAudits(app, auth)
-  return audits.filter((a) => a.action === action).length
-}
