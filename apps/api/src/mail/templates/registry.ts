@@ -19,6 +19,26 @@ export type WelcomeTemplatePayload = {
   actionUrl: string
 }
 
+export type DigestEnrollmentSection =
+  | {
+      certName: string
+      calibrated: true
+      readiness: number
+      delta: number | null
+      weakestDomain: string
+      dueReviewCount: number
+    }
+  | {
+      certName: string
+      calibrated: false
+    }
+
+export type DigestTemplatePayload = {
+  productName: string
+  unsubscribeUrl: string
+  enrollments: DigestEnrollmentSection[]
+}
+
 export type MailTemplatePayloads = {
   foundational: FoundationalTemplatePayload
   emailVerification: AuthLinkTemplatePayload

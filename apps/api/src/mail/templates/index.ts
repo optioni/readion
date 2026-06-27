@@ -1,6 +1,8 @@
 export { wrapInBaseLayout } from './base-layout'
 export { escapeHtml } from './escape'
 export type {
+  DigestEnrollmentSection,
+  DigestTemplatePayload,
   FoundationalTemplatePayload,
   MailTemplatePayloads,
   WelcomeTemplatePayload,
