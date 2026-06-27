@@ -4,6 +4,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter'
 import { ScheduleModule } from '@nestjs/schedule'
 import { ThrottlerGuard } from '@nestjs/throttler'
 import { DbModule } from '@readion/db'
+import { AdminModule } from './admin/admin.module'
 import { AgentModule } from './agent/agent.module'
 import { AuthModule } from './auth/auth.module'
 import { CertificationsModule } from './certifications/certifications.module'
@@ -53,6 +54,7 @@ import { WeakAreasModule } from './weak-areas/weak-areas.module'
     DiagnosticModule,
     ReadinessModule,
     AgentModule,
+    AdminModule,
   ],
   providers: [
     {
