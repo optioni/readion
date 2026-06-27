@@ -8,7 +8,20 @@ export interface CertificationFieldCitation {
   passage: string
 }
 
-export type CertificationProvenance = 'verified' | Record<string, CertificationFieldCitation>
+export interface CertificationFieldUnverified {
+  unverified: true
+}
+
+export interface CertificationFieldManuallyConfirmed {
+  manuallyConfirmed: true
+}
+
+export type CertificationFieldProvenance =
+  | CertificationFieldCitation
+  | CertificationFieldUnverified
+  | CertificationFieldManuallyConfirmed
+
+export type CertificationProvenance = 'verified' | Record<string, CertificationFieldProvenance>
 
 export type CertificationState = 'draft' | 'live'
 

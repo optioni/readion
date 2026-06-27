@@ -10,6 +10,7 @@ export const AuditAction = {
   ContentQuarantined: 'content.quarantined',
   CertPublished: 'cert.published',
   CertReverified: 'cert.reverified',
+  CertCreated: 'cert.created',
 } as const
 
 export const auditActions = [
@@ -22,6 +23,7 @@ export const auditActions = [
   AuditAction.ContentQuarantined,
   AuditAction.CertPublished,
   AuditAction.CertReverified,
+  AuditAction.CertCreated,
 ] as const
 
 export type AuditActionValue = (typeof auditActions)[number]

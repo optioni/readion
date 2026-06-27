@@ -55,8 +55,33 @@ export {
   evaluateCoverage,
 } from './cert-coverage'
 export type {
+  CertExtractionFields,
+  CertExtractionResult,
+  CreateCertificationRequest,
+  DiscoverSourcesRequest,
+  DiscoverSourcesResponse,
+  DiscoveryCandidate,
+  DueForReverificationItem,
+  ExtractedField,
+  ExtractionEnqueuedResponse,
+  ExtractionStatusResponse,
+  ExtractRequest,
+  ReverifyCertificationRequest,
+  SuggestedContentSource,
+} from './certification-setup'
+export {
+  CERT_EXTRACTION_QUEUE,
+  createCertificationRequestSchema,
+  discoverSourcesRequestSchema,
+  extractRequestSchema,
+  reverifyCertificationRequestSchema,
+} from './certification-setup'
+export type {
   CertificationDomain,
   CertificationFieldCitation,
+  CertificationFieldManuallyConfirmed,
+  CertificationFieldProvenance,
+  CertificationFieldUnverified,
   CertificationProvenance,
   CertificationResponse,
   CertificationState,
