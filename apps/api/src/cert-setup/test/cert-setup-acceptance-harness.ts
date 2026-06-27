@@ -5,7 +5,12 @@ import type { INestApplication } from '@nestjs/common'
 import { Test, type TestingModule } from '@nestjs/testing'
 import { Certification, startPostgresContainer, startRedisContainer } from '@readion/db'
 import { acquireIsolatedDatabase } from '@readion/db/src/test-helpers/isolated-db'
-import type { CertificationDomain, CertificationProvenance } from '@readion/shared'
+import {
+  CERT_EXTRACTION_QUEUE,
+  type CertExtractionResult,
+  type CertificationDomain,
+  type CertificationProvenance,
+} from '@readion/shared'
 import { MockEmbeddingModelV3, MockLanguageModelV3 } from 'ai/test'
 import { type Job, Queue, Worker } from 'bullmq'
 import type Redis from 'ioredis'
@@ -16,11 +21,6 @@ import { AppModule } from '../../app.module'
 import { bootstrapApp } from '../../bootstrap'
 import { ProviderAdapter } from '../../llm/provider-adapter'
 import { REDIS_CLIENT } from '../../redis/redis.module'
-
-// The shared queue-name constant CERT_EXTRACTION_QUEUE will be added in group 1
-// (mirroring ingestionQueueName). Until it exists, importing it would break the
-// whole suite's compilation, so reference the literal queue name here.
-export const CERT_EXTRACTION_QUEUE = 'cert-extraction'
 
 export const VENDOR_DOMAIN_URL =
   'https://aws.amazon.com/certification/certified-cloud-practitioner/'
@@ -79,6 +79,21 @@ export const EXTRACTION_RESULT = {
   } satisfies CertificationProvenance,
 }
 
+// The real cert-extraction worker returns a per-field result keyed by field name,
+// each with its grounding citation. This mirrors that shape so the acceptance and
+// controller specs read `data.fields.questionCount.value` through the real service.
+export const EXTRACTION_FIELDS_RESULT: CertExtractionResult = {
+  fields: {
+    domains: {
+      value: EXTRACTED_DOMAINS,
+      citation: citation('Domain 1: Cloud Concepts (24% of scored content)'),
+    },
+    questionCount: { value: 65, citation: citation('The exam contains 65 questions.') },
+    passingScore: { value: 700, citation: citation('A minimum score of 700 is required to pass.') },
+    timeLimitMinutes: { value: 90, citation: citation('Candidates are given 90 minutes.') },
+  },
+}
+
 export type SeedDraftCertificationOptions = {
   code: string
   name?: string
@@ -100,7 +115,7 @@ export type CertSetupAcceptanceHarness = {
   seedDraftCertification: (options: SeedDraftCertificationOptions) => Promise<Certification>
   seedCompletedExtractionJob: (
     data: ExtractionJobData,
-    result: typeof EXTRACTION_RESULT,
+    result: CertExtractionResult,
   ) => Promise<string>
 }
 

@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   type CertSetupAcceptanceHarness,
   createCertSetupAcceptanceHarness,
+  EXTRACTION_FIELDS_RESULT,
   EXTRACTION_RESULT,
   THIRD_PARTY_URL,
   VENDOR_DOMAIN_URL,
@@ -101,13 +102,13 @@ describe('cert-setup acceptance', () => {
         code: 'CLF-C02',
         confirmedSourceUrl: VENDOR_DOMAIN_URL,
       },
-      EXTRACTION_RESULT,
+      EXTRACTION_FIELDS_RESULT,
     )
 
     const found = await req().get(`${EXTRACTIONS}/${jobId}`).set('Authorization', adminAuth)
     expect(found.status).toBe(200)
     expect(found.body.data.state).toBe('completed')
-    expect(found.body.data.fields).toMatchObject({ name: EXTRACTION_RESULT.name })
+    expect(found.body.data.fields.questionCount.value).toBe(65)
 
     const unknown = await req()
       .get(`${EXTRACTIONS}/does-not-exist`)
