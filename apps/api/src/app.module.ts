@@ -14,6 +14,7 @@ import { ApiConfigModule } from './config/config.module'
 import { ContentModule } from './content/content.module'
 import { DiagnosticModule } from './diagnostic/diagnostic.module'
 import { HealthModule } from './health/health.module'
+import { LifecycleEmailModule } from './lifecycle-email/lifecycle-email.module'
 import { LlmModule } from './llm/llm.module'
 import { MailModule } from './mail/mail.module'
 import { MockExamModule } from './mock-exam/mock-exam.module'
@@ -57,6 +58,7 @@ import { WeakAreasModule } from './weak-areas/weak-areas.module'
     MockExamModule,
     DiagnosticModule,
     ReadinessModule,
+    LifecycleEmailModule,
     AgentModule,
     AdminModule,
   ],

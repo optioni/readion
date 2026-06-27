@@ -16,6 +16,6 @@ import { ReviewQueueService } from './review-queue.service'
     ReviewService,
     { provide: DUE_ITEMS_PROVIDER, useExisting: ReviewQueueService },
   ],
-  exports: [DUE_ITEMS_PROVIDER],
+  exports: [DUE_ITEMS_PROVIDER, ReviewService],
 })
 export class ReviewModule {}

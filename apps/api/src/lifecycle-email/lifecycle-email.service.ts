@@ -30,6 +30,10 @@ export class LifecycleEmailService {
     private readonly config: ConfigService<EnvConfig>,
   ) {}
 
+  async sendDigest(_userId: string): Promise<void> {
+    throw new Error('Not implemented')
+  }
+
   async assembleDigest(
     userId: string,
     unsubscribeUrl: string,
