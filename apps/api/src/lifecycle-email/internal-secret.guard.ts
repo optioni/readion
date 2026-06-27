@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto'
 import {
   type CanActivate,
   type ExecutionContext,
@@ -25,10 +26,19 @@ export class InternalSecretGuard implements CanActivate {
     const provided = request.headers?.[INTERNAL_API_SECRET_HEADER]
     const expected = this.config.getOrThrow('INTERNAL_API_SECRET', { infer: true })
 
-    if (typeof provided !== 'string' || provided !== expected) {
+    if (typeof provided !== 'string' || !secretsMatch(provided, expected)) {
       throw new UnauthorizedException('Invalid internal secret')
     }
 
     return true
   }
+}
+
+function secretsMatch(provided: string, expected: string): boolean {
+  const providedBuffer = Buffer.from(provided)
+  const expectedBuffer = Buffer.from(expected)
+  if (providedBuffer.length !== expectedBuffer.length) {
+    return false
+  }
+  return timingSafeEqual(providedBuffer, expectedBuffer)
 }
