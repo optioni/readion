@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common'
 import { ApiExcludeController } from '@nestjs/swagger'
 import type { ValidationErrorItem } from '@readion/shared'
-import { lifecycleUserIdsRequestSchema } from '@readion/shared'
+import { lifecycleEnrollmentIdsRequestSchema, lifecycleUserIdsRequestSchema } from '@readion/shared'
 import type { z } from 'zod'
 import { Public } from '../auth/auth.guards'
 import { InternalSecretGuard } from './internal-secret.guard'
@@ -34,9 +34,9 @@ export class InternalLifecycleController {
   @HttpCode(HttpStatus.OK)
   @Post('nudge')
   async nudge(@Body() body: unknown): Promise<void> {
-    const { userIds } = parseBody(lifecycleUserIdsRequestSchema, body)
-    for (const userId of userIds) {
-      await this.lifecycleEmail.maybeSendNudge(userId)
+    const { userCertificationIds } = parseBody(lifecycleEnrollmentIdsRequestSchema, body)
+    for (const userCertificationId of userCertificationIds) {
+      await this.lifecycleEmail.maybeSendNudge(userCertificationId)
     }
   }
 }

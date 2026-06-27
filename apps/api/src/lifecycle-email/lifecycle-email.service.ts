@@ -6,7 +6,11 @@ import { User, UserCertification } from '@readion/db'
 import type { EnvConfig } from '../config/env.schema'
 import type { ConfiguredMailService } from '../mail/mail.service'
 import { MailService } from '../mail/mail.service'
-import type { DigestEnrollmentSection, DigestTemplatePayload } from '../mail/templates'
+import type {
+  DigestEnrollmentSection,
+  DigestTemplatePayload,
+  ExamNudgeTemplatePayload,
+} from '../mail/templates'
 import { ReadinessService } from '../readiness/readiness.service'
 import { ReviewService } from '../review/review.service'
 import { WeakAreasService } from '../weak-areas/weak-areas.service'
@@ -74,8 +78,51 @@ export class LifecycleEmailService {
     await em.flush()
   }
 
-  async maybeSendNudge(_userId: string): Promise<void> {
-    // Implemented in group 7 (post-exam nudge)
+  async maybeSendNudge(userCertificationId: string, now: Date = new Date()): Promise<void> {
+    const em = this.em.fork()
+    const enrollment = await em.findOne(
+      UserCertification,
+      { id: userCertificationId },
+      { populate: ['user', 'certification'] },
+    )
+    if (enrollment === null) {
+      return
+    }
+
+    // A recorded response (including a dismissal) stops all further nudges.
+    if (enrollment.examOutcomeResponse !== null) {
+      return
+    }
+
+    const maxFollowups = Number(this.config.get('NUDGE_MAX_FOLLOWUPS', { infer: true }))
+    const followupDelayDays = Number(this.config.get('NUDGE_FOLLOWUP_DELAY_DAYS', { infer: true }))
+    const nudgeCount = enrollment.examOutcomeNudgeCount
+    if (nudgeCount >= 1 + maxFollowups) {
+      return
+    }
+    if (nudgeCount >= 1) {
+      const sentAt = enrollment.examOutcomeNudgeSentAt
+      const delayMs = followupDelayDays * 24 * 60 * 60 * 1000
+      if (sentAt === null || now.getTime() - sentAt.getTime() < delayMs) {
+        return
+      }
+    }
+
+    const readiness = await this.readiness.compute(userCertificationId)
+    const threshold = Number(this.config.get('EXAM_READY_THRESHOLD', { infer: true }))
+    if (!readiness.calibrated || readiness.score < threshold) {
+      return
+    }
+
+    const payload: ExamNudgeTemplatePayload = {
+      productName: PRODUCT_NAME,
+      certName: enrollment.certification.name,
+    }
+    await this.mail.send('exam-nudge', enrollment.user.email, payload)
+
+    enrollment.examOutcomeNudgeSentAt = now
+    enrollment.examOutcomeNudgeCount += 1
+    await em.flush()
   }
 
   async unsubscribe(token: string): Promise<void> {

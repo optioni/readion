@@ -28,10 +28,7 @@ describe('LifecycleEmailService.maybeSendNudge (integration)', () => {
     await harness?.teardown()
   })
 
-  async function seedEnrollment(
-    email: string,
-    outcome: 'ready' | 'unready',
-  ): Promise<string> {
+  async function seedEnrollment(email: string, outcome: 'ready' | 'unready'): Promise<string> {
     const token = await harness.registerAndLogin(email, 'correcthorse')
     const userId = await harness.getUserIdFromToken(token)
     await harness.verifyUserEmail(userId)
@@ -53,7 +50,7 @@ describe('LifecycleEmailService.maybeSendNudge (integration)', () => {
   }
 
   function nudgesFor(email: string) {
-    return harness.capturedMail().filter((m) => m.to === email)
+    return harness.capturedMail().filter((m) => m.to === email && /exam/i.test(m.subject))
   }
 
   async function patchEnrollment(
