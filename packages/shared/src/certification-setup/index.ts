@@ -1,8 +1,81 @@
 import { z } from 'zod'
-import type { CertificationDomain, CertificationFieldCitation } from '../certifications'
+import type {
+  CertificationDomain,
+  CertificationFieldCitation,
+  CertificationFieldProvenance,
+} from '../certifications'
 import type { ContentSourceType } from '../content-pipeline'
 
+// `URL` is a runtime global in every target (Node and browsers) but the shared
+// package's `lib` (ES2022 only) does not declare it.
+declare const URL: { new (input: string): { host: string } }
+
 export const CERT_EXTRACTION_QUEUE = 'cert-extraction'
+
+export const CERT_REVERIFICATION_INTERVAL_DAYS_DEFAULT = 180
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+
+// Boundary choice: a cert verified exactly `intervalDays` ago is NOT yet due —
+// only strictly-older-than-the-cutoff verifications fall due.
+export function dueForReverification(
+  verifiedAt: Date | string | null,
+  now: Date,
+  intervalDays: number,
+): boolean {
+  if (verifiedAt === null) {
+    return true
+  }
+  const verifiedTime =
+    typeof verifiedAt === 'string' ? new Date(verifiedAt).getTime() : verifiedAt.getTime()
+  const cutoff = now.getTime() - intervalDays * MS_PER_DAY
+  return verifiedTime < cutoff
+}
+
+export function validateDomainWeights(domains: CertificationDomain[]): boolean {
+  if (domains.length === 0) {
+    return false
+  }
+  return domains.reduce((sum, domain) => sum + domain.weight, 0) === 100
+}
+
+export function buildProvenanceMap(
+  fields: CertExtractionFields,
+  manualFields?: Set<string> | string[],
+): Record<string, CertificationFieldProvenance> {
+  const manual = manualFields instanceof Set ? manualFields : new Set(manualFields ?? [])
+  const entries = Object.entries(fields) as [keyof CertExtractionFields, ExtractedField<unknown>][]
+  return Object.fromEntries(
+    entries.map(([key, field]) => {
+      if (manual.has(key)) {
+        return [key, { manuallyConfirmed: true }]
+      }
+      if ('citation' in field) {
+        return [key, { url: field.citation.url, passage: field.citation.passage }]
+      }
+      return [key, { unverified: true }]
+    }),
+  )
+}
+
+export function rankDiscoveryCandidates(
+  candidates: DiscoveryCandidate[],
+  vendorDomains: string[],
+): DiscoveryCandidate[] {
+  const isVendor = (candidate: DiscoveryCandidate): boolean => {
+    let host: string
+    try {
+      host = new URL(candidate.url).host
+    } catch {
+      return false
+    }
+    return vendorDomains.some((domain) => host === domain || host.endsWith(`.${domain}`))
+  }
+  return candidates
+    .map((candidate, index) => ({ candidate, index, vendor: isVendor(candidate) }))
+    .sort((a, b) => (a.vendor === b.vendor ? a.index - b.index : a.vendor ? -1 : 1))
+    .map((entry) => entry.candidate)
+}
 
 export const discoverSourcesRequestSchema = z.object({
   name: z.string().min(1),

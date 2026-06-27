@@ -1,12 +1,12 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import type {
+  CertificationDomain,
   CertificationFieldCitation,
   CertificationFieldManuallyConfirmed,
   CertificationFieldProvenance,
   CertificationFieldUnverified,
   CertificationProvenance,
 } from '../certifications'
-import type { CertificationDomain } from '../certifications'
 import {
   buildProvenanceMap,
   CERT_EXTRACTION_QUEUE,
@@ -17,13 +17,13 @@ import {
   createCertificationRequestSchema,
   type DiscoverSourcesRequest,
   type DiscoveryCandidate,
-  discoverSourcesRequestSchema,
   type DueForReverificationItem,
+  discoverSourcesRequestSchema,
   dueForReverification,
   type ExtractRequest,
   extractRequestSchema,
-  rankDiscoveryCandidates,
   type ReverifyCertificationRequest,
+  rankDiscoveryCandidates,
   reverifyCertificationRequestSchema,
   validateDomainWeights,
 } from './index'
@@ -92,9 +92,7 @@ describe('extractRequestSchema', () => {
   })
 
   it('rejects a missing name', () => {
-    expect(
-      extractRequestSchema.safeParse({ confirmedSourceUrl: VENDOR_URL }).success,
-    ).toBe(false)
+    expect(extractRequestSchema.safeParse({ confirmedSourceUrl: VENDOR_URL }).success).toBe(false)
   })
 
   it('infers the ExtractRequest type', () => {
@@ -292,11 +290,21 @@ describe('dueForReverification', () => {
 
 describe('validateDomainWeights', () => {
   it('is true when weights sum to exactly 100', () => {
-    expect(validateDomainWeights([{ name: 'A', weight: 50 }, { name: 'B', weight: 50 }])).toBe(true)
+    expect(
+      validateDomainWeights([
+        { name: 'A', weight: 50 },
+        { name: 'B', weight: 50 },
+      ]),
+    ).toBe(true)
   })
 
   it('is false when weights do not sum to 100', () => {
-    expect(validateDomainWeights([{ name: 'A', weight: 50 }, { name: 'B', weight: 40 }])).toBe(false)
+    expect(
+      validateDomainWeights([
+        { name: 'A', weight: 50 },
+        { name: 'B', weight: 40 },
+      ]),
+    ).toBe(false)
   })
 
   it('is false for an empty domains array', () => {

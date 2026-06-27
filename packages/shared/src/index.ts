@@ -70,11 +70,16 @@ export type {
   SuggestedContentSource,
 } from './certification-setup'
 export {
+  buildProvenanceMap,
   CERT_EXTRACTION_QUEUE,
+  CERT_REVERIFICATION_INTERVAL_DAYS_DEFAULT,
   createCertificationRequestSchema,
   discoverSourcesRequestSchema,
+  dueForReverification,
   extractRequestSchema,
+  rankDiscoveryCandidates,
   reverifyCertificationRequestSchema,
+  validateDomainWeights,
 } from './certification-setup'
 export type {
   CertificationDomain,
@@ -141,6 +146,7 @@ export type {
   SubstitutionSignal,
   VerifierVerdict,
 } from './grounding'
+export { isVerbatimPassage, normalizeText } from './grounding'
 export type {
   DiagnosticOffer,
   DiagnosticOfferResponse,
