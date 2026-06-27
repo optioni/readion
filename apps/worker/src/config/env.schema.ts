@@ -40,6 +40,8 @@ const envSchema = z.object({
   AI_API_KEY: z.string().min(1).optional(),
   AI_MODEL_DOMAIN_TAGGING: z.string().min(1).default('gpt-4o-mini'),
   AI_MODEL_SESSION_FILL: z.string().min(1).default('gpt-4o'),
+  AI_MODEL_CERTIFICATION_PREFILL: z.string().min(1).default('gpt-4o-mini'),
+  AI_MODEL_ANSWER_VERIFICATION: z.string().min(1).default('gpt-4o'),
   AI_EMBEDDING_MODEL: z.string().min(1).default('text-embedding-3-small'),
   AI_EMBEDDING_DIMENSION: zodCoerceNumber().default(EMBEDDING_DIMENSION),
 

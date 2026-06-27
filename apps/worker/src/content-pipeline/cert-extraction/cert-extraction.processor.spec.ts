@@ -45,7 +45,11 @@ const buildJob = (): Job =>
   ({
     id: 'job-1',
     queueName: CERT_EXTRACTION_QUEUE,
-    data: { name: 'AWS Certified Solutions Architect', code: 'SAA-C03', confirmedSourceUrl: SOURCE_URL },
+    data: {
+      name: 'AWS Certified Solutions Architect',
+      code: 'SAA-C03',
+      confirmedSourceUrl: SOURCE_URL,
+    },
   }) as Partial<Job> as Job
 
 describe('CertExtractionProcessor (integration)', () => {
@@ -70,7 +74,10 @@ describe('CertExtractionProcessor (integration)', () => {
         },
         {
           provide: LlmService,
-          useValue: { extractCertFields, verifyFieldEntailment } as Partial<LlmService> as LlmService,
+          useValue: {
+            extractCertFields,
+            verifyFieldEntailment,
+          } as Partial<LlmService> as LlmService,
         },
       ],
     }).compile()
@@ -130,8 +137,8 @@ describe('CertExtractionProcessor (integration)', () => {
 
   it('flags a verbatim field whose value the independent verifier does not entail', async () => {
     extractCertFields.mockResolvedValue(groundedProposals())
-    verifyFieldEntailment.mockImplementation(async (_value: unknown, passage: string) =>
-      passage !== 'The exam contains 65 questions.',
+    verifyFieldEntailment.mockImplementation(
+      async (_value: unknown, passage: string) => passage !== 'The exam contains 65 questions.',
     )
 
     const result = await run()

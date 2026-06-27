@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common'
 import { queryCoverageStats } from '@readion/db'
+import { CERT_EXTRACTION_QUEUE } from '@readion/shared'
 import { LlmModule } from '../llm/llm.module'
+import { registerSourceQueue } from '../queue/queue.helpers'
+import { CertExtractionProcessor } from './cert-extraction/cert-extraction.processor'
+import { CertExtractionService } from './cert-extraction/cert-extraction.service'
 import { StaleSourceCron } from './cron/stale-source.cron'
 import { SupersededChunkCleanupCron } from './cron/superseded-chunk-cleanup.cron'
 import { DomainTaggerService } from './domain-tagger/domain-tagger.service'
@@ -26,8 +30,10 @@ import { YouTubeFetchStrategy } from './strategies/youtube.strategy'
 import { ChunkSupersessionService } from './supersession/chunk-supersession.service'
 
 @Module({
-  imports: [LlmModule, ContentQueuesModule],
+  imports: [LlmModule, ContentQueuesModule, registerSourceQueue(CERT_EXTRACTION_QUEUE)],
   providers: [
+    CertExtractionService,
+    CertExtractionProcessor,
     WebFetchStrategy,
     PdfFetchStrategy,
     YouTubeFetchStrategy,

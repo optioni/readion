@@ -98,6 +98,56 @@ describe('LlmService', () => {
     })
   })
 
+  describe('cert extraction', () => {
+    beforeEach(async () => {
+      const moduleRef = await Test.createTestingModule({
+        providers: [LlmService, { provide: ConfigService, useValue: makeConfig('openai') }],
+      }).compile()
+      service = moduleRef.get(LlmService)
+    })
+
+    it('extractCertFields returns the structured proposals from output', async () => {
+      const { generateText } = await import('ai')
+      const proposals = {
+        domains: { value: [{ name: 'Security', weight: 100 }], passage: 'Security (100%)' },
+        questionCount: { value: 65, passage: '65 questions' },
+        passingScore: null,
+        timeLimitMinutes: { value: 90, passage: '90 minutes' },
+      }
+      vi.mocked(generateText).mockResolvedValueOnce({ output: proposals } as any)
+
+      const result = await service.extractCertFields('source', { name: 'AWS SAA', code: 'SAA-C03' })
+      expect(result).toEqual(proposals)
+    })
+
+    it('extractCertFields returns all-null proposals when output is null', async () => {
+      const { generateText } = await import('ai')
+      vi.mocked(generateText).mockResolvedValueOnce({ output: null } as any)
+
+      const result = await service.extractCertFields('source', { name: 'AWS SAA' })
+      expect(result).toEqual({
+        domains: null,
+        questionCount: null,
+        passingScore: null,
+        timeLimitMinutes: null,
+      })
+    })
+
+    it('verifyFieldEntailment returns the verdict from output', async () => {
+      const { generateText } = await import('ai')
+      vi.mocked(generateText).mockResolvedValueOnce({ output: { entailed: true } } as any)
+
+      expect(await service.verifyFieldEntailment(65, '65 questions')).toBe(true)
+    })
+
+    it('verifyFieldEntailment defaults to false when output is null', async () => {
+      const { generateText } = await import('ai')
+      vi.mocked(generateText).mockResolvedValueOnce({ output: null } as any)
+
+      expect(await service.verifyFieldEntailment(65, '65 questions')).toBe(false)
+    })
+  })
+
   describe('with anthropic provider', () => {
     beforeEach(async () => {
       const moduleRef = await Test.createTestingModule({
