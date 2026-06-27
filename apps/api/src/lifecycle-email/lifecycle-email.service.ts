@@ -18,10 +18,7 @@ import { ReadinessService } from '../readiness/readiness.service'
 import { ReviewService } from '../review/review.service'
 import { WeakAreasService } from '../weak-areas/weak-areas.service'
 import { buildEnrollmentSection } from './digest-assembly'
-import {
-  LIFECYCLE_EMAILS_SENT_METRIC,
-  type LifecycleEmailType,
-} from './lifecycle-email.metrics'
+import { LIFECYCLE_EMAILS_SENT_METRIC, type LifecycleEmailType } from './lifecycle-email.metrics'
 import { shouldSendNudge } from './nudge-policy'
 
 const PRODUCT_NAME = 'Readion'

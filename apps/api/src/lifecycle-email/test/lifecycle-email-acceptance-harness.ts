@@ -246,9 +246,7 @@ function configureTestEnv(
   process.env.BCRYPT_COST = '4'
   process.env.WEB_BASE_URL = 'http://localhost:3000'
 
-  // Lifecycle-email config the production schema gains across groups 1-9. The env
-  // schema's object parse ignores unknown keys, so setting them here is safe today and
-  // expresses the intended configuration surface for the digest + nudge flows.
+  // Lifecycle-email config consumed by the digest + nudge flows.
   process.env.PUBLIC_API_URL = 'http://localhost:3001'
   process.env.INTERNAL_API_SECRET = INTERNAL_API_SECRET
   process.env.DIGEST_SEND_WEEKDAY = '1'

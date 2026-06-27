@@ -147,9 +147,9 @@ describe('Internal lifecycle trigger endpoints (integration)', () => {
       const document = buildOpenApiDocument(harness.app)
       const paths = Object.keys(document.paths)
       expect(paths.some((path) => path.includes('/internal'))).toBe(false)
-      expect(
-        paths.some((path) => /\/user-certifications\/\{id\}\/exam-outcome$/.test(path)),
-      ).toBe(true)
+      expect(paths.some((path) => /\/user-certifications\/\{id\}\/exam-outcome$/.test(path))).toBe(
+        true,
+      )
     })
   })
 })

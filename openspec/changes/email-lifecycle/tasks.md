@@ -57,17 +57,17 @@
 
 ## 8. Exam-outcome survey response (`apps/api`)
 
-- [ ] 8.1 RED: Integration test `POST /api/v1/user-certifications/:id/exam-outcome` — owner records `passed|did_not_pass|not_yet|dismissed` (200 + persisted + timestamp); readiness unchanged afterward; non-owner gets `404`; a recorded response stops further nudges (SPEC → Email; PRD §3)
-- [ ] 8.2 GREEN: Implement the owner-scoped exam-outcome controller/service writing the response columns
-- [ ] 8.3 REFACTOR: Confirm the response feeds no readiness path and is the signal future `product-analytics` reads
+- [x] 8.1 RED: Integration test `POST /api/v1/user-certifications/:id/exam-outcome` — owner records `passed|did_not_pass|not_yet|dismissed` (200 + persisted + timestamp); readiness unchanged afterward; non-owner gets `404`; a recorded response stops further nudges (SPEC → Email; PRD §3)
+- [x] 8.2 GREEN: Implement the owner-scoped exam-outcome controller/service writing the response columns
+- [x] 8.3 REFACTOR: Confirm the response feeds no readiness path and is the signal future `product-analytics` reads
 
 ## 9. Acceptance Test — Outer Loop GREEN
 
-- [ ] 9.1 Confirm the Playwright/e2e passes end-to-end (welcome, digest+unsubscribe, nudge+survey)
-- [ ] 9.2 Verify api + worker boot locally with the new env keys (smoke test) — no startup/config errors
+- [x] 9.1 Confirm the Playwright/e2e passes end-to-end (welcome, digest+unsubscribe, nudge+survey)
+- [x] 9.2 Verify api + worker boot locally with the new env keys (smoke test) — no startup/config errors
 - [ ] 9.3 Regenerate the Orval client (`yarn codegen`) for the new public endpoints and commit it; confirm internal endpoints are excluded
-- [ ] 9.4 Emit the opportunistic emails-sent counter against the existing observability infra on each welcome/digest/nudge send (proposal → Impact: Cross-cutting); no new metric is attributed to this change beyond this counter
-- [ ] 9.5 REFACTOR: Clean up test setup, fixtures, and scaffolding
+- [x] 9.4 Emit the opportunistic emails-sent counter against the existing observability infra on each welcome/digest/nudge send (proposal → Impact: Cross-cutting); no new metric is attributed to this change beyond this counter
+- [x] 9.5 REFACTOR: Clean up test setup, fixtures, and scaffolding
 
 ## 10. Change Review — Subagent Verification
 
