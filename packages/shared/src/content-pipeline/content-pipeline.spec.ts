@@ -3,8 +3,8 @@ import {
   type ContentSourceResponse,
   type ContentSourceType,
   type EnqueuedJobResponse,
-  ingestionQueueName,
   type IngestionJobStatus,
+  ingestionQueueName,
   registerSourceRequestSchema,
 } from './index'
 
@@ -109,14 +109,7 @@ describe('IngestionJobStatus', () => {
   it('has the documented field shape', () => {
     expectTypeOf<IngestionJobStatus>().toEqualTypeOf<{
       jobId: string
-      state:
-        | 'waiting'
-        | 'active'
-        | 'completed'
-        | 'failed'
-        | 'delayed'
-        | 'paused'
-        | 'unknown'
+      state: 'waiting' | 'active' | 'completed' | 'failed' | 'delayed' | 'paused' | 'unknown'
       progress: number
       attemptsMade: number
       failedReason: string | null

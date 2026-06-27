@@ -1,10 +1,8 @@
 import { Module } from '@nestjs/common'
-import { contentSourceTypes } from '@readion/shared'
+import { contentSourceTypes, ingestionQueueName } from '@readion/shared'
 import { registerSourceQueue } from '../../queue/queue.helpers'
 
-export function ingestionQueueName(type: string): string {
-  return `ingestion-${type}`
-}
+export { ingestionQueueName } from '@readion/shared'
 
 const queueRegistrations = contentSourceTypes.map((type) =>
   registerSourceQueue(ingestionQueueName(type)),
