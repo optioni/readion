@@ -88,6 +88,7 @@ describe('content admin acceptance', () => {
       .set('Authorization', adminAuth)
 
     expect(reingestDisabled.status).toBe(409)
+    expect(reingestDisabled.headers['content-type']).toContain('application/problem+json')
 
     const afterBlockedReingest = await listAudits(ctx.app, adminAuth)
     expect(afterBlockedReingest.filter((a) => a.action === 'source.reingested')).toHaveLength(0)
@@ -176,6 +177,12 @@ describe('content admin acceptance', () => {
       .set('Authorization', adminAuth)
     expect(missingSourceReingest.status).toBe(404)
 
+    const missingSourceJobs = await supertest(ctx.app.getHttpServer())
+      .get(`${CONTENT_SOURCES_PATH}/${unknownId}/jobs`)
+      .set('Authorization', adminAuth)
+    expect(missingSourceJobs.status).toBe(404)
+    expect(missingSourceJobs.headers['content-type']).toContain('application/problem+json')
+
     const missingJob = await supertest(ctx.app.getHttpServer())
       .get(`${CONTENT_SOURCES_PATH}/${sourceId}/jobs/${randomUUID()}`)
       .set('Authorization', adminAuth)
@@ -195,5 +202,6 @@ describe('content admin acceptance', () => {
 
     const unauthenticated = await supertest(ctx.app.getHttpServer()).get(CONTENT_SOURCES_PATH)
     expect(unauthenticated.status).toBe(401)
+    expect(unauthenticated.headers['content-type']).toContain('application/problem+json')
   })
 })

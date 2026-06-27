@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import supertest from 'supertest'
 import { describe, expect, it } from 'vitest'
-import { bootstrapAdmin, CONTENT_SOURCES_PATH, createWebSource } from './test/content-requests'
+import {
+  bootstrapAdmin,
+  CONTENT_SOURCES_PATH,
+  createWebSource,
+  listAuditCount,
+} from './test/content-requests'
 import { useContentHarness } from './test/content-test-context'
 
 describe('ContentController routes', () => {
@@ -37,6 +42,27 @@ describe('ContentController routes', () => {
 
     expect(res.status).toBe(400)
     expect(res.headers['content-type']).toContain('application/problem+json')
+  })
+
+  it('404s a non-existent certification with problem+json and writes no rows', async () => {
+    const { auth, certificationId } = await bootstrapAdmin(ctx.harness)
+    const unknownCertId = randomUUID()
+
+    const res = await supertest(ctx.app.getHttpServer())
+      .post(CONTENT_SOURCES_PATH)
+      .set('Authorization', auth)
+      .send({ certificationId: unknownCertId, type: 'web', url: 'https://example.com/material' })
+
+    expect(res.status).toBe(404)
+    expect(res.headers['content-type']).toContain('application/problem+json')
+
+    expect(await listAuditCount(ctx.app, auth, 'source.added')).toBe(0)
+
+    const list = await supertest(ctx.app.getHttpServer())
+      .get(CONTENT_SOURCES_PATH)
+      .query({ certificationId })
+      .set('Authorization', auth)
+    expect(list.body.data).toHaveLength(0)
   })
 
   it('lists sources with a collection envelope, certificationId filter, and default page size 25', async () => {
@@ -137,6 +163,7 @@ describe('ContentController routes', () => {
       .post(`${CONTENT_SOURCES_PATH}/${sourceId}/reingest`)
       .set('Authorization', auth)
     expect(blocked.status).toBe(409)
+    expect(blocked.headers['content-type']).toContain('application/problem+json')
   })
 
   it('forbids a non-admin caller and rejects an unauthenticated one', async () => {
