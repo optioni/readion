@@ -16,7 +16,11 @@ export class MockExamAutoSubmitCron {
     private readonly config: ConfigService<EnvConfig>,
   ) {}
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  // Disabled under NODE_ENV=test: the suite shares one Postgres pair, so a sweep firing on its
+  // own schedule would finalize in-progress attempts mid-test and its writes would collide with
+  // other specs' TRUNCATE reset. Tests invoke sweep() directly. process.env is read directly
+  // because the decorator runs before ConfigModule validates env.
+  @Cron(CronExpression.EVERY_MINUTE, { disabled: process.env.NODE_ENV === 'test' })
   async sweep(now = new Date()): Promise<void> {
     const graceSeconds = this.config.get('MOCK_EXAM_AUTO_SUBMIT_GRACE_SECONDS') ?? 120
     const cutoff = new Date(now.getTime() - graceSeconds * 1000)

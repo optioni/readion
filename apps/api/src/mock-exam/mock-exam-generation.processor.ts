@@ -9,7 +9,11 @@ import type { Job } from 'bullmq'
 import type { EnvConfig } from '../config/env.schema'
 import { MockExamGenerationService } from './mock-exam-generation.service'
 
-@Processor(MOCK_EXAM_GENERATION_QUEUE)
+// Under NODE_ENV=test the worker stays idle (autorun off): the suite shares one Postgres/Redis
+// pair and drives generation deterministically via the harness. A live worker would consume
+// jobs enqueued by any spec and write to the shared DB mid-test. process.env is read directly
+// because the decorator runs before ConfigModule validates env.
+@Processor(MOCK_EXAM_GENERATION_QUEUE, { autorun: process.env.NODE_ENV !== 'test' })
 export class MockExamGenerationProcessor extends WorkerHost {
   private readonly logger = new Logger(MockExamGenerationProcessor.name)
 
