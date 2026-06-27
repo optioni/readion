@@ -6,49 +6,49 @@
 
 ## 1. Shared contracts — DTOs, audit vocabulary, queue-name helper
 
-- [ ] 1.1 RED: Unit-test `@readion/shared` additions — `ingestionQueueName('web') === 'ingestion-web'`; `auditActions` contains `source.enabled` and `source.reingested` and `AuditActionValue` includes them; Zod schemas for register-source request (cert id, `type` in `contentSourceTypes`, url, optional interval), source response, and job-status response parse/reject correctly
-- [ ] 1.2 GREEN: Add `ingestionQueueName` to `@readion/shared`; add `SourceEnabled`/`SourceReingested` to `AuditAction`/`auditActions`; add register-source request schema, `ContentSourceResponse`, `IngestionJobStatus`, and `EnqueuedJobResponse` DTOs/types
-- [ ] 1.3 REFACTOR: Re-export `ingestionQueueName` from `@readion/shared` in the worker's `content-queues.module.ts` (drop the local copy); confirm existing worker queue tests still pass with the unchanged string value
+- [x] 1.1 RED: Unit-test `@readion/shared` additions — `ingestionQueueName('web') === 'ingestion-web'`; `auditActions` contains `source.enabled` and `source.reingested` and `AuditActionValue` includes them; Zod schemas for register-source request (cert id, `type` in `contentSourceTypes`, url, optional interval), source response, and job-status response parse/reject correctly
+- [x] 1.2 GREEN: Add `ingestionQueueName` to `@readion/shared`; add `SourceEnabled`/`SourceReingested` to `AuditAction`/`auditActions`; add register-source request schema, `ContentSourceResponse`, `IngestionJobStatus`, and `EnqueuedJobResponse` DTOs/types
+- [x] 1.3 REFACTOR: Re-export `ingestionQueueName` from `@readion/shared` in the worker's `content-queues.module.ts` (drop the local copy); confirm existing worker queue tests still pass with the unchanged string value
 
 ## 2. Source repository (data access)
 
-- [ ] 2.1 RED: Write integration test (real Postgres) for a `ContentSourceRepository` — create with default-interval derivation from `SOURCE_RECHECK_INTERVALS`, find by id (null when absent), list by `certificationId` newest-first with pagination, toggle `enabled`
-- [ ] 2.2 GREEN: Implement `ContentSourceRepository` over the existing `ContentSource` entity (no migration — entity owned by `content-pipeline`)
-- [ ] 2.3 REFACTOR: Clean up query/scoping helpers
+- [x] 2.1 RED: Write integration test (real Postgres) for a `ContentSourceRepository` — create with default-interval derivation from `SOURCE_RECHECK_INTERVALS`, find by id (null when absent), list by `certificationId` newest-first with pagination, toggle `enabled`
+- [x] 2.2 GREEN: Implement `ContentSourceRepository` over the existing `ContentSource` entity (no migration — entity owned by `content-pipeline`)
+- [x] 2.3 REFACTOR: Clean up query/scoping helpers
 
 ## 3. Mappers and audit snapshots (pure logic)
 
-- [ ] 3.1 RED: Unit-test the source→`ContentSourceResponse` mapper, the BullMQ job→`IngestionJobStatus` mapper (state/progress/attemptsMade/failedReason/timestamps), and the audit `before`/`after` snapshot builders for add/disable/enable/reingest
-- [ ] 3.2 GREEN: Implement the mappers and snapshot builders
-- [ ] 3.3 REFACTOR: De-duplicate snapshot/mapping helpers
+- [x] 3.1 RED: Unit-test the source→`ContentSourceResponse` mapper, the BullMQ job→`IngestionJobStatus` mapper (state/progress/attemptsMade/failedReason/timestamps), and the audit `before`/`after` snapshot builders for add/disable/enable/reingest
+- [x] 3.2 GREEN: Implement the mappers and snapshot builders
+- [x] 3.3 REFACTOR: De-duplicate snapshot/mapping helpers
 
 ## 4. ContentSource admin service (orchestration)
 
-- [ ] 4.1 RED: Integration-test `ContentSourceService` — register (validates cert exists → throws `NotFound` otherwise; writes `source.added` audit), disable/enable (idempotent no-op writes no audit; real change writes audit), reingest (refuses disabled with `Conflict`; resolves cert `domains.map(d=>d.name)`; enqueues `ingest` on `ingestionQueueName(type)`; writes `source.reingested` audit), and job status reads (`getJob`/recent-jobs scan filtered by `data.contentSourceId`)
-- [ ] 4.2 GREEN: Implement `ContentSourceService` injecting `ContentSourceRepository`, the `CertificationsService`/repo, `AuditLogService` (from `AdminModule`), and the registered ingestion `Queue`s; build `IngestionJobData = { contentSourceId, domains }` under job name `ingest`
-- [ ] 4.3 REFACTOR: Extract queue-resolution-by-type and tidy error mapping to NestJS `HttpException` subclasses
+- [x] 4.1 RED: Integration-test `ContentSourceService` — register (validates cert exists → throws `NotFound` otherwise; writes `source.added` audit), disable/enable (idempotent no-op writes no audit; real change writes audit), reingest (refuses disabled with `Conflict`; resolves cert `domains.map(d=>d.name)`; enqueues `ingest` on `ingestionQueueName(type)`; writes `source.reingested` audit), and job status reads (`getJob`/recent-jobs scan filtered by `data.contentSourceId`)
+- [x] 4.2 GREEN: Implement `ContentSourceService` injecting `ContentSourceRepository`, the `CertificationsService`/repo, `AuditLogService` (from `AdminModule`), and the registered ingestion `Queue`s; build `IngestionJobData = { contentSourceId, domains }` under job name `ingest`
+- [x] 4.3 REFACTOR: Extract queue-resolution-by-type and tidy error mapping to NestJS `HttpException` subclasses
 
 ## 5. ContentModule controller + wiring (HTTP surface)
 
-- [ ] 5.1 RED: Controller integration tests for every route under `JwtAuthGuard` + `@Roles('admin')` — `POST /` (201), `GET /` (`{ data[], meta }`, `?certificationId` filter, default/max page size), `GET /:id` (single envelope, 404), `POST /:id/disable|/enable` (200), `POST /:id/reingest` (202, 409 on disabled), `GET /:id/jobs` and `/:id/jobs/:jobId` (200/404); assert `403` for `user` role and `401` unauthenticated
-- [ ] 5.2 GREEN: Implement `ContentController`, `ContentModule` (import `AdminModule`, `CertificationsModule`, and a queue module that `BullModule.registerQueue`s all `ingestionQueueName(type)` queues against shared Redis); register `ContentModule` in `AppModule`
-- [ ] 5.3 REFACTOR: Ensure responses flow through the global `ResponseInterceptor`/`ExceptionFilter` (no manual envelope wrapping); tidy DTO validation
+- [x] 5.1 RED: Controller integration tests for every route under `JwtAuthGuard` + `@Roles('admin')` — `POST /` (201), `GET /` (`{ data[], meta }`, `?certificationId` filter, default/max page size), `GET /:id` (single envelope, 404), `POST /:id/disable|/enable` (200), `POST /:id/reingest` (202, 409 on disabled), `GET /:id/jobs` and `/:id/jobs/:jobId` (200/404); assert `403` for `user` role and `401` unauthenticated
+- [x] 5.2 GREEN: Implement `ContentController`, `ContentModule` (import `AdminModule`, `CertificationsModule`, and a queue module that `BullModule.registerQueue`s all `ingestionQueueName(type)` queues against shared Redis); register `ContentModule` in `AppModule`
+- [x] 5.3 REFACTOR: Ensure responses flow through the global `ResponseInterceptor`/`ExceptionFilter` (no manual envelope wrapping); tidy DTO validation
 
 ## 6. Acceptance Test — Outer Loop GREEN
 
-- [ ] 6.1 Confirm the acceptance test from group 0 passes end-to-end
-- [ ] 6.2 Verify affected apps start in the local environment — boot `apps/api` (new `ContentModule` registers queues, no config errors) and `apps/worker` (unchanged queue names resolve from `@readion/shared`); smoke-test with no startup errors
-- [ ] 6.3 Run `yarn codegen` and commit the regenerated Orval client under `apps/web/src/api/`
-- [ ] 6.4 REFACTOR: Clean up test setup, harness, and any duplication
+- [x] 6.1 Confirm the acceptance test from group 0 passes end-to-end
+- [x] 6.2 Verify affected apps start in the local environment — boot `apps/api` (new `ContentModule` registers queues, no config errors) and `apps/worker` (unchanged queue names resolve from `@readion/shared`); smoke-test with no startup errors
+- [x] 6.3 Run `yarn codegen` and commit the regenerated Orval client under `apps/web/src/api/`
+- [x] 6.4 REFACTOR: Clean up test setup, harness, and any duplication
 
 ## 7. Change Review — Subagent Verification
 
-- [ ] 7.1 Dispatch a subagent to review the change against proposal.md, the `content-source-admin` spec scenarios, and design.md (reviewer reports findings only, does not edit code)
-- [ ] 7.2 Triage findings: fix every CRITICAL, resolve or consciously accept each WARNING (one-line reason per accepted WARNING), note SUGGESTIONs; re-run affected tests after fixes
+- [x] 7.1 Dispatch a subagent to review the change against proposal.md, the `content-source-admin` spec scenarios, and design.md (reviewer reports findings only, does not edit code)
+- [x] 7.2 Triage findings: fix every CRITICAL, resolve or consciously accept each WARNING (one-line reason per accepted WARNING), note SUGGESTIONs; re-run affected tests after fixes
 
 ## 8. Polish
 
-- [ ] 8.1 Run linter and fix all errors (`yarn lint`)
-- [ ] 8.2 Run formatter and apply fixes (`yarn format`)
-- [ ] 8.3 Run type checker with zero errors (`yarn typecheck`)
-- [ ] 8.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn test:coverage`)
+- [x] 8.1 Run linter and fix all errors (`yarn lint`)
+- [x] 8.2 Run formatter and apply fixes (`yarn format`)
+- [x] 8.3 Run type checker with zero errors (`yarn typecheck`)
+- [x] 8.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn test:coverage`)
