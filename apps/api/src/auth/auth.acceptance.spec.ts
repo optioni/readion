@@ -1,7 +1,8 @@
 import { EntityManager } from '@mikro-orm/core'
-import type { INestApplication } from '@nestjs/common'
+import { type INestApplication, Logger } from '@nestjs/common'
 import { User } from '@readion/db'
 import supertest from 'supertest'
+import { MAIL_TRANSPORT, type MailTransport } from '../mail/transport'
 import {
   type AuthAcceptanceHarness,
   createAuthAcceptanceHarness,
@@ -10,6 +11,8 @@ import {
   getCookieValue,
   type SetCookieHeaders,
 } from './test/auth-acceptance-harness'
+
+const MAIL_FROM = 'Readion <no-reply@readion.app>'
 
 describe('auth acceptance', () => {
   let harness: AuthAcceptanceHarness
@@ -65,6 +68,50 @@ describe('auth acceptance', () => {
     expect(duplicate.status).toBe(409)
     expect(duplicate.body.detail).toMatch(/email/i)
     expect(await em.count(User, {})).toBe(1)
+  })
+
+  it('sends exactly one welcome email on successful registration', async () => {
+    const register = await registerUser(app, 'welcome@example.com', 'correcthorse')
+    expect(register.status).toBe(201)
+
+    await waitFor(() => harness.mailMessages.some(isWelcomeMessage))
+
+    const welcomeMessages = harness.mailMessages.filter(isWelcomeMessage)
+    expect(welcomeMessages).toHaveLength(1)
+    expect(welcomeMessages[0]).toMatchObject({
+      to: 'welcome@example.com',
+      from: MAIL_FROM,
+    })
+    expect(welcomeMessages[0].subject).toBeTruthy()
+    expect(welcomeMessages[0].text).toBeTruthy()
+    expect(welcomeMessages[0].html).toBeTruthy()
+  })
+
+  it('completes registration and logs when the welcome email send fails', async () => {
+    const transport = harness.moduleRef.get<MailTransport>(MAIL_TRANSPORT, { strict: false })
+    const passThrough = transport.sendMail.bind(transport)
+    const loggerError = vi.spyOn(Logger.prototype, 'error')
+    const sendSpy = vi
+      .spyOn(transport, 'sendMail')
+      .mockImplementation((message) =>
+        message.subject.startsWith('Welcome')
+          ? Promise.reject(new Error('smtp rejected welcome'))
+          : passThrough(message),
+      )
+
+    try {
+      const register = await registerUser(app, 'welcomefail@example.com', 'correcthorse')
+      expect(register.status).toBe(201)
+
+      await waitFor(() =>
+        loggerError.mock.calls.some((call) => String(call[0]).toLowerCase().includes('welcome')),
+      )
+
+      expect(harness.mailMessages.some(isWelcomeMessage)).toBe(false)
+    } finally {
+      sendSpy.mockRestore()
+      loggerError.mockRestore()
+    }
   })
 
   it('assigns admin to the first registered user and user to subsequent registrations', async () => {
@@ -255,6 +302,22 @@ describe('auth acceptance', () => {
 
 function registerUser(app: INestApplication, email: string, password: string) {
   return supertest(app.getHttpServer()).post('/api/v1/auth/register').send({ email, password })
+}
+
+function isWelcomeMessage(message: { subject: string }) {
+  return message.subject.startsWith('Welcome')
+}
+
+async function waitFor(predicate: () => boolean, timeoutMs = 5_000) {
+  const start = Date.now()
+
+  while (!predicate()) {
+    if (Date.now() - start > timeoutMs) {
+      throw new Error('Timed out waiting for condition')
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
 }
 
 function loginUser(app: INestApplication, email: string, password: string) {
