@@ -1,8 +1,4 @@
-import { CERT_EXTRACTION_QUEUE, type CertExtractionResult } from '@readion/shared'
-import { Worker } from 'bullmq'
-import type Redis from 'ioredis'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { REDIS_CLIENT } from '../redis/redis.module'
 import {
   type CertSetupAcceptanceHarness,
   createCertSetupAcceptanceHarness,
@@ -33,12 +29,9 @@ const DRAFT_PAYLOAD = {
 
 describe('CertSetupController routes', () => {
   let harness: CertSetupAcceptanceHarness
-  let connection: { host: string; port: number }
 
   beforeAll(async () => {
     harness = await createCertSetupAcceptanceHarness()
-    const redis = harness.moduleRef.get<Redis>(REDIS_CLIENT)
-    connection = { host: redis.options.host ?? 'localhost', port: redis.options.port ?? 6379 }
   }, 120_000)
 
   beforeEach(async () => {
@@ -52,21 +45,6 @@ describe('CertSetupController routes', () => {
   const req = () => harness.getRequest()
   const asAdmin = async () =>
     `Bearer ${await harness.registerAndLogin('admin@example.com', 'correcthorse')}`
-
-  async function seedCompletedJob(result: CertExtractionResult): Promise<string> {
-    const job = await harness.certExtractionQueue.add('extract', {
-      name: 'AWS Certified Cloud Practitioner',
-      code: 'CLF-C02',
-      confirmedSourceUrl: VENDOR_DOMAIN_URL,
-    })
-    const worker = new Worker(CERT_EXTRACTION_QUEUE, async () => result, { connection })
-    await new Promise<void>((resolve, reject) => {
-      worker.on('completed', () => resolve())
-      worker.on('failed', (_job, error: Error) => reject(error))
-    })
-    await worker.close()
-    return String(job.id)
-  }
 
   it('POST /discover-sources returns 200 with a single-resource envelope, persisting nothing', async () => {
     const adminAuth = await asAdmin()
@@ -133,7 +111,14 @@ describe('CertSetupController routes', () => {
 
   it('GET /extractions/:jobId returns 200 with state and per-field result', async () => {
     const adminAuth = await asAdmin()
-    const jobId = await seedCompletedJob(EXTRACTION_FIELDS_RESULT)
+    const jobId = await harness.seedCompletedExtractionJob(
+      {
+        name: 'AWS Certified Cloud Practitioner',
+        code: 'CLF-C02',
+        confirmedSourceUrl: VENDOR_DOMAIN_URL,
+      },
+      EXTRACTION_FIELDS_RESULT,
+    )
 
     const res = await req().get(`${EXTRACTIONS}/${jobId}`).set('Authorization', adminAuth)
 
