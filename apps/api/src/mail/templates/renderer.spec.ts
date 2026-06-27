@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { type FoundationalTemplatePayload, foundationalTemplate } from './registry'
+import {
+  type FoundationalTemplatePayload,
+  foundationalTemplate,
+  type WelcomeTemplatePayload,
+  welcomeTemplate,
+} from './registry'
 import { renderTemplate } from './renderer'
 
 const payload = {
@@ -7,6 +12,12 @@ const payload = {
   productName: 'Readion',
   actionUrl: 'https://readion.app/study',
 } satisfies FoundationalTemplatePayload
+
+const welcomePayload = {
+  name: 'Ava Learner',
+  productName: 'Readion',
+  actionUrl: 'https://readion.app',
+} satisfies WelcomeTemplatePayload
 
 describe('mail template renderer', () => {
   it('renders subject, text, and HTML for the foundational template', () => {
@@ -45,6 +56,19 @@ describe('mail template renderer', () => {
 
     expect(() => renderTemplate(foundationalTemplate, payload)).not.toThrow()
     expect(transport).toBeDefined()
+  })
+
+  it('renders a non-empty subject, text, and HTML wrapped in the base layout for the welcome template', () => {
+    const rendered = renderTemplate(welcomeTemplate, welcomePayload)
+
+    expect(rendered.subject).toBeTruthy()
+    expect(rendered.text).toBeTruthy()
+    expect(rendered.html).toBeTruthy()
+    expect(rendered.html).toMatch(/^<!doctype html>/i)
+    expect(rendered.html).toContain('<html')
+    expect(rendered.html).toContain('</html>')
+    expect(rendered.html).toContain('<body')
+    expect(rendered.html).toContain('</body>')
   })
 
   it('escapes foundational template payload values in HTML content and attributes', () => {
