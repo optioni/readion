@@ -6,7 +6,6 @@ import {
   AuditAction,
   type ContentSourceResponse,
   type ContentSourceType,
-  contentSourceTypes,
   type EnqueuedJobResponse,
   type IngestionJobStatus,
   ingestionQueueName,
@@ -61,22 +60,14 @@ export class ContentSourceService {
     @InjectQueue(ingestionQueueName('anki')) ankiQueue: Queue,
     @InjectQueue(ingestionQueueName('quizlet')) quizletQueue: Queue,
   ) {
-    const queueList: Queue[] = [
-      webQueue,
-      pdfQueue,
-      youtubeQueue,
-      redditQueue,
-      githubQueue,
-      podcastQueue,
-      ankiQueue,
-      quizletQueue,
-    ]
-    contentSourceTypes.forEach((type, index) => {
-      const queue = queueList[index]
-      if (queue !== undefined) {
-        this.queues.set(type, queue)
-      }
-    })
+    this.queues.set('web', webQueue)
+    this.queues.set('pdf', pdfQueue)
+    this.queues.set('youtube', youtubeQueue)
+    this.queues.set('reddit', redditQueue)
+    this.queues.set('github', githubQueue)
+    this.queues.set('podcast', podcastQueue)
+    this.queues.set('anki', ankiQueue)
+    this.queues.set('quizlet', quizletQueue)
   }
 
   async register(
@@ -218,7 +209,7 @@ export class ContentSourceService {
       owned.map(async (job) => mapJobToStatus(job, await job.getState())),
     )
 
-    return { items, meta: { total: items.length, page: 1, limit: items.length } }
+    return { items, meta: { total: items.length, page: 1, limit: JOB_SCAN_WINDOW } }
   }
 
   private resolveQueue(type: ContentSourceType): Queue {
