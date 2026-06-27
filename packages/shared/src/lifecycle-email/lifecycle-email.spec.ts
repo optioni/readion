@@ -7,6 +7,7 @@ import {
   EXAM_READY_THRESHOLD_DEFAULT,
   examOutcomeRequestSchema,
   examOutcomeResponses,
+  lifecycleEnrollmentIdsRequestSchema,
   lifecycleUserIdsRequestSchema,
   NUDGE_ACTIVITY_LULL_DAYS_DEFAULT,
   NUDGE_FOLLOWUP_DELAY_DAYS_DEFAULT,
@@ -37,6 +38,21 @@ describe('lifecycle internal payload schema', () => {
 
   it('rejects a non-uuid user id', () => {
     expect(() => lifecycleUserIdsRequestSchema.parse({ userIds: ['nope'] })).toThrow()
+  })
+})
+
+describe('lifecycle enrollment-scoped nudge payload schema', () => {
+  it('accepts an array of user-certification ids', () => {
+    const id = '00000000-0000-4000-8000-000000000001'
+    expect(lifecycleEnrollmentIdsRequestSchema.parse({ userCertificationIds: [id] })).toEqual({
+      userCertificationIds: [id],
+    })
+  })
+
+  it('rejects a non-uuid user-certification id', () => {
+    expect(() =>
+      lifecycleEnrollmentIdsRequestSchema.parse({ userCertificationIds: ['nope'] }),
+    ).toThrow()
   })
 })
 
