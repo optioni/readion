@@ -1,8 +1,5 @@
 import 'reflect-metadata'
-import type {
-  LanguageModelV3FinishReason,
-  LanguageModelV3StreamPart,
-} from '@ai-sdk/provider'
+import type { LanguageModelV3FinishReason, LanguageModelV3StreamPart } from '@ai-sdk/provider'
 import { ConfigService } from '@nestjs/config'
 import { Test, type TestingModule } from '@nestjs/testing'
 import { getToken } from '@willsoto/nestjs-prometheus'
@@ -20,8 +17,7 @@ import { CertDiscoveryService } from './cert-discovery.service'
 import { CERT_SEARCH_PORT, type CertSearchResult } from './cert-discovery.types'
 
 const VENDOR_URL = 'https://aws.amazon.com/certification/certified-cloud-practitioner/'
-const THIRD_PARTY_URL =
-  'https://www.examtopics.com/exams/amazon/aws-certified-cloud-practitioner/'
+const THIRD_PARTY_URL = 'https://www.examtopics.com/exams/amazon/aws-certified-cloud-practitioner/'
 const HALLUCINATED_URL = 'https://totally-made-up.example.invalid/clf'
 
 const VENDOR_RESULT: CertSearchResult = {
