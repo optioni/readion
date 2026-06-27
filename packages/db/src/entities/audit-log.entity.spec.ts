@@ -5,12 +5,6 @@ import { startPostgresContainer } from '../test-helpers/containers'
 import { AuditLog, AuditLogSchema } from './audit-log.entity'
 import { User, UserSchema } from './user.entity'
 
-interface ColumnInfo {
-  column_name: string
-  is_nullable: 'YES' | 'NO'
-  data_type: string
-}
-
 describe('AuditLog entity', () => {
   let orm: MikroORM
   let container: Awaited<ReturnType<typeof startPostgresContainer>>
@@ -46,12 +40,14 @@ describe('AuditLog entity', () => {
   }
 
   it('migrates the audit_logs table with the expected columns and nullability', async () => {
-    const rows = await orm.em.getConnection().execute<ColumnInfo[]>(
+    const conn = orm.em.getConnection()
+    type ColumnRow = { column_name: string; is_nullable: string; data_type: string }
+    const rows: ColumnRow[] = await conn.execute<ColumnRow[]>(
       `SELECT column_name, is_nullable, data_type
        FROM information_schema.columns
        WHERE table_name = 'audit_logs'`,
     )
-    const byName = new Map(rows.map((r) => [r.column_name, r]))
+    const byName = new Map<string, ColumnRow>(rows.map((r) => [r.column_name, r]))
 
     expect(byName.get('id')?.is_nullable).toBe('NO')
     expect(byName.get('user_id')?.is_nullable).toBe('YES')

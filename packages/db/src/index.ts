@@ -4,6 +4,7 @@ export {
   AgentConversationSchema,
 } from './entities/agent-conversation.entity'
 export { AgentMessage, AgentMessageSchema } from './entities/agent-message.entity'
+export { AuditLog, AuditLogSchema } from './entities/audit-log.entity'
 export { BaseEntity, BaseSchema } from './entities/base.entity'
 export {
   Certification,
