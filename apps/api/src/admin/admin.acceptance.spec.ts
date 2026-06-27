@@ -26,12 +26,11 @@ describe('admin acceptance', () => {
   it('admin lists users, promotes and demotes the second user, and reads the audit log newest-first', async () => {
     // First registration in a fresh isolated DB yields an admin.
     const adminToken = await harness.registerAndLogin('admin@example.com', 'correcthorse')
-    // Second registration yields a plain user.
-    const userToken = await harness.registerAndLogin('member@example.com', 'correcthorse')
+    // Second registration yields a plain user (the promote/demote target).
+    await harness.registerAndLogin('member@example.com', 'correcthorse')
     await harness.seedActiveEnrollment('member@example.com')
 
     const adminAuth = `Bearer ${adminToken}`
-    const userAuth = `Bearer ${userToken}`
 
     // Admin lists all active users with role + enrollment count.
     const list = await supertest(app.getHttpServer())
