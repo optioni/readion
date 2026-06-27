@@ -62,7 +62,17 @@ export type {
   CertificationState,
 } from './certifications'
 export { chunkReverseIndexKey, evictByChunkId, type RedisEvictClient } from './chunk-lifecycle'
-export type { ChunkMetadata, ChunkState, ContentSourceType, DomainTag } from './content-pipeline'
+export type {
+  ChunkMetadata,
+  ChunkState,
+  ContentSourceResponse,
+  ContentSourceType,
+  DomainTag,
+  EnqueuedJobResponse,
+  IngestionJobState,
+  IngestionJobStatus,
+  RegisterSourceRequest,
+} from './content-pipeline'
 export {
   CHUNK_OVERLAP_DEFAULT,
   CHUNK_SIZE_DEFAULT,
@@ -70,6 +80,9 @@ export {
   contentSourceTypes,
   DOMAIN_CONFIDENCE_THRESHOLD_DEFAULT,
   EMBEDDING_DIMENSION,
+  ingestionJobStates,
+  ingestionQueueName,
+  registerSourceRequestSchema,
   SIMILARITY_THRESHOLD_DEFAULT,
   SOURCE_RECHECK_INTERVALS,
 } from './content-pipeline'

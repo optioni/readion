@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 export const chunkStates = ['active', 'superseded'] as const
 export type ChunkState = (typeof chunkStates)[number]
 
@@ -39,4 +41,55 @@ export const SOURCE_RECHECK_INTERVALS: Record<ContentSourceType, number> = {
   podcast: 10_080,
   anki: 43_200,
   quizlet: 43_200,
+}
+
+export function ingestionQueueName(type: string): string {
+  return `ingestion-${type}`
+}
+
+export const registerSourceRequestSchema = z.object({
+  certificationId: z.string().uuid(),
+  type: z.enum(contentSourceTypes),
+  url: z.string().url(),
+  recheckIntervalMinutes: z.number().int().positive().optional(),
+})
+export type RegisterSourceRequest = z.infer<typeof registerSourceRequestSchema>
+
+export interface ContentSourceResponse {
+  id: string
+  certificationId: string
+  type: ContentSourceType
+  url: string
+  enabled: boolean
+  lastFetchedAt: string | null
+  recheckIntervalMinutes: number
+  createdAt: string
+}
+
+export interface EnqueuedJobResponse {
+  jobId: string
+  contentSourceId: string
+  state: string
+}
+
+export const ingestionJobStates = [
+  'waiting',
+  'active',
+  'completed',
+  'failed',
+  'delayed',
+  'paused',
+  'unknown',
+] as const
+export type IngestionJobState = (typeof ingestionJobStates)[number]
+
+export interface IngestionJobStatus {
+  jobId: string
+  state: IngestionJobState
+  progress: number
+  attemptsMade: number
+  failedReason: string | null
+  timestamp: number | null
+  processedOn: number | null
+  finishedOn: number | null
 }
