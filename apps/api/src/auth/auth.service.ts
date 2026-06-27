@@ -211,7 +211,7 @@ export class AuthService {
       .send('welcome', user.email, {
         name: user.email,
         productName: PRODUCT_NAME,
-        actionUrl: this.config.get('WEB_BASE_URL') ?? 'http://localhost:3000',
+        actionUrl: this.webBaseUrl(),
       })
       .catch((error: unknown) => {
         this.logger.error(`Failed to send welcome email to ${user.email}`, error)
@@ -219,9 +219,13 @@ export class AuthService {
   }
 
   private buildWebLink(path: string, token: string) {
-    const url = new URL(path, this.config.get('WEB_BASE_URL') ?? 'http://localhost:3000')
+    const url = new URL(path, this.webBaseUrl())
     url.searchParams.set('token', token)
     return url.toString()
+  }
+
+  private webBaseUrl() {
+    return this.config.get('WEB_BASE_URL') ?? 'http://localhost:3000'
   }
 
   private toAuthUser(user: User): AuthUser {
