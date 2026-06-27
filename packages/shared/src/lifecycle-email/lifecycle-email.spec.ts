@@ -23,13 +23,13 @@ describe('exam-outcome response option set', () => {
   })
 
   it('accepts each allowed outcome', () => {
-    for (const outcome of examOutcomeResponses) {
-      expect(examOutcomeRequestSchema.parse({ outcome }).outcome).toBe(outcome)
+    for (const response of examOutcomeResponses) {
+      expect(examOutcomeRequestSchema.parse({ response }).response).toBe(response)
     }
   })
 
   it('rejects an unknown outcome', () => {
-    expect(() => examOutcomeRequestSchema.parse({ outcome: 'maybe' })).toThrow()
+    expect(() => examOutcomeRequestSchema.parse({ response: 'maybe' })).toThrow()
   })
 })
 

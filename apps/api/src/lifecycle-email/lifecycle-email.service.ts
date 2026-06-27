@@ -1,8 +1,9 @@
 import { randomBytes } from 'node:crypto'
 import { EntityManager } from '@mikro-orm/core'
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { User, UserCertification } from '@readion/db'
+import type { ExamOutcomeResponse } from '@readion/shared'
 import type { EnvConfig } from '../config/env.schema'
 import type { ConfiguredMailService } from '../mail/mail.service'
 import { MailService } from '../mail/mail.service'
@@ -116,6 +117,24 @@ export class LifecycleEmailService {
 
     enrollment.examOutcomeNudgeSentAt = now
     enrollment.examOutcomeNudgeCount += 1
+    await em.flush()
+  }
+
+  // `examOutcomeResponse`/`examOutcomeRespondedAt` are write-only-for-analytics: they
+  // feed the self-reported pass-rate metric and are read by no readiness/weak-area path.
+  async recordExamOutcome(
+    userId: string,
+    enrollmentId: string,
+    response: ExamOutcomeResponse,
+  ): Promise<void> {
+    const em = this.em.fork()
+    const enrollment = await em.findOne(UserCertification, { id: enrollmentId, user: userId })
+    if (enrollment === null) {
+      throw new NotFoundException('Enrollment not found')
+    }
+
+    enrollment.examOutcomeResponse = response
+    enrollment.examOutcomeRespondedAt = new Date()
     await em.flush()
   }
 

@@ -5,7 +5,7 @@ export const examOutcomeResponses = ['passed', 'did_not_pass', 'not_yet', 'dismi
 export type ExamOutcomeResponse = (typeof examOutcomeResponses)[number]
 
 export const examOutcomeRequestSchema = z.object({
-  outcome: z.enum(examOutcomeResponses),
+  response: z.enum(examOutcomeResponses),
 })
 
 export type ExamOutcomeRequest = z.infer<typeof examOutcomeRequestSchema>

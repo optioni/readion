@@ -93,7 +93,10 @@ describe('POST /api/v1/user-certifications/:id/exam-outcome (integration)', () =
 
   it('returns 404 for a non-owner and records no state', async () => {
     const { enrollmentId } = await seedExamReadyEnrollment('outcome-victim@example.com')
-    const otherToken = await harness.registerAndLogin('outcome-attacker@example.com', 'correcthorse')
+    const otherToken = await harness.registerAndLogin(
+      'outcome-attacker@example.com',
+      'correcthorse',
+    )
 
     const res = await req()
       .post(`/api/v1/user-certifications/${enrollmentId}/exam-outcome`)

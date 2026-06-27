@@ -4,13 +4,14 @@ import { ReadinessModule } from '../readiness/readiness.module'
 import { ReviewModule } from '../review/review.module'
 import { WeakAreasModule } from '../weak-areas/weak-areas.module'
 import { EmailController } from './email.controller'
+import { ExamOutcomeController } from './exam-outcome.controller'
 import { InternalLifecycleController } from './internal-lifecycle.controller'
 import { InternalSecretGuard } from './internal-secret.guard'
 import { LifecycleEmailService } from './lifecycle-email.service'
 
 @Module({
   imports: [MailModule, ReadinessModule, WeakAreasModule, ReviewModule],
-  controllers: [EmailController, InternalLifecycleController],
+  controllers: [EmailController, ExamOutcomeController, InternalLifecycleController],
   providers: [LifecycleEmailService, InternalSecretGuard],
   exports: [LifecycleEmailService],
 })
