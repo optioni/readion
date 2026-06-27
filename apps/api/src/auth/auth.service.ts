@@ -4,6 +4,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
@@ -26,6 +27,8 @@ const PRODUCT_NAME = 'Readion'
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name)
+
   constructor(
     private readonly em: EntityManager,
     private readonly passwords: PasswordHashingService,
@@ -57,6 +60,7 @@ export class AuthService {
     em.persist(user)
     await em.flush()
     await this.sendVerificationEmail(user)
+    this.dispatchWelcomeEmail(user)
 
     return this.issueSession(user)
   }
@@ -200,6 +204,18 @@ export class AuthService {
       productName: PRODUCT_NAME,
       actionUrl: this.buildWebLink('/verify-email', token),
     })
+  }
+
+  private dispatchWelcomeEmail(user: User): void {
+    void this.mail
+      .send('welcome', user.email, {
+        name: user.email,
+        productName: PRODUCT_NAME,
+        actionUrl: this.config.get('WEB_BASE_URL') ?? 'http://localhost:3000',
+      })
+      .catch((error: unknown) => {
+        this.logger.error(`Failed to send welcome email to ${user.email}`, error)
+      })
   }
 
   private buildWebLink(path: string, token: string) {

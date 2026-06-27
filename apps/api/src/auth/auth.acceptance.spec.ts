@@ -51,9 +51,9 @@ describe('auth acceptance', () => {
     expect(register.body.data.user).not.toHaveProperty('passwordHash')
     expect(register.body.data).not.toHaveProperty('refreshToken')
     expectRefreshCookie(register.headers['set-cookie'])
-    expect(harness.mailMessages).toHaveLength(1)
+    expect(linkMessages(harness)).toHaveLength(1)
 
-    const verificationLink = extractFirstUrl(harness.mailMessages[0])
+    const verificationLink = extractFirstUrl(linkMessages(harness)[0])
     expect(verificationLink.origin).toBe('http://localhost:3000')
     expect(verificationLink.searchParams.get('token')).toEqual(expect.any(String))
 
@@ -205,7 +205,7 @@ describe('auth acceptance', () => {
       .post('/api/v1/auth/resend-verification')
       .set('Authorization', `Bearer ${register.body.data.accessToken}`)
     expect(resend.status).toBe(200)
-    expect(harness.mailMessages).toHaveLength(2)
+    expect(linkMessages(harness)).toHaveLength(2)
 
     const oldToken = await supertest(app.getHttpServer())
       .post('/api/v1/auth/verify-email')
@@ -229,7 +229,7 @@ describe('auth acceptance', () => {
       .post('/api/v1/auth/resend-verification')
       .set('Authorization', `Bearer ${register.body.data.accessToken}`)
     expect(resendVerified.status).toBe(200)
-    expect(harness.mailMessages).toHaveLength(2)
+    expect(linkMessages(harness)).toHaveLength(2)
   })
 
   it('handles password reset without enumeration, validates reset token, updates password, and revokes sessions', async () => {
@@ -241,7 +241,7 @@ describe('auth acceptance', () => {
       .post('/api/v1/auth/forgot-password')
       .send({ email: 'reset@example.com' })
     expect(existing.status).toBe(202)
-    expect(harness.mailMessages).toHaveLength(2)
+    expect(linkMessages(harness)).toHaveLength(2)
     const resetToken = latestMailToken(harness)
 
     const unknown = await supertest(app.getHttpServer())
@@ -249,7 +249,7 @@ describe('auth acceptance', () => {
       .send({ email: 'missing@example.com' })
     expect(unknown.status).toBe(202)
     expect(unknown.body).toEqual(existing.body)
-    expect(harness.mailMessages).toHaveLength(2)
+    expect(linkMessages(harness)).toHaveLength(2)
 
     const validate = await supertest(app.getHttpServer()).get(
       `/api/v1/auth/reset-password?token=${resetToken}`,
@@ -308,6 +308,10 @@ function isWelcomeMessage(message: { subject: string }) {
   return message.subject.startsWith('Welcome')
 }
 
+function linkMessages(harness: AuthAcceptanceHarness) {
+  return harness.mailMessages.filter((message) => !isWelcomeMessage(message))
+}
+
 async function waitFor(predicate: () => boolean, timeoutMs = 5_000) {
   const start = Date.now()
 
@@ -342,7 +346,8 @@ function csrfToken(setCookieHeaders: SetCookieHeaders) {
 }
 
 function latestMailToken(harness: AuthAcceptanceHarness) {
-  const message = harness.mailMessages[harness.mailMessages.length - 1]
+  const messages = linkMessages(harness)
+  const message = messages[messages.length - 1]
 
   if (message === undefined) {
     throw new Error('No captured mail message')
