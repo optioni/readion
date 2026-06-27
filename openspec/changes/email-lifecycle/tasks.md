@@ -65,7 +65,7 @@
 
 - [x] 9.1 Confirm the Playwright/e2e passes end-to-end (welcome, digest+unsubscribe, nudge+survey)
 - [x] 9.2 Verify api + worker boot locally with the new env keys (smoke test) — no startup/config errors
-- [ ] 9.3 Regenerate the Orval client (`yarn codegen`) for the new public endpoints and commit it; confirm internal endpoints are excluded
+- [x] 9.3 Regenerate the Orval client (`yarn codegen`) for the new public endpoints and commit it; confirm internal endpoints are excluded
 - [x] 9.4 Emit the opportunistic emails-sent counter against the existing observability infra on each welcome/digest/nudge send (proposal → Impact: Cross-cutting); no new metric is attributed to this change beyond this counter
 - [x] 9.5 REFACTOR: Clean up test setup, fixtures, and scaffolding
 
