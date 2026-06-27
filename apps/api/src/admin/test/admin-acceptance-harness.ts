@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { EntityManager } from '@mikro-orm/core'
 import type { INestApplication } from '@nestjs/common'
-import { Test, type TestingModule } from '@nestjs/testing'
+import { Test } from '@nestjs/testing'
 import {
   Certification,
   startPostgresContainer,
@@ -20,7 +20,6 @@ import { REDIS_CLIENT } from '../../redis/redis.module'
 
 export type AdminAcceptanceHarness = {
   app: INestApplication
-  moduleRef: TestingModule
   resetState: () => Promise<void>
   teardown: () => Promise<void>
   registerAndLogin: (email: string, password: string) => Promise<string>
@@ -51,7 +50,6 @@ export async function createAdminAcceptanceHarness(): Promise<AdminAcceptanceHar
 
   return {
     app,
-    moduleRef,
     resetState: async () => {
       mailMessages.length = 0
       await redis.flushdb()
