@@ -2,6 +2,13 @@ export const APP_NAME = 'Readion'
 export const APP_VERSION = '0.1.0'
 
 export type {
+  AdminUserListItem,
+  AuditActionValue,
+  AuditLogEntry,
+  RoleChangeResponse,
+} from './admin'
+export { AuditAction, auditActions } from './admin'
+export type {
   AgentConversationMode,
   AgentConversationResponse,
   AgentMessageContent,
