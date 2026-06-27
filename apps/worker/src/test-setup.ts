@@ -9,6 +9,8 @@ process.env.SCRAPPER_URL = process.env.SCRAPPER_URL ?? 'http://localhost:3001'
 process.env.NODE_ENV = process.env.NODE_ENV ?? 'test'
 process.env.SERVICE_NAME = process.env.SERVICE_NAME ?? 'readion-worker-test'
 process.env.PROMETHEUS_PORT = process.env.PROMETHEUS_PORT ?? '0'
+process.env.INTERNAL_API_BASE_URL = process.env.INTERNAL_API_BASE_URL ?? 'http://localhost:3001'
+process.env.INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET ?? 'test-internal-lifecycle-secret'
 
 // AI / LLM defaults for tests (no real API calls expected; services are mocked)
 process.env.AI_PROVIDER = process.env.AI_PROVIDER ?? 'openai'

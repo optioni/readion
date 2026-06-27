@@ -7,6 +7,7 @@ import {
   DOMAIN_CONFIDENCE_THRESHOLD_DEFAULT,
   databaseUrlFragment,
   EMBEDDING_DIMENSION,
+  lifecycleEmailWorkerEnvFragment,
   observabilityEnvFragment,
   redisUrlFragment,
   SIMILARITY_THRESHOLD_DEFAULT,
@@ -29,6 +30,7 @@ const envSchema = z.object({
   ...redisUrlFragment,
   ...observabilityEnvFragment,
   ...workerPrometheusFragment,
+  ...lifecycleEmailWorkerEnvFragment,
   SCRAPPER_URL: zodRequiredUrl(),
   LIFECYCLE_DELETION_GRACE_DAYS: zodCoerceNumber().default(LIFECYCLE_DELETION_GRACE_DAYS_DEFAULT),
   SUPERSEDED_CHUNK_RETENTION_DAYS: zodCoerceNumber().default(
