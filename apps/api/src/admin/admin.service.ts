@@ -91,58 +91,64 @@ export class AdminService {
   }
 
   async promote(actorUserId: string, targetId: string): Promise<RoleChangeResponse> {
-    const em = this.em.fork()
-    const user = await em.findOne(User, { id: targetId, deletedAt: null })
+    return this.em.fork().transactional(async (tx) => {
+      const user = await tx.findOne(User, { id: targetId, deletedAt: null })
 
-    if (user === null) {
-      throw new NotFoundException('User not found')
-    }
+      if (user === null) {
+        throw new NotFoundException('User not found')
+      }
 
-    const transition = promoteTransition(user.role)
+      const transition = promoteTransition(user.role)
 
-    if (transition.changed) {
-      const previousRole = user.role
-      user.role = transition.role
-      await em.flush()
-      await this.auditLogService.record({
-        actorUserId,
-        action: AuditAction.UserRolePromoted,
-        targetType: 'user',
-        targetId,
-        before: { role: previousRole },
-        after: { role: transition.role },
-      })
-    }
+      if (transition.changed) {
+        const previousRole = user.role
+        user.role = transition.role
+        await this.auditLogService.record(
+          {
+            actorUserId,
+            action: AuditAction.UserRolePromoted,
+            targetType: 'user',
+            targetId,
+            before: { role: previousRole },
+            after: { role: transition.role },
+          },
+          tx,
+        )
+      }
 
-    return { id: user.id, role: user.role }
+      return { id: user.id, role: user.role }
+    })
   }
 
   async demote(actorUserId: string, targetId: string): Promise<RoleChangeResponse> {
-    const em = this.em.fork()
-    const user = await em.findOne(User, { id: targetId, deletedAt: null })
+    return this.em.fork().transactional(async (tx) => {
+      const user = await tx.findOne(User, { id: targetId, deletedAt: null })
 
-    if (user === null) {
-      throw new NotFoundException('User not found')
-    }
+      if (user === null) {
+        throw new NotFoundException('User not found')
+      }
 
-    const transition = demoteTransition(user.role)
+      const transition = demoteTransition(user.role)
 
-    if (transition.changed) {
-      const previousRole = user.role
-      await this.lastActiveAdminGuard.assertCanDelete(user, em)
-      user.role = transition.role
-      await em.flush()
-      await this.auditLogService.record({
-        actorUserId,
-        action: AuditAction.UserRoleDemoted,
-        targetType: 'user',
-        targetId,
-        before: { role: previousRole },
-        after: { role: transition.role },
-      })
-    }
+      if (transition.changed) {
+        const previousRole = user.role
+        await this.lastActiveAdminGuard.assertCanDelete(user, tx)
+        user.role = transition.role
+        await this.auditLogService.record(
+          {
+            actorUserId,
+            action: AuditAction.UserRoleDemoted,
+            targetType: 'user',
+            targetId,
+            before: { role: previousRole },
+            after: { role: transition.role },
+          },
+          tx,
+        )
+      }
 
-    return { id: user.id, role: user.role }
+      return { id: user.id, role: user.role }
+    })
   }
 
   private async enrollmentCounts(

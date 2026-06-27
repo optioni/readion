@@ -18,9 +18,9 @@ export interface RecordAuditInput {
 export class AuditLogService {
   constructor(private readonly em: EntityManager) {}
 
-  async record(input: RecordAuditInput): Promise<AuditLog> {
-    const em = this.em.fork()
-    const entry = em.create(AuditLog, {
+  async record(input: RecordAuditInput, em?: EntityManager): Promise<AuditLog> {
+    const manager = em ?? this.em.fork()
+    const entry = manager.create(AuditLog, {
       userId: input.actorUserId,
       action: input.action,
       targetType: input.targetType,
@@ -28,8 +28,10 @@ export class AuditLogService {
       before: input.before ?? null,
       after: input.after ?? null,
     })
-    em.persist(entry)
-    await em.flush()
+    manager.persist(entry)
+    if (em === undefined) {
+      await manager.flush()
+    }
     return entry
   }
 }

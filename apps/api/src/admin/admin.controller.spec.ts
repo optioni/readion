@@ -59,6 +59,28 @@ describe('AdminController', () => {
       expect(member.enrollmentCount).toBe(1)
     })
 
+    it('returns users newest-first by creation time', async () => {
+      const adminToken = await harness.registerAndLogin('admin@example.com', 'correcthorse')
+      await harness.registerAndLogin('first@example.com', 'correcthorse')
+      await harness.registerAndLogin('second@example.com', 'correcthorse')
+
+      const res = await supertest(app.getHttpServer())
+        .get('/api/v1/admin/users')
+        .set('Authorization', `Bearer ${adminToken}`)
+
+      expect(res.status).toBe(200)
+
+      const data = res.body.data as { email: string; createdAt: string }[]
+      const timestamps = data.map((entry) => new Date(entry.createdAt).getTime())
+      for (let i = 1; i < timestamps.length; i += 1) {
+        expect(timestamps[i - 1]).toBeGreaterThanOrEqual(timestamps[i])
+      }
+
+      const firstIndex = data.findIndex((entry) => entry.email === 'first@example.com')
+      const secondIndex = data.findIndex((entry) => entry.email === 'second@example.com')
+      expect(secondIndex).toBeLessThan(firstIndex)
+    })
+
     it('clamps an oversized page size to the maximum', async () => {
       const adminToken = await harness.registerAndLogin('admin@example.com', 'correcthorse')
 
@@ -222,6 +244,12 @@ describe('AdminController', () => {
 
       expect(res.status).toBe(409)
       expect(await auditCountForTarget(adminAuth, adminId)).toBe(0)
+
+      const usersRes = await supertest(app.getHttpServer())
+        .get('/api/v1/admin/users')
+        .set('Authorization', adminAuth)
+      const target = usersRes.body.data.find((entry: { id: string }) => entry.id === adminId)
+      expect(target.role).toBe('admin')
     })
 
     it('is a no-op when the user is already a plain user and writes no audit row', async () => {
