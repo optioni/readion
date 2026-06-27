@@ -501,8 +501,6 @@ describe('env schema — lifecycle email', () => {
   })
 
   it('throws when INTERNAL_API_SECRET is empty', () => {
-    expect(() => parseEnv({ ...VALID_ENV, INTERNAL_API_SECRET: '' })).toThrow(
-      /INTERNAL_API_SECRET/,
-    )
+    expect(() => parseEnv({ ...VALID_ENV, INTERNAL_API_SECRET: '' })).toThrow(/INTERNAL_API_SECRET/)
   })
 })

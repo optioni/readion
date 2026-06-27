@@ -39,7 +39,8 @@ process.env.AI_MODEL_COMPLEX_REASONING =
   process.env.AI_MODEL_COMPLEX_REASONING ?? 'claude-sonnet-4-6'
 
 process.env.PUBLIC_API_URL = process.env.PUBLIC_API_URL ?? 'http://localhost:3001'
-process.env.INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET ?? 'test-internal-lifecycle-secret'
+process.env.INTERNAL_API_SECRET =
+  process.env.INTERNAL_API_SECRET ?? 'test-internal-lifecycle-secret'
 
 process.env.GROUNDING_MAX_REGEN_ATTEMPTS = process.env.GROUNDING_MAX_REGEN_ATTEMPTS ?? '3'
 process.env.GROUNDING_VERBATIM_CAP = process.env.GROUNDING_VERBATIM_CAP ?? '500'
