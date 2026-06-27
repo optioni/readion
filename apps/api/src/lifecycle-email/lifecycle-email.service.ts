@@ -74,6 +74,21 @@ export class LifecycleEmailService {
     await em.flush()
   }
 
+  async unsubscribe(token: string): Promise<void> {
+    if (token.trim() === '') {
+      return
+    }
+
+    const em = this.em.fork()
+    const user = await em.findOne(User, { unsubscribeToken: token })
+    if (user === null || user.digestOptOut) {
+      return
+    }
+
+    user.digestOptOut = true
+    await em.flush()
+  }
+
   private buildUnsubscribeUrl(token: string): string {
     const url = new URL('/api/v1/email/unsubscribe', this.config.getOrThrow('PUBLIC_API_URL'))
     url.searchParams.set('token', token)
