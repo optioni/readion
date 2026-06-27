@@ -143,10 +143,13 @@ describe('Internal lifecycle trigger endpoints (integration)', () => {
   })
 
   describe('public OpenAPI document', () => {
-    it('does not expose the internal lifecycle endpoints', () => {
+    it('excludes the internal lifecycle endpoints but exposes the public exam-outcome route', () => {
       const document = buildOpenApiDocument(harness.app)
       const paths = Object.keys(document.paths)
       expect(paths.some((path) => path.includes('/internal'))).toBe(false)
+      expect(
+        paths.some((path) => /\/user-certifications\/\{id\}\/exam-outcome$/.test(path)),
+      ).toBe(true)
     })
   })
 })
