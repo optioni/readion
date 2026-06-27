@@ -28,6 +28,8 @@ const VALID_ENV = {
   JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS: '900',
   JWT_REFRESH_TOKEN_EXPIRES_IN_SECONDS: '604800',
   WEB_BASE_URL: 'http://localhost:3000',
+  PUBLIC_API_URL: 'http://localhost:3001',
+  INTERNAL_API_SECRET: 'internal-lifecycle-secret',
 }
 
 describe('env schema — session summary group', () => {

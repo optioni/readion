@@ -28,6 +28,8 @@ const VALID_ENV = {
   JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS: '900',
   JWT_REFRESH_TOKEN_EXPIRES_IN_SECONDS: '604800',
   WEB_BASE_URL: 'http://localhost:3000',
+  PUBLIC_API_URL: 'http://localhost:3001',
+  INTERNAL_API_SECRET: 'internal-lifecycle-secret',
 }
 
 describe('env schema', () => {
@@ -173,6 +175,8 @@ describe('env schema — email group', () => {
       MAIL_FROM: VALID_ENV.MAIL_FROM,
       JWT_SECRET: VALID_ENV.JWT_SECRET,
       WEB_BASE_URL: VALID_ENV.WEB_BASE_URL,
+      PUBLIC_API_URL: VALID_ENV.PUBLIC_API_URL,
+      INTERNAL_API_SECRET: VALID_ENV.INTERNAL_API_SECRET,
     })
 
     expect(result.NODE_ENV).toBe('development')
@@ -435,6 +439,70 @@ describe('env schema — diagnostic', () => {
   it('rejects DIAGNOSTIC_REPROMPT_AFTER_SESSIONS when non-numeric', () => {
     expect(() => parseEnv({ ...VALID_ENV, DIAGNOSTIC_REPROMPT_AFTER_SESSIONS: 'abc' })).toThrow(
       /DIAGNOSTIC_REPROMPT_AFTER_SESSIONS/,
+    )
+  })
+})
+
+describe('env schema — lifecycle email', () => {
+  it('EXAM_READY_THRESHOLD defaults to 80', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.EXAM_READY_THRESHOLD).toBe(80)
+  })
+
+  it('accepts an EXAM_READY_THRESHOLD override of 75', () => {
+    const result = parseEnv({ ...VALID_ENV, EXAM_READY_THRESHOLD: '75' })
+    expect(result.EXAM_READY_THRESHOLD).toBe(75)
+  })
+
+  it('rejects an EXAM_READY_THRESHOLD above 100', () => {
+    expect(() => parseEnv({ ...VALID_ENV, EXAM_READY_THRESHOLD: '101' })).toThrow(
+      /EXAM_READY_THRESHOLD/,
+    )
+  })
+
+  it('NUDGE_MAX_FOLLOWUPS defaults to 1', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.NUDGE_MAX_FOLLOWUPS).toBe(1)
+  })
+
+  it('exposes scheduling defaults when overrides are absent', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.DIGEST_SEND_WEEKDAY).toBeTypeOf('number')
+    expect(result.DIGEST_SEND_HOUR).toBeTypeOf('number')
+    expect(result.NUDGE_ACTIVITY_LULL_DAYS).toBeTypeOf('number')
+    expect(result.NUDGE_FOLLOWUP_DELAY_DAYS).toBeTypeOf('number')
+  })
+
+  it('coerces DIGEST_SEND_HOUR to a number', () => {
+    const result = parseEnv({ ...VALID_ENV, DIGEST_SEND_HOUR: '8' })
+    expect(result.DIGEST_SEND_HOUR).toBe(8)
+  })
+
+  it('fails fast naming DIGEST_SEND_HOUR when it is not a number', () => {
+    expect(() => parseEnv({ ...VALID_ENV, DIGEST_SEND_HOUR: 'not-a-number' })).toThrow(
+      /DIGEST_SEND_HOUR/,
+    )
+  })
+
+  it('rejects an out-of-range DIGEST_SEND_WEEKDAY', () => {
+    expect(() => parseEnv({ ...VALID_ENV, DIGEST_SEND_WEEKDAY: '7' })).toThrow(
+      /DIGEST_SEND_WEEKDAY/,
+    )
+  })
+
+  it('exposes PUBLIC_API_URL', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.PUBLIC_API_URL).toBe('http://localhost:3001')
+  })
+
+  it('throws when PUBLIC_API_URL is missing', () => {
+    const { PUBLIC_API_URL: _, ...rest } = VALID_ENV
+    expect(() => parseEnv(rest)).toThrow(/PUBLIC_API_URL/)
+  })
+
+  it('throws when INTERNAL_API_SECRET is empty', () => {
+    expect(() => parseEnv({ ...VALID_ENV, INTERNAL_API_SECRET: '' })).toThrow(
+      /INTERNAL_API_SECRET/,
     )
   })
 })

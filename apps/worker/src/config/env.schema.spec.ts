@@ -6,6 +6,8 @@ const VALID_ENV = {
   REDIS_URL: 'redis://localhost:6379',
   SCRAPPER_URL: 'http://localhost:3001',
   NODE_ENV: 'development',
+  INTERNAL_API_BASE_URL: 'http://localhost:3001',
+  INTERNAL_API_SECRET: 'internal-lifecycle-secret',
 }
 
 describe('worker env schema', () => {
@@ -202,5 +204,37 @@ describe('worker env schema — observability group', () => {
 
   it('rejects a non-numeric PROMETHEUS_PORT naming the field', () => {
     expect(() => parseEnv({ ...VALID_ENV, PROMETHEUS_PORT: 'abc' })).toThrow(/PROMETHEUS_PORT/)
+  })
+})
+
+describe('worker env schema — lifecycle email', () => {
+  it('exposes the internal API base URL and shared secret', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.INTERNAL_API_BASE_URL).toBe('http://localhost:3001')
+    expect(result.INTERNAL_API_SECRET).toBe('internal-lifecycle-secret')
+  })
+
+  it('exposes scheduling defaults when overrides are absent', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.DIGEST_SEND_WEEKDAY).toBeTypeOf('number')
+    expect(result.DIGEST_SEND_HOUR).toBeTypeOf('number')
+    expect(result.NUDGE_ACTIVITY_LULL_DAYS).toBeTypeOf('number')
+  })
+
+  it('fails fast naming DIGEST_SEND_HOUR when it is not a number', () => {
+    expect(() => parseEnv({ ...VALID_ENV, DIGEST_SEND_HOUR: 'not-a-number' })).toThrow(
+      /DIGEST_SEND_HOUR/,
+    )
+  })
+
+  it('throws when INTERNAL_API_BASE_URL is missing', () => {
+    const { INTERNAL_API_BASE_URL: _, ...rest } = VALID_ENV
+    expect(() => parseEnv(rest)).toThrow(/INTERNAL_API_BASE_URL/)
+  })
+
+  it('throws when INTERNAL_API_SECRET is empty', () => {
+    expect(() => parseEnv({ ...VALID_ENV, INTERNAL_API_SECRET: '' })).toThrow(
+      /INTERNAL_API_SECRET/,
+    )
   })
 })
