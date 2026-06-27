@@ -6,7 +6,11 @@ import { createDbHarness, type DbHarness, DbModule } from '@readion/db'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { WorkerConfigModule } from '../config/config.module'
 import { DigestSchedulerCron } from './digest-scheduler.cron'
-import { INTERNAL_API_SECRET_HEADER } from './lifecycle-api.client'
+import {
+  INTERNAL_API_SECRET_HEADER,
+  LIFECYCLE_API_CLIENT,
+  LifecycleApiClient,
+} from './lifecycle-api.client'
 import { LifecycleEmailModule } from './lifecycle-email.module'
 
 interface CapturedRequest {
@@ -22,8 +26,9 @@ const DUE_USER_ID = '00000000-0000-0000-0000-0000000000a1'
 const OPTED_OUT_USER_ID = '00000000-0000-0000-0000-0000000000a2'
 const ALREADY_SENT_USER_ID = '00000000-0000-0000-0000-0000000000a3'
 
-// Mon 2026-06-29 09:00 Europe/Helsinki (UTC+3) == 06:00Z. DIGEST_SEND_HOUR=9, weekday=1.
-const FIXED_NOW = new Date('2026-06-29T06:00:00Z')
+// Default send-time is Monday (DIGEST_SEND_WEEKDAY=1) 13:00 (DIGEST_SEND_HOUR=13).
+// Mon 2026-06-29 13:00 Europe/Helsinki (UTC+3) == 10:00Z.
+const FIXED_NOW = new Date('2026-06-29T10:00:00Z')
 
 describe('DigestSchedulerCron (integration)', () => {
   let harness: DbHarness
@@ -59,14 +64,13 @@ describe('DigestSchedulerCron (integration)', () => {
     process.env.REDIS_URL = 'redis://localhost:6379'
     process.env.SCRAPPER_URL = 'http://localhost:3001'
     process.env.NODE_ENV = 'test'
-    process.env.INTERNAL_API_BASE_URL = `http://127.0.0.1:${stubPort}`
-    process.env.INTERNAL_API_SECRET = SECRET
-    process.env.DIGEST_SEND_WEEKDAY = '1'
-    process.env.DIGEST_SEND_HOUR = '9'
 
     moduleRef = await Test.createTestingModule({
       imports: [WorkerConfigModule, DbModule, LifecycleEmailModule],
-    }).compile()
+    })
+      .overrideProvider(LIFECYCLE_API_CLIENT)
+      .useValue(new LifecycleApiClient(`http://127.0.0.1:${stubPort}`, SECRET))
+      .compile()
     await moduleRef.init()
 
     cron = moduleRef.get(DigestSchedulerCron)
@@ -90,7 +94,7 @@ describe('DigestSchedulerCron (integration)', () => {
       'sent@example.com',
       'Europe/Helsinki',
       false,
-      new Date('2026-06-29T05:00:00Z'),
+      new Date('2026-06-29T09:00:00Z'),
     )
   })
 
@@ -106,8 +110,8 @@ describe('DigestSchedulerCron (integration)', () => {
   })
 
   it('does not call the endpoint when no users are due', async () => {
-    // 04:00Z == Mon 07:00 Helsinki — wrong local hour.
-    await cron.scheduleWeeklyDigests(new Date('2026-06-29T04:00:00Z'))
+    // 09:00Z == Mon 12:00 Helsinki — wrong local hour.
+    await cron.scheduleWeeklyDigests(new Date('2026-06-29T09:00:00Z'))
 
     expect(captured).toHaveLength(0)
   })

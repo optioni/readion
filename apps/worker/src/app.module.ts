@@ -4,6 +4,7 @@ import { DbModule } from '@readion/db'
 import { AgentWorkerModule } from './agent/agent.module'
 import { WorkerConfigModule } from './config/config.module'
 import { ContentPipelineModule } from './content-pipeline/content-pipeline.module'
+import { LifecycleEmailModule } from './lifecycle-email/lifecycle-email.module'
 import { WorkerObservabilityModule } from './observability/observability.module'
 import { QueueModule } from './queue/queue.module'
 import { RedisModule } from './redis/redis.module'
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module'
     SemanticSearchModule,
     SessionsWorkerModule,
     AgentWorkerModule,
+    LifecycleEmailModule,
   ],
 })
 export class AppModule {}
