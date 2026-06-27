@@ -1,18 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
+import { lifecycleEmailApiEnvFragment, lifecycleEmailWorkerEnvFragment } from '../env/lifecycle-email'
 import {
   DIGEST_SEND_HOUR_DEFAULT,
   DIGEST_SEND_WEEKDAY_DEFAULT,
   EXAM_READY_THRESHOLD_DEFAULT,
   examOutcomeRequestSchema,
   examOutcomeResponses,
-  lifecycleEmailApiEnvFragment,
-  lifecycleEmailWorkerEnvFragment,
   lifecycleUserIdsRequestSchema,
   NUDGE_ACTIVITY_LULL_DAYS_DEFAULT,
   NUDGE_FOLLOWUP_DELAY_DAYS_DEFAULT,
   NUDGE_MAX_FOLLOWUPS_DEFAULT,
-} from '@readion/shared'
+} from './index'
 
 describe('exam-outcome response option set', () => {
   it('lists exactly the four allowed responses in order', () => {

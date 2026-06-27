@@ -124,6 +124,9 @@ export {
   GROUNDING_MAX_REGEN_ATTEMPTS_DEFAULT,
   GROUNDING_VERBATIM_CAP_DEFAULT,
   groundingEnvFragment,
+  lifecycleEmailApiEnvFragment,
+  lifecycleEmailSharedEnvFragment,
+  lifecycleEmailWorkerEnvFragment,
   observabilityEnvFragment,
   redisUrlFragment,
   workerPrometheusFragment,
@@ -147,6 +150,23 @@ export type {
   VerifierVerdict,
 } from './grounding'
 export { isVerbatimPassage, normalizeText } from './grounding'
+export type {
+  ExamOutcomeRequest,
+  ExamOutcomeResponse,
+  LifecycleDigestRequest,
+  LifecycleNudgeRequest,
+} from './lifecycle-email'
+export {
+  DIGEST_SEND_HOUR_DEFAULT,
+  DIGEST_SEND_WEEKDAY_DEFAULT,
+  EXAM_READY_THRESHOLD_DEFAULT,
+  examOutcomeRequestSchema,
+  examOutcomeResponses,
+  lifecycleUserIdsRequestSchema,
+  NUDGE_ACTIVITY_LULL_DAYS_DEFAULT,
+  NUDGE_FOLLOWUP_DELAY_DAYS_DEFAULT,
+  NUDGE_MAX_FOLLOWUPS_DEFAULT,
+} from './lifecycle-email'
 export type {
   DiagnosticOffer,
   DiagnosticOfferResponse,

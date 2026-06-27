@@ -11,4 +11,9 @@ export {
   zodCoerceNumber,
   zodRequiredUrl,
 } from './helpers'
+export {
+  lifecycleEmailApiEnvFragment,
+  lifecycleEmailSharedEnvFragment,
+  lifecycleEmailWorkerEnvFragment,
+} from './lifecycle-email'
 export { observabilityEnvFragment, workerPrometheusFragment } from './observability'
