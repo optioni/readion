@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { lifecycleEmailApiEnvFragment, lifecycleEmailWorkerEnvFragment } from '../env/lifecycle-email'
+import {
+  lifecycleEmailApiEnvFragment,
+  lifecycleEmailWorkerEnvFragment,
+} from '../env/lifecycle-email'
 import {
   DIGEST_SEND_HOUR_DEFAULT,
   DIGEST_SEND_WEEKDAY_DEFAULT,

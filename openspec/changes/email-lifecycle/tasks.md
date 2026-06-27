@@ -43,17 +43,17 @@
 
 ## 6. Internal trigger endpoints + guard (`apps/api`)
 
-- [ ] 6.1 RED: Integration test `POST /internal/lifecycle/digest` and `/nudge` — valid `INTERNAL_API_SECRET` assembles+sends for eligible candidates; missing/wrong secret is rejected with no send; endpoints absent from the public OpenAPI doc
-- [ ] 6.2 GREEN: Implement the internal controller + shared-secret guard, excluded from `JwtAuthGuard` and the Orval surface
-- [ ] 6.3 REFACTOR: Constant-time secret comparison; tidy guard wiring
+- [x] 6.1 RED: Integration test `POST /internal/lifecycle/digest` and `/nudge` — valid `INTERNAL_API_SECRET` assembles+sends for eligible candidates; missing/wrong secret is rejected with no send; endpoints absent from the public OpenAPI doc
+- [x] 6.2 GREEN: Implement the internal controller + shared-secret guard, excluded from `JwtAuthGuard` and the Orval surface
+- [x] 6.3 REFACTOR: Constant-time secret comparison; tidy guard wiring
 
 ## 7. Post-exam nudge (`apps/api` gate/send + `apps/worker` lull cron)
 
-- [ ] 7.1 RED: Unit test the worker lull-candidate selection with an injected clock — selects enrollments with no activity within `NUDGE_ACTIVITY_LULL_DAYS` and unexhausted allowance; excludes recently active ones (SPEC → Email; PRD §3)
-- [ ] 7.2 GREEN: Implement the worker nudge cron selecting lull candidates from DB activity timestamps and POSTing to `POST /internal/lifecycle/nudge`
-- [ ] 7.3 RED: Unit/integration test the API nudge gate — sends only when calibrated and readiness ≥ `EXAM_READY_THRESHOLD`; not-ready/uncalibrated → no send; records the send; enforces ≤ `NUDGE_MAX_FOLLOWUPS` (one follow-up after the delay, none after any response including `dismissed`)
-- [ ] 7.4 GREEN: Implement `LifecycleEmailService.maybeSendNudge` + the `exam-nudge` survey template, applying the readiness gate via `ReadinessService`
-- [ ] 7.5 REFACTOR: Extract the allowance/follow-up policy as a pure, clock-injected helper
+- [x] 7.1 RED: Unit test the worker lull-candidate selection with an injected clock — selects enrollments with no activity within `NUDGE_ACTIVITY_LULL_DAYS` and unexhausted allowance; excludes recently active ones (SPEC → Email; PRD §3)
+- [x] 7.2 GREEN: Implement the worker nudge cron selecting lull candidates from DB activity timestamps and POSTing to `POST /internal/lifecycle/nudge`
+- [x] 7.3 RED: Unit/integration test the API nudge gate — sends only when calibrated and readiness ≥ `EXAM_READY_THRESHOLD`; not-ready/uncalibrated → no send; records the send; enforces ≤ `NUDGE_MAX_FOLLOWUPS` (one follow-up after the delay, none after any response including `dismissed`)
+- [x] 7.4 GREEN: Implement `LifecycleEmailService.maybeSendNudge` + the `exam-nudge` survey template, applying the readiness gate via `ReadinessService`
+- [x] 7.5 REFACTOR: Extract the allowance/follow-up policy as a pure, clock-injected helper
 
 ## 8. Exam-outcome survey response (`apps/api`)
 

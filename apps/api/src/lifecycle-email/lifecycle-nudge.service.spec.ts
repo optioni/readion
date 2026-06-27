@@ -19,7 +19,11 @@ const CONFIG: Record<string, number> = {
   NUDGE_FOLLOWUP_DELAY_DAYS: 3,
 }
 
-const calibrated = (score: number): ReadinessResult => ({ calibrated: true, score, trajectory: null })
+const calibrated = (score: number): ReadinessResult => ({
+  calibrated: true,
+  score,
+  trajectory: null,
+})
 const uncalibrated = (): ReadinessResult => ({ calibrated: false, score: null, trajectory: null })
 
 type FakeEnrollment = {
@@ -43,10 +47,7 @@ function buildEnrollment(overrides: Partial<FakeEnrollment> = {}): FakeEnrollmen
   }
 }
 
-function buildService(opts: {
-  enrollment: FakeEnrollment | null
-  readiness: ReadinessResult
-}): {
+function buildService(opts: { enrollment: FakeEnrollment | null; readiness: ReadinessResult }): {
   service: LifecycleEmailService
   send: ReturnType<typeof vi.fn>
   compute: ReturnType<typeof vi.fn>
