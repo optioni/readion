@@ -10,9 +10,9 @@ import type { DigestEnrollmentSection, DigestTemplatePayload } from '../mail/tem
 import { ReadinessService } from '../readiness/readiness.service'
 import { ReviewService } from '../review/review.service'
 import { WeakAreasService } from '../weak-areas/weak-areas.service'
+import { buildEnrollmentSection } from './digest-assembly'
 
 const PRODUCT_NAME = 'Readion'
-const NO_WEAK_AREA_FALLBACK = 'your recent topics'
 
 export type DigestEnrollmentInput = {
   id: string
@@ -98,19 +98,24 @@ export class LifecycleEmailService {
   ): Promise<DigestEnrollmentSection> {
     const readiness = await this.readiness.compute(enrollment.id)
     if (!readiness.calibrated) {
-      return { certName: enrollment.certName, calibrated: false }
+      return buildEnrollmentSection({
+        certName: enrollment.certName,
+        readiness,
+        snapshot: enrollment.snapshot,
+        weakAreas: [],
+        dueReviewCount: 0,
+      })
     }
 
     const weakAreas = await this.weakAreas.listForEnrollment(userId, enrollment.id)
     const { meta } = await this.review.getQueue(userId, enrollment.id)
 
-    return {
+    return buildEnrollmentSection({
       certName: enrollment.certName,
-      calibrated: true,
-      readiness: readiness.score,
-      delta: enrollment.snapshot === null ? null : readiness.score - enrollment.snapshot,
-      weakestDomain: weakAreas[0]?.domain ?? NO_WEAK_AREA_FALLBACK,
+      readiness,
+      snapshot: enrollment.snapshot,
+      weakAreas,
       dueReviewCount: meta.dueCount,
-    }
+    })
   }
 }
