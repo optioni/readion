@@ -13,10 +13,17 @@ export type AuthLinkTemplatePayload = {
   actionUrl: string
 }
 
+export type WelcomeTemplatePayload = {
+  name: string
+  productName: string
+  actionUrl: string
+}
+
 export type MailTemplatePayloads = {
   foundational: FoundationalTemplatePayload
   emailVerification: AuthLinkTemplatePayload
   passwordReset: AuthLinkTemplatePayload
+  welcome: WelcomeTemplatePayload
 }
 
 export const foundationalTemplate = {
@@ -59,8 +66,23 @@ export const passwordResetTemplate = {
     ),
 } satisfies MailTemplate<AuthLinkTemplatePayload>
 
+export const welcomeTemplate = {
+  subject: (payload) => `Welcome to ${payload.productName}`,
+  text: (payload) =>
+    `Hi ${payload.name},\n\nWelcome to ${payload.productName}! Start your first study session here: ${payload.actionUrl}`,
+  html: (payload) =>
+    wrapInBaseLayout(
+      `<main>
+        <p>Hi ${escapeHtml(payload.name)},</p>
+        <p>Welcome to ${escapeHtml(payload.productName)}! We're glad you're here.</p>
+        <p><a href="${escapeHtml(payload.actionUrl)}">Start your first study session</a></p>
+      </main>`,
+    ),
+} satisfies MailTemplate<WelcomeTemplatePayload>
+
 export const mailTemplateRegistry = {
   foundational: foundationalTemplate,
   emailVerification: emailVerificationTemplate,
   passwordReset: passwordResetTemplate,
+  welcome: welcomeTemplate,
 } satisfies MailTemplateRegistry<MailTemplatePayloads>
