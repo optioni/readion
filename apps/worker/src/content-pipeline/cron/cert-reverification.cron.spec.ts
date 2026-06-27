@@ -1,9 +1,10 @@
 import { EntityManager } from '@mikro-orm/core'
+import { ConfigService } from '@nestjs/config'
 import { Test, type TestingModule } from '@nestjs/testing'
 import { Certification, createDbHarness, type DbHarness, DbModule } from '@readion/db'
 import { makeGaugeProvider } from '@willsoto/nestjs-prometheus'
 import type { Gauge } from 'prom-client'
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WorkerConfigModule } from '../../config/config.module'
 import {
   CERT_REVERIFICATION_CRON,
@@ -120,6 +121,25 @@ describe('CertReverificationCron (integration)', () => {
     expect(after).toEqual(before)
     const afterIds = after.map((row: { id: string }) => row.id).sort()
     expect(afterIds).toEqual([...ids].sort())
+  })
+
+  it('falls back to the default interval when none is configured', async () => {
+    const now = new Date()
+    // Default interval is 180 days: the 200-day cert is due, the 100-day cert is not.
+    await seedCert(new Date(now.getTime() - 200 * DAY_MS), 'DUE')
+    await seedCert(new Date(now.getTime() - 100 * DAY_MS), 'FRESH')
+
+    const config = moduleRef.get(ConfigService)
+    const spy = vi.spyOn(config, 'get').mockReturnValue(undefined)
+    try {
+      await cron.surfaceDueCertifications(now)
+
+      const gaugeValue = await gauge.get()
+      const metric = gaugeValue.values.find((v) => v.value !== undefined)
+      expect(metric?.value).toBe(1)
+    } finally {
+      spy.mockRestore()
+    }
   })
 
   it('is registered as a cron distinct from the stale-source cron', () => {

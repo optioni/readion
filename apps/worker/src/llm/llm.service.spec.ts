@@ -171,5 +171,20 @@ describe('LlmService', () => {
       const result = await service.generateContent('prompt')
       expect(result).toBe('response')
     })
+
+    it('extractCertFields uses anthropic model', async () => {
+      const { generateText } = await import('ai')
+      vi.mocked(generateText).mockResolvedValueOnce({ output: null } as any)
+
+      const result = await service.extractCertFields('source', { name: 'AWS SAA' })
+      expect(result.domains).toBeNull()
+    })
+
+    it('verifyFieldEntailment uses anthropic model', async () => {
+      const { generateText } = await import('ai')
+      vi.mocked(generateText).mockResolvedValueOnce({ output: { entailed: true } } as any)
+
+      expect(await service.verifyFieldEntailment(65, '65 questions')).toBe(true)
+    })
   })
 })

@@ -110,10 +110,12 @@ describe('CertDiscoveryService', () => {
   let modelRegistry: ModelRegistryService
   let searchMock: ReturnType<typeof vi.fn>
   let capturedTools: Array<{ name: string }> | undefined
+  let modelReply: string
 
   beforeEach(async () => {
     capturedTools = undefined
     searchMock = vi.fn()
+    modelReply = MODEL_OUTPUT_JSON
 
     const langModel = new MockLanguageModelV3({
       doStream: async ({ prompt, tools }: StreamArgs) => {
@@ -126,7 +128,7 @@ describe('CertDiscoveryService', () => {
             ),
           }
         }
-        return { stream: streamFromParts(textReplyParts([MODEL_OUTPUT_JSON])) }
+        return { stream: streamFromParts(textReplyParts([modelReply])) }
       },
     })
 
@@ -215,5 +217,54 @@ describe('CertDiscoveryService', () => {
     })
 
     expect(result.candidates).toEqual([])
+  })
+
+  it('emits a candidate without a snippet when the search result has none', async () => {
+    searchMock.mockResolvedValue([{ url: VENDOR_URL, title: VENDOR_RESULT.title, official: true }])
+    modelReply = JSON.stringify({ candidates: [{ url: VENDOR_URL }] })
+
+    const result = await service.discoverSources({ name: 'AWS Cloud Practitioner' })
+
+    expect(result.candidates).toEqual([{ url: VENDOR_URL, title: VENDOR_RESULT.title }])
+  })
+
+  it('ignores official results whose URL cannot be parsed when deriving vendor domains', async () => {
+    searchMock.mockResolvedValue([
+      { url: 'not a valid url', title: 'Broken', official: true },
+      VENDOR_RESULT,
+    ])
+    modelReply = JSON.stringify({ candidates: [{ url: VENDOR_URL }] })
+
+    const result = await service.discoverSources({ name: 'AWS Cloud Practitioner' })
+
+    expect(result.candidates.map((candidate) => candidate.url)).toEqual([VENDOR_URL])
+  })
+
+  it('returns no candidates when the model emits no JSON object', async () => {
+    searchMock.mockResolvedValue([VENDOR_RESULT])
+    modelReply = 'I was unable to find any authoritative sources.'
+
+    const result = await service.discoverSources({ name: 'AWS Cloud Practitioner' })
+
+    expect(result.candidates).toEqual([])
+  })
+
+  it('returns no candidates when the model output fails schema validation', async () => {
+    searchMock.mockResolvedValue([VENDOR_RESULT])
+    modelReply = JSON.stringify({ candidates: 'not-an-array' })
+
+    const result = await service.discoverSources({ name: 'AWS Cloud Practitioner' })
+
+    expect(result.candidates).toEqual([])
+  })
+
+  it('handles model output that omits the optional candidate and suggestion arrays', async () => {
+    searchMock.mockResolvedValue([VENDOR_RESULT])
+    modelReply = JSON.stringify({})
+
+    const result = await service.discoverSources({ name: 'AWS Cloud Practitioner' })
+
+    expect(result.candidates).toEqual([])
+    expect(result.suggestedContentSources).toBeUndefined()
   })
 })

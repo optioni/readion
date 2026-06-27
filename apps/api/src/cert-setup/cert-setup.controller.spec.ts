@@ -71,6 +71,20 @@ describe('CertSetupController routes', () => {
     expect(res.headers['content-type']).toContain('application/problem+json')
   })
 
+  it('POST /discover-sources maps a root-level type error to the "body" field', async () => {
+    const adminAuth = await asAdmin()
+
+    const res = await req()
+      .post(DISCOVER)
+      .set('Authorization', adminAuth)
+      .set('Content-Type', 'application/json')
+      .send(JSON.stringify(['not-an-object']))
+
+    expect(res.status).toBe(400)
+    const fields = (res.body.errors as Array<{ field: string }>).map((error) => error.field)
+    expect(fields).toContain('body')
+  })
+
   it('POST /extract returns 202 with a jobId and enqueues exactly one job', async () => {
     const adminAuth = await asAdmin()
 
