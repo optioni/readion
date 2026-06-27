@@ -39,12 +39,19 @@ export type DigestTemplatePayload = {
   enrollments: DigestEnrollmentSection[]
 }
 
+export type ExamNudgeTemplatePayload = {
+  productName: string
+  certName: string
+  surveyUrl?: string
+}
+
 export type MailTemplatePayloads = {
   foundational: FoundationalTemplatePayload
   emailVerification: AuthLinkTemplatePayload
   passwordReset: AuthLinkTemplatePayload
   welcome: WelcomeTemplatePayload
   digest: DigestTemplatePayload
+  'exam-nudge': ExamNudgeTemplatePayload
 }
 
 function formatReadiness(readiness: number): string {
@@ -155,10 +162,44 @@ export const digestTemplate = {
     ),
 } satisfies MailTemplate<DigestTemplatePayload>
 
+function examNudgeSurveyText(surveyUrl: string | undefined): string {
+  return surveyUrl === undefined ? '' : `\n\nReply in one tap: ${surveyUrl}`
+}
+
+function examNudgeSurveyHtml(surveyUrl: string | undefined): string {
+  return surveyUrl === undefined
+    ? ''
+    : `<p><a href="${escapeHtml(surveyUrl)}">Reply in one tap</a></p>`
+}
+
+export const examNudgeTemplate = {
+  subject: (payload) => `Did you take your ${payload.certName} exam yet?`,
+  text: (payload) =>
+    `You've been crushing your ${payload.productName} prep for ${payload.certName}.\n\nDid you take the exam yet?\n\n- Passed\n- Didn't pass\n- Not yet${examNudgeSurveyText(
+      payload.surveyUrl,
+    )}`,
+  html: (payload) =>
+    wrapInBaseLayout(
+      `<main>
+        <p>You've been crushing your ${escapeHtml(payload.productName)} prep for ${escapeHtml(
+          payload.certName,
+        )}.</p>
+        <p><strong>Did you take the exam yet?</strong></p>
+        <ul>
+          <li>Passed</li>
+          <li>Didn't pass</li>
+          <li>Not yet</li>
+        </ul>
+        ${examNudgeSurveyHtml(payload.surveyUrl)}
+      </main>`,
+    ),
+} satisfies MailTemplate<ExamNudgeTemplatePayload>
+
 export const mailTemplateRegistry = {
   foundational: foundationalTemplate,
   emailVerification: emailVerificationTemplate,
   passwordReset: passwordResetTemplate,
   welcome: welcomeTemplate,
   digest: digestTemplate,
+  'exam-nudge': examNudgeTemplate,
 } satisfies MailTemplateRegistry<MailTemplatePayloads>

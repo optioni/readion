@@ -3,12 +3,14 @@ export { escapeHtml } from './escape'
 export type {
   DigestEnrollmentSection,
   DigestTemplatePayload,
+  ExamNudgeTemplatePayload,
   FoundationalTemplatePayload,
   MailTemplatePayloads,
   WelcomeTemplatePayload,
 } from './registry'
 export {
   digestTemplate,
+  examNudgeTemplate,
   foundationalTemplate,
   mailTemplateRegistry,
   welcomeTemplate,
