@@ -22,24 +22,24 @@
 
 ## 3. Digest assembly + templates (`apps/api`)
 
-- [ ] 3.1 RED: Unit test digest assembly logic with mocked `ReadinessService`/`WeakAreasService`/`ReviewService` — produces readiness %, weakest domain, due count; computes weekly delta from the snapshot; first-digest has no delta; uncalibrated enrollment yields the keep-going variant and no delta (SPEC → Email)
-- [ ] 3.2 GREEN: Implement `LifecycleEmailService.assembleDigest` + the `digest` template (encouraging tone, unsubscribe link from `PUBLIC_API_URL` + per-user token)
-- [ ] 3.3 RED: Integration test (Testcontainers) — assembling+sending a digest for a seeded enrollment records one email with all four metrics and an unsubscribe link, then persists `last_digest_sent_at` and the per-enrollment `last_digest_readiness` snapshot
-- [ ] 3.4 GREEN: Implement digest send + snapshot/last-sent persistence using the real services and `MailService`
-- [ ] 3.5 REFACTOR: Extract delta + keep-going formatting as pure helpers
+- [x] 3.1 RED: Unit test digest assembly logic with mocked `ReadinessService`/`WeakAreasService`/`ReviewService` — produces readiness %, weakest domain, due count; computes weekly delta from the snapshot; first-digest has no delta; uncalibrated enrollment yields the keep-going variant and no delta (SPEC → Email)
+- [x] 3.2 GREEN: Implement `LifecycleEmailService.assembleDigest` + the `digest` template (encouraging tone, unsubscribe link from `PUBLIC_API_URL` + per-user token)
+- [x] 3.3 RED: Integration test (Testcontainers) — assembling+sending a digest for a seeded enrollment records one email with all four metrics and an unsubscribe link, then persists `last_digest_sent_at` and the per-enrollment `last_digest_readiness` snapshot
+- [x] 3.4 GREEN: Implement digest send + snapshot/last-sent persistence using the real services and `MailService`
+- [x] 3.5 REFACTOR: Extract delta + keep-going formatting as pure helpers
 
 ## 4. One-click unsubscribe (`apps/api`)
 
-- [ ] 4.1 RED: Integration test `GET /api/v1/email/unsubscribe?token=…` — valid token sets `digest_opt_out` and confirms; idempotent on repeat; unknown token returns a generic confirmation with no state change (SPEC → Email: one-click unsubscribe)
-- [ ] 4.2 GREEN: Implement the public unsubscribe controller + stable per-user `unsubscribe_token` (generated lazily if absent)
-- [ ] 4.3 REFACTOR: Ensure the endpoint is excluded from auth and reveals nothing about token validity
+- [x] 4.1 RED: Integration test `GET /api/v1/email/unsubscribe?token=…` — valid token sets `digest_opt_out` and confirms; idempotent on repeat; unknown token returns a generic confirmation with no state change (SPEC → Email: one-click unsubscribe)
+- [x] 4.2 GREEN: Implement the public unsubscribe controller + stable per-user `unsubscribe_token` (generated lazily if absent)
+- [x] 4.3 REFACTOR: Ensure the endpoint is excluded from auth and reveals nothing about token validity
 
 ## 5. Timezone-aware digest cron (`apps/worker`)
 
-- [ ] 5.1 RED: Unit test the local-window predicate with an injected clock, table-driven across `Europe/Helsinki`, `America/New_York`, and a DST transition — selects on local weekday+hour, excludes opted-out, and suppresses a second send within the same local week (SPEC → Email; Cross-cutting deliverables → Weekly progress digest)
-- [ ] 5.2 GREEN: Implement the digest scheduler cron doing DB-readable timezone/opt-out/last-sent selection
-- [ ] 5.3 RED: Integration test invoking the cron method directly — due users are POSTed to the API internal digest endpoint and a digest is captured; opted-out and already-sent users are skipped
-- [ ] 5.4 GREEN: Implement the worker HTTP client call to `POST /internal/lifecycle/digest` (reuse the scrapper-client pattern) with the shared secret
+- [x] 5.1 RED: Unit test the local-window predicate with an injected clock, table-driven across `Europe/Helsinki`, `America/New_York`, and a DST transition — selects on local weekday+hour, excludes opted-out, and suppresses a second send within the same local week (SPEC → Email; Cross-cutting deliverables → Weekly progress digest)
+- [x] 5.2 GREEN: Implement the digest scheduler cron doing DB-readable timezone/opt-out/last-sent selection
+- [x] 5.3 RED: Integration test invoking the cron method directly — due users are POSTed to the API internal digest endpoint and a digest is captured; opted-out and already-sent users are skipped
+- [x] 5.4 GREEN: Implement the worker HTTP client call to `POST /internal/lifecycle/digest` (reuse the scrapper-client pattern) with the shared secret
 
 ## 6. Internal trigger endpoints + guard (`apps/api`)
 
