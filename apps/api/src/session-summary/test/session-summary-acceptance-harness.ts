@@ -1,9 +1,9 @@
 import 'reflect-metadata'
-import { EntityManager, MikroORM } from '@mikro-orm/core'
+import { EntityManager } from '@mikro-orm/core'
 import type { INestApplication } from '@nestjs/common'
 import { Test, type TestingModule } from '@nestjs/testing'
 import { Certification, startPostgresContainer, startRedisContainer } from '@readion/db'
-import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
+import { acquireIsolatedDatabase } from '@readion/db/src/test-helpers/isolated-db'
 import type { MockExamGenerationJobPayload } from '@readion/shared'
 import { MOCK_EXAM_GENERATION_QUEUE } from '@readion/shared'
 import { MockLanguageModelV3 } from 'ai/test'
@@ -101,14 +101,7 @@ export async function createSessionSummaryAcceptanceHarness(): Promise<SessionSu
   process.env.SUMMARY_DRILL_MAX_QUESTIONS = '7'
   process.env.SUMMARY_UNSURE_CONFIDENCE_THRESHOLD = '2'
 
-  const orm = await MikroORM.init({
-    ...mikroOrmConfig,
-    host: postgresContainer.getHost(),
-    port: postgresContainer.getMappedPort(5432),
-    dbName: 'readion_test',
-  })
-  await orm.migrator.up()
-  await orm.close()
+  await acquireIsolatedDatabase()
 
   const langModel = createCombinedMockLangModel()
   const embeddingModel = createMockEmbeddingModel()

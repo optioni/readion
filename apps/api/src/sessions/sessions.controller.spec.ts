@@ -3,6 +3,7 @@ import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { Certification, startPostgresContainer, startRedisContainer } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
+import { acquireIsolatedDatabase } from '@readion/db/src/test-helpers/isolated-db'
 import type Redis from 'ioredis'
 import supertest from 'supertest'
 import type { StartedTestContainer } from 'testcontainers'
@@ -47,11 +48,12 @@ describe('SessionsController (integration)', () => {
     process.env.BCRYPT_COST = '4'
     process.env.WEB_BASE_URL = 'http://localhost:3000'
 
+    await acquireIsolatedDatabase()
     orm = await MikroORM.init({
       ...mikroOrmConfig,
       host: dbHost,
       port: dbPort,
-      dbName: 'readion_test',
+      dbName: process.env.DB_NAME ?? 'readion_test',
     })
     await orm.migrator.up()
     await orm.close()

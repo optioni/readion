@@ -13,6 +13,7 @@ import {
   UserCertification,
 } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
+import { acquireIsolatedDatabase } from '@readion/db/src/test-helpers/isolated-db'
 import { MOCK_EXAM_GENERATION_QUEUE } from '@readion/shared'
 import type { Queue } from 'bullmq'
 import type Redis from 'ioredis'
@@ -41,11 +42,12 @@ describe('DiagnosticController (integration)', () => {
 
     configureTestEnv(postgresContainer, redisContainer)
 
+    await acquireIsolatedDatabase()
     orm = await MikroORM.init({
       ...mikroOrmConfig,
       host: postgresContainer.getHost(),
       port: postgresContainer.getMappedPort(5432),
-      dbName: 'readion_test',
+      dbName: process.env.DB_NAME ?? 'readion_test',
     })
     await orm.migrator.up()
     await orm.close()

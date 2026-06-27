@@ -1,5 +1,5 @@
 import 'reflect-metadata'
-import { EntityManager, MikroORM } from '@mikro-orm/core'
+import { EntityManager } from '@mikro-orm/core'
 import type { INestApplication } from '@nestjs/common'
 import { Test, type TestingModule } from '@nestjs/testing'
 import {
@@ -10,7 +10,7 @@ import {
   User,
   UserCertification,
 } from '@readion/db'
-import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
+import { acquireIsolatedDatabase } from '@readion/db/src/test-helpers/isolated-db'
 import { MockLanguageModelV3 } from 'ai/test'
 import type Redis from 'ioredis'
 import type { StartedTestContainer } from 'testcontainers'
@@ -60,14 +60,7 @@ describe('MockExamGenerationService (integration)', () => {
 
     configureTestEnv(postgresContainer, redisContainer)
 
-    const orm = await MikroORM.init({
-      ...mikroOrmConfig,
-      host: postgresContainer.getHost(),
-      port: postgresContainer.getMappedPort(5432),
-      dbName: 'readion_test',
-    })
-    await orm.migrator.up()
-    await orm.close()
+    await acquireIsolatedDatabase()
 
     const mockLangModel = new MockLanguageModelV3({
       doGenerate: async ({ prompt }: { prompt: Array<{ role: string; content: unknown }> }) => {

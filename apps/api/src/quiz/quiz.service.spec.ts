@@ -10,6 +10,7 @@ import {
   UserCertification,
 } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
+import { acquireIsolatedDatabase } from '@readion/db/src/test-helpers/isolated-db'
 import type { Provenance } from '@readion/shared'
 import Redis from 'ioredis'
 import type { Counter } from 'prom-client'
@@ -101,11 +102,12 @@ describe('QuizService (integration)', () => {
     process.env.DB_PASSWORD = 'readion'
     process.env.REDIS_URL = `redis://${redisHost}:${redisPort}`
 
+    await acquireIsolatedDatabase()
     orm = await MikroORM.init({
       ...mikroOrmConfig,
       host: dbHost,
       port: dbPort,
-      dbName: 'readion_test',
+      dbName: process.env.DB_NAME ?? 'readion_test',
     })
     await orm.migrator.up()
     em = orm.em

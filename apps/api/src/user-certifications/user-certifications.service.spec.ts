@@ -10,6 +10,7 @@ import {
 } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import { startPostgresContainer } from '@readion/db/src/test-helpers/containers'
+import { acquireIsolatedDatabase } from '@readion/db/src/test-helpers/isolated-db'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ReadinessService } from '../readiness/readiness.service'
 import { UserCertificationsService } from './user-certifications.service'
@@ -25,12 +26,13 @@ describe('UserCertificationsService', () => {
 
   beforeAll(async () => {
     container = await startPostgresContainer()
+    await acquireIsolatedDatabase()
     orm = await MikroORM.init({
       ...mikroOrmConfig,
       entities: [UserSchema, CertificationSchema, UserCertificationSchema],
       host: container.getHost(),
       port: container.getMappedPort(5432),
-      dbName: 'readion_test',
+      dbName: process.env.DB_NAME ?? 'readion_test',
     })
     await orm.migrator.up()
     service = new UserCertificationsService(orm.em, readinessStub)

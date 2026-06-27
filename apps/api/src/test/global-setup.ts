@@ -1,4 +1,5 @@
 import { POSTGRES_IMAGE, REDIS_IMAGE } from '@readion/db'
+import { provisionTemplateDatabase } from '@readion/db/src/test-helpers/isolated-db'
 import { GenericContainer, Wait } from 'testcontainers'
 import type { TestProject } from 'vitest/node'
 
@@ -31,6 +32,13 @@ export async function setup(project: TestProject): Promise<() => Promise<void>> 
       .withExposedPorts(6379)
       .start(),
   ])
+
+  // Migrate the template database once. Each spec copies it into its own throwaway database
+  // (see acquireIsolatedDatabase) so specs can never collide on the shared Postgres instance.
+  await provisionTemplateDatabase({
+    host: postgres.getHost(),
+    port: postgres.getMappedPort(5432),
+  })
 
   project.provide(
     'readionPostgresUrl',

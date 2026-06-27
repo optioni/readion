@@ -4,7 +4,7 @@ import type {
   LanguageModelV3FinishReason,
   LanguageModelV3StreamPart,
 } from '@ai-sdk/provider'
-import { EntityManager, MikroORM } from '@mikro-orm/core'
+import { EntityManager } from '@mikro-orm/core'
 import { Test, type TestingModule } from '@nestjs/testing'
 import {
   Certification,
@@ -16,7 +16,7 @@ import {
   UserCertification,
   WeakArea,
 } from '@readion/db'
-import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
+import { acquireIsolatedDatabase } from '@readion/db/src/test-helpers/isolated-db'
 import { MockEmbeddingModelV3, MockLanguageModelV3 } from 'ai/test'
 import type { Queue } from 'bullmq'
 import { Worker } from 'bullmq'
@@ -137,14 +137,7 @@ describe('AgentService (integration)', () => {
     ])
     configureTestEnv(postgresContainer, redisContainer)
 
-    const orm = await MikroORM.init({
-      ...mikroOrmConfig,
-      host: postgresContainer.getHost(),
-      port: postgresContainer.getMappedPort(5432),
-      dbName: 'readion_test',
-    })
-    await orm.migrator.up()
-    await orm.close()
+    await acquireIsolatedDatabase()
 
     const mockEmbeddingModel = new MockEmbeddingModelV3({
       doEmbed: async ({ values }): Promise<EmbeddingModelV3Result> => ({

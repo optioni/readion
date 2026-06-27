@@ -2,6 +2,7 @@ import { EntityManager, MikroORM } from '@mikro-orm/core'
 import { Certification, SessionItem, User, UserCertification } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import { startPostgresContainer } from '@readion/db/src/test-helpers/containers'
+import { acquireIsolatedDatabase } from '@readion/db/src/test-helpers/isolated-db'
 import type { StartedTestContainer } from 'testcontainers'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { QuizService } from '../quiz/quiz.service'
@@ -99,11 +100,12 @@ describe('SessionsService (integration)', () => {
 
   beforeAll(async () => {
     container = await startPostgresContainer()
+    await acquireIsolatedDatabase()
     orm = await MikroORM.init({
       ...mikroOrmConfig,
       host: container.getHost(),
       port: container.getMappedPort(5432),
-      dbName: 'readion_test',
+      dbName: process.env.DB_NAME ?? 'readion_test',
     })
     await orm.migrator.up()
     em = orm.em

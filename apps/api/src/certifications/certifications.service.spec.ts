@@ -3,6 +3,7 @@ import { NotFoundException } from '@nestjs/common'
 import { Certification, CertificationSchema } from '@readion/db'
 import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
 import { startPostgresContainer } from '@readion/db/src/test-helpers/containers'
+import { acquireIsolatedDatabase } from '@readion/db/src/test-helpers/isolated-db'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { CertificationsService } from './certifications.service'
 
@@ -13,12 +14,13 @@ describe('CertificationsService', () => {
 
   beforeAll(async () => {
     container = await startPostgresContainer()
+    await acquireIsolatedDatabase()
     orm = await MikroORM.init({
       ...mikroOrmConfig,
       entities: [CertificationSchema],
       host: container.getHost(),
       port: container.getMappedPort(5432),
-      dbName: 'readion_test',
+      dbName: process.env.DB_NAME ?? 'readion_test',
     })
     await orm.migrator.up()
     service = new CertificationsService(orm.em)

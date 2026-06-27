@@ -1,9 +1,8 @@
-import { MikroORM } from '@mikro-orm/core'
 import type { INestApplication } from '@nestjs/common'
 import { Body, Controller, Get, HttpCode, NotFoundException, Post } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { startPostgresContainer, startRedisContainer } from '@readion/db'
-import mikroOrmConfig from '@readion/db/src/mikro-orm.config'
+import { acquireIsolatedDatabase } from '@readion/db/src/test-helpers/isolated-db'
 import { IsEmail, IsNotEmpty } from 'class-validator'
 import supertest from 'supertest'
 import type { StartedTestContainer } from 'testcontainers'
@@ -100,14 +99,7 @@ describe('API Acceptance', () => {
     process.env.CORS_ORIGIN = 'http://localhost:3000'
     process.env.SENTRY_DSN = 'https://fake@sentry.io/0'
 
-    const orm = await MikroORM.init({
-      ...mikroOrmConfig,
-      host: dbHost,
-      port: dbPort,
-      dbName: 'readion_test',
-    })
-    await orm.migrator.up()
-    await orm.close()
+    await acquireIsolatedDatabase()
 
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
