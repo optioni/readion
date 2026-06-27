@@ -12,7 +12,19 @@ const { Test } = require('@nestjs/testing')
 registerSwcTypeScriptHook()
 registerWorkspaceSourceAliases()
 
-const { startPostgresContainer, startRedisContainer } = require('@readion/db')
+const {
+  Certification,
+  ContentChunk,
+  ContentSource,
+  MockExam,
+  QuizResponse,
+  ReviewItem,
+  User,
+  UserCertification,
+  startPostgresContainer,
+  startRedisContainer,
+} = require('@readion/db')
+const { v4: uuidv4 } = require('uuid')
 const mikroOrmConfig = require('@readion/db/src/mikro-orm.config').default
 
 async function createReadionE2eHarness() {
@@ -91,6 +103,7 @@ async function createReadionE2eHarness() {
         password,
       }
     },
+    seedCalibratedEnrollment: async (email) => seedCalibratedEnrollment(em, email),
     resetState: async () => {
       mailMessages.length = 0
       await redis.flushdb()
@@ -104,6 +117,140 @@ async function createReadionE2eHarness() {
       await scrapperStub.close()
     },
     workerModule,
+  }
+}
+
+// Seeds a calibrated enrollment with real read-surface data so the digest/nudge
+// flows have genuine metrics: a submitted diagnostic guarantees calibration,
+// quiz responses across two content chunks make "Security" the relatively
+// weakest domain, and three past-due review items give a due-review count of 3.
+// Data is written via the EntityManager (not the public API) because resetState
+// truncates every domain table, leaving no live certifications to enroll into.
+async function seedCalibratedEnrollment(em, email) {
+  const fork = em.fork()
+  const user = await fork.findOneOrFail(User, { email })
+
+  const certification = fork.create(Certification, {
+    name: 'AWS Certified Security - Specialty',
+    provider: 'AWS',
+    code: `SCS-${Date.now()}`,
+    domains: [
+      { name: 'Security', weight: 60 },
+      { name: 'Networking', weight: 40 },
+    ],
+    questionCount: 65,
+    passingScore: 750,
+    timeLimitMinutes: 170,
+    state: 'live',
+    provenance: 'verified',
+    verifiedAt: new Date(),
+  })
+
+  const enrollment = fork.create(UserCertification, {
+    user,
+    certification,
+    status: 'active',
+  })
+
+  const contentSource = fork.create(ContentSource, {
+    certificationId: certification.id,
+    type: 'web',
+    url: `https://example.com/${certification.code}`,
+    enabled: true,
+    recheckIntervalMinutes: 1440,
+  })
+
+  // FK targets (certifications, content_sources) must exist before chunks/items
+  // reference them, and these references are plain UUID columns the ORM can't
+  // order automatically — so flush in dependency stages.
+  fork.persist([certification, enrollment, contentSource])
+  await fork.flush()
+
+  const makeChunk = (domain, index) =>
+    fork.create(ContentChunk, {
+      contentSourceId: contentSource.id,
+      certificationId: certification.id,
+      text: `${domain} content #${index}.`,
+      contentHash: `${index}`.padStart(64, '0'),
+      domainTags: [{ domain, confidence: 0.95 }],
+      primaryDomain: domain,
+      metadata: {},
+    })
+
+  const securityChunk = makeChunk('Security', 1)
+  const networkingChunk = makeChunk('Networking', 2)
+  // Review items are unique per (enrollment, chunk) and FK to content_chunks, so
+  // each due item needs its own anchor chunk.
+  const reviewChunks = [makeChunk('Security', 3), makeChunk('Security', 4), makeChunk('Security', 5)]
+
+  fork.persist([securityChunk, networkingChunk, ...reviewChunks])
+  await fork.flush()
+
+  const records = []
+  const makeResponse = (chunk, correct) =>
+    records.push(
+      fork.create(QuizResponse, {
+        userCertification: enrollment,
+        answer: correct ? 'A' : 'B',
+        correct,
+        confidence: 4,
+        timeTakenMs: 12000,
+        format: 'multiple_choice',
+        questionSnapshot: {
+          question: `Question about ${chunk.primaryDomain}`,
+          options: ['A', 'B', 'C', 'D'],
+          correctAnswer: 'A',
+          provenance: {
+            sourceChunkIds: [chunk.id],
+            supportingSpans: [],
+            verdict: { pass: true, score: 1, distractorFindings: [] },
+            score: 1,
+          },
+        },
+      }),
+    )
+
+  // Security is the relatively weakest domain (a few wrong); Networking is strong.
+  for (let i = 0; i < 8; i++) makeResponse(securityChunk, i < 6)
+  for (let i = 0; i < 6; i++) makeResponse(networkingChunk, true)
+
+  records.push(
+    fork.create(MockExam, {
+      user,
+      userCertification: enrollment,
+      type: 'diagnostic',
+      status: 'submitted',
+      startedAt: new Date(Date.now() - 60 * 60 * 1000),
+      deadline: null,
+      score: 82,
+      passed: true,
+      domainBreakdown: {},
+      questions: [],
+    }),
+  )
+
+  const dueAt = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  for (const chunk of reviewChunks) {
+    records.push(
+      fork.create(ReviewItem, {
+        userCertification: enrollment,
+        anchorChunkId: chunk.id,
+        box: 1,
+        state: 'active',
+        dueAt,
+      }),
+    )
+  }
+
+  fork.persist(records)
+  await fork.flush()
+
+  return {
+    userId: user.id,
+    enrollmentId: enrollment.id,
+    certificationId: certification.id,
+    weakestDomain: 'Security',
+    dueReviewCount: 3,
   }
 }
 
@@ -166,6 +313,32 @@ function configureE2eEnv(postgresContainer, redisContainer, scrapperPort, promet
   process.env.SCRAPPER_URL = `http://127.0.0.1:${scrapperPort}`
   process.env.PROMETHEUS_PORT = String(prometheusPort)
   process.env.SERVICE_NAME = 'readion-e2e-test'
+
+  // AI config — required by the API/worker Zod schemas at boot. No model is ever
+  // invoked in these e2e flows, so the values just need to be present and valid.
+  process.env.AI_PROVIDER = 'openai'
+  process.env.AI_API_KEY = 'test-ai-api-key'
+  process.env.AI_MODEL_QUIZ_GENERATION = 'gpt-4o-mini'
+  process.env.AI_MODEL_ANSWER_VERIFICATION = 'gpt-4o'
+  process.env.AI_MODEL_DOMAIN_TAGGING = 'gpt-4o-mini'
+  process.env.AI_MODEL_AGENT_QA = 'gpt-4o'
+  process.env.AI_MODEL_CERTIFICATION_PREFILL = 'gpt-4o-mini'
+  process.env.AI_MODEL_MATERIAL_GENERATION = 'gpt-4o'
+  process.env.AI_MODEL_COMPLEX_REASONING = 'gpt-4o'
+
+  // Lifecycle-email (email-lifecycle change) config — fixed test values so both
+  // apps boot once their Zod schemas require these keys. PUBLIC_API_URL /
+  // INTERNAL_API_BASE_URL hosts are placeholders: tests extract only the path of
+  // generated links and hit them through the harness's real API base URL.
+  process.env.INTERNAL_API_SECRET = 'test-internal-secret'
+  process.env.INTERNAL_API_BASE_URL = 'http://127.0.0.1:3001'
+  process.env.PUBLIC_API_URL = 'http://127.0.0.1:3001'
+  process.env.DIGEST_SEND_WEEKDAY = '1'
+  process.env.DIGEST_SEND_HOUR = '9'
+  process.env.EXAM_READY_THRESHOLD = '80'
+  process.env.NUDGE_ACTIVITY_LULL_DAYS = '7'
+  process.env.NUDGE_FOLLOWUP_DELAY_DAYS = '3'
+  process.env.NUDGE_MAX_FOLLOWUPS = '1'
 }
 
 async function startScrapperStub() {
@@ -232,6 +405,10 @@ function registerWorkspaceSourceAliases() {
   const aliases = new Map([
     ['@readion/db', path.join(root, 'packages/db/src/index.ts')],
     ['@readion/shared', path.join(root, 'packages/shared/src/index.ts')],
+    // `@readion/db`'s test-helpers import `vitest` for shared-container injection.
+    // Under Playwright there is no Vitest runtime, so stub it: `inject()` returns
+    // undefined and the container helpers fall back to starting their own.
+    ['vitest', path.join(__dirname, 'vitest-stub.cjs')],
   ])
   const resolveFilename = Module._resolveFilename
 
