@@ -1,6 +1,8 @@
 {
   "name": "public",
-  "namespaces": ["public"],
+  "namespaces": [
+    "public"
+  ],
   "tables": [
     {
       "name": "agent_conversations",
@@ -105,7 +107,10 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": ["in_session", "standalone"],
+          "enumItems": [
+            "in_session",
+            "standalone"
+          ],
           "mappedType": "enum"
         },
         "study_session_id": {
@@ -162,7 +167,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["last_activity_at"],
+          "columnNames": [
+            "last_activity_at"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "agent_conversations_last_activity_at_idx",
@@ -170,7 +177,9 @@
           "unique": false
         },
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "agent_conversations_pkey",
@@ -178,7 +187,9 @@
           "unique": true
         },
         {
-          "columnNames": ["study_session_id"],
+          "columnNames": [
+            "study_session_id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "agent_conversations_study_session_id_idx",
@@ -187,7 +198,9 @@
           "where": "study_session_id IS NOT NULL"
         },
         {
-          "columnNames": ["user_id"],
+          "columnNames": [
+            "user_id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "agent_conversations_user_id_idx",
@@ -206,10 +219,14 @@
       "triggers": [],
       "foreignKeys": {
         "agent_conversations_user_id_fkey": {
-          "columnNames": ["user_id"],
+          "columnNames": [
+            "user_id"
+          ],
           "constraintName": "agent_conversations_user_id_fkey",
           "localTableName": "public.agent_conversations",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.users",
           "deleteRule": "cascade"
         }
@@ -302,7 +319,12 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": ["user", "assistant", "tool", "system"],
+          "enumItems": [
+            "user",
+            "assistant",
+            "tool",
+            "system"
+          ],
           "mappedType": "enum"
         },
         "updated_at": {
@@ -325,7 +347,11 @@
       },
       "indexes": [
         {
-          "columnNames": ["conversation_id", "created_at", "id"],
+          "columnNames": [
+            "conversation_id",
+            "created_at",
+            "id"
+          ],
           "composite": true,
           "constraint": false,
           "keyName": "agent_messages_conversation_id_created_at_idx",
@@ -333,7 +359,9 @@
           "unique": false
         },
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "agent_messages_pkey",
@@ -352,14 +380,213 @@
       "triggers": [],
       "foreignKeys": {
         "agent_messages_conversation_id_fkey": {
-          "columnNames": ["conversation_id"],
+          "columnNames": [
+            "conversation_id"
+          ],
           "constraintName": "agent_messages_conversation_id_fkey",
           "localTableName": "public.agent_messages",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.agent_conversations",
           "deleteRule": "cascade"
         }
       },
+      "comment": null
+    },
+    {
+      "name": "audit_logs",
+      "schema": "public",
+      "columns": {
+        "action": {
+          "name": "action",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "after": {
+          "name": "after",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "before": {
+          "name": "before",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "target_id": {
+          "name": "target_id",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "target_type": {
+          "name": "target_type",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "created_at"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "audit_logs_created_at_idx",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "audit_logs_pkey",
+          "primary": true,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "audit_logs_user_id_idx",
+          "primary": false,
+          "unique": false
+        }
+      ],
+      "checks": [],
+      "triggers": [],
+      "foreignKeys": {},
       "comment": null
     },
     {
@@ -533,7 +760,10 @@
           "default": "'draft'",
           "comment": null,
           "collation": null,
-          "enumItems": ["draft", "live"],
+          "enumItems": [
+            "draft",
+            "live"
+          ],
           "mappedType": "enum"
         },
         "time_limit_minutes": {
@@ -590,7 +820,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["code"],
+          "columnNames": [
+            "code"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "certifications_code_unique",
@@ -598,7 +830,9 @@
           "unique": true
         },
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "certifications_pkey",
@@ -789,7 +1023,10 @@
           "default": "'active'",
           "comment": null,
           "collation": null,
-          "enumItems": ["active", "superseded"],
+          "enumItems": [
+            "active",
+            "superseded"
+          ],
           "mappedType": "enum"
         },
         "superseded_at": {
@@ -863,7 +1100,10 @@
       },
       "indexes": [
         {
-          "columnNames": ["content_source_id", "content_hash"],
+          "columnNames": [
+            "content_source_id",
+            "content_hash"
+          ],
           "composite": true,
           "constraint": true,
           "keyName": "content_chunks_content_source_hash_unique",
@@ -871,7 +1111,9 @@
           "unique": true
         },
         {
-          "columnNames": ["embedding"],
+          "columnNames": [
+            "embedding"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "content_chunks_embedding_hnsw_idx",
@@ -880,7 +1122,9 @@
           "type": "hnsw"
         },
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "content_chunks_pkey",
@@ -888,7 +1132,9 @@
           "unique": true
         },
         {
-          "columnNames": ["state"],
+          "columnNames": [
+            "state"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "content_chunks_state_idx",
@@ -907,18 +1153,26 @@
       "triggers": [],
       "foreignKeys": {
         "content_chunks_content_source_id_fkey": {
-          "columnNames": ["content_source_id"],
+          "columnNames": [
+            "content_source_id"
+          ],
           "constraintName": "content_chunks_content_source_id_fkey",
           "localTableName": "public.content_chunks",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.content_sources",
           "deleteRule": "cascade"
         },
         "content_chunks_superseded_by_id_fkey": {
-          "columnNames": ["superseded_by_id"],
+          "columnNames": [
+            "superseded_by_id"
+          ],
           "constraintName": "content_chunks_superseded_by_id_fkey",
           "localTableName": "public.content_chunks",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.content_chunks",
           "deleteRule": "set null"
         }
@@ -1045,7 +1299,16 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": ["web", "pdf", "youtube", "reddit", "github", "podcast", "anki", "quizlet"],
+          "enumItems": [
+            "web",
+            "pdf",
+            "youtube",
+            "reddit",
+            "github",
+            "podcast",
+            "anki",
+            "quizlet"
+          ],
           "mappedType": "enum"
         },
         "updated_at": {
@@ -1085,7 +1348,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "content_sources_pkey",
@@ -1259,7 +1524,11 @@
           "default": "'in_progress'",
           "comment": null,
           "collation": null,
-          "enumItems": ["in_progress", "submitted", "expired"],
+          "enumItems": [
+            "in_progress",
+            "submitted",
+            "expired"
+          ],
           "mappedType": "enum"
         },
         "type": {
@@ -1276,7 +1545,10 @@
           "default": "'mock'",
           "comment": null,
           "collation": null,
-          "enumItems": ["mock", "diagnostic"],
+          "enumItems": [
+            "mock",
+            "diagnostic"
+          ],
           "mappedType": "enum"
         },
         "updated_at": {
@@ -1333,7 +1605,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["deadline"],
+          "columnNames": [
+            "deadline"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "mock_exams_deadline_idx",
@@ -1342,7 +1616,9 @@
           "where": "deadline IS NOT NULL"
         },
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "mock_exams_pkey",
@@ -1350,7 +1626,9 @@
           "unique": true
         },
         {
-          "columnNames": ["status"],
+          "columnNames": [
+            "status"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "mock_exams_status_idx",
@@ -1358,7 +1636,9 @@
           "unique": false
         },
         {
-          "columnNames": ["user_certification_id"],
+          "columnNames": [
+            "user_certification_id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "mock_exams_user_certification_id_idx",
@@ -1383,18 +1663,26 @@
       "triggers": [],
       "foreignKeys": {
         "mock_exams_user_certification_id_fkey": {
-          "columnNames": ["user_certification_id"],
+          "columnNames": [
+            "user_certification_id"
+          ],
           "constraintName": "mock_exams_user_certification_id_fkey",
           "localTableName": "public.mock_exams",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.user_certifications",
           "deleteRule": "cascade"
         },
         "mock_exams_user_id_fkey": {
-          "columnNames": ["user_id"],
+          "columnNames": [
+            "user_id"
+          ],
           "constraintName": "mock_exams_user_id_fkey",
           "localTableName": "public.mock_exams",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.users",
           "deleteRule": "cascade"
         }
@@ -1578,7 +1866,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "quiz_responses_pkey",
@@ -1586,7 +1876,9 @@
           "unique": true
         },
         {
-          "columnNames": ["user_certification_id"],
+          "columnNames": [
+            "user_certification_id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "quiz_responses_user_certification_id_idx",
@@ -1611,10 +1903,14 @@
       "triggers": [],
       "foreignKeys": {
         "quiz_responses_user_certification_id_fkey": {
-          "columnNames": ["user_certification_id"],
+          "columnNames": [
+            "user_certification_id"
+          ],
           "constraintName": "quiz_responses_user_certification_id_fkey",
           "localTableName": "public.quiz_responses",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.user_certifications",
           "deleteRule": "cascade"
         }
@@ -1741,7 +2037,11 @@
           "default": "'active'",
           "comment": null,
           "collation": null,
-          "enumItems": ["active", "mastered", "suppressed"],
+          "enumItems": [
+            "active",
+            "mastered",
+            "suppressed"
+          ],
           "mappedType": "enum"
         },
         "updated_at": {
@@ -1781,7 +2081,10 @@
       },
       "indexes": [
         {
-          "columnNames": ["user_certification_id", "anchor_chunk_id"],
+          "columnNames": [
+            "user_certification_id",
+            "anchor_chunk_id"
+          ],
           "composite": true,
           "constraint": true,
           "keyName": "review_items_concept_unique",
@@ -1789,7 +2092,11 @@
           "unique": true
         },
         {
-          "columnNames": ["user_certification_id", "state", "due_at"],
+          "columnNames": [
+            "user_certification_id",
+            "state",
+            "due_at"
+          ],
           "composite": true,
           "constraint": false,
           "keyName": "review_items_due_queue_idx",
@@ -1797,7 +2104,9 @@
           "unique": false
         },
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "review_items_pkey",
@@ -1816,18 +2125,26 @@
       "triggers": [],
       "foreignKeys": {
         "review_items_anchor_chunk_id_fkey": {
-          "columnNames": ["anchor_chunk_id"],
+          "columnNames": [
+            "anchor_chunk_id"
+          ],
           "constraintName": "review_items_anchor_chunk_id_fkey",
           "localTableName": "public.review_items",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.content_chunks",
           "deleteRule": "cascade"
         },
         "review_items_user_certification_id_fkey": {
-          "columnNames": ["user_certification_id"],
+          "columnNames": [
+            "user_certification_id"
+          ],
           "constraintName": "review_items_user_certification_id_fkey",
           "localTableName": "public.review_items",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.user_certifications",
           "deleteRule": "cascade"
         }
@@ -1988,7 +2305,11 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": ["reading", "quiz", "video"],
+          "enumItems": [
+            "reading",
+            "quiz",
+            "video"
+          ],
           "mappedType": "enum"
         },
         "updated_at": {
@@ -2011,7 +2332,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "session_items_pkey",
@@ -2019,7 +2342,9 @@
           "unique": true
         },
         {
-          "columnNames": ["session_id"],
+          "columnNames": [
+            "session_id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "session_items_session_id_idx",
@@ -2027,7 +2352,10 @@
           "unique": false
         },
         {
-          "columnNames": ["session_id", "index"],
+          "columnNames": [
+            "session_id",
+            "index"
+          ],
           "composite": true,
           "constraint": true,
           "keyName": "session_items_session_index_unique",
@@ -2046,10 +2374,14 @@
       "triggers": [],
       "foreignKeys": {
         "session_items_session_id_fkey": {
-          "columnNames": ["session_id"],
+          "columnNames": [
+            "session_id"
+          ],
           "constraintName": "session_items_session_id_fkey",
           "localTableName": "public.session_items",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.study_sessions",
           "deleteRule": "cascade"
         }
@@ -2193,7 +2525,10 @@
           "default": "'study'",
           "comment": null,
           "collation": null,
-          "enumItems": ["study", "review"],
+          "enumItems": [
+            "study",
+            "review"
+          ],
           "mappedType": "enum"
         },
         "last_item_index": {
@@ -2261,7 +2596,12 @@
           "default": "'active'",
           "comment": null,
           "collation": null,
-          "enumItems": ["active", "completed", "partial", "abandoned"],
+          "enumItems": [
+            "active",
+            "completed",
+            "partial",
+            "abandoned"
+          ],
           "mappedType": "enum"
         },
         "updated_at": {
@@ -2318,7 +2658,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["user_certification_id"],
+          "columnNames": [
+            "user_certification_id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "study_sessions_one_active_per_enrollment",
@@ -2327,7 +2669,9 @@
           "where": "status = 'active'::text"
         },
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "study_sessions_pkey",
@@ -2335,7 +2679,9 @@
           "unique": true
         },
         {
-          "columnNames": ["user_certification_id"],
+          "columnNames": [
+            "user_certification_id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "study_sessions_user_certification_id_idx",
@@ -2343,7 +2689,9 @@
           "unique": false
         },
         {
-          "columnNames": ["user_id"],
+          "columnNames": [
+            "user_id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "study_sessions_user_id_idx",
@@ -2368,18 +2716,26 @@
       "triggers": [],
       "foreignKeys": {
         "study_sessions_user_certification_id_fkey": {
-          "columnNames": ["user_certification_id"],
+          "columnNames": [
+            "user_certification_id"
+          ],
           "constraintName": "study_sessions_user_certification_id_fkey",
           "localTableName": "public.study_sessions",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.user_certifications",
           "deleteRule": "cascade"
         },
         "study_sessions_user_id_fkey": {
-          "columnNames": ["user_id"],
+          "columnNames": [
+            "user_id"
+          ],
           "constraintName": "study_sessions_user_id_fkey",
           "localTableName": "public.study_sessions",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.users",
           "deleteRule": "cascade"
         }
@@ -2458,6 +2814,79 @@
           "enumItems": [],
           "mappedType": "datetime"
         },
+        "exam_outcome_nudge_count": {
+          "name": "exam_outcome_nudge_count",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "0",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "exam_outcome_nudge_sent_at": {
+          "name": "exam_outcome_nudge_sent_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "exam_outcome_responded_at": {
+          "name": "exam_outcome_responded_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "exam_outcome_response": {
+          "name": "exam_outcome_response",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [
+            "passed",
+            "did_not_pass",
+            "not_yet",
+            "dismissed"
+          ],
+          "mappedType": "enum"
+        },
         "id": {
           "name": "id",
           "type": "uuid",
@@ -2475,6 +2904,23 @@
           "enumItems": [],
           "mappedType": "uuid"
         },
+        "last_digest_readiness": {
+          "name": "last_digest_readiness",
+          "type": "real",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "float"
+        },
         "session_override_content_mix": {
           "name": "session_override_content_mix",
           "type": "text",
@@ -2489,7 +2935,11 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": ["balanced", "reading-heavy", "quiz-heavy"],
+          "enumItems": [
+            "balanced",
+            "reading-heavy",
+            "quiz-heavy"
+          ],
           "mappedType": "enum"
         },
         "session_override_difficulty": {
@@ -2506,7 +2956,12 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": ["beginner", "intermediate", "advanced", "adaptive"],
+          "enumItems": [
+            "beginner",
+            "intermediate",
+            "advanced",
+            "adaptive"
+          ],
           "mappedType": "enum"
         },
         "session_override_duration": {
@@ -2540,7 +2995,12 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": ["auto", "weak-areas", "new-material", "review"],
+          "enumItems": [
+            "auto",
+            "weak-areas",
+            "new-material",
+            "review"
+          ],
           "mappedType": "enum"
         },
         "session_override_learning_style": {
@@ -2557,7 +3017,11 @@
           "default": null,
           "comment": null,
           "collation": null,
-          "enumItems": ["weak-area-focus", "spaced-repetition", "scenario-based"],
+          "enumItems": [
+            "weak-area-focus",
+            "spaced-repetition",
+            "scenario-based"
+          ],
           "mappedType": "enum"
         },
         "status": {
@@ -2574,7 +3038,10 @@
           "default": "'active'",
           "comment": null,
           "collation": null,
-          "enumItems": ["active", "archived"],
+          "enumItems": [
+            "active",
+            "archived"
+          ],
           "mappedType": "enum"
         },
         "updated_at": {
@@ -2614,7 +3081,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "user_certifications_pkey",
@@ -2622,7 +3091,10 @@
           "unique": true
         },
         {
-          "columnNames": ["user_id", "certification_id"],
+          "columnNames": [
+            "user_id",
+            "certification_id"
+          ],
           "composite": true,
           "constraint": false,
           "keyName": "user_certifications_user_certification_unique",
@@ -2631,6 +3103,12 @@
         }
       ],
       "checks": [
+        {
+          "name": "user_certifications_exam_outcome_response_check",
+          "expression": "\"exam_outcome_response\" in ('passed', 'did_not_pass', 'not_yet', 'dismissed')",
+          "definition": "check (\"exam_outcome_response\" in ('passed', 'did_not_pass', 'not_yet', 'dismissed'))",
+          "columnName": "exam_outcome_response"
+        },
         {
           "name": "user_certifications_session_override_content_mix_check",
           "expression": "\"session_override_content_mix\" in ('balanced', 'reading-heavy', 'quiz-heavy')",
@@ -2671,17 +3149,25 @@
       "triggers": [],
       "foreignKeys": {
         "user_certifications_certification_id_fkey": {
-          "columnNames": ["certification_id"],
+          "columnNames": [
+            "certification_id"
+          ],
           "constraintName": "user_certifications_certification_id_fkey",
           "localTableName": "public.user_certifications",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.certifications"
         },
         "user_certifications_user_id_fkey": {
-          "columnNames": ["user_id"],
+          "columnNames": [
+            "user_id"
+          ],
           "constraintName": "user_certifications_user_id_fkey",
           "localTableName": "public.user_certifications",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.users",
           "deleteRule": "cascade"
         }
@@ -2725,6 +3211,23 @@
           "collation": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "digest_opt_out": {
+          "name": "digest_opt_out",
+          "type": "boolean",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "boolean"
         },
         "display_timezone": {
           "name": "display_timezone",
@@ -2794,6 +3297,23 @@
           "enumItems": [],
           "mappedType": "uuid"
         },
+        "last_digest_sent_at": {
+          "name": "last_digest_sent_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
         "password_hash": {
           "name": "password_hash",
           "type": "text",
@@ -2825,7 +3345,10 @@
           "default": "'user'",
           "comment": null,
           "collation": null,
-          "enumItems": ["user", "admin"],
+          "enumItems": [
+            "user",
+            "admin"
+          ],
           "mappedType": "enum"
         },
         "session_default_content_mix": {
@@ -2842,7 +3365,11 @@
           "default": "'balanced'",
           "comment": null,
           "collation": null,
-          "enumItems": ["balanced", "reading-heavy", "quiz-heavy"],
+          "enumItems": [
+            "balanced",
+            "reading-heavy",
+            "quiz-heavy"
+          ],
           "mappedType": "enum"
         },
         "session_default_difficulty": {
@@ -2859,7 +3386,12 @@
           "default": "'intermediate'",
           "comment": null,
           "collation": null,
-          "enumItems": ["beginner", "intermediate", "advanced", "adaptive"],
+          "enumItems": [
+            "beginner",
+            "intermediate",
+            "advanced",
+            "adaptive"
+          ],
           "mappedType": "enum"
         },
         "session_default_duration": {
@@ -2893,7 +3425,12 @@
           "default": "'auto'",
           "comment": null,
           "collation": null,
-          "enumItems": ["auto", "weak-areas", "new-material", "review"],
+          "enumItems": [
+            "auto",
+            "weak-areas",
+            "new-material",
+            "review"
+          ],
           "mappedType": "enum"
         },
         "session_default_learning_style": {
@@ -2910,8 +3447,29 @@
           "default": "'weak-area-focus'",
           "comment": null,
           "collation": null,
-          "enumItems": ["weak-area-focus", "spaced-repetition", "scenario-based"],
+          "enumItems": [
+            "weak-area-focus",
+            "spaced-repetition",
+            "scenario-based"
+          ],
           "mappedType": "enum"
+        },
+        "unsubscribe_token": {
+          "name": "unsubscribe_token",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -2933,7 +3491,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["lower(email)"],
+          "columnNames": [
+            "lower(email)"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "users_email_lower_active_unique",
@@ -2942,7 +3502,9 @@
           "expression": "CREATE UNIQUE INDEX users_email_lower_active_unique ON public.users USING btree (lower(email)) WHERE (deleted_at IS NULL)"
         },
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "users_pkey",
@@ -3152,7 +3714,9 @@
       },
       "indexes": [
         {
-          "columnNames": ["id"],
+          "columnNames": [
+            "id"
+          ],
           "composite": false,
           "constraint": true,
           "keyName": "weak_areas_pkey",
@@ -3160,7 +3724,10 @@
           "unique": true
         },
         {
-          "columnNames": ["user_certification_id", "domain"],
+          "columnNames": [
+            "user_certification_id",
+            "domain"
+          ],
           "composite": true,
           "constraint": true,
           "keyName": "weak_areas_user_certification_id_domain_unique",
@@ -3168,7 +3735,9 @@
           "unique": true
         },
         {
-          "columnNames": ["user_certification_id"],
+          "columnNames": [
+            "user_certification_id"
+          ],
           "composite": false,
           "constraint": false,
           "keyName": "weak_areas_user_certification_id_idx",
@@ -3180,10 +3749,14 @@
       "triggers": [],
       "foreignKeys": {
         "weak_areas_user_certification_id_fkey": {
-          "columnNames": ["user_certification_id"],
+          "columnNames": [
+            "user_certification_id"
+          ],
           "constraintName": "weak_areas_user_certification_id_fkey",
           "localTableName": "public.weak_areas",
-          "referencedColumnNames": ["id"],
+          "referencedColumnNames": [
+            "id"
+          ],
           "referencedTableName": "public.user_certifications",
           "deleteRule": "cascade"
         }

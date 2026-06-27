@@ -41,6 +41,9 @@ export const UserSchema = defineEntity({
     sessionDefaultLearningStyle: p
       .enum([...sessionDefaultLearningStyles])
       .default(DEFAULT_SESSION_DEFAULTS.learningStyle),
+    digestOptOut: p.boolean().default(false),
+    unsubscribeToken: p.string().nullable(),
+    lastDigestSentAt: p.datetime().nullable(),
     deletedAt: p.datetime().nullable(),
   },
 })
@@ -55,6 +58,9 @@ export class User extends UserSchema.class {
     | 'sessionDefaultDifficulty'
     | 'sessionDefaultFocusArea'
     | 'sessionDefaultLearningStyle'
+    | 'digestOptOut'
+    | 'unsubscribeToken'
+    | 'lastDigestSentAt'
 
   override id: string = v4()
   override email!: string
@@ -71,6 +77,9 @@ export class User extends UserSchema.class {
     DEFAULT_SESSION_DEFAULTS.focusArea
   override sessionDefaultLearningStyle: SessionDefaults['learningStyle'] =
     DEFAULT_SESSION_DEFAULTS.learningStyle
+  override digestOptOut: boolean = false
+  override unsubscribeToken: string | null = null
+  override lastDigestSentAt: Date | null = null
   override deletedAt: Date | null = null
 }
 

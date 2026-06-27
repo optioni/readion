@@ -1,6 +1,7 @@
 import { defineEntity, OptionalProps, p } from '@mikro-orm/core'
-import type { EnrollmentStatus, SessionDefaults } from '@readion/shared'
+import type { EnrollmentStatus, ExamOutcomeResponse, SessionDefaults } from '@readion/shared'
 import {
+  examOutcomeResponses,
   sessionDefaultContentMixes,
   sessionDefaultDifficulties,
   sessionDefaultFocusAreas,
@@ -28,6 +29,11 @@ export const UserCertificationSchema = defineEntity({
     sessionOverrideFocusArea: p.enum([...sessionDefaultFocusAreas]).nullable(),
     sessionOverrideLearningStyle: p.enum([...sessionDefaultLearningStyles]).nullable(),
     diagnosticRePromptedAt: p.datetime().nullable(),
+    lastDigestReadiness: p.float().nullable(),
+    examOutcomeNudgeSentAt: p.datetime().nullable(),
+    examOutcomeNudgeCount: p.integer().default(0),
+    examOutcomeResponse: p.enum([...examOutcomeResponses]).nullable(),
+    examOutcomeRespondedAt: p.datetime().nullable(),
   },
 })
 
@@ -41,6 +47,11 @@ export class UserCertification extends UserCertificationSchema.class {
     | 'sessionOverrideFocusArea'
     | 'sessionOverrideLearningStyle'
     | 'diagnosticRePromptedAt'
+    | 'lastDigestReadiness'
+    | 'examOutcomeNudgeSentAt'
+    | 'examOutcomeNudgeCount'
+    | 'examOutcomeResponse'
+    | 'examOutcomeRespondedAt'
 
   override id: string = v4()
   override user!: User
@@ -53,6 +64,11 @@ export class UserCertification extends UserCertificationSchema.class {
   override sessionOverrideFocusArea: SessionDefaults['focusArea'] | null = null
   override sessionOverrideLearningStyle: SessionDefaults['learningStyle'] | null = null
   override diagnosticRePromptedAt: Date | null = null
+  override lastDigestReadiness: number | null = null
+  override examOutcomeNudgeSentAt: Date | null = null
+  override examOutcomeNudgeCount: number = 0
+  override examOutcomeResponse: ExamOutcomeResponse | null = null
+  override examOutcomeRespondedAt: Date | null = null
 }
 
 UserCertificationSchema.setClass(UserCertification)

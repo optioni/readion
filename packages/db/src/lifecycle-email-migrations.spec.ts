@@ -13,7 +13,7 @@ async function columnNames(harness: DbHarness, table: string, columns: string[])
        AND table_name = '${table}'
        AND column_name IN (${inList})`,
     )
-  return rows.map((r) => r.column_name).sort()
+  return rows.map((r: { column_name: string }) => r.column_name).sort()
 }
 
 describe('lifecycle-email migrations', () => {
