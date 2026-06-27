@@ -1,4 +1,4 @@
-import { timingSafeEqual } from 'node:crypto'
+import { createHash, timingSafeEqual } from 'node:crypto'
 import {
   type CanActivate,
   type ExecutionContext,
@@ -34,11 +34,12 @@ export class InternalSecretGuard implements CanActivate {
   }
 }
 
+// Hash both sides to fixed-width SHA-256 digests before comparing so the
+// comparison is constant-time and never leaks the secret's byte length: a
+// length mismatch (or a missing header hashed from '') yields a different
+// digest, not an early return.
 function secretsMatch(provided: string, expected: string): boolean {
-  const providedBuffer = Buffer.from(provided)
-  const expectedBuffer = Buffer.from(expected)
-  if (providedBuffer.length !== expectedBuffer.length) {
-    return false
-  }
-  return timingSafeEqual(providedBuffer, expectedBuffer)
+  const providedDigest = createHash('sha256').update(provided).digest()
+  const expectedDigest = createHash('sha256').update(expected).digest()
+  return timingSafeEqual(providedDigest, expectedDigest)
 }
