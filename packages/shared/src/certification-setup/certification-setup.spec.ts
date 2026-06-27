@@ -6,18 +6,26 @@ import type {
   CertificationFieldUnverified,
   CertificationProvenance,
 } from '../certifications'
+import type { CertificationDomain } from '../certifications'
 import {
+  buildProvenanceMap,
   CERT_EXTRACTION_QUEUE,
+  CERT_REVERIFICATION_INTERVAL_DAYS_DEFAULT,
+  type CertExtractionFields,
   type CertExtractionResult,
   type CreateCertificationRequest,
   createCertificationRequestSchema,
   type DiscoverSourcesRequest,
+  type DiscoveryCandidate,
   discoverSourcesRequestSchema,
   type DueForReverificationItem,
+  dueForReverification,
   type ExtractRequest,
   extractRequestSchema,
+  rankDiscoveryCandidates,
   type ReverifyCertificationRequest,
   reverifyCertificationRequestSchema,
+  validateDomainWeights,
 } from './index'
 
 const VENDOR_URL = 'https://aws.amazon.com/certification/certified-cloud-practitioner/'
@@ -245,5 +253,126 @@ describe('CertExtractionResult', () => {
   it('round-trips a null extraction result', () => {
     const result: CertExtractionResult = null
     expect(JSON.parse(JSON.stringify(result))).toBeNull()
+  })
+})
+
+describe('CERT_REVERIFICATION_INTERVAL_DAYS_DEFAULT', () => {
+  it('defaults to 180 days', () => {
+    expect(CERT_REVERIFICATION_INTERVAL_DAYS_DEFAULT).toBe(180)
+  })
+})
+
+describe('dueForReverification', () => {
+  const NOW = new Date('2026-06-27T00:00:00.000Z')
+
+  it('is due when verifiedAt is null', () => {
+    expect(dueForReverification(null, NOW, 180)).toBe(true)
+  })
+
+  it('is due when verifiedAt is older than the interval', () => {
+    const verifiedAt = new Date('2025-12-09T00:00:00.000Z') // 200 days before NOW
+    expect(dueForReverification(verifiedAt, NOW, 180)).toBe(true)
+  })
+
+  it('is not due when verifiedAt is fresh', () => {
+    const verifiedAt = new Date('2026-06-17T00:00:00.000Z') // 10 days before NOW
+    expect(dueForReverification(verifiedAt, NOW, 180)).toBe(false)
+  })
+
+  it('parses an ISO string verifiedAt', () => {
+    expect(dueForReverification('2025-12-09T00:00:00.000Z', NOW, 180)).toBe(true)
+    expect(dueForReverification('2026-06-17T00:00:00.000Z', NOW, 180)).toBe(false)
+  })
+
+  it('is not due exactly at the boundary (strictly older required)', () => {
+    const verifiedAt = new Date(NOW.getTime() - 180 * 24 * 60 * 60 * 1000)
+    expect(dueForReverification(verifiedAt, NOW, 180)).toBe(false)
+  })
+})
+
+describe('validateDomainWeights', () => {
+  it('is true when weights sum to exactly 100', () => {
+    expect(validateDomainWeights([{ name: 'A', weight: 50 }, { name: 'B', weight: 50 }])).toBe(true)
+  })
+
+  it('is false when weights do not sum to 100', () => {
+    expect(validateDomainWeights([{ name: 'A', weight: 50 }, { name: 'B', weight: 40 }])).toBe(false)
+  })
+
+  it('is false for an empty domains array', () => {
+    expect(validateDomainWeights([])).toBe(false)
+  })
+})
+
+describe('buildProvenanceMap', () => {
+  const VENDOR = 'https://aws.amazon.com/certification/'
+  const domains: CertificationDomain[] = [{ name: 'Cloud', weight: 100 }]
+
+  const groundedFields: CertExtractionFields = {
+    domains: { value: domains, citation: { url: VENDOR, passage: 'domain passage' } },
+    questionCount: { value: 65, citation: { url: VENDOR, passage: 'question passage' } },
+    passingScore: { value: 700, citation: { url: VENDOR, passage: 'score passage' } },
+    timeLimitMinutes: { value: 90, citation: { url: VENDOR, passage: 'time passage' } },
+  }
+
+  it('maps grounded fields to citation entries', () => {
+    expect(buildProvenanceMap(groundedFields)).toEqual({
+      domains: { url: VENDOR, passage: 'domain passage' },
+      questionCount: { url: VENDOR, passage: 'question passage' },
+      passingScore: { url: VENDOR, passage: 'score passage' },
+      timeLimitMinutes: { url: VENDOR, passage: 'time passage' },
+    })
+  })
+
+  it('maps unverified fields to unverified entries', () => {
+    const fields: CertExtractionFields = {
+      ...groundedFields,
+      passingScore: { unverified: true },
+    }
+    expect(buildProvenanceMap(fields).passingScore).toEqual({ unverified: true })
+  })
+
+  it('maps admin-confirmed fields to manuallyConfirmed entries, overriding extraction', () => {
+    const fields: CertExtractionFields = {
+      ...groundedFields,
+      timeLimitMinutes: { unverified: true },
+    }
+    const result = buildProvenanceMap(fields, ['questionCount', 'timeLimitMinutes'])
+    expect(result.questionCount).toEqual({ manuallyConfirmed: true })
+    expect(result.timeLimitMinutes).toEqual({ manuallyConfirmed: true })
+    expect(result.domains).toEqual({ url: VENDOR, passage: 'domain passage' })
+  })
+
+  it('accepts a Set of manual fields', () => {
+    const result = buildProvenanceMap(groundedFields, new Set(['domains']))
+    expect(result.domains).toEqual({ manuallyConfirmed: true })
+  })
+})
+
+describe('rankDiscoveryCandidates', () => {
+  const thirdParty: DiscoveryCandidate = { url: 'https://examtopics.com/aws', title: 'Exam Topics' }
+  const vendor: DiscoveryCandidate = { url: 'https://aws.amazon.com/cert', title: 'AWS' }
+
+  it('ranks vendor-domain candidates ahead of third-party ones', () => {
+    const ranked = rankDiscoveryCandidates([thirdParty, vendor], ['amazon.com'])
+    expect(ranked.map((c) => c.url)).toEqual([vendor.url, thirdParty.url])
+  })
+
+  it('preserves input order for ties (stable sort)', () => {
+    const a: DiscoveryCandidate = { url: 'https://aws.amazon.com/a', title: 'A' }
+    const b: DiscoveryCandidate = { url: 'https://docs.aws.amazon.com/b', title: 'B' }
+    const ranked = rankDiscoveryCandidates([a, b], ['amazon.com'])
+    expect(ranked.map((c) => c.url)).toEqual([a.url, b.url])
+  })
+
+  it('returns original order when vendorDomains is empty', () => {
+    const ranked = rankDiscoveryCandidates([thirdParty, vendor], [])
+    expect(ranked.map((c) => c.url)).toEqual([thirdParty.url, vendor.url])
+  })
+
+  it('treats unparseable URLs as third-party', () => {
+    const broken: DiscoveryCandidate = { url: 'not a url', title: 'Broken' }
+    const ranked = rankDiscoveryCandidates([broken, vendor], ['amazon.com'])
+    expect(ranked.map((c) => c.url)).toEqual([vendor.url, broken.url])
   })
 })

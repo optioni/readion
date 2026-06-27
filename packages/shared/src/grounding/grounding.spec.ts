@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { isVerbatimPassage, normalizeText } from './index'
 import type {
   DistractorFinding,
   ExtractiveItem,
@@ -83,5 +84,32 @@ describe('shared grounding types', () => {
     expect(signals).toHaveLength(2)
     expect(signals[0]?.type).toBe('fetchMoreMaterial')
     expect(signals[1]?.type).toBe('substitution')
+  })
+})
+
+describe('normalizeText', () => {
+  it('collapses whitespace runs and trims', () => {
+    expect(normalizeText('  the   exam\n\thas  65   questions ')).toBe('the exam has 65 questions')
+  })
+})
+
+describe('isVerbatimPassage', () => {
+  const source = 'The AWS Certified Cloud Practitioner exam contains 65 questions over 90 minutes.'
+
+  it('matches a passage that appears verbatim', () => {
+    expect(isVerbatimPassage(source, 'exam contains 65 questions')).toBe(true)
+  })
+
+  it('matches across differing whitespace', () => {
+    expect(isVerbatimPassage('The exam   has\n65   questions', 'exam has 65 questions')).toBe(true)
+  })
+
+  it('rejects a passage that is absent', () => {
+    expect(isVerbatimPassage(source, 'passing score is 700')).toBe(false)
+  })
+
+  it('rejects an empty passage', () => {
+    expect(isVerbatimPassage(source, '')).toBe(false)
+    expect(isVerbatimPassage(source, '   ')).toBe(false)
   })
 })
