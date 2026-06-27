@@ -1,7 +1,6 @@
 import { EntityManager } from '@mikro-orm/core'
 import { getQueueToken } from '@nestjs/bullmq'
-import { ConflictException, NotFoundException } from '@nestjs/common'
-import { Module } from '@nestjs/common'
+import { ConflictException, Module, NotFoundException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import {
   AuditLog,
@@ -65,7 +64,9 @@ describe('ContentSourceService', () => {
   })
 
   beforeEach(async () => {
-    await em.getConnection().execute('TRUNCATE TABLE content_sources, certifications, audit_logs CASCADE')
+    await em
+      .getConnection()
+      .execute('TRUNCATE TABLE content_sources, certifications, audit_logs CASCADE')
     em.fork().clear()
     for (const queue of queues) {
       await queue.obliterate({ force: true })
