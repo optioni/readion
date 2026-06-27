@@ -23,6 +23,12 @@ describe('AuditAction vocabulary', () => {
     expect(AuditAction.ContentQuarantined).toBe('content.quarantined')
     expect(AuditAction.CertPublished).toBe('cert.published')
     expect(AuditAction.CertReverified).toBe('cert.reverified')
+    expect(AuditAction.CertCreated).toBe('cert.created')
+  })
+
+  it('auditActions tuple includes the cert.created value', () => {
+    expect(auditActions).toContain('cert.created')
+    expectTypeOf<'cert.created'>().toMatchTypeOf<AuditActionValue>()
   })
 
   it('auditActions tuple includes the role-change values', () => {
