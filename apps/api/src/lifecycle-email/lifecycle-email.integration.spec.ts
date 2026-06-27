@@ -98,8 +98,7 @@ describe('LifecycleEmailService.sendDigest (integration)', () => {
     const digests = harness
       .capturedMail()
       .filter(
-        (m) =>
-          m.to === 'digest-delta@example.com' && m.subject.toLowerCase().includes('progress'),
+        (m) => m.to === 'digest-delta@example.com' && m.subject.toLowerCase().includes('progress'),
       )
     expect(digests).toHaveLength(2)
     expect(digests[1]!.text).toContain('from last week')
