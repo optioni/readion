@@ -144,16 +144,19 @@ export class LifecycleEmailService {
     userId: string,
     enrollmentId: string,
     response: ExamOutcomeResponse,
-  ): Promise<void> {
+  ): Promise<{ response: ExamOutcomeResponse; respondedAt: Date }> {
     const em = this.em.fork()
     const enrollment = await em.findOne(UserCertification, { id: enrollmentId, user: userId })
     if (enrollment === null) {
       throw new NotFoundException('Enrollment not found')
     }
 
+    const respondedAt = new Date()
     enrollment.examOutcomeResponse = response
-    enrollment.examOutcomeRespondedAt = new Date()
+    enrollment.examOutcomeRespondedAt = respondedAt
     await em.flush()
+
+    return { response, respondedAt }
   }
 
   async unsubscribe(token: string): Promise<void> {

@@ -71,10 +71,13 @@ describe('POST /api/v1/user-certifications/:id/exam-outcome (integration)', () =
       .send({ response: 'passed' })
 
     expect(res.status).toBe(200)
+    expect(res.body.data.response).toBe('passed')
 
     const enrollment = await em.fork().findOneOrFail(UserCertification, { id: enrollmentId })
     expect(enrollment.examOutcomeResponse).toBe('passed')
     expect(enrollment.examOutcomeRespondedAt).not.toBeNull()
+    // The response timestamp is the exact instant persisted, not a second clock read.
+    expect(res.body.data.respondedAt).toBe(enrollment.examOutcomeRespondedAt?.toISOString())
   })
 
   it('does not change the readiness score', async () => {

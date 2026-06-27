@@ -37,8 +37,10 @@ export class ExamOutcomeController {
     @Body() body: unknown,
   ): Promise<{ data: ExamOutcomeResultDto }> {
     const { response } = parseExamOutcomeBody(body)
-    await this.lifecycleEmail.recordExamOutcome(user.id, id, response)
-    return { data: { response, respondedAt: new Date().toISOString() } }
+    const recorded = await this.lifecycleEmail.recordExamOutcome(user.id, id, response)
+    return {
+      data: { response: recorded.response, respondedAt: recorded.respondedAt.toISOString() },
+    }
   }
 }
 
