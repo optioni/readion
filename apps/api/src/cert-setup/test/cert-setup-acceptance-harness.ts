@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { EntityManager } from '@mikro-orm/core'
-import { BullModule, getQueueToken } from '@nestjs/bullmq'
+import { getQueueToken } from '@nestjs/bullmq'
 import type { INestApplication } from '@nestjs/common'
 import { Test, type TestingModule } from '@nestjs/testing'
 import { Certification, startPostgresContainer, startRedisContainer } from '@readion/db'
@@ -10,17 +10,16 @@ import {
   type CertExtractionResult,
   type CertificationDomain,
   type CertificationProvenance,
+  type DiscoverSourcesResponse,
 } from '@readion/shared'
-import { MockEmbeddingModelV3, MockLanguageModelV3 } from 'ai/test'
 import { type Job, Queue, Worker } from 'bullmq'
 import type Redis from 'ioredis'
 import supertest from 'supertest'
 import type { StartedTestContainer } from 'testcontainers'
-import { vi } from 'vitest'
 import { AppModule } from '../../app.module'
 import { bootstrapApp } from '../../bootstrap'
-import { ProviderAdapter } from '../../llm/provider-adapter'
 import { REDIS_CLIENT } from '../../redis/redis.module'
+import { CertDiscoveryService } from '../cert-discovery.service'
 
 export const VENDOR_DOMAIN_URL =
   'https://aws.amazon.com/certification/certified-cloud-practitioner/'
@@ -33,7 +32,11 @@ export type ExtractionJobData = {
   confirmedSourceUrl: string
 }
 
-export const DISCOVERY_CANDIDATES = {
+// CertDiscoveryService's grounding/ranking is covered by cert-discovery.service.spec.
+// The acceptance suite fakes the service to return an already-ranked response
+// (vendor first) so it deterministically asserts the controller/authz/persistence
+// contract without driving the LLM tool loop.
+export const DISCOVERY_CANDIDATES: DiscoverSourcesResponse = {
   candidates: [
     {
       url: VENDOR_DOMAIN_URL,
@@ -46,7 +49,7 @@ export const DISCOVERY_CANDIDATES = {
       snippet: 'Community-contributed practice questions.',
     },
   ],
-  suggestedContentSources: [{ url: VENDOR_DOMAIN_URL, type: 'web' as const }],
+  suggestedContentSources: [{ url: VENDOR_DOMAIN_URL, type: 'web' }],
 }
 
 const EXTRACTED_DOMAINS: CertificationDomain[] = [
@@ -119,37 +122,6 @@ export type CertSetupAcceptanceHarness = {
   ) => Promise<string>
 }
 
-function createDiscoveryLangModel(): MockLanguageModelV3 {
-  return new MockLanguageModelV3({
-    doGenerate: async ({ prompt }: { prompt: Array<{ role: string; content: unknown }> }) => {
-      const text = JSON.stringify(
-        prompt.some((message) => JSON.stringify(message.content).includes('extract'))
-          ? EXTRACTION_RESULT
-          : DISCOVERY_CANDIDATES,
-      )
-      return {
-        content: [{ type: 'text', text }],
-        finishReason: { unified: 'stop', raw: 'stop' },
-        usage: {
-          inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 },
-          outputTokens: { total: 20, text: 20, reasoning: 0 },
-        },
-        warnings: [],
-      }
-    },
-  })
-}
-
-function createEmbeddingModel(): MockEmbeddingModelV3 {
-  return new MockEmbeddingModelV3({
-    doEmbed: async ({ values }) => ({
-      embeddings: values.map(() => new Array(1536).fill(0.1)),
-      usage: { tokens: values.length * 10 },
-      warnings: [],
-    }),
-  })
-}
-
 export async function createCertSetupAcceptanceHarness(): Promise<CertSetupAcceptanceHarness> {
   const [postgresContainer, redisContainer] = await Promise.all([
     startPostgresContainer(),
@@ -161,12 +133,11 @@ export async function createCertSetupAcceptanceHarness(): Promise<CertSetupAccep
   await acquireIsolatedDatabase()
 
   const moduleRef = await Test.createTestingModule({
-    imports: [AppModule, BullModule.registerQueue({ name: CERT_EXTRACTION_QUEUE })],
+    imports: [AppModule],
   })
-    .overrideProvider(ProviderAdapter)
+    .overrideProvider(CertDiscoveryService)
     .useValue({
-      getChatModel: vi.fn().mockReturnValue(createDiscoveryLangModel()),
-      getEmbeddingModel: vi.fn().mockReturnValue(createEmbeddingModel()),
+      discoverSources: async (): Promise<DiscoverSourcesResponse> => DISCOVERY_CANDIDATES,
     })
     .compile()
 
@@ -204,8 +175,7 @@ export async function createCertSetupAcceptanceHarness(): Promise<CertSetupAccep
     },
     getRequest: () => supertest(app.getHttpServer()),
     countCertifications: async () => em.fork().count(Certification, {}),
-    findCertificationByCode: async (code: string) =>
-      em.fork().findOne(Certification, { code }),
+    findCertificationByCode: async (code: string) => em.fork().findOne(Certification, { code }),
     findCertificationById: async (id: string) => em.fork().findOne(Certification, { id }),
     seedDraftCertification: async (options: SeedDraftCertificationOptions) => {
       const fork = em.fork()

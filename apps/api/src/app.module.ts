@@ -7,6 +7,7 @@ import { DbModule } from '@readion/db'
 import { AdminModule } from './admin/admin.module'
 import { AgentModule } from './agent/agent.module'
 import { AuthModule } from './auth/auth.module'
+import { CertSetupModule } from './cert-setup/cert-setup.module'
 import { CertificationsModule } from './certifications/certifications.module'
 import { ResponseInterceptor } from './common/interceptors/response.interceptor'
 import { ApiConfigModule } from './config/config.module'
@@ -45,6 +46,7 @@ import { WeakAreasModule } from './weak-areas/weak-areas.module'
     AuthModule,
     UsersModule,
     CertificationsModule,
+    CertSetupModule,
     UserCertificationsModule,
     ContentModule,
     QuizModule,

@@ -45,7 +45,8 @@ describe('cert-setup acceptance', () => {
   })
 
   const req = () => harness.getRequest()
-  const asAdmin = async () => `Bearer ${await harness.registerAndLogin('admin@example.com', 'correcthorse')}`
+  const asAdmin = async () =>
+    `Bearer ${await harness.registerAndLogin('admin@example.com', 'correcthorse')}`
 
   it('discovers ranked candidate sources, vendor-domain first, persisting nothing', async () => {
     const adminAuth = await asAdmin()
@@ -66,14 +67,11 @@ describe('cert-setup acceptance', () => {
   it('enqueues exactly one cert-extraction job carrying the confirmed source', async () => {
     const adminAuth = await asAdmin()
 
-    const res = await req()
-      .post(EXTRACT)
-      .set('Authorization', adminAuth)
-      .send({
-        name: 'AWS Certified Cloud Practitioner',
-        code: 'CLF-C02',
-        confirmedSourceUrl: VENDOR_DOMAIN_URL,
-      })
+    const res = await req().post(EXTRACT).set('Authorization', adminAuth).send({
+      name: 'AWS Certified Cloud Practitioner',
+      code: 'CLF-C02',
+      confirmedSourceUrl: VENDOR_DOMAIN_URL,
+    })
 
     expect(res.status).toBe(202)
     expect(res.body.data.jobId).toBeDefined()
@@ -110,9 +108,7 @@ describe('cert-setup acceptance', () => {
     expect(found.body.data.state).toBe('completed')
     expect(found.body.data.fields.questionCount.value).toBe(65)
 
-    const unknown = await req()
-      .get(`${EXTRACTIONS}/does-not-exist`)
-      .set('Authorization', adminAuth)
+    const unknown = await req().get(`${EXTRACTIONS}/does-not-exist`).set('Authorization', adminAuth)
     expect(unknown.status).toBe(404)
   })
 
@@ -130,9 +126,7 @@ describe('cert-setup acceptance', () => {
     expect(cert?.verifiedAt).not.toBeNull()
     expect(cert?.provenance).not.toBe('verified')
 
-    const audit = await req()
-      .get('/api/v1/admin/audit-logs')
-      .set('Authorization', adminAuth)
+    const audit = await req().get('/api/v1/admin/audit-logs').set('Authorization', adminAuth)
     const actions = (audit.body.data as Array<{ action: string }>).map((entry) => entry.action)
     expect(actions).toContain('cert.created')
   })
@@ -201,9 +195,7 @@ describe('cert-setup acceptance', () => {
     const updated = await harness.findCertificationById(cert.id)
     expect(updated?.verifiedAt?.getTime()).toBeGreaterThan(stale.getTime())
 
-    const audit = await req()
-      .get('/api/v1/admin/audit-logs')
-      .set('Authorization', adminAuth)
+    const audit = await req().get('/api/v1/admin/audit-logs').set('Authorization', adminAuth)
     const actions = (audit.body.data as Array<{ action: string }>).map((entry) => entry.action)
     expect(actions).toContain('cert.reverified')
   })
@@ -214,7 +206,14 @@ describe('cert-setup acceptance', () => {
     const res = await req()
       .post(`${BASE}/00000000-0000-0000-0000-000000000000/reverify`)
       .set('Authorization', adminAuth)
-      .send({ confirmedSourceUrl: VENDOR_DOMAIN_URL })
+      .send({
+        confirmedSourceUrl: VENDOR_DOMAIN_URL,
+        domains: EXTRACTION_RESULT.domains,
+        questionCount: 65,
+        passingScore: 700,
+        timeLimitMinutes: 90,
+        provenance: EXTRACTION_RESULT.provenance,
+      })
 
     expect(res.status).toBe(404)
   })

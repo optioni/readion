@@ -71,7 +71,7 @@ export class CertSetupService {
     if (job === undefined) {
       throw new NotFoundException('Extraction job not found')
     }
-    return { state: await job.getState(), fields: job.returnvalue ?? null }
+    return { state: await job.getState(), fields: job.returnvalue?.fields ?? null }
   }
 
   async createDraft(

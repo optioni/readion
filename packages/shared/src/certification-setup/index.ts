@@ -126,7 +126,10 @@ export interface ExtractionEnqueuedResponse {
 
 export interface ExtractionStatusResponse {
   state: string
-  fields: CertExtractionResult
+  // The per-field extraction result (citations per field), or null while the job
+  // has not produced a return value yet. Unwrapped from the worker's
+  // `CertExtractionResult` envelope so callers read `fields.questionCount` directly.
+  fields: CertExtractionFields | null
 }
 
 const certificationDomainSchema = z.object({

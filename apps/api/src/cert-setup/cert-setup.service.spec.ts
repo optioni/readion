@@ -235,7 +235,7 @@ describe('CertSetupService', () => {
       const result = await service.readExtractionResult(jobId)
 
       expect(result.state).toBe('completed')
-      expect(result.fields).toEqual(EXTRACTION_RETURN)
+      expect(result.fields).toEqual(EXTRACTION_RETURN.fields)
     })
 
     it('returns null fields while the job is pending', async () => {
