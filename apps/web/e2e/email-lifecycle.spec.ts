@@ -8,6 +8,11 @@ type SeededEnrollment = {
   certificationId: string
   weakestDomain: string
   dueReviewCount: number
+  priorDigestReadiness: number | null
+}
+
+type SeedEnrollmentOptions = {
+  priorDigestReadiness?: number
 }
 
 const { createReadionE2eHarness } = require('./support/readion-e2e-harness.cjs') as {
@@ -18,7 +23,10 @@ const { createReadionE2eHarness } = require('./support/readion-e2e-harness.cjs')
       api: APIRequestContext,
       email?: string,
     ) => Promise<{ accessToken: string; email: string; password: string }>
-    seedCalibratedEnrollment: (email: string) => Promise<SeededEnrollment>
+    seedCalibratedEnrollment: (
+      email: string,
+      options?: SeedEnrollmentOptions,
+    ) => Promise<SeededEnrollment>
     resetState: () => Promise<void>
     teardown: () => Promise<void>
   }>
@@ -70,7 +78,9 @@ test.describe('email lifecycle', () => {
   // Spec: "Weekly progress digest content" + "One-click unsubscribe".
   test('digest internal endpoint sends a progress digest and unsubscribe opts the user out', async () => {
     const user = await harness.registerVerifiedUser(api)
-    const seed = await harness.seedCalibratedEnrollment(user.email)
+    // Seed a non-null prior snapshot so the send renders a real weekly delta
+    // (current readiness - 60), not a digest with no delta line at all.
+    const seed = await harness.seedCalibratedEnrollment(user.email, { priorDigestReadiness: 60 })
 
     const trigger = await api.post('/internal/lifecycle/digest', {
       headers: { [INTERNAL_SECRET_HEADER]: INTERNAL_API_SECRET },
@@ -86,7 +96,10 @@ test.describe('email lifecycle', () => {
     const body = `${digest!.text}\n${digest!.html}`
     expect(body).toContain(seed.weakestDomain)
     expect(body, 'readiness percentage').toMatch(/\d+\s*%/)
-    expect(body, 'weekly delta').toMatch(/[+-]\s?\d+/)
+    // The digest renders the delta as "(+N% from last week)" / "(-N% from last
+    // week)"; a loose [+-]\d+ regex would spuriously match the base layout's
+    // charset="utf-8", so anchor on the template's real delta phrasing.
+    expect(body, 'weekly delta').toMatch(/[+-]\d+%\s+from last week/i)
     expect(body, 'due-review count').toContain(String(seed.dueReviewCount))
 
     const linkMatch = body.match(/https?:\/\/\S*unsubscribe\S*/i)

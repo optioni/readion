@@ -70,6 +70,9 @@ describe('email-lifecycle acceptance', () => {
     }
     await harness.seedSubmittedDiagnostic(enrollmentId, userId, 60)
     await harness.seedDueReviewItem(enrollmentId, securityChunk, new Date(Date.now() - 86_400_000))
+    // Seed a non-null prior snapshot so this send renders a real weekly delta
+    // (current readiness - 50), exercising task 0.2's "weekly delta" requirement.
+    await harness.seedPriorDigestReadiness(enrollmentId, 50)
 
     const digestRes = await req()
       .post(DIGEST_ENDPOINT)
@@ -84,6 +87,8 @@ describe('email-lifecycle acceptance', () => {
     expect(digest?.text).toContain('%')
     expect(digest?.text.toLowerCase()).toContain('security')
     expect(digest?.text.toLowerCase()).toContain('unsubscribe')
+    // A real weekly delta must be rendered against the seeded prior snapshot.
+    expect(digest?.text).toMatch(/[+-]\d+%\s+from last week/i)
 
     const unsubscribeMatch = digest?.text.match(
       new RegExp(`${UNSUBSCRIBE_ENDPOINT}\\?token=([\\w.-]+)`),

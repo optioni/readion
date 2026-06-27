@@ -103,7 +103,7 @@ async function createReadionE2eHarness() {
         password,
       }
     },
-    seedCalibratedEnrollment: async (email) => seedCalibratedEnrollment(em, email),
+    seedCalibratedEnrollment: async (email, options) => seedCalibratedEnrollment(em, email, options),
     resetState: async () => {
       mailMessages.length = 0
       await redis.flushdb()
@@ -126,7 +126,9 @@ async function createReadionE2eHarness() {
 // weakest domain, and three past-due review items give a due-review count of 3.
 // Data is written via the EntityManager (not the public API) because resetState
 // truncates every domain table, leaving no live certifications to enroll into.
-async function seedCalibratedEnrollment(em, email) {
+// `priorDigestReadiness` seeds a non-null prior snapshot so the next digest send
+// renders a real weekly delta (current readiness - prior).
+async function seedCalibratedEnrollment(em, email, options = {}) {
   const fork = em.fork()
   const user = await fork.findOneOrFail(User, { email })
 
@@ -245,12 +247,22 @@ async function seedCalibratedEnrollment(em, email) {
   fork.persist(records)
   await fork.flush()
 
+  if (options.priorDigestReadiness != null) {
+    await fork
+      .getConnection()
+      .execute('UPDATE user_certifications SET last_digest_readiness = ? WHERE id = ?', [
+        options.priorDigestReadiness,
+        enrollment.id,
+      ])
+  }
+
   return {
     userId: user.id,
     enrollmentId: enrollment.id,
     certificationId: certification.id,
     weakestDomain: 'Security',
     dueReviewCount: 3,
+    priorDigestReadiness: options.priorDigestReadiness ?? null,
   }
 }
 

@@ -40,6 +40,7 @@ export type LifecycleEmailAcceptanceHarness = {
   ) => Promise<void>
   seedSubmittedDiagnostic: (enrollmentId: string, userId: string, score: number) => Promise<void>
   seedDueReviewItem: (enrollmentId: string, chunkId: string, dueAt: Date) => Promise<void>
+  seedPriorDigestReadiness: (enrollmentId: string, readiness: number) => Promise<void>
   enroll: (token: string, certificationId: string) => Promise<string>
 }
 
@@ -193,6 +194,14 @@ export async function createLifecycleEmailAcceptanceHarness(): Promise<Lifecycle
          VALUES (gen_random_uuid(), ?, ?, 1, 'active', ?, now(), now())`,
         [enrollmentId, chunkId, dueAt],
       )
+    },
+    seedPriorDigestReadiness: async (enrollmentId: string, readiness: number) => {
+      const fork = em.fork()
+      const conn = fork.getConnection()
+      await conn.execute('UPDATE user_certifications SET last_digest_readiness = ? WHERE id = ?', [
+        readiness,
+        enrollmentId,
+      ])
     },
     enroll: async (token: string, certificationId: string) => {
       const res = await supertest(httpServer)
