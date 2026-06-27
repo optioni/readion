@@ -109,34 +109,34 @@ describe('Internal lifecycle trigger endpoints (integration)', () => {
   })
 
   describe('POST /internal/lifecycle/nudge', () => {
-    it('accepts a valid secret', async () => {
-      const { userId } = await seedCalibratedEnrollment('internal-nudge@example.com')
+    it('accepts a valid secret and an enrollment-scoped payload', async () => {
+      const { enrollmentId } = await seedCalibratedEnrollment('internal-nudge@example.com')
 
       const res = await req()
         .post(NUDGE_ENDPOINT)
         .set(INTERNAL_API_SECRET_HEADER, INTERNAL_API_SECRET)
-        .send({ userIds: [userId] })
+        .send({ userCertificationIds: [enrollmentId] })
 
       expect(res.status).toBeLessThan(300)
     })
 
     it('rejects a wrong secret', async () => {
-      const { userId } = await seedCalibratedEnrollment('internal-nudge-wrong@example.com')
+      const { enrollmentId } = await seedCalibratedEnrollment('internal-nudge-wrong@example.com')
 
       const res = await req()
         .post(NUDGE_ENDPOINT)
         .set(INTERNAL_API_SECRET_HEADER, 'not-the-secret')
-        .send({ userIds: [userId] })
+        .send({ userCertificationIds: [enrollmentId] })
 
       expect([401, 403]).toContain(res.status)
     })
 
     it('rejects a missing secret', async () => {
-      const { userId } = await seedCalibratedEnrollment('internal-nudge-missing@example.com')
+      const { enrollmentId } = await seedCalibratedEnrollment('internal-nudge-missing@example.com')
 
       const res = await req()
         .post(NUDGE_ENDPOINT)
-        .send({ userIds: [userId] })
+        .send({ userCertificationIds: [enrollmentId] })
 
       expect([401, 403]).toContain(res.status)
     })
