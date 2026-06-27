@@ -3,10 +3,12 @@ import { ConfigService } from '@nestjs/config'
 import type { WorkerEnvConfig } from '../config/env.schema'
 import { DigestSchedulerCron } from './digest-scheduler.cron'
 import { LIFECYCLE_API_CLIENT, LifecycleApiClient } from './lifecycle-api.client'
+import { NudgeSchedulerCron } from './nudge-scheduler.cron'
 
 @Module({
   providers: [
     DigestSchedulerCron,
+    NudgeSchedulerCron,
     {
       provide: LIFECYCLE_API_CLIENT,
       inject: [ConfigService],

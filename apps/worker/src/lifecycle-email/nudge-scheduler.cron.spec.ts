@@ -23,10 +23,12 @@ interface CapturedRequest {
 const SECRET = 'test-internal-secret'
 
 const USER_ID = '00000000-0000-0000-0000-0000000000b0'
-const CERT_ID = '00000000-0000-0000-0000-0000000000b1'
 const LULLED_ENROLLMENT = '00000000-0000-0000-0000-0000000000c1'
 const RECENT_ENROLLMENT = '00000000-0000-0000-0000-0000000000c2'
 const RESPONDED_ENROLLMENT = '00000000-0000-0000-0000-0000000000c3'
+const LULLED_CERT = '00000000-0000-0000-0000-0000000000d1'
+const RECENT_CERT = '00000000-0000-0000-0000-0000000000d2'
+const RESPONDED_CERT = '00000000-0000-0000-0000-0000000000d3'
 
 // Default NUDGE_ACTIVITY_LULL_DAYS is 7.
 const FIXED_NOW = new Date('2026-06-29T12:00:00Z')
@@ -90,36 +92,37 @@ describe('NudgeSchedulerCron (integration)', () => {
   beforeEach(async () => {
     captured.length = 0
     const conn = em.fork().getConnection()
-    await conn.execute('TRUNCATE TABLE users CASCADE')
+    await conn.execute('TRUNCATE TABLE users, certifications CASCADE')
 
     await conn.execute(
       `INSERT INTO users (id, email, password_hash, email_verified, display_timezone, created_at, updated_at)
        VALUES (?, 'nudge@example.com', 'hash', true, 'UTC', now(), now())`,
       [USER_ID],
     )
-    await conn.execute(
-      `INSERT INTO certifications
-         (id, name, provider, code, domains, question_count, passing_score, time_limit_minutes, state, provenance, created_at, updated_at)
-       VALUES (?, 'AWS CLF', 'AWS', 'CLF', '[]'::jsonb, 65, 700, 90, 'live', '"verified"'::jsonb, now(), now())`,
-      [CERT_ID],
-    )
 
-    await seedEnrollment(LULLED_ENROLLMENT, null, LULLED_ACTIVITY)
-    await seedEnrollment(RECENT_ENROLLMENT, null, RECENT_ACTIVITY)
-    await seedEnrollment(RESPONDED_ENROLLMENT, 'passed', LULLED_ACTIVITY)
+    await seedEnrollment(LULLED_ENROLLMENT, LULLED_CERT, null, LULLED_ACTIVITY)
+    await seedEnrollment(RECENT_ENROLLMENT, RECENT_CERT, null, RECENT_ACTIVITY)
+    await seedEnrollment(RESPONDED_ENROLLMENT, RESPONDED_CERT, 'passed', LULLED_ACTIVITY)
   })
 
   async function seedEnrollment(
     enrollmentId: string,
+    certId: string,
     examOutcomeResponse: string | null,
     activityAt: Date,
   ): Promise<void> {
     const conn = em.fork().getConnection()
     await conn.execute(
+      `INSERT INTO certifications
+         (id, name, provider, code, domains, question_count, passing_score, time_limit_minutes, state, provenance, created_at, updated_at)
+       VALUES (?, 'AWS CLF', 'AWS', ?, '[]'::jsonb, 65, 700, 90, 'live', '"verified"'::jsonb, now(), now())`,
+      [certId, `CLF-${certId.slice(-4)}`],
+    )
+    await conn.execute(
       `INSERT INTO user_certifications
          (id, user_id, certification_id, status, enrolled_at, exam_outcome_nudge_count, exam_outcome_response, created_at, updated_at)
        VALUES (?, ?, ?, 'active', now(), 0, ?, now(), now())`,
-      [enrollmentId, USER_ID, CERT_ID, examOutcomeResponse],
+      [enrollmentId, USER_ID, certId, examOutcomeResponse],
     )
     await conn.execute(
       `INSERT INTO quiz_responses
