@@ -1,4 +1,5 @@
 import {
+  CERT_REVERIFICATION_INTERVAL_DAYS_DEFAULT,
   CHUNK_OVERLAP_DEFAULT,
   CHUNK_SIZE_DEFAULT,
   DEFAULT_MIN_CHUNKS_PER_DOMAIN,
@@ -78,6 +79,11 @@ const envSchema = z.object({
   CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE: zodCoerceNumber()
     .refine((n) => n > 0, { message: 'Must be a positive number' })
     .default(DEFAULT_TOTAL_CHUNK_MULTIPLE),
+
+  // Re-verification surfacing interval for certifications
+  CERT_REVERIFICATION_INTERVAL_DAYS: zodCoerceNumber()
+    .refine((n) => Number.isInteger(n) && n > 0, { message: 'Must be a positive integer' })
+    .default(CERT_REVERIFICATION_INTERVAL_DAYS_DEFAULT),
 })
 
 export type WorkerEnvConfig = z.infer<typeof envSchema>

@@ -7,8 +7,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { WorkerConfigModule } from '../../config/config.module'
 import {
   CERT_REVERIFICATION_CRON,
-  CertReverificationCron,
   CERTS_DUE_FOR_REVERIFICATION_GAUGE,
+  CertReverificationCron,
 } from './cert-reverification.cron'
 import { STALE_SOURCE_CRON } from './stale-source.cron'
 
@@ -118,7 +118,8 @@ describe('CertReverificationCron (integration)', () => {
       )
 
     expect(after).toEqual(before)
-    expect(after.map((r) => r.id).sort()).toEqual([...ids].sort())
+    const afterIds = after.map((row: { id: string }) => row.id).sort()
+    expect(afterIds).toEqual([...ids].sort())
   })
 
   it('is registered as a cron distinct from the stale-source cron', () => {

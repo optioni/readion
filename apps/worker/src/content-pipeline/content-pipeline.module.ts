@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common'
 import { queryCoverageStats } from '@readion/db'
 import { CERT_EXTRACTION_QUEUE } from '@readion/shared'
+import { makeGaugeProvider } from '@willsoto/nestjs-prometheus'
 import { LlmModule } from '../llm/llm.module'
 import { registerSourceQueue } from '../queue/queue.helpers'
 import { CertExtractionProcessor } from './cert-extraction/cert-extraction.processor'
 import { CertExtractionService } from './cert-extraction/cert-extraction.service'
+import {
+  CERTS_DUE_FOR_REVERIFICATION_GAUGE,
+  CertReverificationCron,
+} from './cron/cert-reverification.cron'
 import { StaleSourceCron } from './cron/stale-source.cron'
 import { SupersededChunkCleanupCron } from './cron/superseded-chunk-cleanup.cron'
 import { DomainTaggerService } from './domain-tagger/domain-tagger.service'
@@ -50,6 +55,11 @@ import { ChunkSupersessionService } from './supersession/chunk-supersession.serv
     IngestionMetricService,
     ContentQueuesService,
     StaleSourceCron,
+    CertReverificationCron,
+    makeGaugeProvider({
+      name: CERTS_DUE_FOR_REVERIFICATION_GAUGE,
+      help: 'Current number of certifications due for re-verification',
+    }),
     ChunkSupersessionService,
     ChunkReconciliationService,
     SupersededChunkCleanupCron,
