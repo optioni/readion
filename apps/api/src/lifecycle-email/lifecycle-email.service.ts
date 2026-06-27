@@ -15,6 +15,7 @@ import { ReadinessService } from '../readiness/readiness.service'
 import { ReviewService } from '../review/review.service'
 import { WeakAreasService } from '../weak-areas/weak-areas.service'
 import { buildEnrollmentSection } from './digest-assembly'
+import { shouldSendNudge } from './nudge-policy'
 
 const PRODUCT_NAME = 'Readion'
 
@@ -89,23 +90,16 @@ export class LifecycleEmailService {
       return
     }
 
-    // A recorded response (including a dismissal) stops all further nudges.
-    if (enrollment.examOutcomeResponse !== null) {
+    const allowed = shouldSendNudge({
+      now,
+      examOutcomeResponse: enrollment.examOutcomeResponse,
+      nudgeCount: enrollment.examOutcomeNudgeCount,
+      nudgeSentAt: enrollment.examOutcomeNudgeSentAt,
+      maxFollowups: Number(this.config.get('NUDGE_MAX_FOLLOWUPS', { infer: true })),
+      followupDelayDays: Number(this.config.get('NUDGE_FOLLOWUP_DELAY_DAYS', { infer: true })),
+    })
+    if (!allowed) {
       return
-    }
-
-    const maxFollowups = Number(this.config.get('NUDGE_MAX_FOLLOWUPS', { infer: true }))
-    const followupDelayDays = Number(this.config.get('NUDGE_FOLLOWUP_DELAY_DAYS', { infer: true }))
-    const nudgeCount = enrollment.examOutcomeNudgeCount
-    if (nudgeCount >= 1 + maxFollowups) {
-      return
-    }
-    if (nudgeCount >= 1) {
-      const sentAt = enrollment.examOutcomeNudgeSentAt
-      const delayMs = followupDelayDays * 24 * 60 * 60 * 1000
-      if (sentAt === null || now.getTime() - sentAt.getTime() < delayMs) {
-        return
-      }
     }
 
     const readiness = await this.readiness.compute(userCertificationId)
