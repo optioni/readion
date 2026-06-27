@@ -7,7 +7,12 @@ export type {
   MailTemplatePayloads,
   WelcomeTemplatePayload,
 } from './registry'
-export { foundationalTemplate, mailTemplateRegistry, welcomeTemplate } from './registry'
+export {
+  digestTemplate,
+  foundationalTemplate,
+  mailTemplateRegistry,
+  welcomeTemplate,
+} from './registry'
 export { renderTemplate } from './renderer'
 export type {
   MailTemplate,

@@ -4,10 +4,13 @@ import { ConfigService } from '@nestjs/config'
 import type { EnvConfig } from '../config/env.schema'
 import type { ConfiguredMailService } from '../mail/mail.service'
 import { MailService } from '../mail/mail.service'
-import type { DigestTemplatePayload } from '../mail/templates'
+import type { DigestEnrollmentSection, DigestTemplatePayload } from '../mail/templates'
 import { ReadinessService } from '../readiness/readiness.service'
 import { ReviewService } from '../review/review.service'
 import { WeakAreasService } from '../weak-areas/weak-areas.service'
+
+const PRODUCT_NAME = 'Readion'
+const NO_WEAK_AREA_FALLBACK = 'your recent topics'
 
 export type DigestEnrollmentInput = {
   id: string
@@ -28,10 +31,36 @@ export class LifecycleEmailService {
   ) {}
 
   async assembleDigest(
-    _userId: string,
-    _unsubscribeUrl: string,
-    _enrollments: DigestEnrollmentInput[],
+    userId: string,
+    unsubscribeUrl: string,
+    enrollments: DigestEnrollmentInput[],
   ): Promise<DigestTemplatePayload> {
-    throw new Error('Not implemented')
+    const sections: DigestEnrollmentSection[] = []
+    for (const enrollment of enrollments) {
+      sections.push(await this.buildSection(userId, enrollment))
+    }
+    return { productName: PRODUCT_NAME, unsubscribeUrl, enrollments: sections }
+  }
+
+  private async buildSection(
+    userId: string,
+    enrollment: DigestEnrollmentInput,
+  ): Promise<DigestEnrollmentSection> {
+    const readiness = await this.readiness.compute(enrollment.id)
+    if (!readiness.calibrated) {
+      return { certName: enrollment.certName, calibrated: false }
+    }
+
+    const weakAreas = await this.weakAreas.listForEnrollment(userId, enrollment.id)
+    const { meta } = await this.review.getQueue(userId, enrollment.id)
+
+    return {
+      certName: enrollment.certName,
+      calibrated: true,
+      readiness: readiness.score,
+      delta: enrollment.snapshot === null ? null : readiness.score - enrollment.snapshot,
+      weakestDomain: weakAreas[0]?.domain ?? NO_WEAK_AREA_FALLBACK,
+      dueReviewCount: meta.dueCount,
+    }
   }
 }

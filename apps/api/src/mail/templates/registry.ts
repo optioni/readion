@@ -44,6 +44,42 @@ export type MailTemplatePayloads = {
   emailVerification: AuthLinkTemplatePayload
   passwordReset: AuthLinkTemplatePayload
   welcome: WelcomeTemplatePayload
+  digest: DigestTemplatePayload
+}
+
+function formatReadiness(readiness: number): string {
+  return `${Math.round(readiness)}%`
+}
+
+function formatDelta(delta: number | null): string {
+  if (delta === null) {
+    return ''
+  }
+  const rounded = Math.round(delta)
+  const sign = rounded >= 0 ? '+' : ''
+  return `${sign}${rounded}%`
+}
+
+function digestSectionText(section: DigestEnrollmentSection): string {
+  if (!section.calibrated) {
+    return `${section.certName}: Keep going — a few more questions will unlock your readiness score.`
+  }
+  const delta = formatDelta(section.delta)
+  const deltaText = delta === '' ? '' : ` (${delta} from last week)`
+  return `${section.certName}: You're at ${formatReadiness(section.readiness)} readiness${deltaText}. Your best focus area is ${section.weakestDomain}, with ${section.dueReviewCount} review item(s) due.`
+}
+
+function digestSectionHtml(section: DigestEnrollmentSection): string {
+  if (!section.calibrated) {
+    return `<p><strong>${escapeHtml(section.certName)}</strong>: Keep going — a few more questions will unlock your readiness score.</p>`
+  }
+  const delta = formatDelta(section.delta)
+  const deltaText = delta === '' ? '' : ` (${escapeHtml(delta)} from last week)`
+  return `<p><strong>${escapeHtml(section.certName)}</strong>: You're at ${escapeHtml(
+    formatReadiness(section.readiness),
+  )} readiness${deltaText}. Your best focus area is ${escapeHtml(
+    section.weakestDomain,
+  )}, with ${section.dueReviewCount} review item(s) due.</p>`
 }
 
 export const foundationalTemplate = {
@@ -100,9 +136,29 @@ export const welcomeTemplate = {
     ),
 } satisfies MailTemplate<WelcomeTemplatePayload>
 
+export const digestTemplate = {
+  subject: (payload) => `Your weekly progress on ${payload.productName}`,
+  text: (payload) =>
+    `Here's your weekly progress on ${payload.productName}:\n\n${payload.enrollments
+      .map(digestSectionText)
+      .join(
+        '\n\n',
+      )}\n\nKeep up the great work — you've got this!\n\nUnsubscribe: ${payload.unsubscribeUrl}`,
+  html: (payload) =>
+    wrapInBaseLayout(
+      `<main>
+        <p>Here's your weekly progress on ${escapeHtml(payload.productName)}:</p>
+        ${payload.enrollments.map(digestSectionHtml).join('\n')}
+        <p>Keep up the great work — you've got this!</p>
+        <p><a href="${escapeHtml(payload.unsubscribeUrl)}">Unsubscribe</a></p>
+      </main>`,
+    ),
+} satisfies MailTemplate<DigestTemplatePayload>
+
 export const mailTemplateRegistry = {
   foundational: foundationalTemplate,
   emailVerification: emailVerificationTemplate,
   passwordReset: passwordResetTemplate,
   welcome: welcomeTemplate,
+  digest: digestTemplate,
 } satisfies MailTemplateRegistry<MailTemplatePayloads>

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { EnvConfig } from '../config/env.schema'
 import type { ConfiguredMailService } from '../mail/mail.service'
 import type { ReadinessResult } from '../readiness/calibration'
+import type { ReadinessService } from '../readiness/readiness.service'
 import type { ReviewService } from '../review/review.service'
 import type { WeakAreaDto, WeakAreasService } from '../weak-areas/weak-areas.service'
 import { type DigestEnrollmentInput, LifecycleEmailService } from './lifecycle-email.service'
@@ -40,7 +41,9 @@ function buildService(maps: {
     compute: vi.fn(async (enrollmentId: string) => maps.readiness[enrollmentId]),
   } as unknown as ReadinessService
   const weakAreas = {
-    listForEnrollment: vi.fn(async (_userId: string, enrollmentId: string) => maps.weakAreas[enrollmentId] ?? []),
+    listForEnrollment: vi.fn(
+      async (_userId: string, enrollmentId: string) => maps.weakAreas[enrollmentId] ?? [],
+    ),
   } as unknown as WeakAreasService
   const review = {
     getQueue: vi.fn(async (_userId: string, enrollmentId: string) => ({
