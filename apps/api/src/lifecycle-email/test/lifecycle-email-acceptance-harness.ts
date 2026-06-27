@@ -13,16 +13,17 @@ import { bootstrapApp } from '../../bootstrap'
 import { type CapturedMailMessage, MAIL_CAPTURED_MESSAGES } from '../../mail/transport'
 import { REDIS_CLIENT } from '../../redis/redis.module'
 
-// Shared secret guarding the worker -> API internal lifecycle channel. Group 9 wires
-// this into config + a guard; the acceptance test sends it on the internal calls so the
-// contract is expressed before the production code exists.
+// Shared secret guarding the worker -> API internal lifecycle channel. The internal
+// controller's `InternalSecretGuard` reads this header and compares it (constant-time)
+// against `INTERNAL_API_SECRET`.
 export const INTERNAL_API_SECRET = 'test-internal-lifecycle-secret'
-export const INTERNAL_SECRET_HEADER = 'x-internal-secret'
+export const INTERNAL_SECRET_HEADER = 'x-internal-api-secret'
 
 export type LifecycleEmailAcceptanceHarness = {
   app: INestApplication
   moduleRef: TestingModule
   resetState: () => Promise<void>
+  clearCapturedMail: () => void
   teardown: () => Promise<void>
   getRequest: () => ReturnType<typeof supertest>
   capturedMail: () => ReadonlyArray<CapturedMailMessage>
@@ -71,6 +72,9 @@ export async function createLifecycleEmailAcceptanceHarness(): Promise<Lifecycle
     resetState: async () => {
       await redis.flushdb()
       await truncateDomainTables(em)
+      captured.length = 0
+    },
+    clearCapturedMail: () => {
       captured.length = 0
     },
     teardown: async () => {

@@ -6,11 +6,9 @@ import {
   type LifecycleEmailAcceptanceHarness,
 } from './test/lifecycle-email-acceptance-harness'
 
-// Outer-loop acceptance test for the email-lifecycle change. It is RED on purpose:
-// the welcome send, the internal digest/nudge endpoints, the public unsubscribe and
-// exam-outcome routes, and the digest/exam-nudge templates do not exist yet. It turns
-// green once Group 9 wires the full flow together. The harness boot (containers + app)
-// succeeds; every failure below is attributable to absent production code, not setup.
+// Outer-loop acceptance test for the email-lifecycle change: it exercises the welcome
+// send, the internal digest/nudge endpoints, the public unsubscribe and exam-outcome
+// routes, and the digest/exam-nudge templates end-to-end against real Postgres + Redis.
 
 const DIGEST_ENDPOINT = '/internal/lifecycle/digest'
 const NUDGE_ENDPOINT = '/internal/lifecycle/nudge'
@@ -97,7 +95,7 @@ describe('email-lifecycle acceptance', () => {
     expect(unsubscribeRes.status).toBe(200)
 
     // After opting out, re-triggering the digest must not send another digest email.
-    harness.resetState()
+    harness.clearCapturedMail()
     const secondRun = await req()
       .post(DIGEST_ENDPOINT)
       .set(INTERNAL_SECRET_HEADER, INTERNAL_API_SECRET)
@@ -131,7 +129,7 @@ describe('email-lifecycle acceptance', () => {
     const nudgeRes = await req()
       .post(NUDGE_ENDPOINT)
       .set(INTERNAL_SECRET_HEADER, INTERNAL_API_SECRET)
-      .send({ userIds: [userId] })
+      .send({ userCertificationIds: [enrollmentId] })
     expect(nudgeRes.status).toBeLessThan(300)
 
     const survey = findBySubject(harness.capturedMail(), 'exam')
@@ -142,7 +140,7 @@ describe('email-lifecycle acceptance', () => {
     const outcomeRes = await req()
       .post(`/api/v1/user-certifications/${enrollmentId}/exam-outcome`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ outcome: 'passed' })
+      .send({ response: 'passed' })
     expect(outcomeRes.status).toBeLessThan(300)
 
     const readinessAfter = await req()
