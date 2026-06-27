@@ -38,9 +38,13 @@ describe('ContentSourceRepository', () => {
     await harness?.teardown()
   })
 
-  function repository(): ContentSourceRepository {
+  function db(): DbHarness {
     if (!harness) throw new Error('DB harness was not initialized')
-    return new ContentSourceRepository(harness.getEm())
+    return harness
+  }
+
+  function repository(): ContentSourceRepository {
+    return new ContentSourceRepository(db().getEm())
   }
 
   describe('create', () => {
@@ -74,7 +78,7 @@ describe('ContentSourceRepository', () => {
 
   describe('findById', () => {
     it('returns the source when present', async () => {
-      const seeded = await seedSource(harness!, {
+      const seeded = await seedSource(db(), {
         certificationId: randomUUID(),
         url: 'https://example.com/one',
         createdAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -99,22 +103,22 @@ describe('ContentSourceRepository', () => {
       const certificationId = randomUUID()
       const otherCertificationId = randomUUID()
 
-      await seedSource(harness!, {
+      await seedSource(db(), {
         certificationId,
         url: 'https://example.com/oldest',
         createdAt: new Date('2026-01-01T00:00:00.000Z'),
       })
-      await seedSource(harness!, {
+      await seedSource(db(), {
         certificationId,
         url: 'https://example.com/newest',
         createdAt: new Date('2026-03-01T00:00:00.000Z'),
       })
-      await seedSource(harness!, {
+      await seedSource(db(), {
         certificationId,
         url: 'https://example.com/middle',
         createdAt: new Date('2026-02-01T00:00:00.000Z'),
       })
-      await seedSource(harness!, {
+      await seedSource(db(), {
         certificationId: otherCertificationId,
         url: 'https://example.com/other',
         createdAt: new Date('2026-04-01T00:00:00.000Z'),
@@ -131,12 +135,12 @@ describe('ContentSourceRepository', () => {
     })
 
     it('lists all sources newest-first when no certification filter is given', async () => {
-      await seedSource(harness!, {
+      await seedSource(db(), {
         certificationId: randomUUID(),
         url: 'https://example.com/a',
         createdAt: new Date('2026-01-01T00:00:00.000Z'),
       })
-      await seedSource(harness!, {
+      await seedSource(db(), {
         certificationId: randomUUID(),
         url: 'https://example.com/b',
         createdAt: new Date('2026-02-01T00:00:00.000Z'),
@@ -154,7 +158,7 @@ describe('ContentSourceRepository', () => {
     it('paginates with page/limit translated to offset', async () => {
       const certificationId = randomUUID()
       for (let index = 0; index < 5; index += 1) {
-        await seedSource(harness!, {
+        await seedSource(db(), {
           certificationId,
           url: `https://example.com/${index}`,
           createdAt: new Date(Date.UTC(2026, 0, index + 1)),
@@ -173,7 +177,7 @@ describe('ContentSourceRepository', () => {
 
   describe('setEnabled', () => {
     it('toggles the enabled flag and returns the updated source', async () => {
-      const seeded = await seedSource(harness!, {
+      const seeded = await seedSource(db(), {
         certificationId: randomUUID(),
         url: 'https://example.com/toggle',
         createdAt: new Date('2026-01-01T00:00:00.000Z'),
