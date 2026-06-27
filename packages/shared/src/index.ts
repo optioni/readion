@@ -162,6 +162,7 @@ export {
   EXAM_READY_THRESHOLD_DEFAULT,
   examOutcomeRequestSchema,
   examOutcomeResponses,
+  lifecycleEnrollmentIdsRequestSchema,
   lifecycleUserIdsRequestSchema,
   NUDGE_ACTIVITY_LULL_DAYS_DEFAULT,
   NUDGE_FOLLOWUP_DELAY_DAYS_DEFAULT,

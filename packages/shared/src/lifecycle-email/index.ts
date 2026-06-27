@@ -14,8 +14,12 @@ export const lifecycleUserIdsRequestSchema = z.object({
   userIds: z.array(z.string().uuid()),
 })
 
+export const lifecycleEnrollmentIdsRequestSchema = z.object({
+  userCertificationIds: z.array(z.string().uuid()),
+})
+
 export type LifecycleDigestRequest = z.infer<typeof lifecycleUserIdsRequestSchema>
-export type LifecycleNudgeRequest = z.infer<typeof lifecycleUserIdsRequestSchema>
+export type LifecycleNudgeRequest = z.infer<typeof lifecycleEnrollmentIdsRequestSchema>
 
 export const EXAM_READY_THRESHOLD_DEFAULT = 80
 export const NUDGE_MAX_FOLLOWUPS_DEFAULT = 1
