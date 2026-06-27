@@ -74,6 +74,10 @@ export class LifecycleEmailService {
     await em.flush()
   }
 
+  async maybeSendNudge(_userId: string): Promise<void> {
+    // Implemented in group 7 (post-exam nudge)
+  }
+
   async unsubscribe(token: string): Promise<void> {
     if (token.trim() === '') {
       return
