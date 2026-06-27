@@ -18,6 +18,8 @@ describe('AuditAction vocabulary', () => {
   it('includes the forward-looking action values', () => {
     expect(AuditAction.SourceAdded).toBe('source.added')
     expect(AuditAction.SourceDisabled).toBe('source.disabled')
+    expect(AuditAction.SourceEnabled).toBe('source.enabled')
+    expect(AuditAction.SourceReingested).toBe('source.reingested')
     expect(AuditAction.ContentQuarantined).toBe('content.quarantined')
     expect(AuditAction.CertPublished).toBe('cert.published')
     expect(AuditAction.CertReverified).toBe('cert.reverified')
@@ -28,9 +30,16 @@ describe('AuditAction vocabulary', () => {
     expect(auditActions).toContain('user.role.demoted')
   })
 
+  it('auditActions tuple includes the source lifecycle values', () => {
+    expect(auditActions).toContain('source.enabled')
+    expect(auditActions).toContain('source.reingested')
+  })
+
   it('exports the AuditActionValue type', () => {
     expectTypeOf<'user.role.promoted'>().toMatchTypeOf<AuditActionValue>()
     expectTypeOf<'user.role.demoted'>().toMatchTypeOf<AuditActionValue>()
+    expectTypeOf<'source.enabled'>().toMatchTypeOf<AuditActionValue>()
+    expectTypeOf<'source.reingested'>().toMatchTypeOf<AuditActionValue>()
   })
 })
 
