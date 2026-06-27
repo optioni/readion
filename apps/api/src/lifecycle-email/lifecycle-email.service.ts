@@ -1,9 +1,11 @@
 import { randomBytes } from 'node:crypto'
 import { EntityManager } from '@mikro-orm/core'
-import { Inject, Injectable, NotFoundException } from '@nestjs/common'
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { User, UserCertification } from '@readion/db'
 import type { ExamOutcomeResponse } from '@readion/shared'
+import { InjectMetric } from '@willsoto/nestjs-prometheus'
+import type { Counter } from 'prom-client'
 import type { EnvConfig } from '../config/env.schema'
 import type { ConfiguredMailService } from '../mail/mail.service'
 import { MailService } from '../mail/mail.service'
@@ -16,6 +18,10 @@ import { ReadinessService } from '../readiness/readiness.service'
 import { ReviewService } from '../review/review.service'
 import { WeakAreasService } from '../weak-areas/weak-areas.service'
 import { buildEnrollmentSection } from './digest-assembly'
+import {
+  LIFECYCLE_EMAILS_SENT_METRIC,
+  type LifecycleEmailType,
+} from './lifecycle-email.metrics'
 import { shouldSendNudge } from './nudge-policy'
 
 const PRODUCT_NAME = 'Readion'
@@ -28,6 +34,8 @@ export type DigestEnrollmentInput = {
 
 @Injectable()
 export class LifecycleEmailService {
+  private readonly logger = new Logger(LifecycleEmailService.name)
+
   constructor(
     private readonly em: EntityManager,
     private readonly readiness: ReadinessService,
@@ -36,7 +44,18 @@ export class LifecycleEmailService {
     @Inject(MailService)
     private readonly mail: ConfiguredMailService,
     private readonly config: ConfigService<EnvConfig>,
+    @InjectMetric(LIFECYCLE_EMAILS_SENT_METRIC)
+    private readonly emailsSent: Counter,
   ) {}
+
+  // Observability is best-effort: a metrics failure must never break an email send.
+  private recordEmailSent(type: LifecycleEmailType): void {
+    try {
+      this.emailsSent.inc({ type })
+    } catch (error: unknown) {
+      this.logger.warn(`Failed to record lifecycle email metric (${type})`, error)
+    }
+  }
 
   async sendDigest(userId: string): Promise<void> {
     const em = this.em.fork()
@@ -67,6 +86,7 @@ export class LifecycleEmailService {
 
     const payload = await this.assembleDigest(userId, unsubscribeUrl, inputs)
     await this.mail.send('digest', user.email, payload)
+    this.recordEmailSent('digest')
 
     user.lastDigestSentAt = new Date()
     // `payload.enrollments` preserves the order of `enrollments`/`inputs`, so the
@@ -114,6 +134,7 @@ export class LifecycleEmailService {
       certName: enrollment.certification.name,
     }
     await this.mail.send('exam-nudge', enrollment.user.email, payload)
+    this.recordEmailSent('nudge')
 
     enrollment.examOutcomeNudgeSentAt = now
     enrollment.examOutcomeNudgeCount += 1

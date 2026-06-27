@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { APP_GUARD } from '@nestjs/core'
 import { JwtModule } from '@nestjs/jwt'
 import type Redis from 'ioredis'
+import { LifecycleEmailMetricsModule } from '../lifecycle-email/lifecycle-email.metrics'
 import { MailModule } from '../mail/mail.module'
 import { REDIS_CLIENT } from '../redis/redis.module'
 import { AccessTokenService } from './access-token.service'
@@ -14,7 +15,7 @@ import { RefreshTokenStore } from './refresh-token.store'
 import { PasswordResetTokenService, VerificationTokenService } from './single-use-token.service'
 
 @Module({
-  imports: [JwtModule.register({}), MailModule],
+  imports: [JwtModule.register({}), MailModule, LifecycleEmailMetricsModule],
   controllers: [AuthController],
   providers: [
     AuthService,

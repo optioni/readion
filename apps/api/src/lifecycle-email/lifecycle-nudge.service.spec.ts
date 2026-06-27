@@ -1,5 +1,6 @@
 import type { EntityManager } from '@mikro-orm/core'
 import type { ConfigService } from '@nestjs/config'
+import type { Counter } from 'prom-client'
 import { describe, expect, it, vi } from 'vitest'
 import type { EnvConfig } from '../config/env.schema'
 import type { ConfiguredMailService } from '../mail/mail.service'
@@ -52,6 +53,7 @@ function buildService(opts: { enrollment: FakeEnrollment | null; readiness: Read
   send: ReturnType<typeof vi.fn>
   compute: ReturnType<typeof vi.fn>
   flush: ReturnType<typeof vi.fn>
+  inc: ReturnType<typeof vi.fn>
 } {
   const flush = vi.fn(async () => {})
   const fork = {
@@ -68,6 +70,8 @@ function buildService(opts: { enrollment: FakeEnrollment | null; readiness: Read
     get: (key: string) => CONFIG[key],
     getOrThrow: (key: string) => CONFIG[key],
   } as unknown as ConfigService<EnvConfig>
+  const inc = vi.fn()
+  const emailsSent = { inc } as unknown as Counter
 
   const service = new LifecycleEmailService(
     em,
@@ -76,15 +80,16 @@ function buildService(opts: { enrollment: FakeEnrollment | null; readiness: Read
     {} as ReviewService,
     mail,
     config,
+    emailsSent,
   )
 
-  return { service, send, compute, flush }
+  return { service, send, compute, flush, inc }
 }
 
 describe('LifecycleEmailService.maybeSendNudge', () => {
   it('sends and records the first nudge for a calibrated, exam-ready enrollment', async () => {
     const enrollment = buildEnrollment()
-    const { service, send } = buildService({ enrollment, readiness: calibrated(90) })
+    const { service, send, inc } = buildService({ enrollment, readiness: calibrated(90) })
 
     await service.maybeSendNudge(ENROLLMENT_ID, NOW)
 
@@ -94,6 +99,16 @@ describe('LifecycleEmailService.maybeSendNudge', () => {
     expect(to).toBe('learner@example.com')
     expect(enrollment.examOutcomeNudgeCount).toBe(1)
     expect(enrollment.examOutcomeNudgeSentAt).toEqual(NOW)
+    expect(inc).toHaveBeenCalledWith({ type: 'nudge' })
+  })
+
+  it('does not count an email when no nudge is sent', async () => {
+    const enrollment = buildEnrollment()
+    const { service, inc } = buildService({ enrollment, readiness: calibrated(50) })
+
+    await service.maybeSendNudge(ENROLLMENT_ID, NOW)
+
+    expect(inc).not.toHaveBeenCalled()
   })
 
   it('does not send when readiness is below the exam-ready threshold', async () => {

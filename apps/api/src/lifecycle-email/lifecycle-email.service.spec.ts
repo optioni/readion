@@ -1,5 +1,6 @@
 import type { EntityManager } from '@mikro-orm/core'
 import type { ConfigService } from '@nestjs/config'
+import type { Counter } from 'prom-client'
 import { describe, expect, it, vi } from 'vitest'
 import type { EnvConfig } from '../config/env.schema'
 import type { ConfiguredMailService } from '../mail/mail.service'
@@ -59,6 +60,7 @@ function buildService(maps: {
     review,
     {} as ConfiguredMailService,
     {} as ConfigService<EnvConfig>,
+    { inc: vi.fn() } as unknown as Counter,
   )
 }
 

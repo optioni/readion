@@ -10,7 +10,10 @@ import {
 import { ConfigService } from '@nestjs/config'
 import { User, UserRole } from '@readion/db'
 import type { AuthSessionResponse, AuthUser, RoleValue } from '@readion/shared'
+import { InjectMetric } from '@willsoto/nestjs-prometheus'
+import type { Counter } from 'prom-client'
 import type { EnvConfig } from '../config/env.schema'
+import { LIFECYCLE_EMAILS_SENT_METRIC } from '../lifecycle-email/lifecycle-email.metrics'
 import type { ConfiguredMailService } from '../mail/mail.service'
 import { MailService } from '../mail/mail.service'
 import { AccessTokenService } from './access-token.service'
@@ -39,6 +42,8 @@ export class AuthService {
     private readonly config: ConfigService<EnvConfig>,
     @Inject(MailService)
     private readonly mail: ConfiguredMailService,
+    @InjectMetric(LIFECYCLE_EMAILS_SENT_METRIC)
+    private readonly emailsSent: Counter,
   ) {}
 
   async register(input: { email: string; password: string }): Promise<IssuedSession> {
@@ -213,9 +218,21 @@ export class AuthService {
         productName: PRODUCT_NAME,
         actionUrl: this.webBaseUrl(),
       })
+      .then(() => {
+        this.recordWelcomeSent()
+      })
       .catch((error: unknown) => {
         this.logger.error(`Failed to send welcome email to ${user.email}`, error)
       })
+  }
+
+  // Observability is best-effort: a metrics failure must never break registration.
+  private recordWelcomeSent(): void {
+    try {
+      this.emailsSent.inc({ type: 'welcome' })
+    } catch (error: unknown) {
+      this.logger.warn('Failed to record welcome email metric', error)
+    }
   }
 
   private buildWebLink(path: string, token: string) {
