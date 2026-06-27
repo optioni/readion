@@ -111,10 +111,7 @@ describe('mapJobToStatus', () => {
   })
 
   it('nulls absent timestamps', () => {
-    const status = mapJobToStatus(
-      { id: 'job-2', progress: 0, attemptsMade: 0 },
-      'delayed',
-    )
+    const status = mapJobToStatus({ id: 'job-2', progress: 0, attemptsMade: 0 }, 'delayed')
 
     expect(status.timestamp).toBeNull()
     expect(status.processedOn).toBeNull()
