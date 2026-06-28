@@ -35,6 +35,7 @@ function mountPage() {
       stubs: {
         OverviewTab: { template: '<div data-testid="overview-tab-stub" />' },
         SessionsTab: { template: '<div data-testid="sessions-tab-stub" />' },
+        ExamHistoryTab: { template: '<div data-testid="exam-history-tab-stub" />' },
       },
     },
   })

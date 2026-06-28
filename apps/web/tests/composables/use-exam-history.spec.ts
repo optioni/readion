@@ -6,7 +6,6 @@ import { renderComposable } from '../support/vue-query-harness'
 vi.mock('~~/src/api/enrollment-mock-exam/enrollment-mock-exam')
 
 const attempt = (overrides: Record<string, unknown> & { id: string }) => ({
-  id: overrides.id,
   userCertificationId: 'enr-1',
   type: 'mock',
   status: 'submitted',
@@ -80,7 +79,14 @@ describe('useExamHistory', () => {
     })
 
     expect(result.rows.value).toEqual([
-      { id: 'm2', date: null, type: 'diagnostic', status: 'in_progress', score: null, passed: null },
+      {
+        id: 'm2',
+        date: null,
+        type: 'diagnostic',
+        status: 'in_progress',
+        score: null,
+        passed: null,
+      },
     ])
   })
 

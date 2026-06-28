@@ -8,4 +8,5 @@ export const certDetailQueryKeys = {
   sessions: (certificationId: string, page: number, limit: number) =>
     ['cert-detail', 'sessions', certificationId, page, limit] as const,
   sessionSummary: (sessionId: string) => ['cert-detail', 'session-summary', sessionId] as const,
+  mockExams: (enrollmentId: string) => ['cert-detail', 'mock-exams', enrollmentId] as const,
 }
