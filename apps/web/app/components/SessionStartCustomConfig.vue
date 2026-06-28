@@ -13,9 +13,10 @@ import {
   sessionLearningStyles,
 } from '@readion/shared'
 import { computed, reactive, ref } from 'vue'
+import SessionDomainToggle from '~/components/SessionDomainToggle.vue'
+import SessionOverrideControl from '~/components/SessionOverrideControl.vue'
 import { sessionRunPath } from '~/composables/runnerRoutes'
 import { createSession } from '~/composables/sessionViewApi'
-import { statusColorForScore } from '~/composables/statusColor'
 import { useCertDetail } from '~/composables/useCertDetail'
 import { useCertWeakAreas } from '~/composables/useCertWeakAreas'
 
@@ -86,13 +87,6 @@ async function start() {
     isStarting.value = false
   }
 }
-
-const statusColorClass: Record<string, string> = {
-  poor: 'text-readion-status-poor',
-  warning: 'text-readion-status-warning',
-  medium: 'text-readion-status-warning',
-  good: 'text-readion-status-good',
-}
 </script>
 
 <template>
@@ -128,53 +122,14 @@ const statusColorClass: Record<string, string> = {
           </div>
         </div>
 
-        <button
+        <SessionDomainToggle
           v-for="domain in domains"
           :key="domain.name"
-          type="button"
-          :data-testid="`domain-toggle-${domain.name}`"
-          :aria-pressed="selected.has(domain.name)"
-          class="flex w-full items-center gap-2.5 border-readion-border-default border-b py-2 text-left last:border-b-0"
-          @click="toggleDomain(domain.name)"
-        >
-          <span
-            class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border"
-            :class="
-              selected.has(domain.name)
-                ? 'border-readion-primary bg-readion-primary'
-                : 'border-readion-border-strong'
-            "
-          >
-            <svg
-              v-if="selected.has(domain.name)"
-              width="9"
-              height="9"
-              viewBox="0 0 9 9"
-              fill="none"
-            >
-              <path
-                d="M2 4.5l2 2 3-3"
-                stroke="#fff"
-                stroke-width="1.4"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </span>
-          <span
-            class="flex-1 text-xs"
-            :class="selected.has(domain.name) ? 'text-slate-100' : 'text-slate-300'"
-          >
-            {{ domain.name }}
-          </span>
-          <span
-            v-if="scoreByDomain.has(domain.name)"
-            class="font-medium text-[11px]"
-            :class="statusColorClass[statusColorForScore(scoreByDomain.get(domain.name) ?? 0)]"
-          >
-            {{ scoreByDomain.get(domain.name) }}%
-          </span>
-        </button>
+          :name="domain.name"
+          :score="scoreByDomain.get(domain.name)"
+          :selected="selected.has(domain.name)"
+          @toggle="toggleDomain(domain.name)"
+        />
         <div class="py-2" />
       </div>
     </div>
@@ -187,99 +142,35 @@ const statusColorClass: Record<string, string> = {
         <div
           class="flex flex-col gap-4 rounded-xl border border-readion-border-strong bg-readion-background-surface p-4"
         >
-          <div class="flex flex-col gap-2">
-            <span class="text-[11px] text-readion-text-muted uppercase tracking-wide">Duration</span>
-            <div class="flex flex-wrap gap-1.5">
-              <button
-                v-for="option in sessionDurationMinutes"
-                :key="option"
-                type="button"
-                :data-testid="`duration-option-${option}`"
-                :aria-pressed="duration === option"
-                class="rounded-full border px-2.5 py-1 text-xs"
-                :class="
-                  duration === option
-                    ? 'border-readion-primary bg-readion-primary text-white'
-                    : 'border-readion-border-strong text-slate-300'
-                "
-                @click="duration = option"
-              >
-                {{ option }}m
-              </button>
-            </div>
-          </div>
-
-          <div class="flex flex-col gap-2">
-            <span class="text-[11px] text-readion-text-muted uppercase tracking-wide">
-              Content mix
-            </span>
-            <div class="flex flex-wrap gap-1.5">
-              <button
-                v-for="option in sessionContentMixes"
-                :key="option"
-                type="button"
-                :data-testid="`content-mix-${option}`"
-                :aria-pressed="contentMix === option"
-                class="rounded-full border px-2.5 py-1 text-xs"
-                :class="
-                  contentMix === option
-                    ? 'border-readion-primary bg-readion-primary text-white'
-                    : 'border-readion-border-strong text-slate-300'
-                "
-                @click="contentMix = option"
-              >
-                {{ option }}
-              </button>
-            </div>
-          </div>
-
-          <div class="flex flex-col gap-2">
-            <span class="text-[11px] text-readion-text-muted uppercase tracking-wide">
-              Difficulty
-            </span>
-            <div class="flex flex-wrap gap-1.5">
-              <button
-                v-for="option in sessionDifficulties"
-                :key="option"
-                type="button"
-                :data-testid="`difficulty-${option}`"
-                :aria-pressed="difficulty === option"
-                class="rounded-full border px-2.5 py-1 text-xs"
-                :class="
-                  difficulty === option
-                    ? 'border-readion-primary bg-readion-primary text-white'
-                    : 'border-readion-border-strong text-slate-300'
-                "
-                @click="difficulty = option"
-              >
-                {{ option }}
-              </button>
-            </div>
-          </div>
-
-          <div class="flex flex-col gap-2">
-            <span class="text-[11px] text-readion-text-muted uppercase tracking-wide">
-              Learning style
-            </span>
-            <div class="flex flex-wrap gap-1.5">
-              <button
-                v-for="option in sessionLearningStyles"
-                :key="option"
-                type="button"
-                :data-testid="`learning-style-${option}`"
-                :aria-pressed="learningStyle === option"
-                class="rounded-full border px-2.5 py-1 text-xs"
-                :class="
-                  learningStyle === option
-                    ? 'border-readion-primary bg-readion-primary text-white'
-                    : 'border-readion-border-strong text-slate-300'
-                "
-                @click="learningStyle = option"
-              >
-                {{ option }}
-              </button>
-            </div>
-          </div>
+          <SessionOverrideControl
+            label="Duration"
+            testid-prefix="duration-option"
+            :options="sessionDurationMinutes"
+            :model-value="duration"
+            :format="(value) => `${value}m`"
+            @update:model-value="duration = $event"
+          />
+          <SessionOverrideControl
+            label="Content mix"
+            testid-prefix="content-mix"
+            :options="sessionContentMixes"
+            :model-value="contentMix"
+            @update:model-value="contentMix = $event"
+          />
+          <SessionOverrideControl
+            label="Difficulty"
+            testid-prefix="difficulty"
+            :options="sessionDifficulties"
+            :model-value="difficulty"
+            @update:model-value="difficulty = $event"
+          />
+          <SessionOverrideControl
+            label="Learning style"
+            testid-prefix="learning-style"
+            :options="sessionLearningStyles"
+            :model-value="learningStyle"
+            @update:model-value="learningStyle = $event"
+          />
         </div>
       </div>
 
