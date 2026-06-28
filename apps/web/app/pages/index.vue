@@ -50,7 +50,9 @@ function openAddCert() {
         data-testid="dashboard-list"
         class="flex flex-col gap-3.5"
       >
-        <CertCard v-if="ordering.hero" :card="ordering.hero" variant="hero" />
+        <div v-if="ordering.hero" data-testid="cert-card-hero">
+          <CertCard :card="ordering.hero" variant="hero" />
+        </div>
         <CertCard
           v-for="card in ordering.rest"
           :key="card.enrollmentId"
