@@ -128,6 +128,7 @@ export {
   lifecycleEmailSharedEnvFragment,
   lifecycleEmailWorkerEnvFragment,
   observabilityEnvFragment,
+  productAnalyticsEnvFragment,
   redisUrlFragment,
   workerPrometheusFragment,
   zodCoerceBoolean,
@@ -195,6 +196,33 @@ export type { PaginationQueryParams } from './pagination'
 export { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from './pagination'
 export type { ProblemDetails, ValidationErrorItem } from './problem-details'
 export { ERROR_TYPES } from './problem-details'
+export type {
+  AnalyticsMetric,
+  AnalyticsOverview,
+  AnalyticsOverviewResponse,
+  AnalyticsTargetedMetric,
+  AnalyticsTargetedMetricKey,
+  PassRateBreakdown,
+  PassRateMetric,
+  RetentionCohort,
+  RetentionMetric,
+} from './product-analytics'
+export {
+  ANALYTICS_ACTIVE_MIN_SESSIONS_DEFAULT,
+  ANALYTICS_ACTIVE_WINDOW_DAYS_DEFAULT,
+  ANALYTICS_COST_AGENT_MESSAGE_DEFAULT,
+  ANALYTICS_COST_MOCK_QUESTION_DEFAULT,
+  ANALYTICS_COST_QUIZ_DEFAULT,
+  ANALYTICS_COST_SESSION_ITEM_DEFAULT,
+  ANALYTICS_LLM_COST_BUDGET_DEFAULT,
+  ANALYTICS_METRIC_TARGET_ENV_KEYS,
+  ANALYTICS_NORTHSTAR_WINDOW_DAYS_DEFAULT,
+  ANALYTICS_TARGET_AGENT_ENGAGEMENT_DEFAULT,
+  ANALYTICS_TARGET_COMPLETION_RATE_DEFAULT,
+  ANALYTICS_TARGET_NORTHSTAR_GAIN_DEFAULT,
+  ANALYTICS_TARGET_SESSIONS_PER_WEEK_DEFAULT,
+  ANALYTICS_TARGET_W4_RETENTION_DEFAULT,
+} from './product-analytics'
 export type {
   ExplanationRequest,
   ExplanationResponse,

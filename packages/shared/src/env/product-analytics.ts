@@ -1,0 +1,50 @@
+import {
+  ANALYTICS_ACTIVE_MIN_SESSIONS_DEFAULT,
+  ANALYTICS_ACTIVE_WINDOW_DAYS_DEFAULT,
+  ANALYTICS_COST_AGENT_MESSAGE_DEFAULT,
+  ANALYTICS_COST_MOCK_QUESTION_DEFAULT,
+  ANALYTICS_COST_QUIZ_DEFAULT,
+  ANALYTICS_COST_SESSION_ITEM_DEFAULT,
+  ANALYTICS_LLM_COST_BUDGET_DEFAULT,
+  ANALYTICS_NORTHSTAR_WINDOW_DAYS_DEFAULT,
+  ANALYTICS_TARGET_AGENT_ENGAGEMENT_DEFAULT,
+  ANALYTICS_TARGET_COMPLETION_RATE_DEFAULT,
+  ANALYTICS_TARGET_NORTHSTAR_GAIN_DEFAULT,
+  ANALYTICS_TARGET_SESSIONS_PER_WEEK_DEFAULT,
+  ANALYTICS_TARGET_W4_RETENTION_DEFAULT,
+} from '../product-analytics'
+import { zodCoerceNumber } from './helpers'
+
+const positiveInt = () =>
+  zodCoerceNumber().refine((n) => Number.isInteger(n) && n > 0, {
+    message: 'Must be a positive integer',
+  })
+
+const nonNegativeNumber = () =>
+  zodCoerceNumber().refine((n) => n >= 0, { message: 'Must be a non-negative number' })
+
+const positiveNumber = () =>
+  zodCoerceNumber().refine((n) => n > 0, { message: 'Must be a positive number' })
+
+const fraction = () =>
+  zodCoerceNumber().refine((n) => n >= 0 && n <= 1, { message: 'Must be between 0 and 1' })
+
+export const productAnalyticsEnvFragment = {
+  ANALYTICS_ACTIVE_WINDOW_DAYS: positiveInt().default(ANALYTICS_ACTIVE_WINDOW_DAYS_DEFAULT),
+  ANALYTICS_ACTIVE_MIN_SESSIONS: positiveInt().default(ANALYTICS_ACTIVE_MIN_SESSIONS_DEFAULT),
+  ANALYTICS_NORTHSTAR_WINDOW_DAYS: positiveInt().default(ANALYTICS_NORTHSTAR_WINDOW_DAYS_DEFAULT),
+  ANALYTICS_COST_QUIZ: nonNegativeNumber().default(ANALYTICS_COST_QUIZ_DEFAULT),
+  ANALYTICS_COST_MOCK_QUESTION: nonNegativeNumber().default(ANALYTICS_COST_MOCK_QUESTION_DEFAULT),
+  ANALYTICS_COST_SESSION_ITEM: nonNegativeNumber().default(ANALYTICS_COST_SESSION_ITEM_DEFAULT),
+  ANALYTICS_COST_AGENT_MESSAGE: nonNegativeNumber().default(ANALYTICS_COST_AGENT_MESSAGE_DEFAULT),
+  ANALYTICS_TARGET_NORTHSTAR_GAIN: positiveNumber().default(
+    ANALYTICS_TARGET_NORTHSTAR_GAIN_DEFAULT,
+  ),
+  ANALYTICS_TARGET_SESSIONS_PER_WEEK: positiveNumber().default(
+    ANALYTICS_TARGET_SESSIONS_PER_WEEK_DEFAULT,
+  ),
+  ANALYTICS_TARGET_W4_RETENTION: fraction().default(ANALYTICS_TARGET_W4_RETENTION_DEFAULT),
+  ANALYTICS_TARGET_COMPLETION_RATE: fraction().default(ANALYTICS_TARGET_COMPLETION_RATE_DEFAULT),
+  ANALYTICS_TARGET_AGENT_ENGAGEMENT: fraction().default(ANALYTICS_TARGET_AGENT_ENGAGEMENT_DEFAULT),
+  ANALYTICS_LLM_COST_BUDGET: positiveNumber().default(ANALYTICS_LLM_COST_BUDGET_DEFAULT),
+}

@@ -8,6 +8,17 @@ This file decomposes `SPEC.md` into a set of **contained** OpenSpec changes and 
 - **Entity ownership** (table near the bottom) records which change creates each entity + migration, so migrations don't overlap.
 - Update this file whenever a change is added, split, or merged.
 
+## Design references
+
+The UI is designed in two **claude.ai/design** projects (reachable via the `DesignSync` tool; the connector is already authorized):
+
+- **"Readion" design system** — `projectId 38736cfc-91fa-45ef-8524-8103e746ef9f`. Token-only (colors, spacing, radius, Inter type). Already wired into `apps/web` by `web-foundation`.
+- **"Readion app onboarding flow"** — `projectId 4526b72d-50eb-4140-8cf3-39f776743a65`. Full screen mockups (React/Babel artboards), one HTML file per area. Production email templates live under `emails/` (`welcome.html`, `weekly-digest.html`, `password-reset.html`, `post-exam-nudge.html`).
+
+The **Design** column in the Phase 10 table below names the mockup(s) each `web-*` change owns. The mockups were drawn ahead of the API, so each proposal must reconcile its imported design against the implemented backend contract in `design.md` (the `web-auth` change established this pattern: `DesignSync get_file` → save under the change as `design/<name>.html` → reconcile).
+
+Email templates are **server-rendered HTML in the API `MailModule`** (`apps/api/src/mail/templates/`), not frontend pages, and the designs live under `emails/` in the onboarding-flow project. The sending logic (which template fires when, opt-out, unsubscribe) shipped in `mail` + `email-lifecycle`, but those archived changes only built **placeholder** HTML — adopting the designed rich templates is the dedicated `email-templates` change in Phase 9. A separate phase isn't warranted: it's one change against one module.
+
 ## Dependency graph
 
 ```mermaid
@@ -62,15 +73,18 @@ graph TD
 
   %% Phase 9 — Email lifecycle & analytics
   emaillc[email-lifecycle]
+  emailtpl[email-templates]
   analytics[product-analytics]
 
   %% Phase 10 — Frontend feature pages
   dash[web-dashboard]
+  certdetail[web-cert-detail]
   onboard[web-onboarding]
   websession[web-session-view]
   webmock[web-mock-exam]
   webprogress[web-progress]
   webagent[web-agent-chat]
+  settings[web-settings]
   webadmin[web-admin]
 
   %% Phase 11 — Deployment
@@ -159,6 +173,8 @@ graph TD
   ready --> emaillc
   weak --> emaillc
   review --> emaillc
+  mail --> emailtpl
+  emaillc --> emailtpl
 
   sessions --> analytics
   agent --> analytics
@@ -170,6 +186,12 @@ graph TD
   ready --> dash
   weak --> dash
   sessions --> dash
+  dash --> certdetail
+  ucerts --> certdetail
+  ready --> certdetail
+  weak --> certdetail
+  sessions --> certdetail
+  mock --> certdetail
   dash --> onboard
   ucerts --> onboard
   diag --> onboard
@@ -185,6 +207,10 @@ graph TD
   review --> webprogress
   webfd --> webagent
   agent --> webagent
+  webfd --> settings
+  webauth --> settings
+  users --> settings
+  emaillc --> settings
   webfd --> webadmin
   contentadmin --> webadmin
   certsetup --> webadmin
@@ -268,18 +294,21 @@ graph TD
 | Change | Scope | Spec refs | Capabilities | Depends on |
 |---|---|---|---|---|
 | `email-lifecycle` | Welcome email, weekly progress digest (timezone-aware cron, opt-out/unsubscribe), post-exam outcome nudge. | Email (digest, nudge); PRD §3 → Capturing the lagging outcome | `lifecycle-email` | `mail`, `users`, `readiness`, `weak-areas`, `review-srs` |
+| `email-templates` | Replace the placeholder mail builders (currently `wrapInBaseLayout(<p>…</p>)`) with the designed, client-safe **table-based + inline-styled** HTML — base layout plus welcome / weekly-digest (readiness bar, weakest domain, due reviews) / password-reset / post-exam-nudge (one-tap survey). Inline the design-system token **values** (email clients can't use CSS variables or external stylesheets). Preserve the existing subject/text/html contract, plaintext variants, and the digest calibrated/uncalibrated branching; `emailVerification` + `foundational` reuse the new base layout (no dedicated design). Backend (`apps/api/src/mail/templates/`), not a frontend page. | Email; PRD §3; DESIGN.md | extends `transactional-email`, `lifecycle-email` (no new spec) | `mail`, `email-lifecycle` |
 | `product-analytics` | Success-metric instrumentation the SPEC's ops metrics don't cover: active-user definition (≥2 sessions/14d), north-star readiness-gain-per-active-user, W2/W4 retention cohorts, session-completion & agent-engagement rates, sessions/week, per-user LLM-cost attribution (guardrail). Analytics read models feeding a product dashboard. | PRD §3 → Success metrics, Definitions & targets, Guardrail metrics | `product-analytics` | `sessions`, `agent`, `readiness`, `email-lifecycle` |
 
 ### Phase 10 — Frontend feature pages
-| Change | Scope | Spec refs | Capabilities | Depends on |
-|---|---|---|---|---|
-| `web-dashboard` | Vertical cert list, hero treatment, readiness/weak-areas/recent sessions, quick-starts, add-cert. | Frontend → Dashboard; Layout Decisions → Dashboard | `web-dashboard` | `web-auth`, `user-certifications`, `readiness`, `weak-areas`, `sessions` |
-| `web-onboarding` | Cert select, default prefs, diagnostic offer, no-certs/empty-state routing. | Frontend → Onboarding; Certification Enrollment | `web-onboarding` | `web-dashboard`, `user-certifications`, `diagnostic` |
-| `web-session-view` | Split panel content + agent chat, confidence rating, citation chips, report, timer/progress, summary screen, tool-result rendering. | Frontend → Session view; Layout Decisions → Session view; Agent Tool Result Rendering | `web-session-view` | `web-foundation`, `sessions`, `agent`, `end-of-session-summary` |
-| `web-mock-exam` | Full-screen timed exam, nav sidebar, resume, submit→breakdown→review. | Frontend → Mock exam | `web-mock-exam` | `web-foundation`, `mock-exam` |
-| `web-progress` | Weak-area trend, accuracy charts, session history, trajectory, mark-as-mastered. | Frontend → Progress | `web-progress` | `web-foundation`, `weak-areas`, `readiness`, `review-srs` |
-| `web-agent-chat` | Standalone chat, SSE streaming, no citations. | Frontend → Agent chat | `web-agent-chat` | `web-foundation`, `agent` |
-| `web-admin` | Cert setup UI, quarantine review, source mgmt, job status, user mgmt, re-verification, audit log. | Frontend → Admin | `web-admin` | `web-foundation`, `content-admin`, `cert-setup-grounding`, `admin` |
+| Change | Scope | Spec refs | Capabilities | Design | Depends on |
+|---|---|---|---|---|---|
+| `web-dashboard` | Vertical cert list, hero treatment, readiness/weak-areas/recent sessions, quick-starts, add-cert. | Frontend → Dashboard; Layout Decisions → Dashboard | `web-dashboard` | `Dashboard.html` | `web-auth`, `user-certifications`, `readiness`, `weak-areas`, `sessions` |
+| `web-cert-detail` | Per-cert deep-dive reached from the dashboard: Overview tab (stat row, domain scores, suggested next focus, recent sessions), Sessions tab (full per-cert history table + type filter), exam-history. | Frontend → Dashboard (cert detail); Layout Decisions | `web-cert-detail` | `CertDetail.html` | `web-dashboard`, `user-certifications`, `readiness`, `weak-areas`, `sessions`, `mock-exam` |
+| `web-onboarding` | Cert select, default prefs, diagnostic offer, no-certs/empty-state routing. | Frontend → Onboarding; Certification Enrollment | `web-onboarding` | `Onboarding.html` | `web-dashboard`, `user-certifications`, `diagnostic` |
+| `web-session-view` | Session start/config screen (quick-start with saved defaults + suggested weak-domain; custom config with domain-focus picker and duration/mix/difficulty overrides), split panel content + agent chat, confidence rating, citation chips, report, timer/progress, summary screen, tool-result rendering. | Frontend → Session view; Layout Decisions → Session view; Session Personalization; Agent Tool Result Rendering | `web-session-view` | `SessionStart.html`, `Session.html`, `Summary.html` | `web-foundation`, `sessions`, `agent`, `end-of-session-summary` |
+| `web-mock-exam` | Full-screen timed exam, nav sidebar, resume, submit→breakdown→review. | Frontend → Mock exam | `web-mock-exam` | `MockExam.html` | `web-foundation`, `mock-exam` |
+| `web-progress` | Weak-area trend, accuracy charts, session history, trajectory, mark-as-mastered, plus the 5-min review run loop (queue entry → flashcard front → reveal + Again/Hard/Good/Easy SRS rating → completion breakdown). | Frontend → Progress; Spaced Repetition & Review Queue | `web-progress` | `Progress.html`, `QuickReview.html` | `web-foundation`, `weak-areas`, `readiness`, `review-srs` |
+| `web-agent-chat` | Standalone chat, SSE streaming, no citations. | Frontend → Agent chat | `web-agent-chat` | `AgentChat.html` | `web-foundation`, `agent` |
+| `web-settings` | Account tab (profile read/update, password change, delete-account/danger zone), Study-defaults tab (session preference defaults), Notifications tab (email + in-app opt-out toggles, digest unsubscribe). | Frontend → Settings; UsersModule; Account Deletion; Session Personalization (defaults); Email (digest opt-out) | `web-settings` | `Settings.html` | `web-foundation`, `web-auth`, `users`, `email-lifecycle` |
+| `web-admin` | Cert setup UI, quarantine review, source mgmt, job status, user mgmt, re-verification, audit log. | Frontend → Admin | `web-admin` | `AdminCertSetup.html`, `AdminContentUsers.html` | `web-foundation`, `content-admin`, `cert-setup-grounding`, `admin` |
 
 ### Phase 11 — Deployment
 | Change | Scope | Spec refs | Capabilities | Depends on |
@@ -333,7 +362,7 @@ PRD §4 records an explicit trim-point: the smallest loop that still delivers th
 
 `scaffold-monorepo` → `shared-contracts` + `db-foundation` → `api-foundation` + `worker-foundation` → `web-foundation` → `mail` → `auth` → `users` → `web-auth` → `certifications` → `user-certifications` → `llm-foundation` → `content-pipeline` → `cert-go-live` → `grounding-verification` → `quiz` → `weak-areas` → `sessions` → `readiness` → `agent` → `web-dashboard` → `web-session-view`.
 
-Deferrable past the milestone: `mock-exam`, `review-srs`, `diagnostic`, `end-of-session-summary`, `chunk-lifecycle`, `admin`/`content-admin`/`cert-setup-grounding` (run on seed certs until then), `email-lifecycle`, `product-analytics`, remaining `web-*` pages, `k8s-deployment`. (PRD calls multi-source ingestion breadth, mock exams, and LLM-assisted admin setup the natural trim points.)
+Deferrable past the milestone: `mock-exam`, `review-srs`, `diagnostic`, `end-of-session-summary`, `chunk-lifecycle`, `admin`/`content-admin`/`cert-setup-grounding` (run on seed certs until then), `email-lifecycle`, `email-templates`, `product-analytics`, remaining `web-*` pages, `k8s-deployment`. (PRD calls multi-source ingestion breadth, mock exams, and LLM-assisted admin setup the natural trim points.)
 
 ## Notes on slicing
 

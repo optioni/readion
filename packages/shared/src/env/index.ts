@@ -17,3 +17,4 @@ export {
   lifecycleEmailWorkerEnvFragment,
 } from './lifecycle-email'
 export { observabilityEnvFragment, workerPrometheusFragment } from './observability'
+export { productAnalyticsEnvFragment } from './product-analytics'
