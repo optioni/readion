@@ -19,6 +19,7 @@ import {
   ANALYTICS_COST_QUIZ_DEFAULT,
   ANALYTICS_COST_SESSION_ITEM_DEFAULT,
   ANALYTICS_NORTHSTAR_WINDOW_DAYS_DEFAULT,
+  type PassRateBreakdown,
   READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT,
 } from '@readion/shared'
 import type { EnvConfig } from '../config/env.schema'
@@ -260,6 +261,22 @@ export class AnalyticsService {
           })
 
     return { quizResponses, mockQuestions, sessionItems, agentMessages }
+  }
+
+  // Lagging, DISPLAY-ONLY self-reported real-exam outcome: a tally of every recorded
+  // `examOutcomeResponse` across ALL enrollments (not scoped to the active population or a window).
+  // Enrollments without a recorded outcome are simply not counted; an empty result yields all-zeros
+  // rather than throwing. This never feeds another metric or the readiness score.
+  async getPassRateBreakdown(): Promise<PassRateBreakdown> {
+    const em = this.em.fork()
+    const enrollments = await em.find(UserCertification, { examOutcomeResponse: { $ne: null } })
+    const breakdown: PassRateBreakdown = { passed: 0, did_not_pass: 0, not_yet: 0, dismissed: 0 }
+    for (const enrollment of enrollments) {
+      if (enrollment.examOutcomeResponse !== null) {
+        breakdown[enrollment.examOutcomeResponse] += 1
+      }
+    }
+    return breakdown
   }
 
   private costCoefficients(): LlmCostCoefficients {
