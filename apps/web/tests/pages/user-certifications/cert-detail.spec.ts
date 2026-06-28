@@ -8,14 +8,16 @@ vi.mock('~/composables/useCertDetail', () => ({ useCertDetail: vi.fn() }))
 
 vi.stubGlobal('useRoute', () => ({ params: { id: 'enr-1' } }))
 
-function stubCertDetail(options: {
-  name?: string
-  provider?: string
-  certificationId?: string
-  isLoading?: boolean
-  isError?: boolean
-  notFound?: boolean
-} = {}) {
+function stubCertDetail(
+  options: {
+    name?: string
+    provider?: string
+    certificationId?: string
+    isLoading?: boolean
+    isError?: boolean
+    notFound?: boolean
+  } = {},
+) {
   vi.mocked(useCertDetail).mockReturnValue({
     name: computed(() => options.name ?? 'AWS Cloud Practitioner'),
     provider: computed(() => options.provider ?? 'AWS'),

@@ -48,12 +48,13 @@ const cardStyle = computed(() =>
   >
     <div class="mb-4 flex items-start justify-between">
       <div>
-        <div
+        <NuxtLink
           data-testid="cert-title"
-          class="mb-1 text-[11px] uppercase tracking-wider opacity-80"
+          :to="`/user-certifications/${props.card.enrollmentId}`"
+          class="mb-1 block text-[11px] uppercase tracking-wider opacity-80 transition-opacity hover:opacity-100"
         >
           {{ props.card.name }} · {{ props.card.provider }}
-        </div>
+        </NuxtLink>
         <CardReadiness :display="readinessDisplay" />
       </div>
       <QuickStartButtons
