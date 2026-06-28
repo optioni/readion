@@ -1,8 +1,19 @@
-import { type APIRequestContext, expect, request, test } from '@playwright/test'
+import { type APIRequestContext, expect, type Page, request, test } from '@playwright/test'
 import { type SeededDashboardUser, seedDashboardUser } from './support/dashboard-seed'
 
 const apiBaseUrl = process.env.READION_E2E_API_BASE_URL ?? 'http://127.0.0.1:3001'
 const mailpitBaseUrl = process.env.READION_E2E_MAILPIT_BASE_URL ?? 'http://127.0.0.1:8025'
+
+// Drives the /login UI as the seeded user. Waiting for network idle ensures the Nuxt app has
+// hydrated before we interact — otherwise the submit fires a native form GET (no SPA handler
+// attached yet) and the page never authenticates.
+async function signIn(page: Page, user: SeededDashboardUser): Promise<void> {
+  await page.goto('/login')
+  await page.waitForLoadState('networkidle')
+  await page.getByLabel('Email').fill(user.email)
+  await page.getByLabel('Password', { exact: true }).fill(user.password)
+  await page.getByRole('button', { name: /sign in/i }).click()
+}
 
 // Acceptance test for SPEC → Layout Decisions → Dashboard (vertical cert list).
 // Browser-driven against the real Nuxt app + real NestJS API + mailpit, following the
@@ -27,10 +38,7 @@ test.describe('web-dashboard — vertical cert list, hero, quick-starts, add cer
   test('logs in, lands on the dashboard, and renders the seeded enrollments as cards', async ({
     page,
   }) => {
-    await page.goto('/login')
-    await page.getByLabel('Email').fill(seed.email)
-    await page.getByLabel('Password').fill(seed.password)
-    await page.getByRole('button', { name: /sign in/i }).click()
+    await signIn(page, seed)
 
     // Lands authenticated on the dashboard home.
     await expect(page).toHaveURL('/')
@@ -55,10 +63,7 @@ test.describe('web-dashboard — vertical cert list, hero, quick-starts, add cer
   test('promotes the lowest-readiness (or fallback) cert to the gradient hero at the top', async ({
     page,
   }) => {
-    await page.goto('/login')
-    await page.getByLabel('Email').fill(seed.email)
-    await page.getByLabel('Password').fill(seed.password)
-    await page.getByRole('button', { name: /sign in/i }).click()
+    await signIn(page, seed)
     await expect(page).toHaveURL('/')
 
     // The hero card (gradient treatment) is the first card and shows the cert the SPEC rule
@@ -74,10 +79,7 @@ test.describe('web-dashboard — vertical cert list, hero, quick-starts, add cer
   test('shows readiness state, weak areas, recent sessions, and the conditional review quick-start', async ({
     page,
   }) => {
-    await page.goto('/login')
-    await page.getByLabel('Email').fill(seed.email)
-    await page.getByLabel('Password').fill(seed.password)
-    await page.getByRole('button', { name: /sign in/i }).click()
+    await signIn(page, seed)
     await expect(page).toHaveURL('/')
 
     // Not-yet-calibrated enrollments render the calibration message rather than a percentage.
@@ -92,10 +94,9 @@ test.describe('web-dashboard — vertical cert list, hero, quick-starts, add cer
     await expect(heroCard.getByText(/weak areas/i)).toBeVisible()
     await expect(heroCard.getByText(/recent sessions/i)).toBeVisible()
 
-    // The 5-minute review quick-start appears only where reviews are due.
-    // TODO(web-dashboard group 7 — GREEN): the seed must produce an enrollment with
-    // meta.dueCount > 0 (graded-answer + review-scheduling path) so this assertion exercises
-    // real due reviews. The quick-start is the SPEC-mandated conditional control.
+    // The 5-minute review quick-start appears only where reviews are due. The seed writes a
+    // real due ReviewItem for one enrollment (seed.dueReviewEnrollment), so this exercises the
+    // SPEC-mandated conditional control against a genuine dueCount > 0.
     await expect(page.getByRole('button', { name: /5-minute review/i }).first()).toBeVisible()
 
     // Each card offers the Start Session and Mock Exam quick-starts.
@@ -106,10 +107,7 @@ test.describe('web-dashboard — vertical cert list, hero, quick-starts, add cer
   test('adds a certification via the modal and the new cert appears as a card', async ({
     page,
   }) => {
-    await page.goto('/login')
-    await page.getByLabel('Email').fill(seed.email)
-    await page.getByLabel('Password').fill(seed.password)
-    await page.getByRole('button', { name: /sign in/i }).click()
+    await signIn(page, seed)
     await expect(page).toHaveURL('/')
 
     await expect(page.getByTestId('cert-card')).toHaveCount(seed.enrollments.length)

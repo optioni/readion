@@ -1,29 +1,35 @@
 import type { APIRequestContext } from '@playwright/test'
+import { Client } from 'pg'
 import { captureVerificationToken } from './mailpit-helpers'
 
 // Seeds an authenticated user with active enrollments through the SAME running API
 // (127.0.0.1:3001) that the Nuxt dev server talks to — never the in-process Testcontainers
 // harness, which boots its own API on a random port the browser can't reach.
 //
-// The dashboard SPEC scenarios want a richer signal than enrollments alone:
-//   - one calibrated-low cert (lowest readiness → gradient hero)
-//   - one calibrated-high cert (standard surface card, sorted after the hero)
-//   - one not-yet-calibrated cert ("not yet calibrated" copy, sorted last)
-//   - graded answers, recent completed sessions (domain + accuracy), and due reviews
+// Registration, email verification, and enrollment go through the public API. Two pieces of
+// dashboard state cannot be produced over the public API in a local environment because they
+// require the LLM-backed quiz/answer-verification path:
+//   - a non-null readinessScore (calibration), and
+//   - graded answers / completed-session summaries.
+// Those remain null/empty here, which is itself a valid dashboard state the acceptance test
+// exercises ("not yet calibrated", empty panels, most-recently-enrolled hero fallback).
 //
-// Genuinely *calibrating* an enrollment requires submitting graded answers, which runs
-// through LLM-backed quiz generation/verification — not reproducible purely over the public
-// API in this environment. The reliable public-API seeding (register → verify → enroll N
-// certs, plus the hero rule computed from the real enrollment rows) is done here; the
-// calibration / graded-answer / due-review enrichment is a documented TODO for the GREEN
-// group (web-dashboard task group 7), which runs against a fully provisioned API.
+// Due reviews, however, only depend on ReviewItem rows (no LLM), so we seed one directly into
+// the same Postgres database the running API reads from. That makes the SPEC-mandated
+// conditional "5-minute review" quick-start appear on a real card with a real dueCount.
+
+const databaseUrl =
+  process.env.READION_E2E_DATABASE_URL ?? 'postgresql://readion:readion@localhost:5432/readion'
+
+// Minimum live certifications the acceptance flow needs: three to enroll into plus one kept
+// aside for the "+ Add certification" flow.
+const MIN_LIVE_CERTIFICATIONS = 4
 
 const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' }
 
 type RegisterResponse = { data: { accessToken: string } }
 type CertificationRow = { id: string; name: string; provider: string }
 type CertificationsResponse = { data: CertificationRow[] }
-type EnrollResponse = { data: { id: string } }
 type EnrollmentRow = {
   id: string
   certificationId: string
@@ -50,6 +56,9 @@ export type SeededDashboardUser = {
   // SPEC rule (lowest calibrated readiness; most-recently-enrolled when none are calibrated)
   // applied to the actually-seeded enrollment rows.
   heroEnrollment: SeededEnrollment
+  // The enrollment seeded with a due review, so the conditional "5-minute review" quick-start
+  // renders against a real dueCount.
+  dueReviewEnrollment: SeededEnrollment
   // A certification the user is NOT enrolled in, kept aside for the "+ Add certification" flow.
   addableCertification: CertificationRow
 }
@@ -71,10 +80,76 @@ function pickHero(enrollments: SeededEnrollment[]): SeededEnrollment {
   )
 }
 
-export async function seedDashboardUser(
+// Promotes draft certifications to `live` until the catalog has enough for the acceptance flow.
+// The catalog is normally admin-provisioned; in a freshly migrated local database it can be
+// empty of live certs, so the seed makes itself self-sufficient and idempotent.
+async function ensureLiveCatalog(client: Client): Promise<void> {
+  const { rows } = await client.query<{ count: string }>(
+    `SELECT count(*)::int AS count FROM certifications WHERE state = 'live'`,
+  )
+  const liveCount = Number(rows[0]?.count ?? 0)
+  const missing = MIN_LIVE_CERTIFICATIONS - liveCount
+  if (missing <= 0) {
+    return
+  }
+
+  await client.query(
+    `UPDATE certifications SET state = 'live', updated_at = now()
+     WHERE id IN (
+       SELECT id FROM certifications WHERE state = 'draft' ORDER BY name ASC LIMIT $1
+     )`,
+    [missing],
+  )
+}
+
+// Writes the FK chain (content_source → content_chunk → review_item) a due review needs, so the
+// running API's review-queue endpoint reports dueCount > 0 for this enrollment.
+async function seedDueReview(client: Client, enrollment: SeededEnrollment): Promise<void> {
+  const sourceResult = await client.query<{ id: string }>(
+    `INSERT INTO content_sources
+       (id, certification_id, type, url, enabled, recheck_interval_minutes, created_at, updated_at)
+     VALUES (gen_random_uuid(), $1, 'web', $2, true, 1440, now(), now())
+     RETURNING id`,
+    [enrollment.certificationId, `https://example.com/e2e-${enrollment.enrollmentId}`],
+  )
+  const contentSourceId = sourceResult.rows[0]?.id
+  if (contentSourceId === undefined) {
+    throw new Error('Seed failed to create a content source for the due review')
+  }
+
+  const chunkResult = await client.query<{ id: string }>(
+    `INSERT INTO content_chunks
+       (id, content_source_id, certification_id, text, content_hash,
+        domain_tags, primary_domain, metadata, state, created_at, updated_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4,
+        $5::jsonb, $6, '{}'::jsonb, 'active', now(), now())
+     RETURNING id`,
+    [
+      contentSourceId,
+      enrollment.certificationId,
+      'Reviewable content for the dashboard e2e.',
+      `e2e-${enrollment.enrollmentId}`.padEnd(64, '0').slice(0, 64),
+      JSON.stringify([{ domain: 'Security', confidence: 0.95 }]),
+      'Security',
+    ],
+  )
+  const anchorChunkId = chunkResult.rows[0]?.id
+  if (anchorChunkId === undefined) {
+    throw new Error('Seed failed to create a content chunk for the due review')
+  }
+
+  await client.query(
+    `INSERT INTO review_items
+       (id, user_certification_id, anchor_chunk_id, box, state, due_at, created_at, updated_at)
+     VALUES (gen_random_uuid(), $1, $2, 1, 'active', now() - interval '1 day', now(), now())`,
+    [enrollment.enrollmentId, anchorChunkId],
+  )
+}
+
+async function registerVerifiedUser(
   api: APIRequestContext,
   mailpit: APIRequestContext,
-): Promise<SeededDashboardUser> {
+): Promise<{ email: string; password: string; accessToken: string }> {
   const email = `dashboard.${Date.now()}.${Math.floor(Math.random() * 1e6)}@example.com`
   const password = 'correcthorse'
 
@@ -99,78 +174,90 @@ export async function seedDashboardUser(
     throw new Error(`Seed failed to verify email: HTTP ${verifyRes.status()}`)
   }
 
-  const authHeaders = { Authorization: `Bearer ${accessToken}` }
+  return { email, password, accessToken }
+}
 
-  const certsRes = await api.get('/api/v1/certifications', { headers: authHeaders })
-  if (certsRes.status() !== 200) {
-    throw new Error(`Seed failed to list certifications: HTTP ${certsRes.status()}`)
-  }
-  const { data: certifications } = (await certsRes.json()) as CertificationsResponse
+export async function seedDashboardUser(
+  api: APIRequestContext,
+  mailpit: APIRequestContext,
+): Promise<SeededDashboardUser> {
+  const client = new Client({ connectionString: databaseUrl })
+  await client.connect()
 
-  // Precondition: the seeded environment must have a certification catalog (owned by admin
-  // setup). We enroll into the first three and keep one aside for the add-certification flow.
-  if (certifications.length < 3) {
-    throw new Error(
-      `Seed precondition: need >=3 certifications in the catalog, found ${certifications.length}. ` +
-        'Provision the certification catalog (admin setup) before running the dashboard e2e.',
-    )
-  }
+  try {
+    await ensureLiveCatalog(client)
 
-  const certsToEnroll = certifications.slice(0, certifications.length - 1).slice(0, 3)
-  const addableCertification = certifications[certifications.length - 1]
-  if (!addableCertification) {
-    throw new Error('Seed precondition: no certification left for the add-certification flow')
-  }
+    const { email, password, accessToken } = await registerVerifiedUser(api, mailpit)
+    const authHeaders = { Authorization: `Bearer ${accessToken}` }
 
-  for (const certification of certsToEnroll) {
-    const enrollRes = await api.post('/api/v1/user-certifications', {
-      headers: { ...authHeaders, ...CONTENT_TYPE_JSON },
-      data: { certificationId: certification.id },
+    const certsRes = await api.get('/api/v1/certifications', { headers: authHeaders })
+    if (certsRes.status() !== 200) {
+      throw new Error(`Seed failed to list certifications: HTTP ${certsRes.status()}`)
+    }
+    const { data: certifications } = (await certsRes.json()) as CertificationsResponse
+
+    if (certifications.length < MIN_LIVE_CERTIFICATIONS) {
+      throw new Error(
+        `Seed precondition: need >=${MIN_LIVE_CERTIFICATIONS} live certifications, ` +
+          `found ${certifications.length} after provisioning.`,
+      )
+    }
+
+    const certsToEnroll = certifications.slice(0, 3)
+    const addableCertification = certifications[certifications.length - 1]
+    if (addableCertification === undefined) {
+      throw new Error('Seed precondition: no certification left for the add-certification flow')
+    }
+
+    for (const certification of certsToEnroll) {
+      const enrollRes = await api.post('/api/v1/user-certifications', {
+        headers: { ...authHeaders, ...CONTENT_TYPE_JSON },
+        data: { certificationId: certification.id },
+      })
+      if (enrollRes.status() !== 201) {
+        throw new Error(
+          `Seed failed to enroll into ${certification.id}: HTTP ${enrollRes.status()}`,
+        )
+      }
+    }
+
+    // Read the enrollment rows back to compute the hero from the real readinessScore/enrolledAt.
+    const listRes = await api.get('/api/v1/user-certifications?status=active', {
+      headers: authHeaders,
     })
-    if (enrollRes.status() !== 201) {
-      throw new Error(`Seed failed to enroll into ${certification.id}: HTTP ${enrollRes.status()}`)
+    if (listRes.status() !== 200) {
+      throw new Error(`Seed failed to list enrollments: HTTP ${listRes.status()}`)
     }
-    ;(await enrollRes.json()) as EnrollResponse
+    const { data: enrollmentRows } = (await listRes.json()) as EnrollmentsResponse
 
-    // TODO(web-dashboard group 7 — GREEN): enrich this enrollment with graded answers,
-    // completed sessions (domain + accuracy via session summaries), and due reviews so the
-    // calibrated-low / calibrated-high / due-review SPEC scenarios are exercised against real
-    // data. Requires the LLM-backed generation/verification path, unavailable in the RED env.
-  }
+    const certById = new Map(
+      certifications.map((certification) => [certification.id, certification]),
+    )
+    const enrollments: SeededEnrollment[] = enrollmentRows.map((row) => {
+      const certification = certById.get(row.certificationId)
+      return {
+        enrollmentId: row.id,
+        certificationId: row.certificationId,
+        name: certification?.name ?? row.certificationId,
+        provider: certification?.provider ?? '',
+        readinessScore: row.readinessScore,
+        enrolledAt: row.enrolledAt,
+      }
+    })
 
-  // Read the enrollment rows back to compute the hero from the real readinessScore/enrolledAt.
-  const listRes = await api.get('/api/v1/user-certifications?status=active', {
-    headers: authHeaders,
-  })
-  if (listRes.status() !== 200) {
-    throw new Error(`Seed failed to list enrollments: HTTP ${listRes.status()}`)
-  }
-  const { data: enrollmentRows } = (await listRes.json()) as EnrollmentsResponse
+    const heroEnrollment = pickHero(enrollments)
+    await seedDueReview(client, heroEnrollment)
 
-  const certById = new Map(certifications.map((certification) => [certification.id, certification]))
-  const enrollments: SeededEnrollment[] = enrollmentRows.map((row) => {
-    const certification = certById.get(row.certificationId)
     return {
-      enrollmentId: row.id,
-      certificationId: row.certificationId,
-      name: certification?.name ?? row.certificationId,
-      provider: certification?.provider ?? '',
-      readinessScore: row.readinessScore,
-      enrolledAt: row.enrolledAt,
+      email,
+      password,
+      accessToken,
+      enrollments,
+      heroEnrollment,
+      dueReviewEnrollment: heroEnrollment,
+      addableCertification,
     }
-  })
-
-  const firstEnrollment = enrollments[0]
-  if (!firstEnrollment) {
-    throw new Error('Seed produced no enrollments')
-  }
-
-  return {
-    email,
-    password,
-    accessToken,
-    enrollments,
-    heroEnrollment: pickHero(enrollments),
-    addableCertification,
+  } finally {
+    await client.end()
   }
 }
