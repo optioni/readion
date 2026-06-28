@@ -5,6 +5,10 @@ import { AgentConversation, AgentMessage, StudySession, User, UserCertification 
 import {
   ANALYTICS_ACTIVE_MIN_SESSIONS_DEFAULT,
   ANALYTICS_ACTIVE_WINDOW_DAYS_DEFAULT,
+  ANALYTICS_COST_AGENT_MESSAGE_DEFAULT,
+  ANALYTICS_COST_MOCK_QUESTION_DEFAULT,
+  ANALYTICS_COST_QUIZ_DEFAULT,
+  ANALYTICS_COST_SESSION_ITEM_DEFAULT,
   ANALYTICS_NORTHSTAR_WINDOW_DAYS_DEFAULT,
   READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT,
 } from '@readion/shared'
@@ -15,6 +19,9 @@ import {
   type CohortUser,
   cohortRetention,
   completionRate,
+  type LlmArtifactCounts,
+  type LlmCostCoefficients,
+  llmCostPerActiveUser,
   medianReadinessGain,
   medianSessionsPerWeek,
   type ReadinessSample,
@@ -183,6 +190,46 @@ export class AnalyticsService {
       sessionsWithAgent: engagedSessionIds.size,
       totalSessions: sessionIds.length,
     })
+  }
+
+  // ESTIMATED LLM cost per active user over the active window: a derived proxy, not a measured
+  // spend (no per-user token cost is persisted). Sums LLM-driven artifacts attributable to the
+  // active population — quiz responses, mock-exam question counts, session-item generations, and
+  // assistant/tool agent messages — each weighted by its configured cost coefficient, divided by
+  // the active-user count. The agent/SSE-error-rate and ingestion-success ops guardrails are NOT
+  // re-derived here (those stay in Prometheus).
+  async getLlmCostPerActiveUser(now = this.window.now()): Promise<number> {
+    const { userIds, count } = await this.getActiveUserPopulation(now)
+    const counts =
+      count === 0
+        ? { quizResponses: 0, mockQuestions: 0, sessionItems: 0, agentMessages: 0 }
+        : await this.countLlmArtifacts(userIds, now)
+    return llmCostPerActiveUser({
+      counts,
+      coefficients: this.costCoefficients(),
+      activeUserCount: count,
+    })
+  }
+
+  // Repository wiring of the per-artifact counts lands in the next step; until then the proxy
+  // reports zeroed counts so its shape and coefficient math are exercised in isolation.
+  private async countLlmArtifacts(_userIds: string[], _now: Date): Promise<LlmArtifactCounts> {
+    return { quizResponses: 0, mockQuestions: 0, sessionItems: 0, agentMessages: 0 }
+  }
+
+  private costCoefficients(): LlmCostCoefficients {
+    return {
+      quiz: this.config.get('ANALYTICS_COST_QUIZ', { infer: true }) ?? ANALYTICS_COST_QUIZ_DEFAULT,
+      mockQuestion:
+        this.config.get('ANALYTICS_COST_MOCK_QUESTION', { infer: true }) ??
+        ANALYTICS_COST_MOCK_QUESTION_DEFAULT,
+      sessionItem:
+        this.config.get('ANALYTICS_COST_SESSION_ITEM', { infer: true }) ??
+        ANALYTICS_COST_SESSION_ITEM_DEFAULT,
+      agentMessage:
+        this.config.get('ANALYTICS_COST_AGENT_MESSAGE', { infer: true }) ??
+        ANALYTICS_COST_AGENT_MESSAGE_DEFAULT,
+    }
   }
 
   private groupByUser(sessions: StudySession[]): UserSessionGroup[] {

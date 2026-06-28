@@ -80,6 +80,40 @@ export function medianReadinessGain(users: UserReadinessSamples[]): number {
   return median(perUserGains)
 }
 
+export interface LlmCostCoefficients {
+  quiz: number
+  mockQuestion: number
+  sessionItem: number
+  agentMessage: number
+}
+
+export interface LlmArtifactCounts {
+  quizResponses: number
+  mockQuestions: number
+  sessionItems: number
+  agentMessages: number
+}
+
+// An ESTIMATED LLM cost per active user: the sum of countable LLM-driven artifacts each weighted
+// by its configured per-task cost coefficient, divided by the active-user count. No per-user token
+// cost is persisted, so this is a proxy, not a measured spend. Active-user count of 0 returns 0 to
+// avoid divide-by-zero.
+export function llmCostPerActiveUser(input: {
+  counts: LlmArtifactCounts
+  coefficients: LlmCostCoefficients
+  activeUserCount: number
+}): number {
+  if (input.activeUserCount === 0) {
+    return 0
+  }
+  const weighted =
+    input.counts.quizResponses * input.coefficients.quiz +
+    input.counts.mockQuestions * input.coefficients.mockQuestion +
+    input.counts.sessionItems * input.coefficients.sessionItem +
+    input.counts.agentMessages * input.coefficients.agentMessage
+  return weighted / input.activeUserCount
+}
+
 export function completionRate(input: { reachedSummary: number; started: number }): number {
   return input.started === 0 ? 0 : input.reachedSummary / input.started
 }
