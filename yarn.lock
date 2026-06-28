@@ -6517,6 +6517,7 @@ __metadata:
     "@nuxtjs/color-mode": "npm:^4.0.1"
     "@pinia/nuxt": "npm:^0.11.3"
     "@playwright/test": "npm:^1.61.0"
+    "@readion/shared": "workspace:*"
     "@tanstack/vue-query": "npm:^5.101.0"
     "@vite-pwa/nuxt": "npm:^1.1.1"
     "@vitejs/plugin-vue": "npm:^6.0.7"
