@@ -12,6 +12,7 @@
       "!**/dist",
       "!**/coverage",
       "!**/test-results",
+      "!**/openspec/design",
       "!**/.yarn",
       "!**/yarn.lock"
     ]
