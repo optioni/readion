@@ -14,8 +14,8 @@ import {
   selectActiveUsers,
   type TerminalSession,
   type UserSessionGroup,
-  windowStart,
 } from './analytics.stats'
+import { AnalyticsWindow } from './analytics-window'
 
 export interface ActiveUserPopulation {
   userIds: string[]
@@ -28,11 +28,12 @@ export class AnalyticsService {
   constructor(
     private readonly em: EntityManager,
     private readonly config: ConfigService<EnvConfig>,
+    private readonly window: AnalyticsWindow,
   ) {}
 
-  async getActiveUserPopulation(now = this.now()): Promise<ActiveUserPopulation> {
+  async getActiveUserPopulation(now = this.window.now()): Promise<ActiveUserPopulation> {
     const windowDays = this.windowDays()
-    const start = windowStart(now, windowDays)
+    const start = this.window.start(windowDays, now)
     const em = this.em.fork()
     const sessions = await em.find(StudySession, {
       status: { $in: ['completed', 'partial'] },
@@ -46,13 +47,13 @@ export class AnalyticsService {
     return { userIds, count: userIds.length, completedByUser }
   }
 
-  async getSessionsPerWeek(now = this.now()): Promise<number> {
+  async getSessionsPerWeek(now = this.window.now()): Promise<number> {
     const { userIds, completedByUser } = await this.getActiveUserPopulation(now)
     return medianSessionsPerWeek(completedByUser, userIds, this.windowDays())
   }
 
-  async getCompletionRate(now = this.now()): Promise<number> {
-    const start = windowStart(now, this.windowDays())
+  async getCompletionRate(now = this.window.now()): Promise<number> {
+    const start = this.window.start(this.windowDays(), now)
     const em = this.em.fork()
     const started = await em.find(StudySession, { startedAt: { $gte: start, $lte: now } })
     const reachedSummary = started.filter(
@@ -61,8 +62,8 @@ export class AnalyticsService {
     return completionRate({ reachedSummary, started: started.length })
   }
 
-  async getAgentEngagementRate(now = this.now()): Promise<number> {
-    const start = windowStart(now, this.windowDays())
+  async getAgentEngagementRate(now = this.window.now()): Promise<number> {
+    const start = this.window.start(this.windowDays(), now)
     const em = this.em.fork()
     const started = await em.find(StudySession, { startedAt: { $gte: start, $lte: now } })
     if (started.length === 0) {
@@ -109,10 +110,6 @@ export class AnalyticsService {
       userId,
       sessions: terminalSessions,
     }))
-  }
-
-  private now(): Date {
-    return new Date()
   }
 
   private windowDays(): number {
