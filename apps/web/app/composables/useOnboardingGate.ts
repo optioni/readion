@@ -10,7 +10,7 @@ import { certificationsControllerList } from '~~/src/api/certifications/certific
 import { userCertificationsControllerList } from '~~/src/api/user-certifications/user-certifications'
 import { usersControllerGetMe } from '~~/src/api/users/users'
 
-const readProfileEnvelope = (response: { data: unknown }): UserProfileResponse =>
+export const readProfileEnvelope = (response: { data: unknown }): UserProfileResponse =>
   (response.data as { data: UserProfileResponse }).data
 
 export function useOnboardingGate() {
