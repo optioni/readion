@@ -102,15 +102,15 @@ describe('OnboardingSessionPrefs pre-fill', () => {
     const { wrapper } = mountStep()
     await flushPromises()
 
-    expect(
-      wrapper.find('[data-testid="duration-option-90"]').attributes('aria-pressed'),
-    ).toBe('true')
-    expect(
-      wrapper.find('[data-testid="content-mix-quiz-heavy"]').attributes('aria-pressed'),
-    ).toBe('true')
-    expect(
-      wrapper.find('[data-testid="difficulty-advanced"]').attributes('aria-pressed'),
-    ).toBe('true')
+    expect(wrapper.find('[data-testid="duration-option-90"]').attributes('aria-pressed')).toBe(
+      'true',
+    )
+    expect(wrapper.find('[data-testid="content-mix-quiz-heavy"]').attributes('aria-pressed')).toBe(
+      'true',
+    )
+    expect(wrapper.find('[data-testid="difficulty-advanced"]').attributes('aria-pressed')).toBe(
+      'true',
+    )
     expect(wrapper.find('[data-testid="focus-area-review"]').attributes('aria-pressed')).toBe(
       'true',
     )
