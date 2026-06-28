@@ -86,8 +86,8 @@ describe('SessionsTab table', () => {
 
   it('links each row to its session run route', () => {
     const wrapper = mountTab()
-    const link = wrapper.findAll('[data-testid="session-row"]')[0]!.find('a')
-    expect(link.attributes('href')).toBe('/sessions/s1')
+    const row = wrapper.findAll('[data-testid="session-row"]')[0]!
+    expect(row.attributes('href')).toBe('/sessions/s1')
   })
 })
 

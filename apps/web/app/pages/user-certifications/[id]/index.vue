@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import OverviewTab from '~/components/OverviewTab.vue'
+import SessionsTab from '~/components/SessionsTab.vue'
 import { useCertDetail } from '~/composables/useCertDetail'
 
 type TabId = 'overview' | 'sessions' | 'exam-history'
@@ -96,6 +97,7 @@ function selectTab(id: TabId) {
           :certification-id="certificationId"
           :domains="domains"
         />
+        <SessionsTab v-if="tab.id === 'sessions'" :certification-id="certificationId" />
       </div>
     </template>
   </section>

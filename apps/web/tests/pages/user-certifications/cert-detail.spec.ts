@@ -31,7 +31,12 @@ function stubCertDetail(
 
 function mountPage() {
   return mount(CertDetailPage, {
-    global: { stubs: { OverviewTab: { template: '<div data-testid="overview-tab-stub" />' } } },
+    global: {
+      stubs: {
+        OverviewTab: { template: '<div data-testid="overview-tab-stub" />' },
+        SessionsTab: { template: '<div data-testid="sessions-tab-stub" />' },
+      },
+    },
   })
 }
 
