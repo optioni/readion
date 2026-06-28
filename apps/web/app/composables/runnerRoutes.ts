@@ -9,3 +9,11 @@ export function mockExamRunPath(mockExamId: string): string {
 export function reviewRunPath(enrollmentId: string): string {
   return `/user-certifications/${enrollmentId}/review`
 }
+
+export function sessionStartPath(enrollmentId: string): string {
+  return `/user-certifications/${enrollmentId}/session/start`
+}
+
+export function sessionSummaryPath(sessionId: string): string {
+  return `/sessions/${sessionId}/summary`
+}

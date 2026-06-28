@@ -1,10 +1,3 @@
-import type {
-  AgentConversationDetailResponseDto,
-  DrillResultResponseDto,
-  GoDeeperResponseDto,
-  SessionDetailResponseDto,
-  SessionSummaryResponseDto,
-} from '~~/src/api/model'
 import type { CreateSessionRequest, SubmitAnswerRequest } from '@readion/shared'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -23,6 +16,13 @@ import {
 } from '~/composables/sessionViewApi'
 import { agentControllerDetail } from '~~/src/api/agent/agent'
 import { enrollmentSessionsControllerCreate } from '~~/src/api/enrollment-sessions/enrollment-sessions'
+import type {
+  AgentConversationDetailResponseDto,
+  DrillResultResponseDto,
+  GoDeeperResponseDto,
+  SessionDetailResponseDto,
+  SessionSummaryResponseDto,
+} from '~~/src/api/model'
 import {
   quizControllerGenerateExplanation,
   quizControllerReportQuestion,
@@ -85,7 +85,9 @@ beforeEach(() => {
 
 describe('createSession', () => {
   it('POSTs an empty body for quick start (server applies profile defaults)', async () => {
-    vi.mocked(enrollmentSessionsControllerCreate).mockResolvedValue(ok(sessionDetail('sess-1'), 201))
+    vi.mocked(enrollmentSessionsControllerCreate).mockResolvedValue(
+      ok(sessionDetail('sess-1'), 201),
+    )
 
     const result = await createSession('enr-1')
 
@@ -94,7 +96,9 @@ describe('createSession', () => {
   })
 
   it('serialises the override body for custom config', async () => {
-    vi.mocked(enrollmentSessionsControllerCreate).mockResolvedValue(ok(sessionDetail('sess-1'), 201))
+    vi.mocked(enrollmentSessionsControllerCreate).mockResolvedValue(
+      ok(sessionDetail('sess-1'), 201),
+    )
     const body: CreateSessionRequest = { durationMinutes: 30, difficulty: 'intermediate' }
 
     await createSession('enr-1', body)
@@ -252,8 +256,11 @@ describe('createSessionAgentConversation', () => {
     const conversation = {
       data: { id: 'conv-1' },
       relationships: {},
-    } as AgentConversationDetailResponseDto
-    vi.mocked(sessionAgentConversationsControllerCreateInSession).mockResolvedValue(ok(conversation))
+      // biome-ignore lint/suspicious/noExplicitAny: fixture narrowed to the id under assertion
+    } as any as AgentConversationDetailResponseDto
+    vi.mocked(sessionAgentConversationsControllerCreateInSession).mockResolvedValue(
+      ok(conversation),
+    )
 
     const result = await createSessionAgentConversation('sess-1')
 
@@ -267,7 +274,8 @@ describe('fetchAgentConversation', () => {
     const conversation = {
       data: { id: 'conv-1' },
       relationships: { messages: { data: [] } },
-    } as AgentConversationDetailResponseDto
+      // biome-ignore lint/suspicious/noExplicitAny: fixture narrowed to the id under assertion
+    } as any as AgentConversationDetailResponseDto
     vi.mocked(agentControllerDetail).mockResolvedValue(ok(conversation))
 
     const result = await fetchAgentConversation('conv-1')
