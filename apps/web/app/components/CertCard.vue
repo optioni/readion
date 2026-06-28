@@ -11,9 +11,13 @@ import { useCardReadiness } from '~/composables/useCardReadiness'
 import { useCardRecentSessions } from '~/composables/useCardRecentSessions'
 import { useCardWeakAreas } from '~/composables/useCardWeakAreas'
 import type { EnrollmentCard } from '~/composables/useEnrollments'
+import { useQuickStartActions } from '~/composables/useQuickStartActions'
 
 const props = defineProps<{ card: EnrollmentCard; variant: 'hero' | 'standard' }>()
-defineEmits<{ 'start-session': []; 'mock-exam': [] }>()
+
+const { startSession, startMockExam, isStartingSession, isStartingMockExam } = useQuickStartActions(
+  props.card.enrollmentId,
+)
 
 const { readiness } = useCardReadiness(props.card.enrollmentId)
 const { weakAreas } = useCardWeakAreas(props.card.enrollmentId)
@@ -54,8 +58,10 @@ const cardStyle = computed(() =>
       </div>
       <QuickStartButtons
         :variant="variant"
-        @start-session="$emit('start-session')"
-        @mock-exam="$emit('mock-exam')"
+        :is-starting-session="isStartingSession"
+        :is-starting-mock-exam="isStartingMockExam"
+        @start-session="startSession"
+        @mock-exam="startMockExam"
       />
     </div>
     <div class="grid grid-cols-2 gap-3">

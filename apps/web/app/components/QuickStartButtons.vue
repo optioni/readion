@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps<{ variant: 'hero' | 'standard' }>()
+const props = defineProps<{
+  variant: 'hero' | 'standard'
+  isStartingSession: boolean
+  isStartingMockExam: boolean
+}>()
 const emit = defineEmits<{ 'start-session': []; 'mock-exam': [] }>()
 
 const isHero = computed(() => props.variant === 'hero')
@@ -22,8 +26,9 @@ const mockClass = computed(() =>
     <button
       type="button"
       data-testid="start-session-btn"
-      class="cursor-pointer rounded-md px-3.5 py-1.5 font-semibold text-xs"
+      class="cursor-pointer rounded-md px-3.5 py-1.5 font-semibold text-xs disabled:cursor-not-allowed disabled:opacity-60"
       :class="startClass"
+      :disabled="props.isStartingSession"
       @click="emit('start-session')"
     >
       Start Session
@@ -31,8 +36,9 @@ const mockClass = computed(() =>
     <button
       type="button"
       data-testid="mock-exam-btn"
-      class="cursor-pointer rounded-md px-3.5 py-1.5 font-semibold text-xs"
+      class="cursor-pointer rounded-md px-3.5 py-1.5 font-semibold text-xs disabled:cursor-not-allowed disabled:opacity-60"
       :class="mockClass"
+      :disabled="props.isStartingMockExam"
       @click="emit('mock-exam')"
     >
       Mock Exam
