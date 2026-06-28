@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 import {
   agentEngagementFraction,
   completionRate,
+  enrollmentGain,
   isActiveUser,
   isWithinWindow,
   median,
+  medianReadinessGain,
   medianSessionsPerWeek,
   selectActiveUsers,
   sessionsPerWeek,
@@ -197,6 +199,74 @@ describe('selectActiveUsers', () => {
   })
 })
 
+describe('enrollmentGain', () => {
+  it('is now minus at-window-start when calibrated at both ends', () => {
+    expect(
+      enrollmentGain({ scoreNow: 70, scoreAtT: 45, calibratedNow: true, calibratedAtT: true }),
+    ).toBe(25)
+  })
+
+  it('returns a negative gain when readiness regressed', () => {
+    expect(
+      enrollmentGain({ scoreNow: 40, scoreAtT: 55, calibratedNow: true, calibratedAtT: true }),
+    ).toBe(-15)
+  })
+
+  it('is excluded (null), not zero, when uncalibrated at the window start', () => {
+    expect(
+      enrollmentGain({ scoreNow: 70, scoreAtT: null, calibratedNow: true, calibratedAtT: false }),
+    ).toBeNull()
+  })
+
+  it('is excluded (null) when uncalibrated now', () => {
+    expect(
+      enrollmentGain({ scoreNow: null, scoreAtT: 45, calibratedNow: false, calibratedAtT: true }),
+    ).toBeNull()
+  })
+})
+
+describe('medianReadinessGain', () => {
+  it('takes the median per-user gain over the active population', () => {
+    expect(
+      medianReadinessGain([
+        { userId: 'u1', enrollments: [single(70, 45)] },
+        { userId: 'u2', enrollments: [single(60, 50)] },
+        { userId: 'u3', enrollments: [single(80, 50)] },
+      ]),
+    ).toBe(15)
+  })
+
+  it('excludes an enrollment uncalibrated at the window start rather than counting it as zero', () => {
+    // Without exclusion the median of [25, 0, 5] would be 5; excluding u2 yields a median of [25, 5] = 15.
+    expect(
+      medianReadinessGain([
+        { userId: 'u1', enrollments: [single(70, 45)] },
+        { userId: 'u2', enrollments: [excludedAtT(60)] },
+        { userId: 'u3', enrollments: [single(55, 50)] },
+      ]),
+    ).toBe(15)
+  })
+
+  it('averages a user with multiple calibrated enrollments into one per-user gain', () => {
+    expect(
+      medianReadinessGain([{ userId: 'u1', enrollments: [single(70, 50), single(40, 30)] }]),
+    ).toBe(15)
+  })
+
+  it('drops a user whose every enrollment is excluded', () => {
+    expect(
+      medianReadinessGain([
+        { userId: 'u1', enrollments: [single(70, 45)] },
+        { userId: 'u2', enrollments: [excludedAtT(60), excludedAtT(80)] },
+      ]),
+    ).toBe(25)
+  })
+
+  it('returns 0 when no user contributes a gain', () => {
+    expect(medianReadinessGain([{ userId: 'u1', enrollments: [excludedAtT(60)] }])).toBe(0)
+  })
+})
+
 describe('medianSessionsPerWeek', () => {
   it('takes the median weekly rate across the active users', () => {
     const completedByUser = new Map([
@@ -210,3 +280,11 @@ describe('medianSessionsPerWeek', () => {
     expect(medianSessionsPerWeek(new Map(), [], 14)).toBe(0)
   })
 })
+
+function single(scoreNow: number, scoreAtT: number) {
+  return { scoreNow, scoreAtT, calibratedNow: true, calibratedAtT: true } as const
+}
+
+function excludedAtT(scoreNow: number) {
+  return { scoreNow, scoreAtT: null, calibratedNow: true, calibratedAtT: false } as const
+}
