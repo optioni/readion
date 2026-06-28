@@ -33,6 +33,49 @@ export function median(values: number[]): number {
   return sorted.length % 2 === 0 ? (sorted[mid - 1]! + sorted[mid]!) / 2 : sorted[mid]!
 }
 
+export interface ReadinessSample {
+  scoreNow: number | null
+  scoreAtT: number | null
+  calibratedNow: boolean
+  calibratedAtT: boolean
+}
+
+export interface UserReadinessSamples {
+  userId: string
+  enrollments: ReadinessSample[]
+}
+
+// An enrollment contributes a gain only when readiness is calibrated at BOTH the window start
+// and now; an enrollment uncalibrated at either boundary is excluded (returns null), never
+// folded in as a zero, so the median reflects only the genuinely measurable population.
+export function enrollmentGain(sample: ReadinessSample): number | null {
+  if (!sample.calibratedNow || !sample.calibratedAtT) {
+    return null
+  }
+  if (sample.scoreNow === null || sample.scoreAtT === null) {
+    return null
+  }
+  return sample.scoreNow - sample.scoreAtT
+}
+
+// North-star reading: the median per-user readiness gain across the active population. A user
+// with several calibrated enrollments averages their per-enrollment gains into a single
+// per-user gain so multi-cert users are weighted once; a user whose every enrollment is
+// excluded contributes nothing to the median.
+export function medianReadinessGain(users: UserReadinessSamples[]): number {
+  const perUserGains: number[] = []
+  for (const user of users) {
+    const gains = user.enrollments
+      .map(enrollmentGain)
+      .filter((gain): gain is number => gain !== null)
+    if (gains.length === 0) {
+      continue
+    }
+    perUserGains.push(gains.reduce((sum, gain) => sum + gain, 0) / gains.length)
+  }
+  return median(perUserGains)
+}
+
 export function completionRate(input: { reachedSummary: number; started: number }): number {
   return input.started === 0 ? 0 : input.reachedSummary / input.started
 }

@@ -229,9 +229,9 @@ describe('medianReadinessGain', () => {
   it('takes the median per-user gain over the active population', () => {
     expect(
       medianReadinessGain([
-        { userId: 'u1', enrollments: [single(70, 45)] },
-        { userId: 'u2', enrollments: [single(60, 50)] },
-        { userId: 'u3', enrollments: [single(80, 50)] },
+        { userId: 'u1', enrollments: [single(50, 45)] },
+        { userId: 'u2', enrollments: [single(60, 45)] },
+        { userId: 'u3', enrollments: [single(70, 45)] },
       ]),
     ).toBe(15)
   })
