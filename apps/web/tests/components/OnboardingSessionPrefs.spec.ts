@@ -1,0 +1,156 @@
+import type { SessionDefaults } from '@readion/shared'
+import {
+  DEFAULT_SESSION_DEFAULTS,
+  sessionDefaultContentMixes,
+  sessionDefaultDifficulties,
+  sessionDefaultDurations,
+  sessionDefaultFocusAreas,
+  sessionDefaultLearningStyles,
+} from '@readion/shared'
+import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
+import { flushPromises, mount } from '@vue/test-utils'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import OnboardingSessionPrefs from '~/components/OnboardingSessionPrefs.vue'
+import { usersControllerGetMe } from '~~/src/api/users/users'
+
+vi.mock('~~/src/api/users/users')
+
+const profileEnvelope = (sessionDefaults: SessionDefaults) => ({
+  data: {
+    data: {
+      id: 'user-1',
+      email: 'learner@example.com',
+      role: 'student',
+      displayName: 'Learner',
+      displayTimezone: 'Europe/Helsinki',
+      sessionDefaults,
+    },
+  },
+  status: 200,
+  headers: new Headers(),
+})
+
+function stubProfile(sessionDefaults: SessionDefaults) {
+  vi.mocked(usersControllerGetMe).mockResolvedValue(
+    // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+    profileEnvelope(sessionDefaults) as any,
+  )
+}
+
+function mountStep() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  })
+  const wrapper = mount(OnboardingSessionPrefs, {
+    global: { plugins: [[VueQueryPlugin, { queryClient }]] },
+  })
+  return { wrapper, queryClient }
+}
+
+const confirmButton = (wrapper: ReturnType<typeof mountStep>['wrapper']) =>
+  wrapper.findAll('button').find((button) => /confirm|enroll/i.test(button.text()))
+
+afterEach(() => {
+  vi.clearAllMocks()
+})
+
+describe('OnboardingSessionPrefs options', () => {
+  it('renders one control per enum value for every field', async () => {
+    stubProfile(DEFAULT_SESSION_DEFAULTS)
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    for (const value of sessionDefaultDurations) {
+      expect(wrapper.find(`[data-testid="duration-option-${value}"]`).exists()).toBe(true)
+    }
+    for (const value of sessionDefaultContentMixes) {
+      expect(wrapper.find(`[data-testid="content-mix-${value}"]`).exists()).toBe(true)
+    }
+    for (const value of sessionDefaultDifficulties) {
+      expect(wrapper.find(`[data-testid="difficulty-${value}"]`).exists()).toBe(true)
+    }
+    for (const value of sessionDefaultFocusAreas) {
+      expect(wrapper.find(`[data-testid="focus-area-${value}"]`).exists()).toBe(true)
+    }
+    for (const value of sessionDefaultLearningStyles) {
+      expect(wrapper.find(`[data-testid="learning-style-${value}"]`).exists()).toBe(true)
+    }
+  })
+
+  it('exposes the prefs container', async () => {
+    stubProfile(DEFAULT_SESSION_DEFAULTS)
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="onboarding-session-prefs"]').exists()).toBe(true)
+  })
+})
+
+describe('OnboardingSessionPrefs pre-fill', () => {
+  it('pre-selects each control from the profile sessionDefaults', async () => {
+    const defaults: SessionDefaults = {
+      duration: 90,
+      contentMix: 'quiz-heavy',
+      difficulty: 'advanced',
+      focusArea: 'review',
+      learningStyle: 'scenario-based',
+    }
+    stubProfile(defaults)
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    expect(
+      wrapper.find('[data-testid="duration-option-90"]').attributes('aria-pressed'),
+    ).toBe('true')
+    expect(
+      wrapper.find('[data-testid="content-mix-quiz-heavy"]').attributes('aria-pressed'),
+    ).toBe('true')
+    expect(
+      wrapper.find('[data-testid="difficulty-advanced"]').attributes('aria-pressed'),
+    ).toBe('true')
+    expect(wrapper.find('[data-testid="focus-area-review"]').attributes('aria-pressed')).toBe(
+      'true',
+    )
+    expect(
+      wrapper.find('[data-testid="learning-style-scenario-based"]').attributes('aria-pressed'),
+    ).toBe('true')
+  })
+
+  it('emits the full pre-filled defaults when confirmed without changes', async () => {
+    stubProfile(DEFAULT_SESSION_DEFAULTS)
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    await confirmButton(wrapper)?.trigger('click')
+
+    expect(wrapper.emitted('confirm')?.at(-1)).toEqual([{ ...DEFAULT_SESSION_DEFAULTS }])
+  })
+})
+
+describe('OnboardingSessionPrefs selection', () => {
+  it('emits the chosen values for all five fields after changes', async () => {
+    stubProfile(DEFAULT_SESSION_DEFAULTS)
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="duration-option-60"]').trigger('click')
+    await wrapper.find('[data-testid="learning-style-spaced-repetition"]').trigger('click')
+
+    await confirmButton(wrapper)?.trigger('click')
+
+    expect(wrapper.emitted('confirm')?.at(-1)).toEqual([
+      {
+        duration: 60,
+        contentMix: 'balanced',
+        difficulty: 'intermediate',
+        focusArea: 'auto',
+        learningStyle: 'spaced-repetition',
+      },
+    ])
+  })
+})
