@@ -3,9 +3,12 @@ import type {
   AgentConversationDetailResponseDto,
   CertificationResponseDto,
   DrillResultEnvelopeDto,
+  DrillResultResponseDtoSession,
   GoDeeperResponseDto,
   SessionDetailResponseDto,
   SessionItemResponseDto,
+  SessionReadinessChangeDto,
+  SessionResponseDto,
   SessionSummaryEnvelopeDto,
   WeakAreaListResponseDto,
 } from '../../src/api/model'
@@ -153,22 +156,25 @@ function buildSessionDetail(
   items: SessionItemResponseDto[],
   overrides: { status?: string; lastItemIndex?: number; endedAt?: string | null } = {},
 ): SessionDetailResponseDto {
+  // Orval generates `{ [key: string]: unknown }` for the nullable/enum scalar columns
+  // (kind/status/focusArea/endedAt), so the runtime fixture literal is cast to the DTO once.
+  const data = {
+    id,
+    userCertificationId: SESSION_IDS.enrollmentId,
+    kind: 'study',
+    status: overrides.status ?? 'active',
+    durationMinutes: 60,
+    contentMix: 'balanced',
+    difficulty: 'intermediate',
+    focusArea: 'auto',
+    learningStyle: 'weak-area-focus',
+    lastItemIndex: overrides.lastItemIndex ?? 0,
+    startedAt: '2026-06-28T09:00:00.000Z',
+    endedAt: overrides.endedAt ?? null,
+    items,
+  } as unknown as SessionResponseDto
   return {
-    data: {
-      id,
-      userCertificationId: SESSION_IDS.enrollmentId,
-      kind: 'study',
-      status: overrides.status ?? 'active',
-      durationMinutes: 60,
-      contentMix: 'balanced',
-      difficulty: 'intermediate',
-      focusArea: 'auto',
-      learningStyle: 'weak-area-focus',
-      lastItemIndex: overrides.lastItemIndex ?? 0,
-      startedAt: '2026-06-28T09:00:00.000Z',
-      endedAt: overrides.endedAt ?? null,
-      items,
-    },
+    data,
     relationships: { items: { data: items.map((item) => ({ index: item.index })) } },
   }
 }
@@ -200,7 +206,7 @@ function buildConversationDetail(messages: unknown[] = []): AgentConversationDet
       createdAt: '2026-06-28T09:05:00.000Z',
     },
     relationships: { messages: { data: messages } },
-  } as AgentConversationDetailResponseDto
+  } as unknown as AgentConversationDetailResponseDto
 }
 
 const SUMMARY: SessionSummaryEnvelopeDto = {
@@ -215,7 +221,7 @@ const SUMMARY: SessionSummaryEnvelopeDto = {
       { domain: 'Secure Architectures', delta: 0.12 },
       { domain: 'Resilient Architectures', delta: -0.04 },
     ],
-    readiness: { before: 0.62, after: 0.66, delta: 0.04 },
+    readiness: { before: 0.62, after: 0.66, delta: 0.04 } as unknown as SessionReadinessChangeDto,
     strongestQuestion: {
       responseId: SESSION_IDS.strongestResponseId,
       question: 'Which feature enforces permission guardrails across an OU?',
@@ -379,7 +385,7 @@ export function mockSessionLoop(page: Page): {
 
   // --- Quiz submit / report / explanation ---
   mock(page, new RegExp(`/api/v1/quiz/${questionId}/submit$`), async (route) => {
-    await fulfilJson(route, 201, QUIZ_SUBMIT_RESULT)
+    await fulfilJson(route, 201, { data: QUIZ_SUBMIT_RESULT })
   })
   mock(page, new RegExp(`/api/v1/quiz/${questionId}/report$`), async (route) => {
     await route.fulfill({ status: 204, headers: CORS_HEADERS, body: '' })
@@ -396,7 +402,7 @@ export function mockSessionLoop(page: Page): {
 
   // --- In-session agent conversation: create, hydrate, stream a turn ---
   mock(page, /\/api\/v1\/sessions\/[0-9a-f-]{36}\/agent-conversations$/, async (route) => {
-    await fulfilJson(route, 201, { data: buildConversationDetail() })
+    await fulfilJson(route, 201, buildConversationDetail())
   })
   mock(
     page,
@@ -422,7 +428,8 @@ export function mockSessionLoop(page: Page): {
     const body: DrillResultEnvelopeDto = {
       data: {
         status: 'started',
-        session: buildSessionDetail(drillSessionId, buildItems()).data,
+        session: buildSessionDetail(drillSessionId, buildItems())
+          .data as unknown as DrillResultResponseDtoSession,
       },
     }
     await fulfilJson(route, 201, body)
@@ -441,7 +448,23 @@ export async function gotoAuthenticated(page: Page, path: string): Promise<void>
   await page.goto('/forgot-password')
   await page.waitForLoadState('networkidle')
   await page.evaluate((target) => {
-    window.history.pushState({}, '', target)
+    // Vue Router reads `history.state.current`/`.position` when a later programmatic push()
+    // saves the current entry; a bare `pushState({}, ...)` wipes those and makes the next
+    // navigateTo() build a `<origin>undefined` URL. Preserve the well-formed state the real
+    // /forgot-password load installed so the in-app client-side navigation stays coherent.
+    const previous = (window.history.state ?? {}) as { current?: string; position?: number }
+    window.history.pushState(
+      {
+        back: previous.current ?? null,
+        current: target,
+        forward: null,
+        replaced: false,
+        position: (previous.position ?? 0) + 1,
+        scroll: null,
+      },
+      '',
+      target,
+    )
     window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }))
   }, path)
 }

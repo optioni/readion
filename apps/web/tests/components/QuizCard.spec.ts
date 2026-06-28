@@ -13,7 +13,7 @@ const OPTIONS = [
   'IAM permissions boundaries',
   'Service Control Policies (SCPs)',
   'Session policies',
-]
+] as const
 
 const quizContent = JSON.stringify({
   questionId: 'q-1',
@@ -167,7 +167,10 @@ describe('QuizCard report', () => {
     await flushPromises()
 
     expect(reportQuizQuestion).toHaveBeenCalledTimes(1)
-    const [questionId, body] = vi.mocked(reportQuizQuestion).mock.calls[0]
+    const [questionId, body] = vi.mocked(reportQuizQuestion).mock.calls[0] as [
+      string,
+      { userCertificationId: string; reason: string },
+    ]
     expect(questionId).toBe('q-1')
     expect(body.userCertificationId).toBe('uc-1')
     expect(body.reason.length).toBeGreaterThan(0)
