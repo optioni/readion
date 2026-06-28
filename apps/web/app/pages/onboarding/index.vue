@@ -18,16 +18,26 @@ const step = ref<Step>('cert')
 const certificationId = ref<string | null>(null)
 const enrollmentId = ref<string | null>(null)
 const enrollError = ref<string | null>(null)
+// Enrolling refetches the gate's enrollments query, flipping the decision to `dashboard` mid-flow.
+// Once the user has started enrolling we own the navigation (offer step → skip/take), so the
+// defensive redirect must not fire — otherwise it yanks the user off the diagnostic offer.
+const hasStartedEnrollment = ref(false)
 
-const isOnboarding = computed(() => decision.value?.kind === 'onboarding')
+// Keep the wizard mounted through the offer step even after enrolling flips the gate to `dashboard`.
+const isOnboarding = computed(
+  () => decision.value?.kind === 'onboarding' || hasStartedEnrollment.value,
+)
 const isNoCerts = computed(() => decision.value?.kind === 'no-certs')
 
 watch(
   decision,
   (value) => {
     if (!value) return
-    if (value.kind === 'dashboard') navigateTo('/')
-    if (value.kind === 'admin-cert-setup') navigateTo(ADMIN_CERT_SETUP_ROUTE)
+    if (value.kind === 'admin-cert-setup') {
+      navigateTo(ADMIN_CERT_SETUP_ROUTE)
+      return
+    }
+    if (value.kind === 'dashboard' && !hasStartedEnrollment.value) navigateTo('/')
   },
   { immediate: true },
 )
@@ -67,6 +77,7 @@ function onCertContinue(id: string) {
 async function onPrefsConfirm(sessionDefaults: SessionDefaults) {
   if (!certificationId.value) return
   enrollError.value = null
+  hasStartedEnrollment.value = true
   const outcome = await saveDefaultsAndEnroll({
     certificationId: certificationId.value,
     sessionDefaults,
@@ -76,6 +87,7 @@ async function onPrefsConfirm(sessionDefaults: SessionDefaults) {
     step.value = 'offer'
     return
   }
+  hasStartedEnrollment.value = false
   enrollError.value = 'We could not complete your enrollment. Please try again.'
 }
 </script>

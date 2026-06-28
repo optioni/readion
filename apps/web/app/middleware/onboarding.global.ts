@@ -38,7 +38,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
       if (to.path !== '/onboarding') return navigateTo('/onboarding')
       return
     default:
-      if (to.path !== '/') return navigateTo('/')
+      if (to.path !== '/') return navigateTo('/', { replace: true })
       return
   }
 })

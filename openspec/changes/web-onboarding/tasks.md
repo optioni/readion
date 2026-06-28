@@ -25,39 +25,39 @@
 
 ## 4. Cert-select step component
 
-- [ ] 4.1 RED: Write a unit test (mocked HTTP) for the cert-select component: renders one option per `GET /certifications` item showing `name` + `provider`; Continue disabled until a selection is made; emits the chosen `certificationId`
-- [ ] 4.2 GREEN: Implement the cert-select step component reusing the `AddCertificationModal` row style and selected-state token (`primary.default`); drive options off `certificationsControllerList` (live-only, no client-side filtering)
-- [ ] 4.3 REFACTOR: Share row markup/util with the dashboard add-cert pattern where reasonable without coupling to `web-dashboard`'s modal
+- [x] 4.1 RED: Write a unit test (mocked HTTP) for the cert-select component: renders one option per `GET /certifications` item showing `name` + `provider`; Continue disabled until a selection is made; emits the chosen `certificationId`
+- [x] 4.2 GREEN: Implement the cert-select step component reusing the `AddCertificationModal` row style and selected-state token (`primary.default`); drive options off `certificationsControllerList` (live-only, no client-side filtering)
+- [x] 4.3 REFACTOR: Share row markup/util with the dashboard add-cert pattern where reasonable without coupling to `web-dashboard`'s modal
 
 ## 5. Default session-preferences step component
 
-- [ ] 5.1 RED: Write a unit test for the prefs form: pre-fills the five fields from `GET /users/me` `sessionDefaults` (e.g. `DEFAULT_SESSION_DEFAULTS`); option sets come from the shared `sessionDefaults*` enums; emits the chosen values
-- [ ] 5.2 GREEN: Implement the prefs form (duration 15/30/60/90, content mix, difficulty, focus area, learning style) bound to the shared `@readion/shared` enums
-- [ ] 5.3 REFACTOR: Validate against `sessionDefaultsSchema` shape; send the full chosen `sessionDefaults` set (all five fields) in both the `PATCH /users/me` and the enroll bodies for an unambiguous, idempotent write
+- [x] 5.1 RED: Write a unit test for the prefs form: pre-fills the five fields from `GET /users/me` `sessionDefaults` (e.g. `DEFAULT_SESSION_DEFAULTS`); option sets come from the shared `sessionDefaults*` enums; emits the chosen values
+- [x] 5.2 GREEN: Implement the prefs form (duration 15/30/60/90, content mix, difficulty, focus area, learning style) bound to the shared `@readion/shared` enums
+- [x] 5.3 REFACTOR: Validate against `sessionDefaultsSchema` shape; send the full chosen `sessionDefaults` set (all five fields) in both the `PATCH /users/me` and the enroll bodies for an unambiguous, idempotent write
 
 ## 6. Enroll + diagnostic action composable
 
-- [ ] 6.1 RED: Write unit tests (mocked HTTP) for the actions: `saveDefaultsAndEnroll` calls `PATCH /users/me` then `POST /user-certifications` with `{certificationId, sessionDefaults}` and returns the enrollment id, invalidating `dashboardQueryKeys.enrollments()`; on enroll 422 it surfaces an error and does not advance; `takeDiagnostic(id)` calls `POST /:id/diagnostic` then navigates to the runner route; `skipDiagnostic(id)` calls `POST /:id/diagnostic-offer/dismiss` then navigates to `/`
-- [ ] 6.2 GREEN: Implement `app/composables/useOnboardingActions.ts` wrapping the enroll, diagnostic-create, and dismiss client calls with the navigation targets (placeholder routes for the runner)
-- [ ] 6.3 REFACTOR: Centralize placeholder route constants (mock-exam runner, admin cert-setup) so they are easy to reconcile when `web-mock-exam` / `web-admin` land
+- [x] 6.1 RED: Write unit tests (mocked HTTP) for the actions: `saveDefaultsAndEnroll` calls `PATCH /users/me` then `POST /user-certifications` with `{certificationId, sessionDefaults}` and returns the enrollment id, invalidating `dashboardQueryKeys.enrollments()`; on enroll 422 it surfaces an error and does not advance; `takeDiagnostic(id)` calls `POST /:id/diagnostic` then navigates to the runner route; `skipDiagnostic(id)` calls `POST /:id/diagnostic-offer/dismiss` then navigates to `/`
+- [x] 6.2 GREEN: Implement `app/composables/useOnboardingActions.ts` wrapping the enroll, diagnostic-create, and dismiss client calls with the navigation targets (placeholder routes for the runner)
+- [x] 6.3 REFACTOR: Centralize placeholder route constants (mock-exam runner, admin cert-setup) so they are easy to reconcile when `web-mock-exam` / `web-admin` land
 
 ## 7. Diagnostic offer step + re-prompt nudge components
 
-- [ ] 7.1 RED: Write unit tests for the offer card (shows Take/Skip when `offer==='onboarding'`; proceeds to dashboard when `offer==='none'`) and the dashboard re-prompt nudge (renders only when `offer==='re-prompt'`; Skip dismisses and resolves to `none`; Take starts the diagnostic)
-- [ ] 7.2 GREEN: Implement the diagnostic offer step component and the standalone re-prompt nudge component (both driven by `diagnosticControllerGetOffer`), reusing `useOnboardingActions`
-- [ ] 7.3 REFACTOR: Mount the re-prompt nudge on the dashboard without modifying `web-dashboard`'s owned card components beyond the mount point
+- [x] 7.1 RED: Write unit tests for the offer card (shows Take/Skip when `offer==='onboarding'`; proceeds to dashboard when `offer==='none'`) and the dashboard re-prompt nudge (renders only when `offer==='re-prompt'`; Skip dismisses and resolves to `none`; Take starts the diagnostic)
+- [x] 7.2 GREEN: Implement the diagnostic offer step component and the standalone re-prompt nudge component (both driven by `diagnosticControllerGetOffer`), reusing `useOnboardingActions`
+- [x] 7.3 REFACTOR: Mount the re-prompt nudge on the dashboard without modifying `web-dashboard`'s owned card components beyond the mount point
 
 ## 8. Onboarding page assembly + no-certs empty state
 
-- [ ] 8.1 RED: Write a unit/integration test for `app/pages/onboarding/index.vue` assembling the steps in order and rendering the "No certifications available yet" empty state for the non-admin/no-certs branch
-- [ ] 8.2 GREEN: Implement `app/pages/onboarding/index.vue` (and any sub-route) wiring the gate, cert-select, prefs, and diagnostic-offer steps plus the empty state, using the spec/DESIGN.md-derived layout (centered column, `surface` step cards, `label` headings, `primary.default` CTAs)
-- [ ] 8.3 REFACTOR: Apply the design.md Visual Design tokens/layout; leave a code comment referencing the pending `Onboarding.html` re-pull/re-diff (DesignSync absent)
+- [x] 8.1 RED: Write a unit/integration test for `app/pages/onboarding/index.vue` assembling the steps in order and rendering the "No certifications available yet" empty state for the non-admin/no-certs branch
+- [x] 8.2 GREEN: Implement `app/pages/onboarding/index.vue` (and any sub-route) wiring the gate, cert-select, prefs, and diagnostic-offer steps plus the empty state, using the spec/DESIGN.md-derived layout (centered column, `surface` step cards, `label` headings, `primary.default` CTAs)
+- [x] 8.3 REFACTOR: Apply the design.md Visual Design tokens/layout; leave a code comment referencing the canonical `Onboarding.html` artboard (V3 sidebar wizard)
 
 ## 9. Acceptance Test — Outer Loop GREEN
 
-- [ ] 9.1 Confirm all onboarding acceptance tests pass end-to-end against the real API
-- [ ] 9.2 Verify the affected app starts in the local environment (smoke test) — boot `apps/web` (and the API it depends on) and confirm no startup/config errors
-- [ ] 9.3 REFACTOR: Clean up test setup, fixtures, and placeholder-route handling
+- [x] 9.1 Confirm all onboarding acceptance tests pass end-to-end against the real API
+- [x] 9.2 Verify the affected app starts in the local environment (smoke test) — boot `apps/web` (and the API it depends on) and confirm no startup/config errors
+- [x] 9.3 REFACTOR: Clean up test setup, fixtures, and placeholder-route handling
 
 ## 10. Change Review — Subagent Verification
 

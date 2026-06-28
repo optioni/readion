@@ -63,6 +63,11 @@ export default defineNuxtConfig({
       ],
     },
   },
+  vite: {
+    optimizeDeps: {
+      include: ['@readion/shared'],
+    },
+  },
   typescript: {
     tsConfig: {
       compilerOptions: {
