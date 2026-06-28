@@ -18,7 +18,16 @@ import {
   ANALYTICS_COST_MOCK_QUESTION_DEFAULT,
   ANALYTICS_COST_QUIZ_DEFAULT,
   ANALYTICS_COST_SESSION_ITEM_DEFAULT,
+  ANALYTICS_LLM_COST_BUDGET_DEFAULT,
+  ANALYTICS_METRIC_TARGET_ENV_KEYS,
   ANALYTICS_NORTHSTAR_WINDOW_DAYS_DEFAULT,
+  ANALYTICS_TARGET_AGENT_ENGAGEMENT_DEFAULT,
+  ANALYTICS_TARGET_COMPLETION_RATE_DEFAULT,
+  ANALYTICS_TARGET_NORTHSTAR_GAIN_DEFAULT,
+  ANALYTICS_TARGET_SESSIONS_PER_WEEK_DEFAULT,
+  ANALYTICS_TARGET_W4_RETENTION_DEFAULT,
+  type AnalyticsOverview,
+  type AnalyticsTargetedMetricKey,
   type PassRateBreakdown,
   READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT,
 } from '@readion/shared'
@@ -50,6 +59,18 @@ export interface ActiveUserPopulation {
   completedByUser: Map<string, number>
 }
 
+// Fallback targets mirroring the env-fragment defaults, keyed by the same metric keys as the
+// single-source env mapping. retentionW2 and retentionW4 share the W4 target by design.
+const ANALYTICS_METRIC_TARGET_DEFAULTS: Record<AnalyticsTargetedMetricKey, number> = {
+  readinessGain: ANALYTICS_TARGET_NORTHSTAR_GAIN_DEFAULT,
+  sessionsPerWeek: ANALYTICS_TARGET_SESSIONS_PER_WEEK_DEFAULT,
+  retentionW2: ANALYTICS_TARGET_W4_RETENTION_DEFAULT,
+  retentionW4: ANALYTICS_TARGET_W4_RETENTION_DEFAULT,
+  completionRate: ANALYTICS_TARGET_COMPLETION_RATE_DEFAULT,
+  agentEngagement: ANALYTICS_TARGET_AGENT_ENGAGEMENT_DEFAULT,
+  llmCostPerActiveUser: ANALYTICS_LLM_COST_BUDGET_DEFAULT,
+}
+
 @Injectable()
 export class AnalyticsService {
   constructor(
@@ -59,6 +80,72 @@ export class AnalyticsService {
     private readonly readiness: ReadinessService,
     private readonly asOfReadiness: AsOfReadiness,
   ) {}
+
+  // Assembles every read model into the overview envelope. All sections share ONE reporting
+  // instant so the figures are internally consistent. Each targeted section is paired with its
+  // configured target via the single-source ANALYTICS_METRIC_TARGET_ENV_KEYS mapping, and the
+  // active-population/retention-cohort sizes are surfaced so a reader can gauge significance.
+  async getOverview(now = this.window.now()): Promise<AnalyticsOverview> {
+    const population = await this.getActiveUserPopulation(now)
+    const [
+      readinessGain,
+      sessionsPerWeek,
+      completionRate,
+      agentEngagement,
+      llmCostPerActiveUser,
+      retention,
+      passRateBreakdown,
+    ] = await Promise.all([
+      this.getReadinessGain(now),
+      this.getSessionsPerWeek(now),
+      this.getCompletionRate(now),
+      this.getAgentEngagementRate(now),
+      this.getLlmCostPerActiveUser(now),
+      this.getRetentionCohorts(now),
+      this.getPassRateBreakdown(),
+    ])
+
+    return {
+      activeUsers: { value: population.count, population: population.count },
+      readinessGain: {
+        value: readinessGain,
+        target: this.metricTarget('readinessGain'),
+        population: population.count,
+      },
+      sessionsPerWeek: {
+        value: sessionsPerWeek,
+        target: this.metricTarget('sessionsPerWeek'),
+        population: population.count,
+      },
+      retentionW2: {
+        value: retention.w2.value,
+        target: this.metricTarget('retentionW2'),
+        population: retention.w2.population,
+        cohorts: retention.w2.cohorts,
+      },
+      retentionW4: {
+        value: retention.w4.value,
+        target: this.metricTarget('retentionW4'),
+        population: retention.w4.population,
+        cohorts: retention.w4.cohorts,
+      },
+      completionRate: { value: completionRate, target: this.metricTarget('completionRate') },
+      agentEngagement: { value: agentEngagement, target: this.metricTarget('agentEngagement') },
+      llmCostPerActiveUser: {
+        value: llmCostPerActiveUser,
+        target: this.metricTarget('llmCostPerActiveUser'),
+        population: population.count,
+      },
+      passRateBreakdown: { value: passRateBreakdown },
+    }
+  }
+
+  private metricTarget(key: AnalyticsTargetedMetricKey): number {
+    return (
+      this.config.get(ANALYTICS_METRIC_TARGET_ENV_KEYS[key], { infer: true }) ??
+      ANALYTICS_METRIC_TARGET_DEFAULTS[key]
+    )
+  }
 
   async getActiveUserPopulation(now = this.window.now()): Promise<ActiveUserPopulation> {
     const windowDays = this.windowDays()

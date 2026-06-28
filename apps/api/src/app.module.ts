@@ -6,6 +6,7 @@ import { ThrottlerGuard } from '@nestjs/throttler'
 import { DbModule } from '@readion/db'
 import { AdminModule } from './admin/admin.module'
 import { AgentModule } from './agent/agent.module'
+import { AnalyticsModule } from './analytics/analytics.module'
 import { AuthModule } from './auth/auth.module'
 import { CertSetupModule } from './cert-setup/cert-setup.module'
 import { CertificationsModule } from './certifications/certifications.module'
@@ -61,6 +62,7 @@ import { WeakAreasModule } from './weak-areas/weak-areas.module'
     LifecycleEmailModule,
     AgentModule,
     AdminModule,
+    AnalyticsModule,
   ],
   providers: [
     {
