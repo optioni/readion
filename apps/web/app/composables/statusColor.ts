@@ -12,3 +12,13 @@ export function statusColorForScore(score: number): StatusColorKey {
   }
   return 'good'
 }
+
+// Shared status-palette class helpers so reading/quiz cards, weak-area panels, and the session
+// summary all colour from one place instead of duplicating Tailwind token strings.
+export function statusTextColorClass(key: StatusColorKey): string {
+  return `text-readion-status-${key}`
+}
+
+export function statusBorderColorClass(key: StatusColorKey): string {
+  return `border-readion-status-${key}`
+}

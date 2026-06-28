@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { statusBorderColorClass, statusTextColorClass } from '~/composables/statusColor'
 
 export type QuizOptionState = 'rest' | 'selected' | 'correct' | 'incorrect' | 'dim'
 
@@ -16,9 +17,9 @@ const containerClass = computed<string>(() => {
     case 'selected':
       return 'border-readion-primary bg-readion-primary text-white'
     case 'correct':
-      return 'border-readion-status-good text-readion-status-good'
+      return `${statusBorderColorClass('good')} ${statusTextColorClass('good')}`
     case 'incorrect':
-      return 'border-readion-status-poor text-readion-status-poor'
+      return `${statusBorderColorClass('poor')} ${statusTextColorClass('poor')}`
     case 'dim':
       return 'border-readion-border-default text-readion-text-subtle opacity-70'
     default:

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import CardPanel from '~/components/CardPanel.vue'
-import { statusColorForScore } from '~/composables/statusColor'
+import { statusColorForScore, statusTextColorClass } from '~/composables/statusColor'
 import type { WeakAreaResponseDto } from '~~/src/api/model'
 
 const props = defineProps<{ weakAreas: WeakAreaResponseDto[] }>()
 
-const scoreClass = (score: number) => `text-readion-status-${statusColorForScore(score)}`
+const scoreClass = (score: number) => statusTextColorClass(statusColorForScore(score))
 </script>
 
 <template>

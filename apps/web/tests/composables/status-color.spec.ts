@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { statusColorForScore } from '~/composables/statusColor'
+import {
+  statusBorderColorClass,
+  statusColorForScore,
+  statusTextColorClass,
+} from '~/composables/statusColor'
 
 describe('statusColorForScore', () => {
   it.each([
@@ -16,5 +20,17 @@ describe('statusColorForScore', () => {
     [100, 'good'],
   ] as const)('maps score %i to status key %s', (score, expected) => {
     expect(statusColorForScore(score)).toBe(expected)
+  })
+})
+
+describe('status colour class helpers', () => {
+  it('builds the text colour class from a status key', () => {
+    expect(statusTextColorClass('good')).toBe('text-readion-status-good')
+    expect(statusTextColorClass('poor')).toBe('text-readion-status-poor')
+  })
+
+  it('builds the border colour class from a status key', () => {
+    expect(statusBorderColorClass('good')).toBe('border-readion-status-good')
+    expect(statusBorderColorClass('poor')).toBe('border-readion-status-poor')
   })
 })
