@@ -48,6 +48,13 @@ Groups:
 
 Work through pending groups in order.
 
+**Before dispatching each group, run a usage safety check.** Run `ccusage blocks --active --json` and read the active 5-hour block. You are guarding against the rate limit being hit **mid-group**, which halts the implementer/reviewer subagent and leaves half-written, uncommitted work (and tasks.md not yet marked).
+
+- `endTime` is when the current 5-hour window resets; `burnRate.tokensPerMinute` and `totalTokens` show how hard you are consuming it.
+- If consumption is heavy and the burn rate is high — a real risk of hitting the limit before a group completes — **do not dispatch the next group**. Stop here, at a clean boundary where the previous group's tasks are marked `- [x]` and committed, and report `Apply paused` with the usage snapshot, the reset time (`endTime`), and the reason. Resume after the window resets or on the user's instruction.
+
+`ccusage` reads local logs and cannot see your true remaining quota — only the interactive `/usage` command can. Treat this as a safety heuristic: when in doubt, pause at the boundary rather than risk a mid-group halt. (See the `checking-usage` skill for command details.)
+
 ---
 
 ### Groups typed: acceptance-red, acceptance-green, implementation
@@ -139,3 +146,4 @@ Reason: <description>
 - **Mark tasks `- [x]` in tasks.md** immediately after each group's subagent returns DONE.
 - **Review groups use the reviewer agent**, not the implementer. Never send a review group to the implementer.
 - **Acceptance-red groups must not have implementation** — the implementer is explicitly told to stop after the test fails correctly.
+- **Pause between groups, never mid-group** — if the usage check shows a risk of hitting the rate limit before a group finishes, stop before dispatching it and report `Apply paused`; do not start a group you might not finish. A boundary pause loses nothing; a mid-group halt strands uncommitted work.

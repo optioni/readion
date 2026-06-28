@@ -26,6 +26,15 @@ The user will tell you one of:
 
 Work through each target change one at a time.
 
+### 2·0. Usage safety check (before starting each change)
+
+Before beginning a change — including the transition from one archive to the next change — run `ccusage blocks --active --json` and read the active 5-hour block. You are guarding against the rate limit being hit **mid-change**, which halts a subagent and leaves half-implemented, uncommitted work.
+
+- `endTime` is when the current 5-hour window resets; `burnRate.tokensPerMinute` and `totalTokens` show how hard you are consuming it.
+- If consumption is heavy and the burn rate is high — a real risk of hitting the limit before a full change completes — **do not start the next change**. Stop here, at a clean boundary where every prior change is archived and committed, and report the usage snapshot, the reset time (`endTime`), and that you are pausing to avoid a mid-change halt. Resume after the window resets or on the user's instruction.
+
+`ccusage` reads local logs and cannot see your true remaining quota — only the interactive `/usage` command can. Treat this as a safety heuristic: when at all in doubt, surface the snapshot and let the user decide rather than risk halting mid-change. (See the `checking-usage` skill for command details.)
+
 ### 2a. Artifact generation (ff-change)
 
 **Skip this step if the change already has a directory under `openspec/changes/`** — artifacts exist, go straight to 2b.
@@ -93,3 +102,4 @@ Not started (depend on change-c):
 - **Never run out of dependency order** — if a dependency failed or was skipped, skip all changes that depend on it and say so in the final report.
 - **Spawn subagents for all three steps** (ff-change, apply, archive) — do not invoke those skills inline. Each step is heavy and will exhaust your context if run directly.
 - **In-progress changes** (directory exists, not archived): start at 2b, not 2a.
+- **Pause at change boundaries, never mid-change** — if the usage check (2·0) shows a risk of hitting the rate limit before a change finishes, stop after the current archive and report; do not dispatch the next change. A boundary pause loses nothing; a mid-change halt strands uncommitted work.
