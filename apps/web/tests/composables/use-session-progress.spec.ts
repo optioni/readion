@@ -34,7 +34,7 @@ describe('useSessionProgress', () => {
     expect(completedCount.value).toBe(0)
     expect(percent.value).toBe(0)
 
-    items.value[0].completed = true
+    items.value = [item(0, true), item(1, false)]
     expect(completedCount.value).toBe(1)
     expect(percent.value).toBe(50)
   })

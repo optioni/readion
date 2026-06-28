@@ -70,6 +70,7 @@ describe('useCertDetail', () => {
     expect(certificationsControllerDetail).toHaveBeenCalledWith('cert-1')
     expect(result.name.value).toBe('AWS Cloud Practitioner')
     expect(result.provider.value).toBe('AWS')
+    expect(result.code.value).toBe('CLF-C02')
     expect(result.certificationId.value).toBe('cert-1')
     expect(result.notFound.value).toBe(false)
     expect(result.isError.value).toBe(false)

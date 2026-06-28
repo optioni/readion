@@ -35,6 +35,7 @@ export function useCertDetail(enrollmentId: string) {
 
   const name = computed(() => certificationQuery.data.value?.name ?? '')
   const provider = computed(() => certificationQuery.data.value?.provider ?? '')
+  const code = computed(() => certificationQuery.data.value?.code ?? '')
   const domains = computed(() => certificationQuery.data.value?.domains ?? [])
 
   const isLoading = computed(() => {
@@ -48,5 +49,5 @@ export function useCertDetail(enrollmentId: string) {
     () => (enrollmentQuery.isError.value && !notFound.value) || certificationQuery.isError.value,
   )
 
-  return { name, provider, certificationId, domains, isLoading, isError, notFound }
+  return { name, provider, code, certificationId, domains, isLoading, isError, notFound }
 }

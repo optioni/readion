@@ -2,13 +2,9 @@ import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed } from 'vue'
-import SessionViewPage from '~/pages/sessions/[id]/index.vue'
-import {
-  completeSessionItem,
-  endSession,
-  fetchSessionDetail,
-} from '~/composables/sessionViewApi'
+import { completeSessionItem, endSession, fetchSessionDetail } from '~/composables/sessionViewApi'
 import { useCertDetail } from '~/composables/useCertDetail'
+import SessionViewPage from '~/pages/sessions/[id]/index.vue'
 
 vi.mock('~/composables/sessionViewApi', () => ({
   fetchSessionDetail: vi.fn(),
@@ -191,11 +187,7 @@ describe('Session view resume behaviour', () => {
 
 describe('Session view progress and advancing', () => {
   it('shows completed/total progress reflecting completed flags', async () => {
-    stubSession([
-      readingItem(0, true),
-      readingItem(1, true),
-      readingItem(2, false),
-    ])
+    stubSession([readingItem(0, true), readingItem(1, true), readingItem(2, false)])
     const wrapper = mountPage()
     await flushPromises()
 

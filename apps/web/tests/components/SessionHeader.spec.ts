@@ -20,7 +20,12 @@ function stubCert(options: { code?: string; name?: string } = {}) {
 }
 
 function mountHeader(
-  props: { userCertificationId?: string; elapsed?: string; completedCount?: number; totalCount?: number } = {},
+  props: {
+    userCertificationId?: string
+    elapsed?: string
+    completedCount?: number
+    totalCount?: number
+  } = {},
 ) {
   return mount(SessionHeader, {
     props: {

@@ -12,6 +12,7 @@ function stubCertDetail(
   options: {
     name?: string
     provider?: string
+    code?: string
     certificationId?: string
     isLoading?: boolean
     isError?: boolean
@@ -21,6 +22,7 @@ function stubCertDetail(
   vi.mocked(useCertDetail).mockReturnValue({
     name: computed(() => options.name ?? 'AWS Cloud Practitioner'),
     provider: computed(() => options.provider ?? 'AWS'),
+    code: computed(() => options.code ?? 'CLF-C02'),
     certificationId: computed(() => options.certificationId ?? 'cert-1'),
     domains: computed(() => []),
     isLoading: computed(() => options.isLoading ?? false),
