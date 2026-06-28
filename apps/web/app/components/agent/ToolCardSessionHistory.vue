@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import ToolCard from '~/components/agent/ToolCard.vue'
 
 type DomainAccuracy = { domain: string; accuracy: number }
 type SessionEntry = {
@@ -21,20 +22,15 @@ function pct(accuracy: number): number {
 </script>
 
 <template>
-  <div
-    data-testid="tool-result-card"
-    class="mt-1.5 rounded-lg border border-readion-border-strong bg-readion-background-surface px-3.5 py-3"
-  >
-    <div class="mb-2.5 text-[10px] text-readion-accent-label uppercase tracking-wider">
-      Recent sessions
-    </div>
-
+  <ToolCard label="Recent sessions">
     <div
       v-for="session in sessions"
       :key="session.sessionId"
-      class="mb-2.5 last:mb-0 border-readion-border-default border-b pb-2.5 last:border-b-0 last:pb-0"
+      class="mb-2.5 border-readion-border-default border-b pb-2.5 last:mb-0 last:border-b-0 last:pb-0"
     >
-      <div class="mb-1 flex items-center justify-between text-[10px] text-readion-text-muted uppercase tracking-wider">
+      <div
+        class="mb-1 flex items-center justify-between text-[10px] text-readion-text-muted uppercase tracking-wider"
+      >
         <span>{{ session.kind }}</span>
         <span>{{ session.status }}</span>
       </div>
@@ -47,5 +43,5 @@ function pct(accuracy: number): number {
         <span class="font-semibold text-readion-text-primary">{{ pct(domain.accuracy) }}%</span>
       </div>
     </div>
-  </div>
+  </ToolCard>
 </template>

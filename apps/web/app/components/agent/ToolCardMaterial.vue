@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import AgentChip from '~/components/agent/AgentChip.vue'
+import ToolCard from '~/components/agent/ToolCard.vue'
 import MarkdownBlock from '~/components/MarkdownBlock.vue'
 
 type MaterialOutput =
@@ -20,12 +21,7 @@ const isLoading = computed(() => !isInline.value && !isReady.value && !isFailed.
 </script>
 
 <template>
-  <div
-    data-testid="tool-result-card"
-    class="mt-1.5 rounded-lg border border-readion-border-strong bg-readion-background-surface px-3.5 py-3"
-  >
-    <div class="mb-2 text-[10px] text-readion-accent-label uppercase tracking-wider">More material</div>
-
+  <ToolCard label="More material">
     <MarkdownBlock v-if="isInline" :source="content" />
 
     <template v-else>
@@ -44,18 +40,9 @@ const isLoading = computed(() => !isInline.value && !isReady.value && !isFailed.
           label="Job enqueued"
           tone="muted"
         />
-        <AgentChip
-          v-if="isReady"
-          data-testid="material-ready-chip"
-          label="New material ready"
-          tone="good"
-        />
-        <AgentChip
-          v-if="isFailed"
-          label="Material unavailable"
-          tone="warning"
-        />
+        <AgentChip v-if="isReady" data-testid="material-ready-chip" label="New material ready" tone="good" />
+        <AgentChip v-if="isFailed" label="Material unavailable" tone="warning" />
       </div>
     </template>
-  </div>
+  </ToolCard>
 </template>

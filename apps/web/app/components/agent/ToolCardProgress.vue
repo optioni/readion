@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import AgentChip from '~/components/agent/AgentChip.vue'
+import ToolCard from '~/components/agent/ToolCard.vue'
 import { statusColorForScore, statusTextColorClass } from '~/composables/statusColor'
 
 type DomainProgress = {
@@ -37,14 +38,10 @@ function barColorClass(score: number): string {
 </script>
 
 <template>
-  <div
-    data-testid="tool-result-card"
-    class="mt-1.5 rounded-lg border border-readion-border-strong bg-readion-background-surface px-3.5 py-3"
-  >
-    <div class="mb-2.5 flex items-center justify-between">
-      <span class="text-[10px] text-readion-accent-label uppercase tracking-wider">Your progress</span>
+  <ToolCard label="Your progress">
+    <template #header-right>
       <AgentChip data-testid="readiness-chip" :label="readinessLabel" tone="accent" />
-    </div>
+    </template>
 
     <div
       v-for="domain in domains"
@@ -64,5 +61,5 @@ function barColorClass(score: number): string {
         />
       </div>
     </div>
-  </div>
+  </ToolCard>
 </template>

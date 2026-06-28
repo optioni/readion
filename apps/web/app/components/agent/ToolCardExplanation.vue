@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import ToolCard from '~/components/agent/ToolCard.vue'
 import CitationChip from '~/components/CitationChip.vue'
 import MarkdownBlock from '~/components/MarkdownBlock.vue'
 
@@ -26,12 +27,7 @@ const citationLabels = computed(() =>
 </script>
 
 <template>
-  <div
-    data-testid="tool-result-card"
-    class="mt-1.5 rounded-lg border border-readion-border-strong bg-readion-background-surface px-3.5 py-3"
-  >
-    <div class="mb-2 text-[10px] text-readion-accent-label uppercase tracking-wider">Explanation</div>
-
+  <ToolCard label="Explanation">
     <div
       v-if="correctAnswer"
       data-testid="explanation-correct-answer"
@@ -45,5 +41,5 @@ const citationLabels = computed(() =>
     <div v-if="citationLabels.length" class="mt-2.5 flex flex-wrap gap-1.5">
       <CitationChip v-for="label in citationLabels" :key="label" :label="label" />
     </div>
-  </div>
+  </ToolCard>
 </template>

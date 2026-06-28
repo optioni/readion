@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import ToolCard from '~/components/agent/ToolCard.vue'
 import MarkdownBlock from '~/components/MarkdownBlock.vue'
 
 type ExamStrategyOutput = {
@@ -15,16 +16,13 @@ const advice = computed(() => data.value.advice ?? '')
 </script>
 
 <template>
-  <div
-    data-testid="tool-result-card"
-    class="mt-1.5 rounded-lg border border-readion-status-warning/30 bg-readion-status-warning/[0.06] px-3.5 py-3"
-  >
-    <div class="mb-2 flex items-center gap-1.5 text-[10px] text-readion-status-warning uppercase tracking-wider">
+  <ToolCard label="Exam strategy" tone="warning">
+    <template #label>
       <span>Exam strategy</span>
       <span v-if="data.domain" class="text-readion-text-muted normal-case tracking-normal">
         · {{ data.domain }}
       </span>
-    </div>
+    </template>
     <MarkdownBlock :source="advice" />
-  </div>
+  </ToolCard>
 </template>
