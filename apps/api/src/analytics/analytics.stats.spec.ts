@@ -7,6 +7,7 @@ import {
   enrollmentGain,
   isActiveUser,
   isWithinWindow,
+  llmCostPerActiveUser,
   median,
   medianReadinessGain,
   medianSessionsPerWeek,
@@ -421,6 +422,46 @@ describe('cohortRetention', () => {
     expect(result.w4.cohorts).toEqual([])
     expect(result.w2).toEqual({ value: 0, population: 0, cohorts: [] })
     expect(result.w4).toEqual({ value: 0, population: 0, cohorts: [] })
+  })
+})
+
+describe('llmCostPerActiveUser', () => {
+  const coefficients = {
+    quiz: 0.01,
+    mockQuestion: 0.02,
+    sessionItem: 0.03,
+    agentMessage: 0.02,
+  }
+
+  it('is the coefficient-weighted artifact sum divided by the active-user count', () => {
+    // 10*0.01 + 5*0.02 + 4*0.03 + 6*0.02 = 0.44; over 2 active users = 0.22.
+    expect(
+      llmCostPerActiveUser({
+        counts: { quizResponses: 10, mockQuestions: 5, sessionItems: 4, agentMessages: 6 },
+        coefficients,
+        activeUserCount: 2,
+      }),
+    ).toBeCloseTo(0.22)
+  })
+
+  it('applies each coefficient to its own artifact count', () => {
+    expect(
+      llmCostPerActiveUser({
+        counts: { quizResponses: 0, mockQuestions: 3, sessionItems: 0, agentMessages: 0 },
+        coefficients,
+        activeUserCount: 1,
+      }),
+    ).toBeCloseTo(0.06)
+  })
+
+  it('returns 0 when there are no active users (avoids divide-by-zero)', () => {
+    expect(
+      llmCostPerActiveUser({
+        counts: { quizResponses: 10, mockQuestions: 5, sessionItems: 4, agentMessages: 6 },
+        coefficients,
+        activeUserCount: 0,
+      }),
+    ).toBe(0)
   })
 })
 
