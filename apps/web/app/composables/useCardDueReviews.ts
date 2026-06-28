@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { readionFetch } from '~/api/mutator'
+import { dashboardQueryKeys } from '~/composables/dashboardQueryKeys'
 import { getEnrollmentReviewControllerQueueUrl } from '~~/src/api/enrollment-review/enrollment-review'
 
 interface ReviewQueueResponse {
@@ -16,7 +17,7 @@ type ReviewQueueResult = {
 
 export function useCardDueReviews(enrollmentId: string) {
   const query = useQuery({
-    queryKey: ['dashboard', 'due-reviews', enrollmentId],
+    queryKey: dashboardQueryKeys.dueReviews(enrollmentId),
     queryFn: async () => {
       const response = await readionFetch<ReviewQueueResult>(
         getEnrollmentReviewControllerQueueUrl(enrollmentId),

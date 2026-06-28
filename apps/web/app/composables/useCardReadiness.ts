@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
+import { dashboardQueryKeys } from '~/composables/dashboardQueryKeys'
 import { readinessControllerRead } from '~~/src/api/readiness/readiness'
 
 export interface CardReadiness {
@@ -16,7 +17,7 @@ const PLACEHOLDER_READINESS: CardReadiness = {
 
 export function useCardReadiness(enrollmentId: string) {
   const query = useQuery({
-    queryKey: ['dashboard', 'readiness', enrollmentId],
+    queryKey: dashboardQueryKeys.readiness(enrollmentId),
     queryFn: async () => {
       const response = await readinessControllerRead(enrollmentId)
       return response.data.data

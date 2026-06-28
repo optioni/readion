@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
-import type { SessionResponseDto, SessionSummaryResponseDto } from '~~/src/api/model'
-import { sessionSummaryControllerSummary } from '~~/src/api/session-summary/session-summary'
+import { dashboardQueryKeys } from '~/composables/dashboardQueryKeys'
+import {
+  fetchRecentSessionSummaries,
+  RECENT_SESSIONS_LIMIT,
+} from '~/composables/recentSessionSummaries'
 import { sessionsControllerList } from '~~/src/api/sessions/sessions'
-
-const RECENT_SESSIONS_LIMIT = 3
 
 export interface RecentSessionEntry {
   id: string
@@ -18,41 +19,16 @@ interface RecentSessionsData {
   readinessDelta: number | null
 }
 
-const isCompleted = (session: SessionResponseDto) => String(session.status) === 'completed'
-
-async function fetchSummaries(
-  sessions: SessionResponseDto[],
-): Promise<Map<string, SessionSummaryResponseDto>> {
-  const completed = sessions.filter(isCompleted).slice(0, RECENT_SESSIONS_LIMIT)
-  const results = await Promise.all(
-    completed.map(async (session) => {
-      try {
-        const response = await sessionSummaryControllerSummary(session.id)
-        if (response.status !== 200) {
-          return null
-        }
-        return [session.id, response.data.data] as const
-      } catch {
-        return null
-      }
-    }),
-  )
-
-  return new Map(
-    results.filter((entry): entry is [string, SessionSummaryResponseDto] => entry !== null),
-  )
-}
-
 export function useCardRecentSessions(enrollmentId: string, certificationId: string) {
   const query = useQuery({
-    queryKey: ['dashboard', 'recent-sessions', enrollmentId, certificationId],
+    queryKey: dashboardQueryKeys.recentSessions(enrollmentId, certificationId),
     queryFn: async (): Promise<RecentSessionsData> => {
       const response = await sessionsControllerList({
         certificationId,
         limit: RECENT_SESSIONS_LIMIT,
       })
       const sessionRows = response.data.data
-      const summaries = await fetchSummaries(sessionRows)
+      const summaries = await fetchRecentSessionSummaries(sessionRows)
 
       const sessions = sessionRows.map<RecentSessionEntry>((session) => {
         const summary = summaries.get(session.id)

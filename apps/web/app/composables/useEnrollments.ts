@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
+import { dashboardQueryKeys } from '~/composables/dashboardQueryKeys'
 import { certificationsControllerList } from '~~/src/api/certifications/certifications'
 import { userCertificationsControllerList } from '~~/src/api/user-certifications/user-certifications'
 
@@ -15,7 +16,7 @@ export interface EnrollmentCard {
 
 export function useEnrollments() {
   const enrollmentsQuery = useQuery({
-    queryKey: ['dashboard', 'enrollments', 'active'],
+    queryKey: dashboardQueryKeys.enrollments(),
     queryFn: async () => {
       const response = await userCertificationsControllerList({ status: 'active' })
       return response.data.data
@@ -23,7 +24,7 @@ export function useEnrollments() {
   })
 
   const certificationsQuery = useQuery({
-    queryKey: ['dashboard', 'certifications'],
+    queryKey: dashboardQueryKeys.certifications(),
     queryFn: async () => {
       const response = await certificationsControllerList()
       return response.data.data
