@@ -15,7 +15,7 @@ export async function runAuthBootstrap(auth: {
 
   try {
     const csrfToken = getCsrfTokenFromCookie()
-    const refreshRes = await fetch(`${apiBase}/auth/refresh`, {
+    const refreshRes = await fetch(`${apiBase}/api/v1/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
       ...(csrfToken ? { headers: { 'x-csrf-token': csrfToken } } : {}),
@@ -34,7 +34,7 @@ export async function runAuthBootstrap(auth: {
 
     auth.setSession(accessToken, null)
 
-    const meRes = await fetch(`${apiBase}/users/me`, {
+    const meRes = await fetch(`${apiBase}/api/v1/users/me`, {
       credentials: 'include',
       headers: { Authorization: `Bearer ${accessToken}` },
     })

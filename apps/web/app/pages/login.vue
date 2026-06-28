@@ -27,8 +27,13 @@
 
     <form @submit.prevent="handleSubmit">
       <div class="mb-4">
-        <label class="block text-xs font-medium text-slate-400 mb-1.5">Email</label>
+        <label
+          for="login-email"
+          class="block text-xs font-medium text-slate-400 mb-1.5"
+          >Email</label
+        >
         <input
+          id="login-email"
           v-model="email"
           type="email"
           placeholder="you@example.com"
@@ -39,9 +44,14 @@
       </div>
 
       <div class="mb-2">
-        <label class="block text-xs font-medium text-slate-400 mb-1.5">Password</label>
+        <label
+          for="login-password"
+          class="block text-xs font-medium text-slate-400 mb-1.5"
+          >Password</label
+        >
         <div class="relative">
           <input
+            id="login-password"
             v-model="password"
             :type="showPassword ? 'text' : 'password'"
             placeholder="••••••••"
@@ -111,7 +121,7 @@ async function handleSubmit() {
   const readionFetch = createReadionFetch({ apiBaseUrl: runtimeConfig.public.apiBaseUrl })
 
   try {
-    const loginRes = await readionFetch<LoginResponse>('/auth/login', {
+    const loginRes = await readionFetch<LoginResponse>('/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: email.value, password: password.value }),
@@ -120,7 +130,7 @@ async function handleSubmit() {
     if (!accessToken) throw new Error('Missing access token')
     auth.setSession(accessToken, null)
 
-    const meRes = await readionFetch<MeResponse>('/users/me', {
+    const meRes = await readionFetch<MeResponse>('/api/v1/users/me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
     if (meRes.data?.data) {
