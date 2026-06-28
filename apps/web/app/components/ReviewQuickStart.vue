@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reviewRunPath } from '~/composables/reviewRoute'
+import { reviewRunPath } from '~/composables/runnerRoutes'
 import { enrollmentReviewControllerStart } from '~~/src/api/enrollment-review/enrollment-review'
 
 const props = defineProps<{ enrollmentId: string; dueCount: number }>()
