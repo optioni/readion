@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import AddCertificationModal from '~/components/AddCertificationModal.vue'
 import CertCard from '~/components/CertCard.vue'
+import DiagnosticRePromptNudge from '~/components/DiagnosticRePromptNudge.vue'
 import { selectHeroAndOrder } from '~/composables/dashboardOrdering'
 import { useEnrollments } from '~/composables/useEnrollments'
 
@@ -50,6 +51,11 @@ function openAddCert() {
         data-testid="dashboard-list"
         class="flex flex-col gap-3.5"
       >
+        <DiagnosticRePromptNudge
+          v-for="card in cards"
+          :key="`nudge-${card.enrollmentId}`"
+          :enrollment-id="card.enrollmentId"
+        />
         <div v-if="ordering.hero" data-testid="cert-card-hero">
           <CertCard :card="ordering.hero" variant="hero" />
         </div>

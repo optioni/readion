@@ -15,6 +15,14 @@ vi.mock('~/components/CertCard.vue', () => ({
   },
 }))
 
+vi.mock('~/components/DiagnosticRePromptNudge.vue', () => ({
+  default: {
+    name: 'DiagnosticRePromptNudge',
+    props: ['enrollmentId'],
+    template: '<div data-testid="diagnostic-reprompt-stub" :data-enrollment-id="enrollmentId" />',
+  },
+}))
+
 vi.mock('~/components/AddCertificationModal.vue', () => ({
   default: {
     name: 'AddCertificationModal',
@@ -75,6 +83,19 @@ describe('Dashboard list', () => {
     const wrapper = mountPage()
     expect(renderedCards(wrapper)).toHaveLength(2)
     expect(wrapper.find('[data-testid="add-cert"]').exists()).toBe(true)
+  })
+
+  it('mounts a self-hiding re-prompt nudge per active enrollment', () => {
+    stubEnrollments({
+      cards: [
+        card({ name: 'A', enrollmentId: 'enr-a', readinessScore: 75 }),
+        card({ name: 'B', enrollmentId: 'enr-b', readinessScore: 42 }),
+      ],
+    })
+    const wrapper = mountPage()
+    const nudges = wrapper.findAll('[data-testid="diagnostic-reprompt-stub"]')
+    expect(nudges).toHaveLength(2)
+    expect(nudges.map((n) => n.attributes('data-enrollment-id'))).toEqual(['enr-a', 'enr-b'])
   })
 
   it('promotes the lowest-readiness cert to the hero and orders the rest ascending', () => {
