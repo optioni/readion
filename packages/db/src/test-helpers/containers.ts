@@ -1,10 +1,25 @@
 import { GenericContainer, type StartedTestContainer, Wait } from 'testcontainers'
-import { inject } from 'vitest'
 
 declare module 'vitest' {
   interface ProvidedContext {
     readionPostgresUrl?: string
     readionRedisUrl?: string
+  }
+}
+
+// `inject` is resolved lazily so that importing the @readion/db barrel never pulls the Vitest
+// runtime into non-test consumers (the API/worker processes require the compiled package, and
+// Vitest's CJS entry throws on require). Inside the suite the shared-container URLs are still
+// injected; everywhere else this resolves to undefined and the helpers start their own
+// container, exactly as the fallback path already does.
+async function injectSharedUrl(
+  key: 'readionPostgresUrl' | 'readionRedisUrl',
+): Promise<string | undefined> {
+  try {
+    const { inject } = await import('vitest')
+    return inject(key)
+  } catch {
+    return undefined
   }
 }
 
@@ -39,7 +54,7 @@ function sharedHandle(host: string, port: number): StartedTestContainer {
 }
 
 export async function startPostgresContainer(): Promise<StartedTestContainer> {
-  const sharedUrl = inject('readionPostgresUrl')
+  const sharedUrl = await injectSharedUrl('readionPostgresUrl')
   if (sharedUrl !== undefined) {
     const { host, port } = parse(sharedUrl)
     return sharedHandle(host, port)
@@ -56,7 +71,7 @@ export async function startPostgresContainer(): Promise<StartedTestContainer> {
 }
 
 export async function startRedisContainer(): Promise<StartedTestContainer> {
-  const sharedUrl = inject('readionRedisUrl')
+  const sharedUrl = await injectSharedUrl('readionRedisUrl')
   if (sharedUrl !== undefined) {
     const { host, port } = parse(sharedUrl)
     return sharedHandle(host, port)
