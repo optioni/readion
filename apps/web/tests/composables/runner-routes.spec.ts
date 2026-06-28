@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { mockExamRunPath, reviewRunPath, sessionRunPath } from '~/composables/runnerRoutes'
+import {
+  mockExamRunPath,
+  reviewRunPath,
+  sessionRunPath,
+  sessionStartPath,
+  sessionSummaryPath,
+} from '~/composables/runnerRoutes'
 
 describe('runner route builders', () => {
   it('builds the session run path from a session id', () => {
@@ -12,5 +18,13 @@ describe('runner route builders', () => {
 
   it('builds the review run path from an enrollment id', () => {
     expect(reviewRunPath('enr-1')).toBe('/user-certifications/enr-1/review')
+  })
+
+  it('builds the session-start path from an enrollment id', () => {
+    expect(sessionStartPath('enr-1')).toBe('/user-certifications/enr-1/session/start')
+  })
+
+  it('builds the session-summary path from a session id', () => {
+    expect(sessionSummaryPath('sess-1')).toBe('/sessions/sess-1/summary')
   })
 })
