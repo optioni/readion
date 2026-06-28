@@ -13,15 +13,15 @@
 
 ## 2. Onboarding gate + routing composable (pure logic)
 
-- [ ] 2.1 RED: Write unit tests for a pure `resolveOnboardingRoute({ certs, role, enrollments })` function covering: ≥1 active enrollment → dashboard; 0 enrollments + ≥1 live cert → onboarding; 0 certs + admin → admin-cert-setup placeholder; 0 certs + non-admin → no-certs empty state
-- [ ] 2.2 GREEN: Implement `app/composables/useOnboardingGate.ts` (queries `usersControllerGetMe` for role + sessionDefaults, `certificationsControllerList`, `userCertificationsControllerList({status:'active'})`) wrapping the pure resolver
-- [ ] 2.3 REFACTOR: Extract the pure resolver into a separately tested helper; ensure role is read from `GET /users/me` (not the auth store, which omits `role` — see design.md reconciliation)
+- [x] 2.1 RED: Write unit tests for a pure `resolveOnboardingRoute({ certs, role, enrollments })` function covering: ≥1 active enrollment → dashboard; 0 enrollments + ≥1 live cert → onboarding; 0 certs + admin → admin-cert-setup placeholder; 0 certs + non-admin → no-certs empty state
+- [x] 2.2 GREEN: Implement `app/composables/useOnboardingGate.ts` (queries `usersControllerGetMe` for role + sessionDefaults, `certificationsControllerList`, `userCertificationsControllerList({status:'active'})`) wrapping the pure resolver
+- [x] 2.3 REFACTOR: Extract the pure resolver into a separately tested helper; ensure role is read from `GET /users/me` (not the auth store, which omits `role` — see design.md reconciliation)
 
 ## 3. Route middleware / page guard
 
-- [ ] 3.1 RED: Write a unit/integration test (Vitest + `@nuxt/test-utils`, mocked HTTP) asserting navigating to `/onboarding` with an existing active enrollment redirects to `/`, and that a no-certs non-admin renders the empty state
-- [ ] 3.2 GREEN: Implement the route middleware/guard for `app/pages/onboarding/` using `useOnboardingGate`, redirecting per the resolver
-- [ ] 3.3 REFACTOR: Ensure the guard runs after auth bootstrap (`web-auth`) and degrades gracefully while queries load (skeleton, no premature redirect)
+- [x] 3.1 RED: Write a unit/integration test (Vitest + `@nuxt/test-utils`, mocked HTTP) asserting navigating to `/onboarding` with an existing active enrollment redirects to `/`, and that a no-certs non-admin renders the empty state
+- [x] 3.2 GREEN: Implement the route middleware/guard for `app/pages/onboarding/` using `useOnboardingGate`, redirecting per the resolver
+- [x] 3.3 REFACTOR: Ensure the guard runs after auth bootstrap (`web-auth`) and degrades gracefully while queries load (skeleton, no premature redirect)
 
 ## 4. Cert-select step component
 
