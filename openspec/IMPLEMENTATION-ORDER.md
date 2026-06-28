@@ -163,6 +163,7 @@ graph TD
   sessions --> analytics
   agent --> analytics
   ready --> analytics
+  emaillc --> analytics
 
   webauth --> dash
   ucerts --> dash
@@ -267,7 +268,7 @@ graph TD
 | Change | Scope | Spec refs | Capabilities | Depends on |
 |---|---|---|---|---|
 | `email-lifecycle` | Welcome email, weekly progress digest (timezone-aware cron, opt-out/unsubscribe), post-exam outcome nudge. | Email (digest, nudge); PRD §3 → Capturing the lagging outcome | `lifecycle-email` | `mail`, `users`, `readiness`, `weak-areas`, `review-srs` |
-| `product-analytics` | Success-metric instrumentation the SPEC's ops metrics don't cover: active-user definition (≥2 sessions/14d), north-star readiness-gain-per-active-user, W2/W4 retention cohorts, session-completion & agent-engagement rates, sessions/week, per-user LLM-cost attribution (guardrail). Analytics read models feeding a product dashboard. | PRD §3 → Success metrics, Definitions & targets, Guardrail metrics | `product-analytics` | `sessions`, `agent`, `readiness` |
+| `product-analytics` | Success-metric instrumentation the SPEC's ops metrics don't cover: active-user definition (≥2 sessions/14d), north-star readiness-gain-per-active-user, W2/W4 retention cohorts, session-completion & agent-engagement rates, sessions/week, per-user LLM-cost attribution (guardrail). Analytics read models feeding a product dashboard. | PRD §3 → Success metrics, Definitions & targets, Guardrail metrics | `product-analytics` | `sessions`, `agent`, `readiness`, `email-lifecycle` |
 
 ### Phase 10 — Frontend feature pages
 | Change | Scope | Spec refs | Capabilities | Depends on |
