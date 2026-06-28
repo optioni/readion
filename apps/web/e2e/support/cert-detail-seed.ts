@@ -10,8 +10,16 @@ import { captureVerificationToken } from './mailpit-helpers'
 // cert-detail page reads back that the public API cannot produce locally (it needs the
 // LLM-backed quiz/answer-verification path) is written as FK-chained rows DIRECTLY into the same
 // Postgres database the running API reads from, exactly as the web-dashboard seed does for due
-// reviews. That covers: weak-area domains, study + review session history, graded quiz
-// responses, and a submitted mock-exam attempt.
+// reviews. That covers: graded quiz responses (which the API recomputes into weak-area domains),
+// study + review session history, and a submitted mock-exam attempt.
+//
+// IMPORTANT: weak_areas rows cannot be seeded directly — the web weak-areas endpoint
+// (userCertificationsControllerListWeakAreas) RECOMPUTES weak areas from quiz_responses on every
+// read and DELETES any domain that has no backing responses. So instead we seed content_chunks
+// (one per certification domain, carrying primary_domain) plus quiz_responses whose provenance
+// points at those chunks, and let the API derive the weak areas. Correctness is monotonic in the
+// domain index so the certification's first domain is deterministically the weakest, which the
+// Overview's per-domain breakdown surfaces first and the suggested-next-focus points at.
 //
 // Generated Orval client methods the cert-detail composables consume (all already committed under
 // apps/web/src/api, so NO `yarn codegen` is required for this change):
@@ -43,8 +51,9 @@ export type SeededCertDetailUser = {
   certificationId: string
   certName: string
   provider: string
-  // Domains the seed wrote weak_areas rows for, in descending weakness, so the Overview
-  // per-domain breakdown and suggested-next-focus have deterministic content to assert.
+  // Every certification domain, in catalog order, so the Overview per-domain breakdown (one row
+  // per certification domain) and the suggested-next-focus have deterministic content to assert.
+  // The first entry is seeded as the weakest domain.
   weakAreaDomains: string[]
   // Direct-DB session history split by kind so the Sessions-tab type filter has both classes to
   // narrow between.
@@ -115,21 +124,101 @@ async function resolveUserId(client: Client, email: string): Promise<string> {
   return id
 }
 
-async function seedWeakAreas(
+async function createContentSource(
+  client: Client,
+  certificationId: string,
+  url: string,
+): Promise<string> {
+  const result = await client.query<{ id: string }>(
+    `INSERT INTO content_sources
+       (id, certification_id, type, url, enabled, recheck_interval_minutes, created_at, updated_at)
+     VALUES (gen_random_uuid(), $1, 'web', $2, true, 1440, now(), now())
+     RETURNING id`,
+    [certificationId, url],
+  )
+  const id = result.rows[0]?.id
+  if (id === undefined) {
+    throw new Error('Seed failed to create a content source')
+  }
+  return id
+}
+
+async function createContentChunk(
+  client: Client,
+  contentSourceId: string,
+  certificationId: string,
+  primaryDomain: string,
+  hashSeed: string,
+): Promise<string> {
+  const result = await client.query<{ id: string }>(
+    `INSERT INTO content_chunks
+       (id, content_source_id, certification_id, text, content_hash,
+        domain_tags, primary_domain, metadata, state, created_at, updated_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4,
+        $5::jsonb, $6, '{}'::jsonb, 'active', now(), now())
+     RETURNING id`,
+    [
+      contentSourceId,
+      certificationId,
+      `Reviewable content for ${primaryDomain} (cert-detail e2e).`,
+      hashSeed.padEnd(64, '0').slice(0, 64),
+      JSON.stringify([{ domain: primaryDomain, confidence: 0.95 }]),
+      primaryDomain,
+    ],
+  )
+  const id = result.rows[0]?.id
+  if (id === undefined) {
+    throw new Error(`Seed failed to create a content chunk for ${primaryDomain}`)
+  }
+  return id
+}
+
+// Seeds, per certification domain, a content chunk plus quiz responses that point at it through
+// their provenance. The API derives the weak-area domains and their 0–100 scores from these
+// responses. Correctness rises with the domain index so domains[0] is the weakest.
+async function seedDomainPerformance(
   client: Client,
   enrollmentId: string,
+  certificationId: string,
   domains: string[],
 ): Promise<void> {
-  // Lowest score first so the suggested-next-focus deterministically resolves to domains[0].
-  const scores = [0.32, 0.61]
+  const contentSourceId = await createContentSource(
+    client,
+    certificationId,
+    `https://example.com/e2e-cert-detail-domains-${enrollmentId}`,
+  )
+
+  const totalPerDomain = domains.length
   for (const [index, domain] of domains.entries()) {
-    await client.query(
-      `INSERT INTO weak_areas
-         (id, user_certification_id, domain, score, accuracy, mean_confidence, response_count,
-          created_at, updated_at)
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, now(), now())`,
-      [enrollmentId, domain, scores[index] ?? 0.5, scores[index] ?? 0.5, 0.6, 8],
+    const chunkId = await createContentChunk(
+      client,
+      contentSourceId,
+      certificationId,
+      domain,
+      `e2e-cert-detail-${enrollmentId}-${index}`,
     )
+    const snapshot = JSON.stringify({
+      question: `Which option best fits ${domain}?`,
+      options: ['A', 'B', 'C', 'D'],
+      correctAnswer: 'A',
+      provenance: {
+        sourceChunkIds: [chunkId],
+        supportingSpans: [],
+        verdict: { pass: true, score: 1, distractorFindings: [] },
+        score: 1,
+      },
+    })
+    const correctCount = index + 1
+    for (let i = 0; i < totalPerDomain; i++) {
+      const correct = i < correctCount
+      await client.query(
+        `INSERT INTO quiz_responses
+           (id, user_certification_id, answer, correct, confidence, time_taken_ms,
+            question_snapshot, format, created_at, updated_at)
+         VALUES (gen_random_uuid(), $1, $2, $3, 3, 9000, $4::jsonb, 'multiple_choice', now(), now())`,
+        [enrollmentId, correct ? 'A' : 'B', correct, snapshot],
+      )
+    }
   }
 }
 
@@ -164,30 +253,6 @@ async function seedSessions(
   }
 }
 
-async function seedQuizResponses(client: Client, enrollmentId: string): Promise<void> {
-  const snapshot = JSON.stringify({
-    question: 'Which service provides managed object storage?',
-    options: ['A', 'B', 'C', 'D'],
-    correctAnswer: 'A',
-    provenance: {
-      sourceChunkIds: [],
-      supportingSpans: [],
-      verdict: { pass: true, score: 1, distractorFindings: [] },
-      score: 1,
-    },
-  })
-  const responses = [true, true, false, true]
-  for (const correct of responses) {
-    await client.query(
-      `INSERT INTO quiz_responses
-         (id, user_certification_id, answer, correct, confidence, time_taken_ms,
-          question_snapshot, format, created_at, updated_at)
-       VALUES (gen_random_uuid(), $1, 'A', $2, 3, 9000, $3::jsonb, 'multiple_choice', now(), now())`,
-      [enrollmentId, correct, snapshot],
-    )
-  }
-}
-
 async function seedMockExam(
   client: Client,
   enrollmentId: string,
@@ -218,38 +283,18 @@ async function seedDueReview(
   enrollmentId: string,
   certificationId: string,
 ): Promise<void> {
-  const sourceResult = await client.query<{ id: string }>(
-    `INSERT INTO content_sources
-       (id, certification_id, type, url, enabled, recheck_interval_minutes, created_at, updated_at)
-     VALUES (gen_random_uuid(), $1, 'web', $2, true, 1440, now(), now())
-     RETURNING id`,
-    [certificationId, `https://example.com/e2e-cert-detail-${enrollmentId}`],
+  const contentSourceId = await createContentSource(
+    client,
+    certificationId,
+    `https://example.com/e2e-cert-detail-review-${enrollmentId}`,
   )
-  const contentSourceId = sourceResult.rows[0]?.id
-  if (contentSourceId === undefined) {
-    throw new Error('Seed failed to create a content source for the due review')
-  }
-
-  const chunkResult = await client.query<{ id: string }>(
-    `INSERT INTO content_chunks
-       (id, content_source_id, certification_id, text, content_hash,
-        domain_tags, primary_domain, metadata, state, created_at, updated_at)
-     VALUES (gen_random_uuid(), $1, $2, $3, $4,
-        $5::jsonb, $6, '{}'::jsonb, 'active', now(), now())
-     RETURNING id`,
-    [
-      contentSourceId,
-      certificationId,
-      'Reviewable content for the cert-detail e2e.',
-      `e2e-cert-detail-${enrollmentId}`.padEnd(64, '0').slice(0, 64),
-      JSON.stringify([{ domain: 'Security', confidence: 0.95 }]),
-      'Security',
-    ],
+  const anchorChunkId = await createContentChunk(
+    client,
+    contentSourceId,
+    certificationId,
+    'Security',
+    `e2e-cert-detail-review-${enrollmentId}`,
   )
-  const anchorChunkId = chunkResult.rows[0]?.id
-  if (anchorChunkId === undefined) {
-    throw new Error('Seed failed to create a content chunk for the due review')
-  }
 
   await client.query(
     `INSERT INTO review_items
@@ -290,8 +335,9 @@ export async function seedCertDetailUser(
       throw new Error(`Seed failed to read certification detail: HTTP ${detailRes.status()}`)
     }
     const { data: detail } = (await detailRes.json()) as CertificationDetailResponse
-    const domains = detail.domains.map((domain) => domain.name)
-    const weakAreaDomains = domains.slice(0, 2)
+    // The Overview renders one breakdown row per certification domain, so the acceptance test
+    // asserts a row count equal to every domain — not just the answered ones.
+    const weakAreaDomains = detail.domains.map((domain) => domain.name)
     if (weakAreaDomains.length === 0) {
       weakAreaDomains.push('General')
     }
@@ -305,15 +351,25 @@ export async function seedCertDetailUser(
     }
     const { data: enrollment } = (await enrollRes.json()) as EnrollResponse
 
-    await seedWeakAreas(client, enrollment.id, weakAreaDomains)
+    await seedDomainPerformance(
+      client,
+      enrollment.id,
+      enrollment.certificationId,
+      weakAreaDomains,
+    )
     const { studySessionCount, reviewSessionCount } = await seedSessions(
       client,
       enrollment.id,
       userId,
     )
-    await seedQuizResponses(client, enrollment.id)
     const mockExam = await seedMockExam(client, enrollment.id, userId, weakAreaDomains)
     await seedDueReview(client, enrollment.id, enrollment.certificationId)
+
+    // Materialise the weak_areas rows now (the endpoint recomputes from the seeded responses) so
+    // the session-summary endpoint's next-focus, which reads the persisted table, is populated.
+    await api.get(`/api/v1/user-certifications/${enrollment.id}/weak-areas`, {
+      headers: authHeaders,
+    })
 
     return {
       email,
