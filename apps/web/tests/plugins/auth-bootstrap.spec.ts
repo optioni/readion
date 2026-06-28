@@ -6,7 +6,7 @@ describe('auth bootstrap', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.stubGlobal('useRuntimeConfig', () => ({
-      public: { apiBaseUrl: 'http://localhost:3001/api/v1' },
+      public: { apiBaseUrl: 'http://localhost:3001' },
     }))
   })
 
@@ -20,13 +20,9 @@ describe('auth bootstrap', () => {
     await runAuthBootstrap(auth)
   }
 
-  it('calls /auth/refresh on load', async () => {
+  it('calls /auth/refresh then /users/me with correctly-constructed URLs on load', async () => {
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(
-        new Response(JSON.stringify({ data: { accessToken: 'tok' } }), { status: 200 }),
-      )
-    vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ data: { accessToken: 'new-tok' } }), { status: 200 }),
       )
@@ -48,7 +44,11 @@ describe('auth bootstrap', () => {
     await runBootstrap(auth)
 
     const urls = fetchMock.mock.calls.map((c) => String(c[0]))
-    expect(urls.some((u) => u.includes('/auth/refresh'))).toBe(true)
+    expect(urls[0]).toBe('http://localhost:3001/api/v1/auth/refresh')
+    expect(urls[1]).toBe('http://localhost:3001/api/v1/users/me')
+    for (const url of urls) {
+      expect(url).not.toContain('/api/v1/api/v1')
+    }
   })
 
   it('stores the new access token and hydrates user on successful refresh', async () => {

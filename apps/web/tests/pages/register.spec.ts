@@ -13,7 +13,7 @@ vi.stubGlobal('useRouter', () => ({ push: mockRouterPush }))
 vi.stubGlobal('useRoute', () => mockRoute)
 vi.stubGlobal('definePageMeta', vi.fn())
 vi.stubGlobal('useRuntimeConfig', () => ({
-  public: { apiBaseUrl: 'http://localhost:3001/api/v1' },
+  public: { apiBaseUrl: 'http://localhost:3001' },
 }))
 
 let pinia: Pinia
@@ -48,7 +48,8 @@ describe('/register page', () => {
   })
 
   it('stores the access token and navigates onward on successful registration', async () => {
-    vi.spyOn(globalThis, 'fetch')
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ data: { accessToken: 'tok' } }), { status: 201 }),
       )
@@ -77,6 +78,13 @@ describe('/register page', () => {
 
     expect(auth.isAuthenticated).toBe(true)
     expect(mockRouterPush).toHaveBeenCalled()
+
+    const urls = fetchMock.mock.calls.map((c) => String(c[0]))
+    expect(urls[0]).toBe('http://localhost:3001/api/v1/auth/register')
+    expect(urls[1]).toBe('http://localhost:3001/api/v1/users/me')
+    for (const url of urls) {
+      expect(url).not.toContain('/api/v1/api/v1')
+    }
   })
 
   it('renders field-level errors from a 422 problem-details response', async () => {

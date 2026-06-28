@@ -13,7 +13,7 @@ vi.stubGlobal('useRouter', () => ({ push: mockRouterPush }))
 vi.stubGlobal('useRoute', () => mockRoute)
 vi.stubGlobal('definePageMeta', vi.fn())
 vi.stubGlobal('useRuntimeConfig', () => ({
-  public: { apiBaseUrl: 'http://localhost:3001/api/v1' },
+  public: { apiBaseUrl: 'http://localhost:3001' },
 }))
 
 let pinia: Pinia
@@ -36,7 +36,8 @@ describe('/login page', () => {
   })
 
   it('stores the access token and navigates to home on successful login', async () => {
-    vi.spyOn(globalThis, 'fetch')
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ data: { accessToken: 'tok' } }), { status: 200 }),
       )
@@ -65,6 +66,13 @@ describe('/login page', () => {
 
     expect(auth.isAuthenticated).toBe(true)
     expect(mockRouterPush).toHaveBeenCalledWith('/')
+
+    const urls = fetchMock.mock.calls.map((c) => String(c[0]))
+    expect(urls[0]).toBe('http://localhost:3001/api/v1/auth/login')
+    expect(urls[1]).toBe('http://localhost:3001/api/v1/users/me')
+    for (const url of urls) {
+      expect(url).not.toContain('/api/v1/api/v1')
+    }
   })
 
   it('shows a uniform error message and stays on /login on 401', async () => {
