@@ -38,37 +38,25 @@ const statusClass = (status: string) => {
     </div>
 
     <CardPanel v-else data-testid="exam-history-list" label="Exam History">
-      <template v-for="row in rows" :key="row.id">
-        <NuxtLink
-          v-if="isSubmitted(row.status)"
-          data-testid="exam-history-row"
-          :to="mockExamRunPath(row.id)"
-          :class="rowClass"
+      <component
+        :is="isSubmitted(row.status) ? 'NuxtLink' : 'div'"
+        v-for="row in rows"
+        :key="row.id"
+        data-testid="exam-history-row"
+        :to="isSubmitted(row.status) ? mockExamRunPath(row.id) : undefined"
+        :class="rowClass"
+      >
+        <span class="text-slate-400">{{ row.date?.slice(0, 10) }}</span>
+        <span :class="pillClass">{{ row.type }}</span>
+        <span class="flex-1 uppercase" :class="statusClass(row.status)">{{ row.status }}</span>
+        <span v-if="row.score !== null" class="text-slate-100">{{ Math.round(row.score) }}</span>
+        <span
+          v-if="row.passed !== null"
+          :class="row.passed ? 'text-readion-status-good' : 'text-readion-status-poor'"
         >
-          <span class="text-slate-400">{{ row.date?.slice(0, 10) }}</span>
-          <span :class="pillClass">{{ row.type }}</span>
-          <span class="flex-1 uppercase" :class="statusClass(row.status)">{{ row.status }}</span>
-          <span v-if="row.score !== null" class="text-slate-100">{{ Math.round(row.score) }}</span>
-          <span
-            v-if="row.passed !== null"
-            :class="row.passed ? 'text-readion-status-good' : 'text-readion-status-poor'"
-          >
-            {{ row.passed ? 'Pass' : 'Fail' }}
-          </span>
-        </NuxtLink>
-        <div v-else data-testid="exam-history-row" :class="rowClass">
-          <span class="text-slate-400">{{ row.date?.slice(0, 10) }}</span>
-          <span :class="pillClass">{{ row.type }}</span>
-          <span class="flex-1 uppercase" :class="statusClass(row.status)">{{ row.status }}</span>
-          <span v-if="row.score !== null" class="text-slate-100">{{ Math.round(row.score) }}</span>
-          <span
-            v-if="row.passed !== null"
-            :class="row.passed ? 'text-readion-status-good' : 'text-readion-status-poor'"
-          >
-            {{ row.passed ? 'Pass' : 'Fail' }}
-          </span>
-        </div>
-      </template>
+          {{ row.passed ? 'Pass' : 'Fail' }}
+        </span>
+      </component>
     </CardPanel>
   </div>
 </template>
