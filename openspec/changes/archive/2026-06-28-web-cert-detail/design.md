@@ -34,7 +34,7 @@ Every datum the page renders is already exposed by archived backend changes and 
 
 ## Visual Design
 
-**Design provenance — DesignSync not available.** The canonical artboard for this screen is **`CertDetail.html`** in the "Readion app onboarding flow" Claude Design project (`projectId 4526b72d-50eb-4140-8cf3-39f776743a65`). The token-only design system (`projectId 38736cfc-91fa-45ef-8524-8103e746ef9f`) is already wired into `apps/web`. **The `DesignSync` connector is not present in this environment** — there is no `DesignSync` / `get_file` tool in the toolset, so the artboard could **not** be pulled. Per the change brief, no reconstructed `design/CertDetail.html` was fabricated and no canonical provenance is claimed. `design/CertDetail.html` is intentionally absent and is **flagged for a re-pull + re-diff when DesignSync becomes available**; at that point the reconciliation table below must be re-checked against the real artboard.
+**Design provenance — canonical artboard in shared mirror.** The canonical artboard for this screen is **`CertDetail.html`** in the "Readion app onboarding flow" Claude Design project (`projectId 4526b72d-50eb-4140-8cf3-39f776743a65`). The token-only design system (`projectId 38736cfc-91fa-45ef-8524-8103e746ef9f`) is already wired into `apps/web`. The `DesignSync` connector is **not available to the automated implementer subagents** (it is an interactively-authenticated claude.ai connector, absent from headless/background toolsets), so no reconstructed artboard was fabricated during implementation — correctly. The canonical `CertDetail.html` was subsequently **pulled via `DesignSync get_file` from the interactive session** and stored verbatim in the shared design mirror at **`../../../design/CertDetail.html`** (renders over HTTP next to `app-shell.jsx` + the `_ds` token bundle). The reconciliation table below was checked against this canonical artboard: the Overview (stat row, domain-score bars, suggested-next-focus, recent sessions) and Sessions (history table with type pills) match the implemented layout; the artboard shows an **"Exam history" tab** alongside Overview/Sessions, consistent with the roadmap's third tab. The behavioural spec remains authoritative where the artboard and the implemented backend contract diverge.
 
 This visual section is therefore driven by **SPEC → Frontend (cert detail) + Layout Decisions**, **DESIGN.md token values**, and the **archived `web-dashboard` component patterns** (the canonical design system tokens are already wired in via `app/design/tokens.ts`).
 
@@ -50,7 +50,7 @@ This visual section is therefore driven by **SPEC → Frontend (cert detail) + L
 
 ### Design ↔ contract reconciliation
 
-The canonical artboard could not be diffed (DesignSync absent), so this table reconciles the **SPEC/roadmap intent** against the **implemented backend contract**. The behavioural specs win; resolve as follows during implementation. **Re-diff against `CertDetail.html` once it can be pulled.**
+This table reconciles the **SPEC/roadmap intent** (now confirmed against the canonical `../../../design/CertDetail.html` artboard) against the **implemented backend contract**. The behavioural specs win; resolve as follows.
 
 | Element (SPEC/roadmap intent) | Conflict with contract | Resolution |
 |---|---|---|
@@ -95,10 +95,10 @@ Acceptance tests are Playwright e2e specs in `apps/web/e2e/` running the real Nu
 - **Sessions-table request volume** (one summary per completed visible row) → bound to the visible page; use vue-query caching keyed per session id so paging back is free; rows without summaries render without accuracy rather than blocking.
 - **Client-side type filter vs. pagination** → filtering a single loaded page can show fewer than `limit` rows after filtering. Mitigation: keep the filter a clearly-scoped view of loaded rows; if this proves confusing, a follow-up backend `kind` param closes the gap (out of scope here).
 - **Mock-exam list payload weight** (full `questions[]` per attempt) → acceptable at typical attempt counts; only header fields are rendered. Flagged for revisit if attempts grow large.
-- **Design provenance** → no canonical `CertDetail.html` was pulled (DesignSync absent). Visuals follow SPEC + DESIGN.md tokens + the dashboard patterns. **Action: re-pull `CertDetail.html` and re-diff the reconciliation table when DesignSync is available.**
+- **Design provenance** → canonical `CertDetail.html` pulled via `DesignSync get_file` (interactive session) and stored in the shared mirror at `../../../design/CertDetail.html`; visuals follow it plus DESIGN.md tokens and the dashboard patterns. Reconciliation table checked against the artboard — matches.
 
 ## Open Questions
 
 - Exact downstream route names for a session row, a mock-exam review, and the review run loop depend on `web-session-view` / `web-mock-exam` / `web-progress`; reuse the `runnerRoutes` helper and reconcile when those land.
-- Whether Exam History should be a third tab or a section within Overview — modelled here as a third tab per the roadmap's explicit "exam-history"; collapse into Overview if the artboard (once pulled) shows otherwise.
+- Whether Exam History should be a third tab or a section within Overview — modelled here as a third tab per the roadmap's explicit "exam-history"; **the canonical `CertDetail.html` artboard confirms a third "Exam history" tab** (alongside Overview/Sessions), so the third-tab modelling stands.
 - Whether a future per-user target-exam-date should add a countdown to the stat row — out of scope; needs a backend field first.

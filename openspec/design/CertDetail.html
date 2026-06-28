@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion — Cert Detail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui; background: #c6c2ba; }
+    .canvas-wrap { padding: 48px 56px; }
+    .canvas-section { margin-bottom: 56px; }
+    .canvas-section-head { margin-bottom: 20px; }
+    .canvas-section-title { font-size: 17px; font-weight: 600; color: #2d2520; }
+    .canvas-section-sub { font-size: 12px; color: #7a6e65; margin-top: 3px; }
+    .canvas-row { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+    .artboard-wrap { flex-shrink: 0; }
+    .artboard-label { font-size: 11px; color: #7a6e65; margin-bottom: 7px; font-weight: 500; letter-spacing: 0.02em; }
+    .artboard-frame { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.js"></script>
+
+<script type="text/babel" src="app-shell.jsx"></script>
+<script type="text/babel">
+
+const Canvas = (p) => <div className="canvas-wrap">{p.children}</div>;
+const CanvasSection = (p) => (
+  <div className="canvas-section">
+    <div className="canvas-section-head">
+      <div className="canvas-section-title">{p.title}</div>
+      {p.subtitle && <div className="canvas-section-sub">{p.subtitle}</div>}
+    </div>
+    <div className="canvas-row">{p.children}</div>
+  </div>
+);
+const Artboard = (p) => (
+  <div className="artboard-wrap" style={{ width: p.width }}>
+    <div className="artboard-label">{p.label}</div>
+    <div className="artboard-frame" style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+  </div>
+);
+
+const T = {
+  base:     'var(--readion-background-base)',
+  surface:  'var(--readion-background-surface)',
+  elevated: 'var(--readion-background-elevated)',
+  overlay:  'var(--readion-background-overlay)',
+  primary:  'var(--readion-primary)',
+  accent:   'var(--readion-accent-label)',
+  tPrimary: 'var(--readion-text-primary)',
+  tSecond:  'var(--readion-text-secondary)',
+  tMuted:   'var(--readion-text-muted)',
+  tSubtle:  'var(--readion-text-subtle)',
+  border:   'var(--readion-border-strong)',
+  borderDef:'var(--readion-border-default)',
+  poor:     'var(--readion-status-poor)',
+  warn:     'var(--readion-status-warning)',
+  medium:   'var(--readion-status-medium)',
+  good:     'var(--readion-status-good)',
+  rMd:      'var(--readion-rounded-md)',
+  rLg:      'var(--readion-rounded-lg)',
+  rXl:      'var(--readion-rounded-xl)',
+  rFull:    'var(--readion-rounded-full)',
+};
+
+const scoreColor = window.Shell.scoreColor;
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+const Shell = window.Shell;
+const AppSidebar = () => <Shell.AppSidebar active="Dashboard" admin={true} />;
+
+// ── Page tabs ─────────────────────────────────────────────────────────────────
+const CertTabs = ({ active }) => (
+  <div style={{ display: 'flex', borderBottom: '1px solid ' + T.border, background: T.elevated, padding: '0 28px', flexShrink: 0 }}>
+    {['Overview', 'Sessions', 'Exam history'].map((t) => (
+      <div key={t} style={{ padding: '12px 16px', fontSize: 13, color: t === active ? T.tPrimary : T.tMuted, borderBottom: '2px solid ' + (t === active ? T.accent : 'transparent'), cursor: 'pointer', marginBottom: -1 }}>{t}</div>
+    ))}
+  </div>
+);
+
+// ── Cert header ───────────────────────────────────────────────────────────────
+const CertHeader = () => (
+  <div style={{ borderBottom: '1px solid ' + T.border, padding: '16px 28px', background: T.surface, flexShrink: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+      <span style={{ fontSize: 11, color: T.tMuted, cursor: 'pointer' }}>&#8592; Dashboard</span>
+      <span style={{ fontSize: 11, color: T.tSubtle }}>/</span>
+      <span style={{ fontSize: 11, color: T.tSecond }}>SAA-C03</span>
+    </div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+          <div style={{ fontSize: 20, fontWeight: 700, color: T.tPrimary }}>Solutions Architect – Associate</div>
+          <span style={{ fontSize: 10, color: T.tSubtle, background: T.elevated, padding: '2px 7px', borderRadius: 3, fontFamily: 'var(--readion-font-mono)' }}>SAA-C03</span>
+        </div>
+        <div style={{ fontSize: 12, color: T.tMuted }}>Amazon Web Services</div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <button style={{ padding: '7px 14px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer' }}>Mock exam</button>
+        <button style={{ padding: '7px 16px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Start session &#8594;</button>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Overview tab ──────────────────────────────────────────────────────────────
+const DOMAINS = [
+  { name: 'IAM & Security',     score: 45, delta: 7,  sessions: 4 },
+  { name: 'Networking & CDN',   score: 43, delta: 2,  sessions: 3 },
+  { name: 'Cost Optimization',  score: 52, delta: 4,  sessions: 2 },
+  { name: 'High Availability',  score: 68, delta: 3,  sessions: 2 },
+  { name: 'Storage Solutions',  score: 71, delta: 1,  sessions: 1 },
+  { name: 'Compute & Lambda',   score: 79, delta: 5,  sessions: 1 },
+  { name: 'Database Services',  score: 76, delta: 2,  sessions: 1 },
+];
+
+const OverviewTab = () => {
+  const readiness = 75;
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+
+      {/* Stats row */}
+      <div style={{ display: 'flex', gap: 12 }}>
+        {[
+          { label: 'Readiness',    value: readiness + '%', color: scoreColor(readiness), sub: '↑3% this week' },
+          { label: 'Sessions',     value: '14',  color: T.tPrimary, sub: 'completed' },
+          { label: 'Questions',    value: '312', color: T.tPrimary, sub: 'answered' },
+          { label: 'Avg accuracy', value: '68%', color: scoreColor(68), sub: 'per session' },
+        ].map((s) => (
+          <div key={s.label} style={{ flex: 1, background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '14px 16px' }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 6 }}>{s.label}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>
+            <div style={{ fontSize: 11, color: T.tSubtle, marginTop: 4 }}>{s.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: 18 }}>
+        {/* Domain scores */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 10 }}>Domain scores</div>
+          <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '8px 20px' }}>
+            {DOMAINS.map((d, i) => {
+              const color = scoreColor(d.score);
+              return (
+                <div key={d.name}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, color: T.tSecond, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</div>
+                      <div style={{ height: 3, background: T.border, borderRadius: 3 }}>
+                        <div style={{ height: '100%', width: d.score + '%', background: color, borderRadius: 3 }} />
+                      </div>
+                    </div>
+                    <div style={{ flexShrink: 0, width: 36, textAlign: 'right' }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color }}>{d.score}%</span>
+                    </div>
+                    <div style={{ flexShrink: 0, width: 36, textAlign: 'right' }}>
+                      <span style={{ fontSize: 11, color: T.good }}>↑{d.delta}%</span>
+                    </div>
+                  </div>
+                  {i < DOMAINS.length - 1 && <div style={{ height: 1, background: T.borderDef }} />}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right column: recent sessions + next focus */}
+        <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Suggested focus */}
+          <div style={{ padding: '14px 16px', background: 'rgba(124,140,248,0.06)', border: '1px solid rgba(124,140,248,0.18)', borderRadius: T.rXl }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.accent, marginBottom: 6 }}>Suggested next</div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: T.tPrimary, marginBottom: 4 }}>IAM & Security</div>
+            <div style={{ fontSize: 12, color: T.tMuted, lineHeight: 1.55 }}>Lowest domain score (45%). Last studied 2 days ago.</div>
+          </div>
+
+          {/* Recent sessions */}
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 10 }}>Recent sessions</div>
+            <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, overflow: 'hidden' }}>
+              {[
+                { date: 'Today',      duration: '20:34', accuracy: 67, delta: '+3%' },
+                { date: 'Yesterday',  duration: '22:18', accuracy: 71, delta: '+2%' },
+                { date: 'Jun 21',     duration: '1h 47m', accuracy: 71, delta: '+8%', type: 'Mock' },
+                { date: 'Jun 19',     duration: '18:45', accuracy: 70, delta: '+2%' },
+              ].map((s, i, arr) => (
+                <div key={i}>
+                  <div style={{ display: 'flex', alignItems: 'center', padding: '9px 14px', gap: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12, color: T.tSecond }}>{s.date}</div>
+                      <div style={{ fontSize: 10, color: T.tMuted }}>{s.duration}{s.type ? ' · Mock' : ''}</div>
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 500, color: scoreColor(s.accuracy) }}>{s.accuracy}%</div>
+                    <div style={{ fontSize: 11, color: T.good }}>{s.delta}</div>
+                  </div>
+                  {i < arr.length - 1 && <div style={{ height: 1, background: T.borderDef }} />}
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 8, textAlign: 'right' }}>
+              <span style={{ fontSize: 12, color: T.accent, cursor: 'pointer' }}>View all sessions &#8594;</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Sessions tab ──────────────────────────────────────────────────────────────
+const SESSION_HISTORY = [
+  { date: 'Today, Jun 23',   time: '3:42 PM', type: 'Study', duration: '20:34', domains: 'IAM, Networking',    q: 12, accuracy: 67, delta: '+3%', readiness: '75%' },
+  { date: 'Jun 23',          time: '9:15 AM', type: 'Study', duration: '22:18', domains: 'Cost Opt., Storage',  q: 14, accuracy: 71, delta: '+2%', readiness: '72%' },
+  { date: 'Jun 21',          time: '7:30 PM', type: 'Mock',  duration: '1h 47m', domains: 'All domains',       q: 65, accuracy: 71, delta: '+8%', readiness: '70%' },
+  { date: 'Jun 19',          time: '8:00 PM', type: 'Study', duration: '18:45', domains: 'IAM, High Avail.',    q: 12, accuracy: 70, delta: '+2%', readiness: '62%' },
+  { date: 'Jun 17',          time: '7:15 PM', type: 'Study', duration: '20:10', domains: 'Networking',          q: 12, accuracy: 58, delta: '+2%', readiness: '60%' },
+  { date: 'Jun 16',          time: '8:30 PM', type: 'Study', duration: '23:41', domains: 'IAM, Compute',        q: 15, accuracy: 60, delta: '+3%', readiness: '58%' },
+  { date: 'Jun 14',          time: '4:00 PM', type: 'Mock',  duration: '1h 52m', domains: 'All domains',       q: 65, accuracy: 62, delta: '+5%', readiness: '55%' },
+];
+
+const TypeChip = ({ type }) => (
+  <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: T.rFull, background: type === 'Mock' ? 'rgba(124,140,248,0.1)' : T.elevated, border: '1px solid ' + (type === 'Mock' ? 'rgba(124,140,248,0.2)' : T.border), color: type === 'Mock' ? T.accent : T.tMuted }}>
+    {type}
+  </span>
+);
+
+const SessionsTab = () => (
+  <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+      <span style={{ fontSize: 13, color: T.tMuted }}>14 sessions &middot; SAA-C03</span>
+      <select style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rMd, padding: '5px 10px', fontSize: 12, color: T.tSecond, cursor: 'pointer', outline: 'none' }}>
+        <option>All types</option><option>Study only</option><option>Mock only</option>
+      </select>
+    </div>
+    <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, overflow: 'hidden' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', padding: '8px 16px', background: T.elevated, borderBottom: '1px solid ' + T.border }}>
+        {[['Date', 1.4], ['Type', 0.7], ['Duration', 0.9], ['Domains covered', 1.8], ['Q', 0.4], ['Accuracy', 0.8], ['Readiness', 0.7]].map(([h, f]) => (
+          <div key={h} style={{ flex: f, fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tSubtle }}>{h}</div>
+        ))}
+      </div>
+      {SESSION_HISTORY.map((s, i) => (
+        <div key={i}>
+          <div style={{ display: 'flex', alignItems: 'center', padding: '10px 16px' }}>
+            <div style={{ flex: 1.4 }}>
+              <div style={{ fontSize: 12, color: T.tSecond }}>{s.date}</div>
+              <div style={{ fontSize: 10, color: T.tSubtle }}>{s.time}</div>
+            </div>
+            <div style={{ flex: 0.7 }}><TypeChip type={s.type} /></div>
+            <div style={{ flex: 0.9, fontSize: 12, color: T.tMuted, fontFamily: 'var(--readion-font-mono)' }}>{s.duration}</div>
+            <div style={{ flex: 1.8, fontSize: 12, color: T.tMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.domains}</div>
+            <div style={{ flex: 0.4, fontSize: 12, color: T.tMuted, fontFamily: 'var(--readion-font-mono)' }}>{s.q}</div>
+            <div style={{ flex: 0.8, fontSize: 12, fontWeight: 500, color: scoreColor(s.accuracy) }}>{s.accuracy}%</div>
+            <div style={{ flex: 0.7 }}>
+              <span style={{ fontSize: 12, color: T.good }}>{s.delta}</span>
+              <span style={{ fontSize: 11, color: T.tSubtle, marginLeft: 4 }}>{s.readiness}</span>
+            </div>
+          </div>
+          {i < SESSION_HISTORY.length - 1 && <div style={{ height: 1, background: T.borderDef, margin: '0 16px' }} />}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// ── Cert detail layout ────────────────────────────────────────────────────────
+const CertDetailLayout = ({ tab, children }) => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AppSidebar />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <CertHeader />
+      <CertTabs active={tab} />
+      {children}
+    </div>
+  </div>
+);
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <Canvas>
+      <CanvasSection title="Cert detail" subtitle="Per-cert deep-dive. Breadcrumb back to dashboard. Overview + Sessions tabs shown.">
+        <Artboard label="Overview — domain scores, stats, recent sessions" width={1100} height={820}>
+          <CertDetailLayout tab="Overview"><OverviewTab /></CertDetailLayout>
+        </Artboard>
+        <Artboard label="Sessions — full history table for this cert" width={1100} height={820}>
+          <CertDetailLayout tab="Sessions"><SessionsTab /></CertDetailLayout>
+        </Artboard>
+      </CanvasSection>
+    </Canvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

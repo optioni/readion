@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion — Onboarding Flow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui; background: #eae8e3; }
+    .canvas-wrap { padding: 48px 56px; }
+    .canvas-section { margin-bottom: 56px; }
+    .canvas-section-head { margin-bottom: 20px; }
+    .canvas-section-title { font-size: 17px; font-weight: 600; color: #2d2520; font-family: -apple-system, system-ui, sans-serif; }
+    .canvas-section-sub { font-size: 12px; color: #7a6e65; margin-top: 3px; }
+    .canvas-row { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+    .artboard-wrap { flex-shrink: 0; }
+    .artboard-label { font-size: 11px; color: #7a6e65; margin-bottom: 7px; font-weight: 500; font-family: -apple-system, system-ui, sans-serif; letter-spacing: 0.02em; }
+    .artboard-frame { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 24px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.js"></script>
+<script type="text/babel" src="app-shell.jsx"></script>
+
+<script type="text/babel">
+
+// ── Canvas layout ────────────────────────────────────────────────────────────
+
+const Canvas = ({ children }) => <div className="canvas-wrap">{children}</div>;
+const CanvasSection = ({ title, subtitle, children, preferred }) => (
+  <div className="canvas-section">
+    <div className="canvas-section-head">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: subtitle ? 3 : 0 }}>
+        <div className="canvas-section-title">{title}</div>
+        {preferred && <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(74,222,128,0.3)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>&#9733; Preferred</span>}
+      </div>
+      {subtitle && <div className="canvas-section-sub">{subtitle}</div>}
+    </div>
+    <div className="canvas-row">{children}</div>
+  </div>
+);
+const Artboard = ({ label, width, children }) => (
+  <div className="artboard-wrap" style={{ width }}>
+    <div className="artboard-label">{label}</div>
+    <div className="artboard-frame" style={{ width }}>{children}</div>
+  </div>
+);
+
+// ── Tokens shorthand ─────────────────────────────────────────────────────────
+
+const T = {
+  base:     'var(--readion-background-base)',
+  surface:  'var(--readion-background-surface)',
+  elevated: 'var(--readion-background-elevated)',
+  primary:  'var(--readion-primary)',
+  accent:   'var(--readion-accent-label)',
+  tPrimary: 'var(--readion-text-primary)',
+  tSecond:  'var(--readion-text-secondary)',
+  tMuted:   'var(--readion-text-muted)',
+  tSubtle:  'var(--readion-text-subtle)',
+  border:   'var(--readion-border-strong)',
+  good:     'var(--readion-status-good)',
+  warn:     'var(--readion-status-warning)',
+  rMd:      'var(--readion-rounded-md)',
+  rLg:      'var(--readion-rounded-lg)',
+  rXl:      'var(--readion-rounded-xl)',
+  rFull:    'var(--readion-rounded-full)',
+};
+
+// ── Data ─────────────────────────────────────────────────────────────────────
+
+const CERTS = [
+  { code: 'SAA-C03', name: 'Solutions Architect - Associate',    vendor: 'Amazon Web Services' },
+  { code: 'SAP-C02', name: 'Solutions Architect - Professional', vendor: 'Amazon Web Services' },
+  { code: 'DVA-C02', name: 'Developer - Associate',              vendor: 'Amazon Web Services' },
+  { code: 'PCA',     name: 'Professional Cloud Architect',       vendor: 'Google Cloud' },
+  { code: 'AZ-104',  name: 'Azure Administrator Associate',      vendor: 'Microsoft Azure' },
+  { code: 'CKA',     name: 'Certified Kubernetes Administrator', vendor: 'Linux Foundation' },
+  { code: 'SY0-701', name: 'CompTIA Security+',                  vendor: 'CompTIA' },
+];
+
+const CERT_GROUPS = [
+  { vendor: 'Amazon Web Services',      certs: CERTS.filter(c => c.vendor === 'Amazon Web Services') },
+  { vendor: 'Google Cloud',             certs: CERTS.filter(c => c.vendor === 'Google Cloud') },
+  { vendor: 'Microsoft Azure',          certs: CERTS.filter(c => c.vendor === 'Microsoft Azure') },
+  { vendor: 'Linux Foundation / CompTIA', certs: CERTS.filter(c => c.vendor === 'Linux Foundation' || c.vendor === 'CompTIA') },
+];
+
+// ── Shared primitives ────────────────────────────────────────────────────────
+
+const OBBase = ({ children }) => (
+  <div style={{ background: T.base, fontFamily: 'Inter, ui-sans-serif, system-ui', padding: 40, display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
+    {children}
+  </div>
+);
+
+const OBCard = ({ children, width, padding }) => (
+  <div style={{ width: width || 420, flexShrink: 0, background: T.surface, borderRadius: T.rXl, padding: padding || 32, boxShadow: '0 8px 48px rgba(0,0,0,0.5)' }}>
+    {children}
+  </div>
+);
+
+const OBBar = ({ step }) => (
+  <div style={{ marginBottom: 22 }}>
+    <div style={{ height: 2, background: T.border, borderRadius: 2 }}>
+      <div style={{ height: '100%', width: (step / 3 * 100) + '%', background: T.primary, borderRadius: 2 }} />
+    </div>
+  </div>
+);
+
+const OBStepTag = ({ step }) => (
+  <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.accent, marginBottom: 6 }}>
+    Step {step} of 3
+  </div>
+);
+
+const OBTitle = ({ title, sub }) => (
+  <div style={{ marginBottom: 18 }}>
+    <div style={{ fontSize: 20, fontWeight: 600, color: T.tPrimary, lineHeight: 1.3, marginBottom: sub ? 5 : 0 }}>{title}</div>
+    {sub && <div style={{ fontSize: 13, color: T.tMuted, lineHeight: 1.5 }}>{sub}</div>}
+  </div>
+);
+
+const OBNav = ({ step }) => (
+  <div style={{ display: 'flex', justifyContent: step > 1 ? 'space-between' : 'flex-end', alignItems: 'center', marginTop: 22, paddingTop: 18, borderTop: '1px solid ' + T.border }}>
+    {step > 1 && <span style={{ fontSize: 13, color: T.tMuted, cursor: 'pointer' }}>&#8592; Back</span>}
+    <button style={{ padding: '9px 22px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Continue &#8594;</button>
+  </div>
+);
+
+const OBPills = ({ options, selected }) => (
+  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+    {options.map(function(o) {
+      return (
+        <div key={o} style={{ padding: '5px 12px', borderRadius: T.rFull, fontSize: 13, fontWeight: o === selected ? 500 : 400, background: o === selected ? T.primary : 'transparent', color: o === selected ? '#fff' : T.tSecond, border: '1px solid ' + (o === selected ? T.primary : T.border), cursor: 'pointer' }}>
+          {o}
+        </div>
+      );
+    })}
+  </div>
+);
+
+const OBPref = ({ label, options, selected, note }) => (
+  <div style={{ marginBottom: 18 }}>
+    <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 8 }}>{label}</div>
+    <OBPills options={options} selected={selected} />
+    {note && <div style={{ fontSize: 11, color: T.tSubtle, marginTop: 5 }}>{note}</div>}
+  </div>
+);
+
+const SearchBox = ({ suffix }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: T.base, border: '1px solid ' + T.border, borderRadius: T.rMd, padding: '7px 12px', marginBottom: 10 }}>
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+      <circle cx="7" cy="7" r="5" stroke="#64748b" strokeWidth="1.5" />
+      <path d="M11 11l3 3" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+    <span style={{ fontSize: 13, color: T.tSubtle, flex: 1 }}>Search certifications...</span>
+    {suffix && <span style={{ fontSize: 11, color: T.tSubtle, background: T.elevated, padding: '2px 6px', borderRadius: 3 }}>{suffix}</span>}
+  </div>
+);
+
+// ── V1: Minimal ───────────────────────────────────────────────────────────────
+
+const V1Step1 = function() {
+  return (
+    <OBBase>
+      <OBCard>
+        <OBBar step={1} />
+        <OBStepTag step={1} />
+        <OBTitle title="Which certification are you preparing for?" />
+        <SearchBox />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {CERTS.map(function(c, i) {
+            return (
+              <div key={c.code} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: T.rMd, background: i === 0 ? 'rgba(29,78,216,0.12)' : 'transparent', border: '1px solid ' + (i === 0 ? T.primary : 'transparent'), cursor: 'pointer' }}>
+                <div style={{ width: 15, height: 15, borderRadius: '50%', flexShrink: 0, border: '2px solid ' + (i === 0 ? T.primary : T.border), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {i === 0 && <div style={{ width: 5, height: 5, borderRadius: '50%', background: T.primary }} />}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, color: i === 0 ? T.tPrimary : T.tSecond, fontWeight: i === 0 ? 500 : 400 }}>{c.name}</div>
+                  <div style={{ fontSize: 11, color: T.tMuted, marginTop: 1 }}>{c.vendor} &middot; {c.code}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <OBNav step={1} />
+      </OBCard>
+    </OBBase>
+  );
+};
+
+const V1Step2 = function() {
+  return (
+    <OBBase>
+      <OBCard>
+        <OBBar step={2} />
+        <OBStepTag step={2} />
+        <OBTitle title="Set your study defaults" sub="These become your starting point - adjust any time in settings." />
+        <OBPref label="Session length" options={['10 min', '20 min', '30 min', '45 min']} selected="20 min" />
+        <OBPref label="Content mix" options={['Questions', 'Mixed', 'Concepts first']} selected="Mixed" />
+        <OBPref label="Difficulty" options={['Adaptive', 'Easy', 'Medium', 'Hard']} selected="Adaptive" note="Adaptive adjusts automatically as you improve" />
+        <OBPref label="Learning style" options={['Spaced rep.', 'Intensive']} selected="Spaced rep." />
+        <OBNav step={2} />
+      </OBCard>
+    </OBBase>
+  );
+};
+
+const V1Step3 = function() {
+  return (
+    <OBBase>
+      <OBCard>
+        <OBBar step={3} />
+        <OBStepTag step={3} />
+        <OBTitle title="Build your personal study plan" />
+        <p style={{ fontSize: 14, color: T.tSecond, lineHeight: 1.65, margin: '0 0 28px' }}>
+          A 15-minute diagnostic measures where you stand today. Readion uses the results to weight sessions toward your actual knowledge gaps - so every minute counts from day one.
+        </p>
+        <button style={{ width: '100%', padding: 11, background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 500, cursor: 'pointer', marginBottom: 14 }}>
+          Start diagnostic &middot; ~15 min
+        </button>
+        <div style={{ textAlign: 'center' }}>
+          <span style={{ fontSize: 13, color: T.tMuted, cursor: 'pointer' }}>Skip - go to dashboard &#8594;</span>
+        </div>
+      </OBCard>
+    </OBBase>
+  );
+};
+
+// ── V2: Warm / Guided ────────────────────────────────────────────────────────
+
+const V2Bar = function(props) {
+  var step = props.step;
+  var labels = ['Certification', 'Preferences', 'Diagnostic'];
+  var pct = step === 1 ? 16 : step === 2 ? 50 : 100;
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+        {labels.map(function(s, i) {
+          return (
+            <span key={s} style={{ fontSize: 11, letterSpacing: '0.04em', color: i + 1 === step ? T.accent : i + 1 < step ? T.primary : T.tSubtle }}>
+              {i + 1 < step && <span>&#10003; </span>}{s}
+            </span>
+          );
+        })}
+      </div>
+      <div style={{ height: 3, background: T.border, borderRadius: 3 }}>
+        <div style={{ height: '100%', width: pct + '%', background: T.primary, borderRadius: 3 }} />
+      </div>
+    </div>
+  );
+};
+
+const V2Step1 = function() {
+  return (
+    <OBBase>
+      <OBCard width={540} padding={36}>
+        <V2Bar step={1} />
+        <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.accent, marginBottom: 6 }}>Welcome to Readion</div>
+        <OBTitle title="What are you studying for?" sub="Select the certification exam you are working toward." />
+        {CERTS.map(function(c, i) {
+          return (
+            <div key={c.code} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: T.rLg, background: i === 0 ? 'rgba(29,78,216,0.1)' : T.base, border: '1px solid ' + (i === 0 ? T.primary : T.border), cursor: 'pointer', marginBottom: 6 }}>
+              <div style={{ flexShrink: 0, width: 36, height: 36, background: T.surface, borderRadius: T.rMd, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: i === 0 ? T.accent : T.tMuted, letterSpacing: '0.02em', textAlign: 'center', lineHeight: 1.2 }}>{c.code}</span>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, color: i === 0 ? T.tPrimary : T.tSecond, fontWeight: i === 0 ? 500 : 400 }}>{c.name}</div>
+                <div style={{ fontSize: 11, color: T.tMuted, marginTop: 2 }}>{c.vendor}</div>
+              </div>
+              {i === 0 && (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="7" fill="var(--readion-primary)" />
+                  <path d="M5 8l2 2 4-4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </div>
+          );
+        })}
+        <OBNav step={1} />
+      </OBCard>
+    </OBBase>
+  );
+};
+
+const V2PrefCard = function(props) {
+  return (
+    <div style={{ background: T.base, border: '1px solid ' + T.border, borderRadius: T.rLg, padding: '12px 14px', marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+        <span style={{ fontSize: 11, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tMuted }}>{props.label}</span>
+      </div>
+      <OBPills options={props.options} selected={props.selected} />
+    </div>
+  );
+};
+
+const V2Step2 = function() {
+  return (
+    <OBBase>
+      <OBCard width={540} padding={36}>
+        <V2Bar step={2} />
+        <OBTitle title="How do you want to study?" sub="Readion adapts over time - these are your starting defaults." />
+        <V2PrefCard icon="&#9201;" label="Session length"  options={['10 min', '20 min', '30 min', '45 min']} selected="20 min" />
+        <V2PrefCard icon="&#127919;" label="Content mix"   options={['Questions', 'Mixed', 'Concepts first']}  selected="Mixed" />
+        <V2PrefCard icon="&#128202;" label="Difficulty"    options={['Adaptive', 'Easy', 'Medium', 'Hard']}    selected="Adaptive" />
+        <V2PrefCard icon="&#128257;" label="Learning style" options={['Spaced rep.', 'Intensive']}             selected="Spaced rep." />
+        <OBNav step={2} />
+      </OBCard>
+    </OBBase>
+  );
+};
+
+const CheckDot = function() {
+  return (
+    <div style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, background: 'rgba(52,211,153,0.12)', border: '1px solid ' + T.good, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 1 }}>
+      <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+        <path d="M2 4.5l2 2 3-3" stroke="var(--readion-status-good)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+};
+
+const V2Step3 = function() {
+  var items = [
+    ['Surfaces your weakest topics immediately',    'Readion weights your first sessions toward them - no wasted time.'],
+    ['Calibrates question difficulty to your level', 'You will not drill material you already know.'],
+    ['Creates a measurable progress baseline',       'See exactly how far you have come as exam day approaches.'],
+  ];
+  return (
+    <OBBase>
+      <OBCard width={540} padding={36}>
+        <V2Bar step={3} />
+        <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.good, marginBottom: 8 }}>Almost ready</div>
+        <OBTitle title="Start with a baseline snapshot" sub="Know where you stand before you spend a single minute studying." />
+        <div style={{ marginBottom: 26 }}>
+          {items.map(function(item) {
+            return (
+              <div key={item[0]} style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
+                <CheckDot />
+                <div>
+                  <div style={{ fontSize: 13, color: T.tPrimary, fontWeight: 500, marginBottom: 2 }}>{item[0]}</div>
+                  <div style={{ fontSize: 12, color: T.tMuted, lineHeight: 1.5 }}>{item[1]}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <button style={{ width: '100%', padding: 11, background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 500, cursor: 'pointer', marginBottom: 12 }}>
+          Take the diagnostic &middot; ~15 min
+        </button>
+        <div style={{ textAlign: 'center' }}>
+          <span style={{ fontSize: 13, color: T.tMuted, cursor: 'pointer' }}>Skip - I will set my own pace</span>
+        </div>
+      </OBCard>
+    </OBBase>
+  );
+};
+
+// ── V3: Structured (sidebar) ──────────────────────────────────────────────────
+
+const V3Sidebar = function(props) {
+  var active = props.active;
+  var steps = ['Certification', 'Preferences', 'Diagnostic'];
+  return (
+    <div style={{ width: 200, flexShrink: 0, background: T.elevated, borderRight: '1px solid ' + T.border, padding: '32px 20px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.accent, marginBottom: 32 }}>Readion</div>
+      <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tSubtle, marginBottom: 10 }}>Setup</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {steps.map(function(s, i) {
+          var st = i + 1 < active ? 'done' : i + 1 === active ? 'active' : 'upcoming';
+          return (
+            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: T.rMd, background: st === 'active' ? 'rgba(29,78,216,0.15)' : 'transparent' }}>
+              <div style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: st === 'done' ? 'rgba(29,78,216,0.25)' : st === 'active' ? T.primary : 'transparent', border: '1px solid ' + (st === 'upcoming' ? T.border : 'transparent') }}>
+                {st === 'done'
+                  ? <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M2 4.5l2 2 3-3" stroke="var(--readion-accent-label)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  : <span style={{ fontSize: 10, color: st === 'active' ? '#fff' : T.tSubtle, fontWeight: 500 }}>{i + 1}</span>
+                }
+              </div>
+              <span style={{ fontSize: 13, color: st === 'active' ? T.tPrimary : st === 'done' ? T.tSecond : T.tMuted }}>{s}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ flex: 1, minHeight: 20 }} />
+      <div style={{ fontSize: 11, color: active > steps.length ? T.good : T.tSubtle, lineHeight: 1.6 }}>{active > steps.length ? '\u2713 Setup complete' : 'Setup takes about 2 minutes.'}</div>
+    </div>
+  );
+};
+
+const V3Layout = function(props) {
+  return (
+    <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base }}>
+      <V3Sidebar active={props.step} />
+      <div style={{ flex: 1, padding: '40px 48px' }}>{props.children}</div>
+    </div>
+  );
+};
+
+const V3Step1 = function() {
+  return (
+    <V3Layout step={1}>
+      <div style={{ maxWidth: 520 }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.accent, marginBottom: 6 }}>Step 1 of 3</div>
+        <div style={{ fontSize: 22, fontWeight: 600, color: T.tPrimary, lineHeight: 1.25, marginBottom: 4 }}>Choose your target certification</div>
+        <div style={{ fontSize: 13, color: T.tMuted, marginBottom: 20 }}>You can add more certifications later from your profile.</div>
+        <SearchBox suffix="7 available" />
+        {CERT_GROUPS.map(function(group) {
+          return (
+            <div key={group.vendor} style={{ marginBottom: 4 }}>
+              <div style={{ fontSize: 11, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tSubtle, padding: '5px 10px' }}>{group.vendor}</div>
+              {group.certs.map(function(c) {
+                var sel = c.code === 'SAA-C03';
+                return (
+                  <div key={c.code} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: T.rMd, background: sel ? 'rgba(29,78,216,0.12)' : 'transparent', border: '1px solid ' + (sel ? T.primary : 'transparent'), cursor: 'pointer', marginBottom: 2 }}>
+                    <div style={{ width: 15, height: 15, borderRadius: '50%', flexShrink: 0, border: '2px solid ' + (sel ? T.primary : T.border), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {sel && <div style={{ width: 5, height: 5, borderRadius: '50%', background: T.primary }} />}
+                    </div>
+                    <span style={{ flex: 1, fontSize: 13, color: sel ? T.tPrimary : T.tSecond, fontWeight: sel ? 500 : 400 }}>{c.name}</span>
+                    <span style={{ fontSize: 10, color: T.tMuted, background: T.elevated, padding: '2px 6px', borderRadius: 3, fontFamily: 'var(--readion-font-mono)' }}>{c.code}</span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24, paddingTop: 20, borderTop: '1px solid ' + T.border }}>
+          <button style={{ padding: '9px 22px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Continue &#8594;</button>
+        </div>
+      </div>
+    </V3Layout>
+  );
+};
+
+const V3Step2 = function() {
+  var prefs = [
+    { label: 'Content mix',    options: ['Questions', 'Mixed', 'Concepts first'], sel: 'Mixed' },
+    { label: 'Learning style', options: ['Spaced rep.', 'Intensive'],              sel: 'Spaced rep.' },
+  ];
+  return (
+    <V3Layout step={2}>
+      <div style={{ maxWidth: 520 }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.accent, marginBottom: 6 }}>Step 2 of 3</div>
+        <div style={{ fontSize: 22, fontWeight: 600, color: T.tPrimary, marginBottom: 4 }}>Study preferences</div>
+        <div style={{ fontSize: 13, color: T.tMuted, marginBottom: 24 }}>Readion adapts over time - these are your starting defaults.</div>
+        <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rLg, padding: '20px 20px 16px', marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{ fontSize: 12, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tMuted }}>Session length</span>
+            <span style={{ fontSize: 13, color: T.accent, fontWeight: 500 }}>20 min</span>
+          </div>
+          <div style={{ position: 'relative', height: 18, marginBottom: 6 }}>
+            <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 3, background: T.border, borderRadius: 2, transform: 'translateY(-50%)' }}>
+              <div style={{ height: '100%', width: '36%', background: T.primary, borderRadius: 2 }} />
+              <div style={{ position: 'absolute', top: '50%', left: '36%', width: 13, height: 13, background: '#fff', border: '2px solid ' + T.primary, borderRadius: '50%', transform: 'translate(-50%,-50%)', boxShadow: '0 1px 4px rgba(0,0,0,0.4)' }} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            {['5m', '15m', '30m', '45m', '60m'].map(function(m) { return <span key={m} style={{ fontSize: 10, color: T.tSubtle }}>{m}</span>; })}
+          </div>
+        </div>
+        <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rLg, padding: '16px 20px' }}>
+          {prefs.map(function(p, idx) {
+            return (
+              <div key={p.label}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, paddingBottom: 14 }}>
+                  <span style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.tMuted, width: 100, flexShrink: 0 }}>{p.label}</span>
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                    {p.options.map(function(o) {
+                      return <div key={o} style={{ padding: '5px 10px', borderRadius: T.rMd, fontSize: 12, background: o === p.sel ? T.primary : T.elevated, color: o === p.sel ? '#fff' : T.tSecond, border: '1px solid ' + (o === p.sel ? T.primary : T.border), cursor: 'pointer' }}>{o}</div>;
+                    })}
+                  </div>
+                </div>
+                {idx < prefs.length - 1 && <div style={{ height: 1, background: T.border, marginBottom: 14 }} />}
+              </div>
+            );
+          })}
+        </div>
+        {/* Difficulty — adaptive by default, manual tucked away */}
+        <div style={{ marginTop: 12, background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rLg, padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
+            <span style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.tMuted, width: 100, flexShrink: 0 }}>Difficulty</span>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+              <span style={{ padding: '5px 12px', borderRadius: T.rMd, fontSize: 12, fontWeight: 500, background: T.primary, color: '#fff', border: '1px solid ' + T.primary, whiteSpace: 'nowrap' }}>Adaptive</span>
+              <span style={{ fontSize: 11, color: T.tSubtle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Tunes itself as you improve</span>
+            </div>
+          </div>
+          <span style={{ fontSize: 12, color: T.accent, cursor: 'pointer', flexShrink: 0 }}>Set manually</span>
+        </div>
+        <div style={{ marginTop: 10, padding: '10px 14px', background: T.elevated, border: '1px solid ' + T.border, borderRadius: T.rMd }}>
+          <span style={{ fontSize: 12, color: T.tMuted }}>At 20 min/session &times; 5 days/week &#8594; </span>
+          <span style={{ fontSize: 12, color: T.accent }}>~8 weeks to exam-ready</span>
+          <span style={{ fontSize: 12, color: T.tSubtle }}> (estimate)</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, paddingTop: 20, borderTop: '1px solid ' + T.border }}>
+          <span style={{ fontSize: 13, color: T.tMuted, cursor: 'pointer' }}>&#8592; Back</span>
+          <button style={{ padding: '9px 22px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Continue &#8594;</button>
+        </div>
+      </div>
+    </V3Layout>
+  );
+};
+
+const V3Step3 = function() {
+  var bullets = [
+    'Maps your knowledge against all exam domains',
+    'Front-loads your weakest areas in session 1',
+    'Calibrates difficulty so you are never bored or overwhelmed',
+  ];
+  return (
+    <V3Layout step={3}>
+      <div style={{ maxWidth: 520 }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.accent, marginBottom: 6 }}>Step 3 of 3</div>
+        <div style={{ fontSize: 22, fontWeight: 600, color: T.tPrimary, marginBottom: 4 }}>Diagnostic assessment</div>
+        <div style={{ fontSize: 13, color: T.tMuted, marginBottom: 24 }}>Optional - but it makes your first week significantly more effective.</div>
+        <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tSubtle, marginBottom: 10 }}>What it does</div>
+            {bullets.map(function(item) {
+              return (
+                <div key={item} style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                  <div style={{ width: 4, height: 4, borderRadius: '50%', background: T.accent, flexShrink: 0, marginTop: 7 }} />
+                  <span style={{ fontSize: 13, color: T.tSecond, lineHeight: 1.55 }}>{item}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ width: 148, flexShrink: 0 }}>
+            <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rLg, padding: '16px 12px', textAlign: 'center', marginBottom: 10 }}>
+              <div style={{ fontSize: 32, fontWeight: 700, color: T.tPrimary, lineHeight: 1 }}>~15</div>
+              <div style={{ fontSize: 11, color: T.tMuted, letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 10 }}>minutes</div>
+              <div style={{ height: 1, background: T.border, marginBottom: 10 }} />
+              <div style={{ fontSize: 12, color: T.tMuted }}>30 adaptive questions</div>
+            </div>
+            <button style={{ width: '100%', padding: '9px 0', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Start &#8594;</button>
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, paddingTop: 20, borderTop: '1px solid ' + T.border }}>
+          <span style={{ fontSize: 13, color: T.tMuted, cursor: 'pointer' }}>&#8592; Back</span>
+          <span style={{ fontSize: 13, color: T.tSubtle, cursor: 'pointer' }}>Skip - go to dashboard</span>
+        </div>
+      </div>
+    </V3Layout>
+  );
+};
+
+// ── Edge cases ────────────────────────────────────────────────────────────────
+
+const CertIcon = function() {
+  return (
+    <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(29,78,216,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2l2.4 5 5.6.8-4 3.9 1 5.5L12 15l-5 2.2 1-5.5L4 7.8 9.6 7z" stroke="var(--readion-accent-label)" strokeWidth="1.4" strokeLinejoin="round" />
+        <line x1="9" y1="21" x2="12" y2="22" stroke="var(--readion-text-muted)" strokeWidth="1.4" strokeLinecap="round" />
+        <line x1="12" y1="22" x2="15" y2="21" stroke="var(--readion-text-muted)" strokeWidth="1.4" strokeLinecap="round" />
+        <line x1="12" y1="22" x2="12" y2="24" stroke="var(--readion-text-muted)" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+    </div>
+  );
+};
+
+const EmptyStateUser = function() {
+  return (
+    <OBBase>
+      <OBCard>
+        <div style={{ textAlign: 'center', padding: '20px 0 4px' }}>
+          <CertIcon />
+          <div style={{ fontSize: 18, fontWeight: 600, color: T.tPrimary, marginBottom: 10 }}>No certifications available yet</div>
+          <div style={{ fontSize: 13, color: T.tSecond, lineHeight: 1.65, marginBottom: 12 }}>
+            Readion is ready - but your organization has not set up any certification programs yet.
+          </div>
+          <div style={{ fontSize: 13, color: T.tMuted, lineHeight: 1.65, marginBottom: 24, textAlign: 'left', background: T.base, borderRadius: T.rLg, padding: '12px 14px' }}>
+            Certifications are added by your account admin. They define the exam structure, question bank, and syllabus. Once at least one is configured, you can continue setup here.
+          </div>
+          <button style={{ padding: '9px 20px', background: 'transparent', color: T.tSecond, border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, cursor: 'pointer', marginBottom: 14, width: '100%' }}>
+            Notify me when certs are added
+          </button>
+          <div style={{ fontSize: 12, color: T.tSubtle }}>
+            Questions? Reach your admin or <span style={{ color: T.accent, cursor: 'pointer' }}>support@readion.app</span>
+          </div>
+        </div>
+      </OBCard>
+    </OBBase>
+  );
+};
+
+const EmptyStateAdmin = function() {
+  return (
+    <OBBase>
+      <OBCard>
+        <div style={{ textAlign: 'center', padding: '20px 0 4px' }}>
+          <CertIcon />
+          <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.warn, marginBottom: 8 }}>Admin setup required</div>
+          <div style={{ fontSize: 18, fontWeight: 600, color: T.tPrimary, marginBottom: 10 }}>Set up your first certification</div>
+          <div style={{ fontSize: 13, color: T.tSecond, lineHeight: 1.65, marginBottom: 12 }}>
+            You are the first admin on this Readion account. Before anyone can start studying, add at least one certification.
+          </div>
+          <div style={{ fontSize: 13, color: T.tMuted, lineHeight: 1.65, marginBottom: 24, textAlign: 'left', background: T.base, borderRadius: T.rLg, padding: '12px 14px' }}>
+            Certifications define the exam structure, domains, and question banks your users study from. You can invite other admins and import question banks after initial setup.
+          </div>
+          <button style={{ padding: '11px 22px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 500, cursor: 'pointer', width: '100%', marginBottom: 10 }}>
+            Set up first certification &#8594;
+          </button>
+          <div style={{ fontSize: 12, color: T.tSubtle }}>You can invite other admins and add question banks afterwards.</div>
+        </div>
+      </OBCard>
+    </OBBase>
+  );
+};
+
+// ── Post-setup: diagnostic baseline result ────────────────────────────────────
+
+const RESULT_DOMAINS = [
+  { label: 'IAM & Security',      pct: 38, focus: true },
+  { label: 'Networking',          pct: 44, focus: true },
+  { label: 'Cost Optimization',   pct: 53 },
+  { label: 'Compute',             pct: 61 },
+  { label: 'Storage & Databases', pct: 72 },
+];
+
+const V3DiagnosticResult = function() {
+  var S = window.Shell;
+  return (
+    <V3Layout step={4}>
+      <div style={{ maxWidth: 620 }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.good, marginBottom: 6 }}>&#10003; Diagnostic complete</div>
+        <div style={{ fontSize: 22, fontWeight: 600, color: T.tPrimary, lineHeight: 1.25, marginBottom: 4 }}>Here&rsquo;s your baseline</div>
+        <div style={{ fontSize: 13, color: T.tMuted, marginBottom: 24 }}>We assessed you across every exam domain. Your sessions are now weighted toward where it counts.</div>
+
+        <div style={{ display: 'flex', gap: 24, alignItems: 'stretch', marginBottom: 18 }}>
+          {/* Readiness ring + approximation */}
+          <div style={{ width: 200, flexShrink: 0, background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rLg, padding: 22, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <S.ReadinessRing pct={47} size={128} />
+            <div style={{ fontSize: 12, color: T.tMuted, marginTop: 14, marginBottom: 12 }}>Exam readiness today</div>
+            <div style={{ height: 1, background: T.border, width: '100%', marginBottom: 12 }} />
+            <div style={{ fontSize: 13, color: T.tSecond, lineHeight: 1.5 }}>
+              <span style={{ color: T.accent, fontWeight: 500 }}>~8 weeks</span> to exam-ready
+            </div>
+            <div style={{ fontSize: 11, color: T.tSubtle, marginTop: 3 }}>at 20 min/day &middot; estimate</div>
+          </div>
+
+          {/* Domain breakdown */}
+          <div style={{ flex: 1, background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rLg, padding: '16px 20px' }}>
+            <div style={{ fontSize: 11, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 6 }}>By domain</div>
+            {RESULT_DOMAINS.map(function(d) {
+              return <S.DomainScoreRow key={d.label} label={d.label} pct={d.pct} focus={d.focus} labelWidth={130} />;
+            })}
+          </div>
+        </div>
+
+        <div style={{ padding: '10px 14px', background: T.elevated, border: '1px solid ' + T.border, borderRadius: T.rMd, marginBottom: 24 }}>
+          <span style={{ fontSize: 12, color: T.tMuted }}>Your first sessions will front-load </span>
+          <span style={{ fontSize: 12, color: T.tPrimary, fontWeight: 500 }}>IAM &amp; Security</span>
+          <span style={{ fontSize: 12, color: T.tMuted }}> and </span>
+          <span style={{ fontSize: 12, color: T.tPrimary, fontWeight: 500 }}>Networking</span>
+          <span style={{ fontSize: 12, color: T.tMuted }}>.</span>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', paddingTop: 4 }}>
+          <button style={{ padding: '10px 24px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Go to dashboard &#8594;</button>
+        </div>
+      </div>
+    </V3Layout>
+  );
+};
+
+// ── Post-setup: completion (diagnostic skipped) ───────────────────────────────
+
+const V3Complete = function() {
+  var summary = [
+    ['Certification', 'Solutions Architect \u2013 Associate'],
+    ['Session length', '20 min'],
+    ['Content mix', 'Mixed'],
+    ['Difficulty', 'Adaptive'],
+    ['Learning style', 'Spaced repetition'],
+  ];
+  return (
+    <V3Layout step={4}>
+      <div style={{ maxWidth: 520 }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.good, marginBottom: 6 }}>&#10003; You&rsquo;re all set</div>
+        <div style={{ fontSize: 22, fontWeight: 600, color: T.tPrimary, lineHeight: 1.25, marginBottom: 4 }}>Setup complete</div>
+        <div style={{ fontSize: 13, color: T.tMuted, marginBottom: 24 }}>Your plan is ready. You can change any of this later in settings.</div>
+
+        {/* Summary */}
+        <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rLg, padding: '6px 20px', marginBottom: 14 }}>
+          {summary.map(function(row, i) {
+            return (
+              <div key={row[0]} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderTop: i === 0 ? 'none' : '1px solid ' + T.border }}>
+                <span style={{ fontSize: 12, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.tMuted }}>{row[0]}</span>
+                <span style={{ fontSize: 13, color: T.tPrimary, fontWeight: 500 }}>{row[1]}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Not-assessed nudge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'rgba(124,140,248,0.06)', border: '1px solid rgba(124,140,248,0.18)', borderRadius: T.rLg, marginBottom: 24 }}>
+          <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: '50%', border: '1px solid ' + T.border, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 18, fontWeight: 700, color: T.tSubtle }}>&mdash;</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, color: T.tPrimary, fontWeight: 500, marginBottom: 1 }}>Readiness not measured yet</div>
+            <div style={{ fontSize: 12, color: T.tMuted, lineHeight: 1.5 }}>Take the 15-min diagnostic anytime to personalise your plan faster.</div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4 }}>
+          <span style={{ fontSize: 13, color: T.accent, cursor: 'pointer' }}>Take diagnostic</span>
+          <button style={{ padding: '10px 24px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>Go to dashboard &#8594;</button>
+        </div>
+      </div>
+    </V3Layout>
+  );
+};
+
+// ── App ───────────────────────────────────────────────────────────────────────
+
+function App() {
+  return (
+    <Canvas>
+      <CanvasSection title="Onboarding flow" subtitle="Sidebar wizard nav, vendor-grouped cert list, slider for duration, adaptive-by-default difficulty.">
+        <Artboard label="Step 1 - Choose cert"    width={780}><V3Step1 /></Artboard>
+        <Artboard label="Step 2 - Preferences"    width={780}><V3Step2 /></Artboard>
+        <Artboard label="Step 3 - Diagnostic"     width={780}><V3Step3 /></Artboard>
+      </CanvasSection>
+      <CanvasSection title="Setup complete" subtitle="Where the flow lands. Took the diagnostic - baseline readiness handoff. Skipped it - completion summary with a nudge.">
+        <Artboard label="Took diagnostic - baseline result" width={920}><V3DiagnosticResult /></Artboard>
+        <Artboard label="Skipped - completion summary"       width={780}><V3Complete /></Artboard>
+      </CanvasSection>
+      <CanvasSection title="Edge Cases" subtitle="States that bypass the main flow.">
+        <Artboard label="No certs - regular user" width={500}><EmptyStateUser /></Artboard>
+        <Artboard label="No certs - first admin"  width={500}><EmptyStateAdmin /></Artboard>
+      </CanvasSection>
+    </Canvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+</script>
+</body>
+</html>
