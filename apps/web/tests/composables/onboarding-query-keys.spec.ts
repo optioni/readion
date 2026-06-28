@@ -25,8 +25,6 @@ describe('onboarding query keys', () => {
 
   it('namespaces keys disjointly from dashboardQueryKeys', () => {
     expect(onboardingQueryKeys.enrollments()[0]).not.toBe(dashboardQueryKeys.enrollments()[0])
-    expect(onboardingQueryKeys.certifications()[0]).not.toBe(
-      dashboardQueryKeys.certifications()[0],
-    )
+    expect(onboardingQueryKeys.certifications()[0]).not.toBe(dashboardQueryKeys.certifications()[0])
   })
 })

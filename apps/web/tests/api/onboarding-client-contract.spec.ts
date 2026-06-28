@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { certificationsControllerList } from '~~/src/api/certifications/certifications'
-import { diagnosticControllerCreate, diagnosticControllerDismissOffer, diagnosticControllerGetOffer } from '~~/src/api/diagnostic/diagnostic'
-import { userCertificationsControllerEnroll, userCertificationsControllerList } from '~~/src/api/user-certifications/user-certifications'
+import {
+  diagnosticControllerCreate,
+  diagnosticControllerDismissOffer,
+  diagnosticControllerGetOffer,
+} from '~~/src/api/diagnostic/diagnostic'
+import {
+  userCertificationsControllerEnroll,
+  userCertificationsControllerList,
+} from '~~/src/api/user-certifications/user-certifications'
 import { usersControllerGetMe, usersControllerUpdateMe } from '~~/src/api/users/users'
 
 describe('onboarding client contract', () => {
