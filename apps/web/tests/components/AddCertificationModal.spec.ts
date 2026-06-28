@@ -123,7 +123,7 @@ describe('AddCertificationModal enroll', () => {
     })
     vi.mocked(userCertificationsControllerEnroll).mockResolvedValue(
       // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
-      okEnvelope([])  as any,
+      okEnvelope([]) as any,
     )
 
     const { wrapper } = mountModal()
@@ -140,7 +140,9 @@ describe('AddCertificationModal enroll', () => {
 
   it('closes the modal on a successful enroll', async () => {
     stubData({
-      certifications: [certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' })],
+      certifications: [
+        certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' }),
+      ],
       enrollments: [],
     })
     vi.mocked(userCertificationsControllerEnroll).mockResolvedValue(
@@ -159,7 +161,9 @@ describe('AddCertificationModal enroll', () => {
 
   it('invalidates the enrollments query so the dashboard refreshes', async () => {
     stubData({
-      certifications: [certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' })],
+      certifications: [
+        certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' }),
+      ],
       enrollments: [],
     })
     vi.mocked(userCertificationsControllerEnroll).mockResolvedValue(

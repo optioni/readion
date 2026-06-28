@@ -166,7 +166,9 @@ describe('Dashboard add-certification entry', () => {
   it('opens the add-certification modal when the entry is activated', async () => {
     stubEnrollments({ cards: [card({ name: 'A', readinessScore: 50 })] })
     const wrapper = mountPage()
-    expect(wrapper.find('[data-testid="add-cert-modal-stub"]').attributes('data-open')).toBe('false')
+    expect(wrapper.find('[data-testid="add-cert-modal-stub"]').attributes('data-open')).toBe(
+      'false',
+    )
     await wrapper.find('[data-testid="add-cert"]').trigger('click')
     expect(wrapper.find('[data-testid="add-cert-modal-stub"]').attributes('data-open')).toBe('true')
   })

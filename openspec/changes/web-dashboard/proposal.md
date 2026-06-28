@@ -1,0 +1,26 @@
+## Why
+
+`web-auth` gets a user authenticated and into the app, but the post-login home (`/`) is currently a placeholder — there is no home that shows the learner what to study next. SPEC → Frontend → Dashboard and SPEC → Layout Decisions → Dashboard define this home as a **vertical cert list**: every enrolled certification stacked as a card with its readiness score, top weak areas, recent sessions, due-review quick-start, and Start-Session / Mock-Exam actions, with the lowest-readiness cert promoted to a gradient "hero" treatment because it needs the most attention. This is the MVP milestone's landing surface (IMPLEMENTATION-ORDER → MVP milestone: `web-auth → web-dashboard → web-session-view`) and the routing target for `web-onboarding`. Every data point it needs is already exposed by archived backend changes (`user-certifications`, `readiness`, `weak-areas`, `sessions`, `review-srs`); this change is the frontend that assembles them.
+
+## What Changes
+
+- **Dashboard page** at the app home (`/` / `pages/index.vue`) rendering the **vertical cert list**: each active enrollment as a card with certification name + provider, readiness score (or "not yet calibrated"), delta since last session, top-3 weak-area domains with status-coloured scores, last-3 recent sessions (domain + accuracy), a due-review count with a "5-minute review" quick-start (shown only when items are due), and Start-Session + Mock-Exam quick-start buttons.
+- **Hero treatment**: the lowest-readiness calibrated cert is rendered with the gradient hero card at the top of the list; the rest are shown in the muted surface style, sorted by readiness ascending. An "+ Add certification" entry sits at the bottom.
+- **Add-certification modal**: lists certifications the user is not yet enrolled in (from `GET /certifications`), enrolls via `POST /user-certifications`, and refreshes the list. (Optional per-cert session-default overrides at enroll time are deferred to `web-onboarding`/`web-settings`; this change enrolls with defaults.)
+- **Quick-start actions** wired to the existing API: Start Session → `POST /user-certifications/:id/sessions`; Mock Exam → `POST /user-certifications/:id/mock-exams`; 5-minute review → `POST /user-certifications/:id/review/start`. Each navigates to the relevant runner route owned by a downstream `web-*` change (route stubs only here).
+- **Empty / no-cert states**: when the user has zero active enrollments, render an empty state with the add-certification entry rather than an empty list. (The first-admin → admin-setup and zero-available-certs routing live in `web-onboarding`; this change only handles the authenticated-with-no-enrollments view.)
+- **Data assembly composables** over the generated Orval client — no new API endpoints and no `yarn codegen` (every endpoint is already in `apps/web/src/api`).
+
+## Capabilities
+
+### New Capabilities
+- `web-dashboard`: The authenticated home — a vertical list of enrolled certifications, each card surfacing readiness (with calibration state and delta), top weak areas, recent sessions, a conditional due-review quick-start, and Start-Session / Mock-Exam actions; the lowest-readiness cert gets the gradient hero treatment; an add-certification entry enrolls in a new cert.
+
+## Impact
+
+- **`apps/web`**: new `pages/index.vue` (the dashboard), cert-card components (hero + standard variants), an add-certification modal, and Pinia/vue-query composables that fan in the enrollment list, per-enrollment readiness, weak areas, recent sessions (+ summaries), and due-review counts. Reuses the wired Readion tokens and the `web-auth` route protection.
+- **Backend contract consumed (no API changes)**: `GET /user-certifications?status=active`, `GET /certifications`, `GET /user-certifications/:id/readiness`, `GET /user-certifications/:id/weak-areas`, `GET /sessions?certificationId=&limit=3`, `GET /sessions/:id/summary` (per-session accuracy + readiness delta), `GET /user-certifications/:id/review` (due count), `POST /user-certifications`, `POST /user-certifications/:id/sessions`, `POST /user-certifications/:id/mock-exams`, `POST /user-certifications/:id/review/start`.
+- **No new entities, migrations, crons, or metrics.** Frontend-only; the entity-ownership and cross-cutting-deliverables tables attribute nothing to `web-dashboard`.
+- **No Orval regeneration** — all consumed endpoints already exist in the committed client (`enrollment`, `readiness`, `weak-areas` via user-certifications, `enrollment-sessions`, `sessions`, `session-summary`, `enrollment-review`, `enrollment-mock-exam`, `certifications`).
+- **Tests**: Playwright e2e (`apps/web/e2e/`) against the real Nuxt app + API + Postgres/Redis; Vitest component/composable unit tests with a mocked HTTP layer.
+- **Depends on** archived `web-auth` (auth store, route protection, mutator), `user-certifications` (enroll/list), `readiness`, `weak-areas`, `sessions`. The due-review quick-start additionally consumes `review-srs` and the Mock-Exam button consumes `mock-exam` (both archived) — satisfied dependencies the roadmap's Depends-on column omits (see design.md). Downstream cert-detail / onboarding / session / mock / progress routes are out of scope (route stubs only).
