@@ -117,6 +117,25 @@ describe('useOnboardingActions saveDefaultsAndEnroll', () => {
     expect(invalidateSpy).not.toHaveBeenCalled()
     expect(navigated).toBeNull()
   })
+
+  it('returns an error outcome without enrolling when the profile PATCH fails', async () => {
+    const failure = new Error('Internal Server Error')
+    vi.mocked(usersControllerUpdateMe).mockRejectedValue(failure)
+
+    const { result, queryClient } = renderComposable(() => useOnboardingActions())
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+    const outcome = await result.saveDefaultsAndEnroll({
+      certificationId: 'cert-1',
+      sessionDefaults,
+    })
+
+    expect(outcome).toEqual({ ok: false, error: failure })
+    expect(outcome).not.toHaveProperty('enrollmentId')
+    expect(userCertificationsControllerEnroll).not.toHaveBeenCalled()
+    expect(invalidateSpy).not.toHaveBeenCalled()
+    expect(navigated).toBeNull()
+  })
 })
 
 describe('useOnboardingActions takeDiagnostic', () => {
