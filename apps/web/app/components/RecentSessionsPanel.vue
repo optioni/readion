@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CardPanel from '~/components/CardPanel.vue'
 import type { RecentSessionEntry } from '~/composables/useCardRecentSessions'
 
 const props = defineProps<{ sessions: RecentSessionEntry[] }>()
@@ -10,8 +11,7 @@ const accuracyPercent = (accuracy: number) => `${Math.round(accuracy * 100)}%`
 </script>
 
 <template>
-  <div data-testid="recent-sessions-panel" class="rounded-md bg-black/25 p-3">
-    <div class="mb-2 text-[11px] uppercase tracking-wider opacity-70">Recent Sessions</div>
+  <CardPanel data-testid="recent-sessions-panel" label="Recent Sessions">
     <template v-if="props.sessions.length > 0">
       <div
         v-for="session in props.sessions"
@@ -24,5 +24,5 @@ const accuracyPercent = (accuracy: number) => `${Math.round(accuracy * 100)}%`
       </div>
     </template>
     <div v-else class="text-xs opacity-50">No sessions yet</div>
-  </div>
+  </CardPanel>
 </template>

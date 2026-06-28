@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CardPanel from '~/components/CardPanel.vue'
 import { statusColorForScore } from '~/composables/statusColor'
 import type { WeakAreaResponseDto } from '~~/src/api/model'
 
@@ -8,8 +9,7 @@ const scoreClass = (score: number) => `text-readion-status-${statusColorForScore
 </script>
 
 <template>
-  <div data-testid="weak-areas-panel" class="rounded-md bg-black/25 p-3">
-    <div class="mb-2 text-[11px] uppercase tracking-wider opacity-70">Weak Areas</div>
+  <CardPanel data-testid="weak-areas-panel" label="Weak Areas">
     <template v-if="props.weakAreas.length > 0">
       <div
         v-for="area in props.weakAreas"
@@ -22,5 +22,5 @@ const scoreClass = (score: number) => `text-readion-status-${statusColorForScore
       </div>
     </template>
     <div v-else class="text-xs opacity-50">No data yet</div>
-  </div>
+  </CardPanel>
 </template>
