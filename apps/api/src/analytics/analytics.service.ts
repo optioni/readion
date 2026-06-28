@@ -31,8 +31,11 @@ import {
   type PassRateBreakdown,
   READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT,
 } from '@readion/shared'
+import { InjectMetric } from '@willsoto/nestjs-prometheus'
+import type { Gauge } from 'prom-client'
 import type { EnvConfig } from '../config/env.schema'
 import { ReadinessService } from '../readiness/readiness.service'
+import { ANALYTICS_ACTIVE_USERS_GAUGE, ANALYTICS_NORTHSTAR_GAIN_GAUGE } from './analytics.metrics'
 import {
   agentEngagementFraction,
   type CohortUser,
@@ -79,6 +82,10 @@ export class AnalyticsService {
     private readonly window: AnalyticsWindow,
     private readonly readiness: ReadinessService,
     private readonly asOfReadiness: AsOfReadiness,
+    @InjectMetric(ANALYTICS_ACTIVE_USERS_GAUGE)
+    private readonly activeUsersGauge: Gauge<string>,
+    @InjectMetric(ANALYTICS_NORTHSTAR_GAIN_GAUGE)
+    private readonly northstarGainGauge: Gauge<string>,
   ) {}
 
   // Assembles every read model into the overview envelope. All sections share ONE reporting
@@ -104,6 +111,9 @@ export class AnalyticsService {
       this.getRetentionCohorts(now),
       this.getPassRateBreakdown(),
     ])
+
+    this.activeUsersGauge.set(population.count)
+    this.northstarGainGauge.set(readinessGain)
 
     return {
       activeUsers: { value: population.count, population: population.count },
