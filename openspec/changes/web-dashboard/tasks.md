@@ -40,15 +40,15 @@
 
 ## 6. Add-certification modal
 
-- [ ] 6.1 RED: Component-test the modal — lists certifications from `GET /certifications` minus the user's active enrollments; selecting one calls `POST /user-certifications` and, on success, closes and refreshes the dashboard so the new card appears
-- [ ] 6.2 GREEN: Implement the add-certification modal (enroll with defaults; per-cert override UI deferred to `web-onboarding`/`web-settings`)
-- [ ] 6.3 REFACTOR: Invalidate the enrollments query on successful enroll so the list refreshes without a manual reload
+- [x] 6.1 RED: Component-test the modal — lists certifications from `GET /certifications` minus the user's active enrollments; selecting one calls `POST /user-certifications` and, on success, closes and refreshes the dashboard so the new card appears
+- [x] 6.2 GREEN: Implement the add-certification modal (enroll with defaults; per-cert override UI deferred to `web-onboarding`/`web-settings`)
+- [x] 6.3 REFACTOR: Invalidate the enrollments query on successful enroll so the list refreshes without a manual reload
 
 ## 7. Acceptance Test — Outer Loop GREEN
 
-- [ ] 7.1 Confirm the `dashboard.e2e.ts` acceptance test passes end-to-end
-- [ ] 7.2 Verify the affected apps start in the local environment (smoke test) — boot `apps/web` (and the `apps/api` it depends on) and confirm no startup/config errors and the dashboard renders for a seeded user
-- [ ] 7.3 REFACTOR: Clean up e2e seeding helpers and any duplicated test scaffolding
+- [x] 7.1 Confirm the `dashboard.e2e.ts` acceptance test passes end-to-end
+- [x] 7.2 Verify the affected apps start in the local environment (smoke test) — boot `apps/web` (and the `apps/api` it depends on) and confirm no startup/config errors and the dashboard renders for a seeded user
+- [x] 7.3 REFACTOR: Clean up e2e seeding helpers and any duplicated test scaffolding
 
 ## 8. Change Review — Subagent Verification
 
