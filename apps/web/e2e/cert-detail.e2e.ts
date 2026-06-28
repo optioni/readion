@@ -71,7 +71,7 @@ test.describe('web-cert-detail — tabbed enrollment detail (Overview, Sessions,
     // Readiness + trajectory live in a stat row at the top of the Overview.
     await expect(page.getByTestId('cert-detail-stat-row')).toBeVisible()
 
-    // Per-domain breakdown — one row per domain the user has answered (weak_areas).
+    // Per-domain breakdown — one row per certification domain (every domain, answered or not).
     const domainRows = page.getByTestId('domain-score-row')
     await expect(domainRows).toHaveCount(seed.weakAreaDomains.length)
     const firstFocusDomain = seed.weakAreaDomains[0]
@@ -120,5 +120,26 @@ test.describe('web-cert-detail — tabbed enrollment detail (Overview, Sessions,
     await expect(examRows).toHaveCount(1)
     await expect(examRows.first()).toContainText(/submitted/i)
     await expect(examRows.first()).toContainText(String(Math.round(seed.mockExam.score)))
+  })
+
+  test('shows a not-found state for an enrollment the signed-in user does not own', async ({
+    page,
+  }) => {
+    await signIn(page, seed)
+    await expect(page).toHaveURL('/')
+
+    // Auth lives only in the client (the refresh-cookie bootstrap is a client plugin), so a full
+    // page load of a protected route is redirected to /login by SSR middleware. We therefore reach
+    // the route through an in-app (client-side) navigation, as the rest of this suite does via card
+    // clicks. A well-formed but non-existent enrollment id makes the API answer 404, and the page
+    // degrades to its not-found state instead of rendering the certification header.
+    await page.evaluate((path) => {
+      window.history.pushState({}, '', path)
+      window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }))
+    }, '/user-certifications/00000000-0000-0000-0000-000000000000')
+
+    await expect(page).toHaveURL(/00000000-0000-0000-0000-000000000000$/)
+    await expect(page.getByTestId('cert-detail-not-found')).toBeVisible()
+    await expect(page.getByTestId('cert-detail-name')).toHaveCount(0)
   })
 })
