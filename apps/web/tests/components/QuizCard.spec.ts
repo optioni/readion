@@ -9,7 +9,11 @@ vi.mock('~/composables/sessionViewApi', () => ({
   reportQuizQuestion: vi.fn(),
 }))
 
-const OPTIONS = ['IAM permissions boundaries', 'Service Control Policies (SCPs)', 'Session policies']
+const OPTIONS = [
+  'IAM permissions boundaries',
+  'Service Control Policies (SCPs)',
+  'Session policies',
+]
 
 const quizContent = JSON.stringify({
   questionId: 'q-1',

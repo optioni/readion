@@ -22,8 +22,14 @@ describe('renderMarkdown', () => {
     expect(html).not.toContain('<script>')
   })
 
-  it('strips javascript: protocol links', () => {
+  it('never emits a javascript: href', () => {
     const html = renderMarkdown('[click](javascript:alert(1))')
-    expect(html).not.toContain('javascript:alert')
+    expect(html).not.toMatch(/href="javascript:/)
+    expect(html).not.toContain('<a ')
+  })
+
+  it('renders safe http links as anchors', () => {
+    const html = renderMarkdown('[docs](https://aws.amazon.com)')
+    expect(html).toContain('href="https://aws.amazon.com"')
   })
 })

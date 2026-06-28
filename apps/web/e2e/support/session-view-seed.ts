@@ -105,10 +105,10 @@ const QUIZ_ITEM_CONTENT = JSON.stringify({
   question:
     'Which AWS Organizations feature enforces permission guardrails across every account in an OU?',
   options: [
-    { id: 'a', text: 'IAM permissions boundaries' },
-    { id: 'b', text: 'Service Control Policies (SCPs)' },
-    { id: 'c', text: 'Resource-based policies' },
-    { id: 'd', text: 'Session policies' },
+    'IAM permissions boundaries',
+    'Service Control Policies (SCPs)',
+    'Resource-based policies',
+    'Session policies',
   ],
   format: 'multiple_choice',
 })
@@ -183,15 +183,13 @@ const GO_DEEPER: GoDeeperResponseDto = {
 const QUIZ_SUBMIT_RESULT = {
   id: 'response-quiz-1',
   correct: true,
-  answer: 'b',
+  answer: 'Service Control Policies (SCPs)',
   confidence: 4,
   timeTakenMs: 8200,
   userCertificationId: SESSION_IDS.enrollmentId,
 }
 
-function buildConversationDetail(
-  messages: unknown[] = [],
-): AgentConversationDetailResponseDto {
+function buildConversationDetail(messages: unknown[] = []): AgentConversationDetailResponseDto {
   return {
     data: {
       id: SESSION_IDS.conversationId,
@@ -335,19 +333,19 @@ export function mockSessionLoop(page: Page): {
   )
 
   // --- Create session (quick start = empty body → 201 with the session) ---
-  mock(
-    page,
-    new RegExp(`/api/v1/user-certifications/${enrollmentId}/sessions$`),
-    async (route) => {
-      await fulfilJson(route, 201, buildSessionDetail(sessionId, items))
-    },
-  )
+  mock(page, new RegExp(`/api/v1/user-certifications/${enrollmentId}/sessions$`), async (route) => {
+    await fulfilJson(route, 201, buildSessionDetail(sessionId, items))
+  })
 
   // --- Session detail w/ items (matches both the main session and the drill session) ---
   mock(page, /\/api\/v1\/sessions\/([0-9a-f-]{36})(\?|$)/, async (route) => {
     const id = new URL(route.request().url()).pathname.split('/')[4] ?? sessionId
     const reflected = items.map((item) => ({ ...item, completed: completed.has(item.index) }))
-    await fulfilJson(route, 200, buildSessionDetail(id, reflected, { lastItemIndex: completed.size }))
+    await fulfilJson(
+      route,
+      200,
+      buildSessionDetail(id, reflected, { lastItemIndex: completed.size }),
+    )
   })
 
   // --- Item completion / go-deeper ---

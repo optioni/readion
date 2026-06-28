@@ -4,7 +4,9 @@ import QuizOption from '~/components/QuizOption.vue'
 
 describe('QuizOption', () => {
   it('renders the letter and text', () => {
-    const wrapper = mount(QuizOption, { props: { letter: 'B', text: 'Service Control Policies', state: 'rest' } })
+    const wrapper = mount(QuizOption, {
+      props: { letter: 'B', text: 'Service Control Policies', state: 'rest' },
+    })
 
     expect(wrapper.text()).toContain('B')
     expect(wrapper.text()).toContain('Service Control Policies')
