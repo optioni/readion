@@ -40,7 +40,10 @@ describe('productAnalyticsEnvFragment', () => {
   })
 
   it('coerces string overrides to numbers', () => {
-    const result = parse({ ANALYTICS_ACTIVE_WINDOW_DAYS: '21', ANALYTICS_TARGET_W4_RETENTION: '0.5' })
+    const result = parse({
+      ANALYTICS_ACTIVE_WINDOW_DAYS: '21',
+      ANALYTICS_TARGET_W4_RETENTION: '0.5',
+    })
     expect(result.ANALYTICS_ACTIVE_WINDOW_DAYS).toBe(21)
     expect(result.ANALYTICS_TARGET_W4_RETENTION).toBe(0.5)
   })
