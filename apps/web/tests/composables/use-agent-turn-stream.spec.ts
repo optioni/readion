@@ -100,7 +100,7 @@ describe('useAgentTurnStream().streamTurn', () => {
     const { streamTurn } = useAgentTurnStream()
     const events: AgentStreamEvent[] = []
     await streamTurn('conv-1', 'Why SCP?', (event) => events.push(event), {
-      apiBaseUrl: 'http://localhost:3001/api/v1',
+      apiBaseUrl: 'http://localhost:3001',
       accessToken: 'token-abc',
       fetchImpl: fetchImpl as unknown as typeof fetch,
     })
@@ -124,7 +124,7 @@ describe('useAgentTurnStream().streamTurn', () => {
     const { streamTurn } = useAgentTurnStream()
     const events: AgentStreamEvent[] = []
     await streamTurn('conv-1', 'hi', (event) => events.push(event), {
-      apiBaseUrl: 'http://localhost:3001/api/v1',
+      apiBaseUrl: 'http://localhost:3001',
       accessToken: null,
       fetchImpl: fetchImpl as unknown as typeof fetch,
     })

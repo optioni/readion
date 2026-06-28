@@ -57,9 +57,13 @@ async function submit() {
   ) {
     return
   }
+  const answer = parsed.value.options[selectedIndex.value]
+  if (answer === undefined) {
+    return
+  }
   result.value = await submitQuizAnswer(parsed.value.questionId, {
     userCertificationId: props.userCertificationId,
-    answer: parsed.value.options[selectedIndex.value],
+    answer,
     confidence: confidence.value,
     timeTakenMs: Date.now() - shownAt,
   })

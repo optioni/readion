@@ -90,12 +90,15 @@ export function useAgentTurnStream() {
       headers.set('x-csrf-token', csrfToken)
     }
 
-    const response = await doFetch(`${apiBaseUrl}/agent-conversations/${conversationId}/messages`, {
-      method: 'POST',
-      credentials: 'include',
-      headers,
-      body: JSON.stringify({ content }),
-    })
+    const response = await doFetch(
+      `${apiBaseUrl}/api/v1/agent-conversations/${conversationId}/messages`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({ content }),
+      },
+    )
 
     if (!response.ok || !response.body) {
       onEvent({ type: 'error', error: `Agent request failed (${response.status})` })

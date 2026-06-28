@@ -54,7 +54,8 @@ const timeLabel = computed<string | null>(() => {
   if (!session?.startedAt || !session?.endedAt) {
     return null
   }
-  const elapsedMs = new Date(session.endedAt).getTime() - new Date(session.startedAt).getTime()
+  const elapsedMs =
+    new Date(String(session.endedAt)).getTime() - new Date(session.startedAt).getTime()
   if (!Number.isFinite(elapsedMs) || elapsedMs < 0) {
     return null
   }
