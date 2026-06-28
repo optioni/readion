@@ -1,7 +1,10 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import AgentPanel from '~/components/AgentPanel.vue'
-import { createSessionAgentConversation, fetchAgentConversation } from '~/composables/sessionViewApi'
+import {
+  createSessionAgentConversation,
+  fetchAgentConversation,
+} from '~/composables/sessionViewApi'
 import type { AgentStreamEvent } from '~/composables/useAgentTurnStream'
 
 const { streamTurnMock } = vi.hoisted(() => ({ streamTurnMock: vi.fn() }))
@@ -11,9 +14,13 @@ vi.mock('~/composables/sessionViewApi', () => ({
   fetchAgentConversation: vi.fn(),
 }))
 
-vi.mock('~/composables/useAgentTurnStream', () => ({
-  useAgentTurnStream: () => ({ streamTurn: streamTurnMock }),
-}))
+vi.mock('~/composables/useAgentTurnStream', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('~/composables/useAgentTurnStream')>()
+  return {
+    ...actual,
+    useAgentTurnStream: () => ({ streamTurn: streamTurnMock }),
+  }
+})
 
 function conversationDetail(messages: unknown[] = []) {
   return {

@@ -14,7 +14,13 @@ describe('AgentToolResult dispatch', () => {
       tool: 'getUserProgress',
       readiness: { calibrated: true, score: 0.72 },
       domains: [
-        { domain: 'Secure Architectures', score: 0.41, accuracy: 0.44, meanConfidence: 0.6, responseCount: 18 },
+        {
+          domain: 'Secure Architectures',
+          score: 0.41,
+          accuracy: 0.44,
+          meanConfidence: 0.6,
+          responseCount: 18,
+        },
       ],
     })
 
@@ -110,7 +116,10 @@ describe('AgentToolResult dispatch', () => {
     expect(wrapper.find('[data-testid="material-ready-chip"]').exists()).toBe(false)
 
     await wrapper.setProps({
-      part: { toolName: 'fetchMoreMaterial', output: { tool: 'fetchMoreMaterial', status: 'enqueued', jobId: 'job-1' } },
+      part: {
+        toolName: 'fetchMoreMaterial',
+        output: { tool: 'fetchMoreMaterial', status: 'enqueued', jobId: 'job-1' },
+      },
       jobStatus: 'completed',
     })
 

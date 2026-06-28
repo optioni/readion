@@ -2,6 +2,7 @@
 import { type SessionItemResponse, type SessionItemType, sessionItemTypes } from '@readion/shared'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref, watch } from 'vue'
+import AgentPanel from '~/components/AgentPanel.vue'
 import QuizCard from '~/components/QuizCard.vue'
 import ReadingBlock from '~/components/ReadingBlock.vue'
 import SessionHeader from '~/components/SessionHeader.vue'
@@ -128,18 +129,7 @@ async function handleEnd() {
       </template>
 
       <template #agent>
-        <!--
-          Group 5 mount point: replace this placeholder with
-          <AgentPanel :session-id="sessionId" />.
-          The collapse/expand state is owned by SessionLayout, so AgentPanel
-          only needs to supply the panel content.
-        -->
-        <div
-          data-testid="agent-panel-placeholder"
-          class="flex flex-1 items-center justify-center px-4 py-6 text-center text-readion-text-subtle text-xs"
-        >
-          Study assistant coming soon.
-        </div>
+        <AgentPanel :session-id="sessionId" />
       </template>
     </SessionLayout>
   </div>

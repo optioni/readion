@@ -107,6 +107,10 @@ function mountPage() {
           template:
             '<div data-testid="quiz-stub" :data-uc="userCertificationId" @click="$emit(\'advance\', item.index)">quiz {{ item.index }}</div>',
         },
+        AgentPanel: {
+          props: ['sessionId'],
+          template: '<div data-testid="agent-panel-stub" :data-sid="sessionId" />',
+        },
       },
     },
   })
@@ -137,6 +141,10 @@ describe('Session view page shell', () => {
     expect(wrapper.find('[data-testid="session-header"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="session-content"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="agent-panel"]').exists()).toBe(true)
+
+    const agentPanel = wrapper.find('[data-testid="agent-panel-stub"]')
+    expect(agentPanel.exists()).toBe(true)
+    expect(agentPanel.attributes('data-sid')).toBe('sess-1')
   })
 
   it('renders a loading state before the session resolves', () => {
