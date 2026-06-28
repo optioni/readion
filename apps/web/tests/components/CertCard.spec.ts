@@ -2,9 +2,9 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, ref } from 'vue'
 import CertCard from '~/components/CertCard.vue'
+import { useCardDueReviews } from '~/composables/useCardDueReviews'
 import type { CardReadiness } from '~/composables/useCardReadiness'
 import { useCardReadiness } from '~/composables/useCardReadiness'
-import { useCardDueReviews } from '~/composables/useCardDueReviews'
 import type { RecentSessionEntry } from '~/composables/useCardRecentSessions'
 import { useCardRecentSessions } from '~/composables/useCardRecentSessions'
 import { useCardWeakAreas } from '~/composables/useCardWeakAreas'
@@ -111,7 +111,9 @@ describe('CertCard title + readiness', () => {
     stubRecentSessions([], 3)
     const wrapper = mountCard()
     expect(wrapper.find('[data-testid="card-readiness"]').text()).toContain('75% ready')
-    expect(wrapper.find('[data-testid="readiness-delta"]').text()).toContain('+3% since last session')
+    expect(wrapper.find('[data-testid="readiness-delta"]').text()).toContain(
+      '+3% since last session',
+    )
   })
 
   it('omits the delta element when no prior session delta exists', () => {
@@ -143,15 +145,15 @@ describe('CertCard weak areas', () => {
     const wrapper = mountCard()
     const rows = wrapper.findAll('[data-testid="weak-area-row"]')
     expect(rows).toHaveLength(3)
-    expect(rows[0].text()).toContain('Billing')
-    expect(rows[0].text()).toContain('48%')
-    expect(rows[0].find('[data-testid="weak-area-score"]').classes()).toContain(
+    expect(rows[0]!.text()).toContain('Billing')
+    expect(rows[0]!.text()).toContain('48%')
+    expect(rows[0]!.find('[data-testid="weak-area-score"]').classes()).toContain(
       'text-readion-status-poor',
     )
-    expect(rows[1].find('[data-testid="weak-area-score"]').classes()).toContain(
+    expect(rows[1]!.find('[data-testid="weak-area-score"]').classes()).toContain(
       'text-readion-status-warning',
     )
-    expect(rows[2].find('[data-testid="weak-area-score"]').classes()).toContain(
+    expect(rows[2]!.find('[data-testid="weak-area-score"]').classes()).toContain(
       'text-readion-status-good',
     )
   })
@@ -173,8 +175,8 @@ describe('CertCard recent sessions', () => {
     const wrapper = mountCard()
     const rows = wrapper.findAll('[data-testid="recent-session-row"]')
     expect(rows).toHaveLength(1)
-    expect(rows[0].text()).toContain('Security')
-    expect(rows[0].text()).toContain('82%')
+    expect(rows[0]!.text()).toContain('Security')
+    expect(rows[0]!.text()).toContain('82%')
   })
 
   it('falls back to date plus focus area with no accuracy when a session has no summary', () => {
@@ -193,7 +195,9 @@ describe('CertCard recent sessions', () => {
     stubRecentSessions([], null)
     const wrapper = mountCard()
     expect(wrapper.findAll('[data-testid="recent-session-row"]')).toHaveLength(0)
-    expect(wrapper.find('[data-testid="recent-sessions-panel"]').text()).toContain('No sessions yet')
+    expect(wrapper.find('[data-testid="recent-sessions-panel"]').text()).toContain(
+      'No sessions yet',
+    )
   })
 })
 
