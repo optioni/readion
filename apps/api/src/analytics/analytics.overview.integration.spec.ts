@@ -1,4 +1,8 @@
+import { getToken } from '@willsoto/nestjs-prometheus'
+import type { Gauge } from 'prom-client'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { ANALYTICS_ACTIVE_USERS_GAUGE } from './analytics.metrics'
+import { AnalyticsService } from './analytics.service'
 import {
   type AnalyticsAcceptanceHarness,
   createAnalyticsAcceptanceHarness,
@@ -78,5 +82,16 @@ describe('GET /api/v1/admin/analytics/overview', () => {
     }
 
     expect(data.activeUsers?.value).toBe(harness.population.expectedActiveUsers)
+  })
+
+  it('records the active-user count in a Prometheus gauge when the overview is computed', async () => {
+    const service = harness.moduleRef.get(AnalyticsService)
+    await service.getOverview()
+
+    const gauge = harness.moduleRef.get<Gauge<string>>(getToken(ANALYTICS_ACTIVE_USERS_GAUGE))
+    const metric = await gauge.get()
+    const sample = metric.values.find((v) => v.labels && Object.keys(v.labels).length === 0)
+
+    expect(sample?.value).toBe(harness.population.expectedActiveUsers)
   })
 })
