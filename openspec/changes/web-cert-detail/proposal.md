@@ -1,0 +1,36 @@
+## Why
+
+`web-dashboard` shipped the post-login home — a vertical list of cert cards, each a compact summary of one enrollment. But a card is a glance, not a deep-dive: it shows the top-3 weak areas, the last-3 sessions, and a readiness number, and nothing more. SPEC → Frontend → Dashboard (cert detail) and SPEC → Layout Decisions call for a **per-certification detail page reached from the dashboard** where the learner can see the full picture for one cert: every domain's score, the suggested next focus, and the complete history of study sessions and mock/diagnostic exams — not just the most recent three.
+
+IMPLEMENTATION-ORDER → Phase 10 → `web-cert-detail` defines this page as: an **Overview tab** (stat row, domain scores, suggested next focus, recent sessions), a **Sessions tab** (full per-cert history table with a type filter), and an **exam-history** view (mock + diagnostic attempts). Every datum it needs is already exposed by archived backend changes (`user-certifications`, `readiness`, `weak-areas`, `sessions`, `mock-exam`) and present in the committed Orval client — this change is the frontend that assembles them into a navigable deep-dive and adds the entry point from the dashboard card.
+
+## What Changes
+
+- **Cert-detail page** at `pages/user-certifications/[id]/index.vue` (route `/user-certifications/:id`), reached from each dashboard cert card. Loads the enrollment (`GET /user-certifications/:id?include=weakAreas`) and its certification (`GET /certifications/:certificationId` for name/provider/domains/format), with a tabbed layout: **Overview**, **Sessions**, **Exam History**.
+- **Dashboard entry point**: the existing `CertCard` (hero + standard) gets a navigation affordance (its header/title links to `/user-certifications/:id`) so the deep-dive is reachable from the dashboard. No other dashboard change.
+- **Overview tab**:
+  - **Stat row** — readiness percentage (or "not yet calibrated"), passive trajectory ("exam-ready in ~N weeks" when `trajectory` is present, informational only — never a date), total-sessions count, and due-review count.
+  - **Domain scores** — the full ranked per-domain breakdown from `GET /user-certifications/:id/weak-areas`, each domain's score coloured on the status scale (<50 poor, 50–65 warning, 65–80 medium, >80 good); a "no data yet" placeholder per cert domain (`certification.domains`) that has no weak-area record.
+  - **Suggested next focus** — derived from the most recent completed session's `GET /sessions/:id/summary` (`nextFocus.domain`), falling back to the lowest-scoring weak-area domain; informational, no invented deadlines.
+  - **Recent sessions** — the last 3 sessions (`GET /sessions?certificationId=&limit=3`) joined with per-session summary accuracy, reusing the `web-dashboard` recent-session pattern.
+- **Sessions tab**: a full, paginated per-cert history table from `GET /sessions?certificationId=<Certification.id>&page=&limit=` showing date, kind (study/review), focus area, duration, status, and accuracy (per-row summary, bounded to the visible page). A **type filter** (All / Study / Review) applied **client-side over `SessionResponse.kind`** — the sessions list endpoint has no `kind`/`type` query param (see design.md reconciliation). Each row links to its session view / summary.
+- **Exam History**: a list of mock and diagnostic attempts from `GET /user-certifications/:id/mock-exams` showing date, type (mock/diagnostic), status (in_progress/submitted/expired), score, and pass/fail, with the domain breakdown available and a link into the mock-exam review route.
+- **Data-assembly composables** over the generated Orval client — no new API endpoints and **no `yarn codegen`** (every consumed endpoint is already in `apps/web/src/api`). Reuses the archived `web-dashboard` helpers: `statusColor`, `readinessFormat`, `recentSessionSummaries`, `runnerRoutes`, and the query-key convention.
+
+## Capabilities
+
+### New Capabilities
+- `web-cert-detail`: A per-certification deep-dive page reached from the dashboard, with an Overview tab (readiness/trajectory stat row, full per-domain status-coloured scores, suggested next focus, recent sessions), a Sessions tab (full paginated per-cert session history with a client-side study/review type filter), and an Exam History view (mock + diagnostic attempts with status, score, and pass/fail).
+
+## Impact
+
+- **`apps/web`**: new `pages/user-certifications/[id]/index.vue` with Overview / Sessions / Exam-History tab components; a domain-scores breakdown component (all cert domains, status-coloured, "no data" placeholders); a stat-row component; a sessions-history table with the client-side type filter; an exam-history list; and composables that fan in the enrollment, certification, readiness, weak areas, paginated sessions (+ bounded summaries), and mock-exam history over the existing client. A navigation link is added to the existing `CertCard`.
+- **Backend contract consumed (no API changes)**: `GET /user-certifications/:id?include=weakAreas`, `GET /certifications/:id`, `GET /user-certifications/:id/readiness`, `GET /user-certifications/:id/weak-areas`, `GET /sessions?certificationId=&page=&limit=`, `GET /sessions/:id/summary`, `GET /user-certifications/:id/review` (due count), `GET /user-certifications/:id/mock-exams`.
+- **No new entities, migrations, crons, or metrics.** Frontend-only; the IMPLEMENTATION-ORDER entity-ownership and cross-cutting-deliverables tables attribute nothing to `web-cert-detail`.
+- **No Orval regeneration** — all consumed endpoints already exist in the committed client (`user-certifications`, `certifications`, `readiness`, weak-areas via `user-certifications`, `sessions`, `session-summary`, `enrollment-review`, `enrollment-mock-exam`). A task asserts the required client methods exist before building against them.
+- **Tests**: Playwright e2e (`apps/web/e2e/`) against the real Nuxt app + API + Postgres/Redis (reusing/extending the `web-dashboard` seed helper); Vitest component/composable unit tests with a mocked HTTP layer.
+- **Depends on** archived `web-dashboard` (cert card, composables, query keys, status-colour/readiness/runner-route helpers), `user-certifications` (enrollment detail + weak-areas), `readiness`, `weak-areas`, `sessions` (+ `session-summary`), and `mock-exam` (exam history) — all archived. Downstream session / mock-exam / review runner screens are out of scope (the page links to their routes only).
+
+## Design
+
+- The canonical artboard for this screen is **`CertDetail.html`** in the "Readion app onboarding flow" Claude Design project (`projectId 4526b72d-50eb-4140-8cf3-39f776743a65`). **It could not be pulled in this environment: the `DesignSync` connector is not present in the toolset** (no `DesignSync` / `get_file` tool is available). No reconstructed artboard was fabricated and no canonical provenance is claimed. design.md drives the visual section from SPEC → Frontend (cert detail) + Layout Decisions, DESIGN.md token values, and the archived `web-dashboard` component patterns, and flags `design/CertDetail.html` for a re-pull + re-diff when DesignSync is available. The behavioural spec and the reconciliation against the implemented backend contract remain authoritative.

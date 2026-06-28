@@ -90,7 +90,12 @@ function stubQuickStartActions() {
 }
 
 function mountCard(variant: 'hero' | 'standard' = 'hero') {
-  return mount(CertCard, { props: { card, variant } })
+  return mount(CertCard, {
+    props: { card, variant },
+    global: {
+      stubs: { NuxtLink: { props: ['to'], template: '<a :href="to"><slot /></a>' } },
+    },
+  })
 }
 
 beforeEach(() => {
@@ -119,6 +124,12 @@ describe('CertCard title + readiness', () => {
     const wrapper = mountCard()
     expect(wrapper.find('[data-testid="cert-title"]').text()).toContain('AWS Cloud Practitioner')
     expect(wrapper.find('[data-testid="cert-title"]').text()).toContain('AWS')
+  })
+
+  it('links the title to the enrollment detail page', () => {
+    const wrapper = mountCard()
+    const title = wrapper.find('[data-testid="cert-title"]')
+    expect(title.attributes('href')).toBe('/user-certifications/enr-1')
   })
 
   it('shows the calibrated readiness percentage with its signed delta', () => {
