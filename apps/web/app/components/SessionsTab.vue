@@ -7,13 +7,27 @@ import { useSessionsHistory } from '~/composables/useSessionsHistory'
 
 const props = defineProps<{ certificationId: string | null }>()
 
-const page = ref(1)
-const limit = ref(10)
+const pageInput = ref(1)
+const limitInput = ref(10)
 
-const { rows, isLoading } = useSessionsHistory(
+const { rows, total, page, limit, isLoading } = useSessionsHistory(
   computed(() => props.certificationId),
-  { page, limit },
+  { page: pageInput, limit: limitInput },
 )
+
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / limit.value)))
+const showPager = computed(() => totalPages.value > 1)
+
+function prevPage() {
+  if (page.value > 1) {
+    page.value -= 1
+  }
+}
+function nextPage() {
+  if (page.value < totalPages.value) {
+    page.value += 1
+  }
+}
 
 const activeFilter = ref<SessionTypeFilter>('all')
 function selectFilter(filter: SessionTypeFilter) {
@@ -93,5 +107,32 @@ const formatAccuracy = (accuracy: number | null) =>
         </span>
       </NuxtLink>
     </CardPanel>
+
+    <nav
+      v-if="showPager"
+      data-testid="sessions-pagination"
+      aria-label="Sessions pages"
+      class="flex items-center justify-between gap-3 text-xs"
+    >
+      <button
+        type="button"
+        data-testid="sessions-page-prev"
+        :disabled="page <= 1"
+        class="rounded-md bg-black/25 px-3 py-1 text-slate-300 transition-colors hover:text-slate-100 disabled:cursor-not-allowed disabled:text-slate-600"
+        @click="prevPage"
+      >
+        Previous
+      </button>
+      <span class="text-slate-400">Page {{ page }} of {{ totalPages }}</span>
+      <button
+        type="button"
+        data-testid="sessions-page-next"
+        :disabled="page >= totalPages"
+        class="rounded-md bg-black/25 px-3 py-1 text-slate-300 transition-colors hover:text-slate-100 disabled:cursor-not-allowed disabled:text-slate-600"
+        @click="nextPage"
+      >
+        Next
+      </button>
+    </nav>
   </div>
 </template>

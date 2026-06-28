@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { computed, ref } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import SessionsTab from '~/components/SessionsTab.vue'
 import type { SessionHistoryRow } from '~/composables/useSessionsHistory'
 import { useSessionsHistory } from '~/composables/useSessionsHistory'
@@ -149,5 +149,55 @@ describe('SessionsTab empty state', () => {
     const wrapper = mountTab()
     expect(wrapper.find('[data-testid="sessions-empty"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="sessions-history-table"]').exists()).toBe(false)
+  })
+})
+
+describe('SessionsTab pagination', () => {
+  function stubPaged(page: Ref<number>, limit: number, total: number) {
+    vi.mocked(useSessionsHistory).mockReturnValue({
+      rows: computed(() => [historyRow({ id: 's1' })]),
+      total: computed(() => total),
+      page,
+      limit: ref(limit),
+      isLoading: ref(false),
+      isError: ref(false),
+    })
+  }
+
+  it('renders a pager and advances the page ref on next when there is more than one page', async () => {
+    const page = ref(1)
+    stubPaged(page, 5, 8)
+    const wrapper = mountTab()
+    expect(wrapper.find('[data-testid="sessions-pagination"]').exists()).toBe(true)
+    await wrapper.find('[data-testid="sessions-page-next"]').trigger('click')
+    expect(page.value).toBe(2)
+  })
+
+  it('hides the pager when every session fits on one page', () => {
+    stubPaged(ref(1), 5, 3)
+    const wrapper = mountTab()
+    expect(wrapper.find('[data-testid="sessions-pagination"]').exists()).toBe(false)
+  })
+
+  it('disables prev on the first page and next on the last page', () => {
+    stubPaged(ref(1), 5, 8)
+    const onFirst = mountTab()
+    expect(onFirst.find('[data-testid="sessions-page-prev"]').attributes('disabled')).toBeDefined()
+    expect(
+      onFirst.find('[data-testid="sessions-page-next"]').attributes('disabled'),
+    ).toBeUndefined()
+
+    stubPaged(ref(2), 5, 8)
+    const onLast = mountTab()
+    expect(onLast.find('[data-testid="sessions-page-prev"]').attributes('disabled')).toBeUndefined()
+    expect(onLast.find('[data-testid="sessions-page-next"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('decrements the page ref on prev', async () => {
+    const page = ref(2)
+    stubPaged(page, 5, 8)
+    const wrapper = mountTab()
+    await wrapper.find('[data-testid="sessions-page-prev"]').trigger('click')
+    expect(page.value).toBe(1)
   })
 })
