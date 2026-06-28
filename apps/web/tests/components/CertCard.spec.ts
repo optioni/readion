@@ -9,6 +9,7 @@ import type { RecentSessionEntry } from '~/composables/useCardRecentSessions'
 import { useCardRecentSessions } from '~/composables/useCardRecentSessions'
 import { useCardWeakAreas } from '~/composables/useCardWeakAreas'
 import type { EnrollmentCard } from '~/composables/useEnrollments'
+import { useQuickStartActions } from '~/composables/useQuickStartActions'
 import { enrollmentReviewControllerStart } from '~~/src/api/enrollment-review/enrollment-review'
 import type { WeakAreaResponseDto } from '~~/src/api/model'
 
@@ -16,6 +17,7 @@ vi.mock('~/composables/useCardReadiness', () => ({ useCardReadiness: vi.fn() }))
 vi.mock('~/composables/useCardWeakAreas', () => ({ useCardWeakAreas: vi.fn() }))
 vi.mock('~/composables/useCardRecentSessions', () => ({ useCardRecentSessions: vi.fn() }))
 vi.mock('~/composables/useCardDueReviews', () => ({ useCardDueReviews: vi.fn() }))
+vi.mock('~/composables/useQuickStartActions', () => ({ useQuickStartActions: vi.fn() }))
 vi.mock('~~/src/api/enrollment-review/enrollment-review', () => ({
   enrollmentReviewControllerStart: vi.fn(),
 }))
@@ -75,6 +77,18 @@ function stubDueReviews(count: number) {
   })
 }
 
+const startSession = vi.fn()
+const startMockExam = vi.fn()
+
+function stubQuickStartActions() {
+  vi.mocked(useQuickStartActions).mockReturnValue({
+    startSession,
+    startMockExam,
+    isStartingSession: ref(false),
+    isStartingMockExam: ref(false),
+  })
+}
+
 function mountCard(variant: 'hero' | 'standard' = 'hero') {
   return mount(CertCard, { props: { card, variant } })
 }
@@ -92,6 +106,7 @@ beforeEach(() => {
     3,
   )
   stubDueReviews(0)
+  stubQuickStartActions()
   vi.mocked(enrollmentReviewControllerStart).mockResolvedValue({
     data: undefined,
     status: 200,
@@ -202,16 +217,16 @@ describe('CertCard recent sessions', () => {
 })
 
 describe('CertCard quick-start actions', () => {
-  it('emits start-session when the Start Session button is activated', async () => {
+  it('starts a session when the Start Session button is activated', async () => {
     const wrapper = mountCard()
     await wrapper.find('[data-testid="start-session-btn"]').trigger('click')
-    expect(wrapper.emitted('start-session')).toHaveLength(1)
+    expect(startSession).toHaveBeenCalledTimes(1)
   })
 
-  it('emits mock-exam when the Mock Exam button is activated', async () => {
+  it('starts a mock exam when the Mock Exam button is activated', async () => {
     const wrapper = mountCard()
     await wrapper.find('[data-testid="mock-exam-btn"]').trigger('click')
-    expect(wrapper.emitted('mock-exam')).toHaveLength(1)
+    expect(startMockExam).toHaveBeenCalledTimes(1)
   })
 })
 
