@@ -68,7 +68,10 @@ describe('GET /api/v1/admin/analytics/overview', () => {
 
     expect(res.status).toBe(200)
 
-    const data = res.body.data as Record<string, { value: unknown; target?: unknown }>
+    const data = res.body.data as Record<
+      string,
+      { value: unknown; target?: unknown; population?: unknown }
+    >
     expect(data).toBeDefined()
 
     for (const key of SECTION_KEYS) {
@@ -82,6 +85,10 @@ describe('GET /api/v1/admin/analytics/overview', () => {
     }
 
     expect(data.activeUsers?.value).toBe(harness.population.expectedActiveUsers)
+
+    // Each rate reports the sessions-started denominator as its population for significance.
+    expect(typeof data.completionRate?.population).toBe('number')
+    expect(typeof data.agentEngagement?.population).toBe('number')
   })
 
   it('records the active-user count in a Prometheus gauge when the overview is computed', async () => {

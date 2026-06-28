@@ -102,6 +102,7 @@ export class AnalyticsService {
       llmCostPerActiveUser,
       retention,
       passRateBreakdown,
+      startedSessions,
     ] = await Promise.all([
       this.getReadinessGain(now, population),
       this.getSessionsPerWeek(now, population),
@@ -110,6 +111,7 @@ export class AnalyticsService {
       this.getLlmCostPerActiveUser(now, population),
       this.getRetentionCohorts(now),
       this.getPassRateBreakdown(),
+      this.countStartedSessions(now),
     ])
 
     this.activeUsersGauge.set(population.count)
@@ -139,8 +141,16 @@ export class AnalyticsService {
         population: retention.w4.population,
         cohorts: retention.w4.cohorts,
       },
-      completionRate: { value: completionRate, target: this.metricTarget('completionRate') },
-      agentEngagement: { value: agentEngagement, target: this.metricTarget('agentEngagement') },
+      completionRate: {
+        value: completionRate,
+        target: this.metricTarget('completionRate'),
+        population: startedSessions,
+      },
+      agentEngagement: {
+        value: agentEngagement,
+        target: this.metricTarget('agentEngagement'),
+        population: startedSessions,
+      },
       llmCostPerActiveUser: {
         value: llmCostPerActiveUser,
         target: this.metricTarget('llmCostPerActiveUser'),
@@ -208,12 +218,13 @@ export class AnalyticsService {
   ): Promise<ReadinessSample> {
     const nowReadiness = await this.readiness.compute(enrollmentId)
     const startReadiness = await this.asOfReadiness.computeAt(enrollmentId, windowStart, threshold)
-    return {
-      scoreNow: nowReadiness.score,
-      scoreAtT: startReadiness.score,
-      calibratedNow: nowReadiness.calibrated,
-      calibratedAtT: startReadiness.calibrated,
-    }
+    const now = nowReadiness.calibrated
+      ? { calibratedNow: true as const, scoreNow: nowReadiness.score }
+      : { calibratedNow: false as const, scoreNow: null }
+    const atT = startReadiness.calibrated
+      ? { calibratedAtT: true as const, scoreAtT: startReadiness.score }
+      : { calibratedAtT: false as const, scoreAtT: null }
+    return { ...now, ...atT }
   }
 
   async getSessionsPerWeek(
@@ -256,6 +267,15 @@ export class AnalyticsService {
       windowDays: this.windowDays(),
       minSessions: this.minSessions(),
     })
+  }
+
+  // The shared denominator for both completion-rate and agent-engagement: the count of sessions
+  // started in the active window. Surfaced as each section's reported population so a reader can
+  // gauge the significance of those rates.
+  private async countStartedSessions(now: Date): Promise<number> {
+    const start = this.window.start(this.windowDays(), now)
+    const em = this.em.fork()
+    return em.count(StudySession, { startedAt: { $gte: start, $lte: now } })
   }
 
   async getCompletionRate(now = this.window.now()): Promise<number> {

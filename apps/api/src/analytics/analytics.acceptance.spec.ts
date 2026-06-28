@@ -88,8 +88,9 @@ describe('product-analytics acceptance', () => {
     expect(completionRate).toBeGreaterThan(0)
     expect(completionRate).toBeLessThanOrEqual(1)
 
-    // North-star readiness gain has a real numeric reading from the seeded mock exams.
-    expect(typeof data.readinessGain?.value).toBe('number')
+    // North-star readiness gain is genuinely exercised end-to-end: the first active user is
+    // calibrated at the 28-day window start and improves across it, yielding a positive median.
+    expect(data.readinessGain?.value as number).toBeGreaterThan(0)
 
     // The lagging pass-rate breakdown reflects the seeded exam-outcome responses.
     expect(data.passRateBreakdown?.value).toBeDefined()

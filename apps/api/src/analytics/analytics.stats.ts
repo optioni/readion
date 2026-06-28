@@ -37,12 +37,16 @@ export function median(values: number[]): number {
   return sorted.length % 2 === 0 ? (sorted[mid - 1]! + sorted[mid]!) / 2 : sorted[mid]!
 }
 
-export interface ReadinessSample {
-  scoreNow: number | null
-  scoreAtT: number | null
-  calibratedNow: boolean
-  calibratedAtT: boolean
-}
+// Each boundary's calibration flag discriminates whether its score is present, so a reading
+// calibrated at both ends is statically guaranteed to carry non-null scores.
+export type ReadinessSample = (
+  | { calibratedNow: true; scoreNow: number }
+  | {
+      calibratedNow: false
+      scoreNow: null
+    }
+) &
+  ({ calibratedAtT: true; scoreAtT: number } | { calibratedAtT: false; scoreAtT: null })
 
 export interface UserReadinessSamples {
   userId: string
@@ -54,9 +58,6 @@ export interface UserReadinessSamples {
 // folded in as a zero, so the median reflects only the genuinely measurable population.
 export function enrollmentGain(sample: ReadinessSample): number | null {
   if (!sample.calibratedNow || !sample.calibratedAtT) {
-    return null
-  }
-  if (sample.scoreNow === null || sample.scoreAtT === null) {
     return null
   }
   return sample.scoreNow - sample.scoreAtT

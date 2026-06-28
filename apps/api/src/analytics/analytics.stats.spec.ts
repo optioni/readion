@@ -138,6 +138,18 @@ describe('isActiveUser', () => {
     ).toBe(false)
   })
 
+  it('does not count a user with only abandoned sessions as active', () => {
+    expect(
+      isActiveUser({
+        sessions: [
+          { status: 'abandoned', endedAt: within },
+          { status: 'abandoned', endedAt: within },
+        ],
+        ...opts,
+      }),
+    ).toBe(false)
+  })
+
   it('excludes abandoned sessions from the count', () => {
     expect(
       isActiveUser({

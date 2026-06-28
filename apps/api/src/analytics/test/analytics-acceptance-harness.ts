@@ -4,7 +4,8 @@ import type { INestApplication } from '@nestjs/common'
 import { Test, type TestingModule } from '@nestjs/testing'
 import {
   Certification,
-  MockExam,
+  ContentChunk,
+  ContentSource,
   StudySession,
   startPostgresContainer,
   startRedisContainer,
@@ -114,6 +115,29 @@ async function seedPopulation(em: EntityManager): Promise<SeededPopulation> {
     state: 'live',
   })
   fork.persist(certification)
+  await fork.flush()
+
+  // A content chunk whose primaryDomain matches one of the certification's domains so the first
+  // active user's quiz responses can carry real domain attribution (sourceChunkIds -> chunk),
+  // letting AsOfReadiness resolve a domain and produce a genuine north-star gain end-to-end.
+  const attributionDomain = 'Cloud Concepts'
+  const contentSource = fork.create(ContentSource, {
+    certificationId: certification.id,
+    type: 'web',
+    url: 'https://seed.test/analytics',
+    recheckIntervalMinutes: 1440,
+  })
+  fork.persist(contentSource)
+  await fork.flush()
+  const attributionChunk = fork.create(ContentChunk, {
+    contentSourceId: contentSource.id,
+    certificationId: certification.id,
+    text: 'seeded analytics chunk',
+    contentHash: 'a'.repeat(64),
+    domainTags: [{ domain: attributionDomain, confidence: 1 }],
+    primaryDomain: attributionDomain,
+  })
+  fork.persist(attributionChunk)
   await fork.flush()
 
   const makeUser = (email: string, createdDaysAgo: number) => {
@@ -254,17 +278,45 @@ async function seedPopulation(em: EntityManager): Promise<SeededPopulation> {
     }
   }
 
-  // At least one submitted mock exam (recent) plus an earlier diagnostic so a readiness
-  // gain delta exists for the north-star metric.
+  // North-star end-to-end: the first active user is calibrated AS OF the 28-day window start (a
+  // diagnostic submitted ≥ 28 days ago plus domain-attributed graded answers that predate T) with
+  // low readiness then, and improves to a high readiness now (recent correct answers + a recent
+  // passing mock), so the seeded population yields a strictly positive median readiness gain.
   const firstActive = activeUsers[0]!
   const firstEnrollmentId = enrollments.get(firstActive.user.id)!
   await conn.execute(
     `INSERT INTO mock_exams (id, user_id, user_certification_id, type, status, score, passed, domain_breakdown, questions, created_at, updated_at)
      VALUES
-       (gen_random_uuid(), ?, ?, 'diagnostic', 'submitted', 55, false, '{}'::jsonb, '[]'::jsonb, now() - (24 * interval '1 day'), now() - (24 * interval '1 day')),
+       (gen_random_uuid(), ?, ?, 'diagnostic', 'submitted', 55, false, '{}'::jsonb, '[]'::jsonb, now() - (30 * interval '1 day'), now() - (30 * interval '1 day')),
        (gen_random_uuid(), ?, ?, 'mock', 'submitted', 80, true, '{}'::jsonb, '[]'::jsonb, now() - (2 * interval '1 day'), now() - (2 * interval '1 day'))`,
     [firstActive.user.id, firstEnrollmentId, firstActive.user.id, firstEnrollmentId],
   )
+
+  const addAttributedResponses = async (count: number, correct: boolean, daysAgo: number) => {
+    const snapshot = JSON.stringify({
+      question: 'Q?',
+      options: ['A', 'B', 'C', 'D'],
+      correctAnswer: 'A',
+      provenance: {
+        sourceChunkIds: [attributionChunk.id],
+        supportingSpans: [],
+        verdict: { pass: true, score: 1, distractorFindings: [] },
+        score: 1,
+      },
+    })
+    for (let i = 0; i < count; i += 1) {
+      await conn.execute(
+        `INSERT INTO quiz_responses (id, user_certification_id, answer, correct, confidence, time_taken_ms, question_snapshot, format, created_at, updated_at)
+         VALUES (gen_random_uuid(), ?, ?, ?, 3, 5000, ?::jsonb, 'multiple_choice', now() - (? * interval '1 day'), now() - (? * interval '1 day'))`,
+        [firstEnrollmentId, correct ? 'A' : 'B', correct, snapshot, daysAgo, daysAgo],
+      )
+    }
+  }
+
+  // Ten wrong answers that existed at T (low readiness then) and twenty recent correct answers
+  // (high readiness now), both attributed to the seeded chunk's domain.
+  await addAttributedResponses(10, false, 30)
+  await addAttributedResponses(20, true, 1)
 
   // Recorded exam-outcome responses feeding the lagging pass-rate breakdown.
   await conn.execute(
