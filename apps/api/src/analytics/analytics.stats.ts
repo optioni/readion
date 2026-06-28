@@ -198,9 +198,7 @@ function isActiveInWeek(user: CohortUser, weekNumber: number, options: Retention
 // A cohort's week-N figure is only meaningful once every member has reached their week-N boundary
 // relative to the reporting instant; until then the cohort is immature for that week and omitted.
 function isCohortMature(users: CohortUser[], weekNumber: number, now: Date): boolean {
-  const latestBoundary = Math.max(
-    ...users.map((u) => u.createdAt.getTime() + weekNumber * WEEK_MS),
-  )
+  const latestBoundary = Math.max(...users.map((u) => u.createdAt.getTime() + weekNumber * WEEK_MS))
   return latestBoundary <= now.getTime()
 }
 

@@ -1,7 +1,7 @@
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { AgentConversation, AgentMessage, StudySession, UserCertification } from '@readion/db'
+import { AgentConversation, AgentMessage, StudySession, User, UserCertification } from '@readion/db'
 import {
   ANALYTICS_ACTIVE_MIN_SESSIONS_DEFAULT,
   ANALYTICS_ACTIVE_WINDOW_DAYS_DEFAULT,
@@ -12,10 +12,13 @@ import type { EnvConfig } from '../config/env.schema'
 import { ReadinessService } from '../readiness/readiness.service'
 import {
   agentEngagementFraction,
+  type CohortUser,
+  cohortRetention,
   completionRate,
   medianReadinessGain,
   medianSessionsPerWeek,
   type ReadinessSample,
+  type RetentionReadModel,
   selectActiveUsers,
   type TerminalSession,
   type UserReadinessSamples,
@@ -99,6 +102,40 @@ export class AnalyticsService {
   async getSessionsPerWeek(now = this.window.now()): Promise<number> {
     const { userIds, completedByUser } = await this.getActiveUserPopulation(now)
     return medianSessionsPerWeek(completedByUser, userIds, this.windowDays())
+  }
+
+  // Registration-week retention: users grouped by the calendar week of User.createdAt, each
+  // evaluated against the SAME active-user predicate as of their own week-2 (registration + 14d)
+  // and week-4 (registration + 28d) boundaries. A cohort is reported for a week only once every
+  // member has reached that week's boundary relative to `now`; immature cohorts are omitted.
+  async getRetentionCohorts(now = this.window.now()): Promise<RetentionReadModel> {
+    const em = this.em.fork()
+    const [users, sessions] = await Promise.all([
+      em.find(User, {}),
+      em.find(StudySession, {
+        status: { $in: ['completed', 'partial'] },
+        endedAt: { $ne: null },
+      }),
+    ])
+
+    const sessionsByUser = new Map<string, TerminalSession[]>()
+    for (const session of sessions) {
+      const list = sessionsByUser.get(session.user.id) ?? []
+      list.push({ status: session.status, endedAt: session.endedAt })
+      sessionsByUser.set(session.user.id, list)
+    }
+
+    const cohortUsers: CohortUser[] = users.map((user) => ({
+      userId: user.id,
+      createdAt: user.createdAt,
+      sessions: sessionsByUser.get(user.id) ?? [],
+    }))
+
+    return cohortRetention(cohortUsers, {
+      now,
+      windowDays: this.windowDays(),
+      minSessions: this.minSessions(),
+    })
   }
 
   async getCompletionRate(now = this.window.now()): Promise<number> {

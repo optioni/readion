@@ -11,13 +11,12 @@ import {
   UserCertification,
 } from '@readion/db'
 import { acquireIsolatedDatabase } from '@readion/db/src/test-helpers/isolated-db'
-import type { SessionStatus } from '@readion/shared'
+import type { RetentionCohort, SessionStatus } from '@readion/shared'
 import type { StartedTestContainer } from 'testcontainers'
 import { AppModule } from '../../app.module'
 import { bootstrapApp } from '../../bootstrap'
 import { AnalyticsModule } from '../analytics.module'
 import { AnalyticsService } from '../analytics.service'
-import type { RetentionCohort } from '@readion/shared'
 
 const DOMAIN = 'Cloud Concepts'
 
