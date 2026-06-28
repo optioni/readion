@@ -504,3 +504,52 @@ describe('env schema — lifecycle email', () => {
     expect(() => parseEnv({ ...VALID_ENV, INTERNAL_API_SECRET: '' })).toThrow(/INTERNAL_API_SECRET/)
   })
 })
+
+describe('env schema — product analytics', () => {
+  it('exposes window/population defaults when overrides are absent', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.ANALYTICS_ACTIVE_WINDOW_DAYS).toBe(14)
+    expect(result.ANALYTICS_ACTIVE_MIN_SESSIONS).toBe(2)
+    expect(result.ANALYTICS_NORTHSTAR_WINDOW_DAYS).toBe(28)
+  })
+
+  it('exposes numeric cost-coefficient defaults', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.ANALYTICS_COST_QUIZ).toBeTypeOf('number')
+    expect(result.ANALYTICS_COST_MOCK_QUESTION).toBeTypeOf('number')
+    expect(result.ANALYTICS_COST_SESSION_ITEM).toBeTypeOf('number')
+    expect(result.ANALYTICS_COST_AGENT_MESSAGE).toBeTypeOf('number')
+  })
+
+  it('exposes target defaults when overrides are absent', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.ANALYTICS_TARGET_NORTHSTAR_GAIN).toBe(15)
+    expect(result.ANALYTICS_TARGET_SESSIONS_PER_WEEK).toBe(2)
+    expect(result.ANALYTICS_TARGET_W4_RETENTION).toBe(0.4)
+    expect(result.ANALYTICS_TARGET_COMPLETION_RATE).toBe(0.75)
+    expect(result.ANALYTICS_TARGET_AGENT_ENGAGEMENT).toBe(0.5)
+    expect(result.ANALYTICS_LLM_COST_BUDGET).toBeTypeOf('number')
+  })
+
+  it('accepts analytics overrides from env', () => {
+    const result = parseEnv({
+      ...VALID_ENV,
+      ANALYTICS_ACTIVE_WINDOW_DAYS: '21',
+      ANALYTICS_TARGET_COMPLETION_RATE: '0.9',
+    })
+    expect(result.ANALYTICS_ACTIVE_WINDOW_DAYS).toBe(21)
+    expect(result.ANALYTICS_TARGET_COMPLETION_RATE).toBe(0.9)
+  })
+
+  it('fails fast naming ANALYTICS_ACTIVE_WINDOW_DAYS when it is not a number', () => {
+    expect(() => parseEnv({ ...VALID_ENV, ANALYTICS_ACTIVE_WINDOW_DAYS: 'not-a-number' })).toThrow(
+      /ANALYTICS_ACTIVE_WINDOW_DAYS/,
+    )
+  })
+
+  it('rejects an out-of-range ANALYTICS_TARGET_W4_RETENTION', () => {
+    expect(() => parseEnv({ ...VALID_ENV, ANALYTICS_TARGET_W4_RETENTION: '1.5' })).toThrow(
+      /ANALYTICS_TARGET_W4_RETENTION/,
+    )
+  })
+})
