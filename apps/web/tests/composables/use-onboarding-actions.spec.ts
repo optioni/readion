@@ -71,9 +71,9 @@ describe('useOnboardingActions saveDefaultsAndEnroll', () => {
       headers: jsonHeaders,
       body: JSON.stringify({ certificationId: 'cert-1', sessionDefaults }),
     })
-    expect(
-      vi.mocked(usersControllerUpdateMe).mock.invocationCallOrder[0],
-    ).toBeLessThan(vi.mocked(userCertificationsControllerEnroll).mock.invocationCallOrder[0])
+    const patchOrder = vi.mocked(usersControllerUpdateMe).mock.invocationCallOrder
+    const enrollOrder = vi.mocked(userCertificationsControllerEnroll).mock.invocationCallOrder
+    expect(Math.min(...patchOrder)).toBeLessThan(Math.min(...enrollOrder))
     expect(outcome).toEqual({ ok: true, enrollmentId: 'enr-1' })
   })
 
