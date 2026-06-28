@@ -1,6 +1,10 @@
-import type { SessionStatus } from '@readion/shared'
+import type { RetentionCohort, SessionStatus } from '@readion/shared'
 
 const DAY_MS = 86_400_000
+const WEEK_MS = 7 * DAY_MS
+// Unix epoch (1970-01-01) is a Thursday; Mondays land 4 days later, so shifting by this offset
+// makes every week bucket open on Monday 00:00 UTC.
+const MONDAY_EPOCH_OFFSET_MS = 4 * DAY_MS
 const TERMINAL_COMPLETED: ReadonlyArray<SessionStatus> = ['completed', 'partial']
 
 export interface TerminalSession {
@@ -146,4 +150,99 @@ export function medianSessionsPerWeek(
 ): number {
   const rates = activeUserIds.map((id) => sessionsPerWeek(completedByUser.get(id) ?? 0, windowDays))
   return median(rates)
+}
+
+export interface CohortUser {
+  userId: string
+  createdAt: Date
+  sessions: TerminalSession[]
+}
+
+export interface RetentionOptions {
+  now: Date
+  windowDays: number
+  minSessions: number
+}
+
+export interface RetentionWeekSummary {
+  value: number
+  population: number
+  cohorts: RetentionCohort[]
+}
+
+export interface RetentionReadModel {
+  w2: RetentionWeekSummary
+  w4: RetentionWeekSummary
+}
+
+// Stable, timezone-independent registration-week bucket: the Monday 00:00 UTC at or before the
+// registration instant. Used as the cohort key.
+export function registrationWeekStart(createdAt: Date): Date {
+  const weekIndex = Math.floor((createdAt.getTime() - MONDAY_EPOCH_OFFSET_MS) / WEEK_MS)
+  return new Date(weekIndex * WEEK_MS + MONDAY_EPOCH_OFFSET_MS)
+}
+
+// "Active in week N" = the active-user predicate evaluated AS OF the end of week N after the
+// user's own registration (boundary = registration + weekNumber * 7 days). Reuses isActiveUser
+// so the active definition is never forked.
+function isActiveInWeek(user: CohortUser, weekNumber: number, options: RetentionOptions): boolean {
+  const boundary = new Date(user.createdAt.getTime() + weekNumber * WEEK_MS)
+  return isActiveUser({
+    sessions: user.sessions,
+    now: boundary,
+    windowDays: options.windowDays,
+    minSessions: options.minSessions,
+  })
+}
+
+// A cohort's week-N figure is only meaningful once every member has reached their week-N boundary
+// relative to the reporting instant; until then the cohort is immature for that week and omitted.
+function isCohortMature(users: CohortUser[], weekNumber: number, now: Date): boolean {
+  const latestBoundary = Math.max(
+    ...users.map((u) => u.createdAt.getTime() + weekNumber * WEEK_MS),
+  )
+  return latestBoundary <= now.getTime()
+}
+
+function weekSummary(
+  cohorts: Map<string, CohortUser[]>,
+  weekNumber: number,
+  options: RetentionOptions,
+): RetentionWeekSummary {
+  const rows: RetentionCohort[] = []
+  let pooledRetained = 0
+  let pooledSize = 0
+  for (const [cohortWeek, users] of cohorts) {
+    if (!isCohortMature(users, weekNumber, options.now)) {
+      continue
+    }
+    const retained = users.filter((u) => isActiveInWeek(u, weekNumber, options)).length
+    const size = users.length
+    rows.push({ cohortWeek, size, retained, fraction: retained / size })
+    pooledRetained += retained
+    pooledSize += size
+  }
+  rows.sort((a, b) => a.cohortWeek.localeCompare(b.cohortWeek))
+  return {
+    value: pooledSize === 0 ? 0 : pooledRetained / pooledSize,
+    population: pooledSize,
+    cohorts: rows,
+  }
+}
+
+export function cohortRetention(
+  users: CohortUser[],
+  options: RetentionOptions,
+): RetentionReadModel {
+  const cohorts = new Map<string, CohortUser[]>()
+  for (const user of users) {
+    const key = registrationWeekStart(user.createdAt).toISOString().slice(0, 10)
+    const group = cohorts.get(key) ?? []
+    group.push(user)
+    cohorts.set(key, group)
+  }
+  return {
+    w2: weekSummary(cohorts, 2, options),
+    w4: weekSummary(cohorts, 4, options),
+  }
 }
