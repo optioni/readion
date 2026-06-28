@@ -42,13 +42,13 @@
 
 ## 6. Change Review — Subagent Verification
 
-- [ ] 6.1 Dispatch a subagent to review the change against proposal.md, the spec scenarios, and design.md (reviewer reports findings only, does not edit code)
-- [ ] 6.2 Triage findings: fix every CRITICAL, resolve or accept each WARNING (one-line reason per accepted WARNING), note SUGGESTIONs; re-run affected tests
+- [x] 6.1 Dispatch a subagent to review the change against proposal.md, the spec scenarios, and design.md (reviewer reports findings only, does not edit code)
+- [x] 6.2 Triage findings: fix every CRITICAL, resolve or accept each WARNING (one-line reason per accepted WARNING), note SUGGESTIONs; re-run affected tests
 
 ## 7. Polish
 
-- [ ] 7.1 Run linter and fix all errors (`yarn lint`)
-- [ ] 7.2 Run formatter and apply fixes (`yarn format`)
-- [ ] 7.3 Run type checker with zero errors (`yarn workspace apps/web typecheck`)
-- [ ] 7.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn test:coverage`)
+- [x] 7.1 Run linter and fix all errors (`yarn lint`)
+- [x] 7.2 Run formatter and apply fixes (`yarn format`)
+- [x] 7.3 Run type checker with zero errors (`yarn workspace apps/web typecheck`)
+- [x] 7.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn test:coverage`)
 - [ ] 7.5 When DesignSync becomes available: re-pull `CertDetail.html` into `design/CertDetail.html`, re-diff the design.md reconciliation table against it, and reconcile any divergence (flagged in design.md — DesignSync was absent at authoring time)

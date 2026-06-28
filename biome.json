@@ -11,6 +11,7 @@
       "!**/.output",
       "!**/dist",
       "!**/coverage",
+      "!**/test-results",
       "!**/.yarn",
       "!**/yarn.lock"
     ]
