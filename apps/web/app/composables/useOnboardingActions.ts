@@ -28,13 +28,13 @@ export function useOnboardingActions() {
     certificationId: string
     sessionDefaults: SessionDefaults
   }): Promise<EnrollOutcome> {
-    await usersControllerUpdateMe({
-      headers: jsonHeaders,
-      body: JSON.stringify({ sessionDefaults: input.sessionDefaults }),
-    })
-
     let enrollmentId: string
     try {
+      await usersControllerUpdateMe({
+        headers: jsonHeaders,
+        body: JSON.stringify({ sessionDefaults: input.sessionDefaults }),
+      })
+
       const response = await userCertificationsControllerEnroll({
         headers: jsonHeaders,
         body: JSON.stringify({
