@@ -38,6 +38,7 @@ export type SeededEnrollment = {
   name: string
   provider: string
   readinessScore: number | null
+  enrolledAt: string
 }
 
 export type SeededDashboardUser = {
@@ -155,6 +156,7 @@ export async function seedDashboardUser(
       name: certification?.name ?? row.certificationId,
       provider: certification?.provider ?? '',
       readinessScore: row.readinessScore,
+      enrolledAt: row.enrolledAt,
     }
   })
 

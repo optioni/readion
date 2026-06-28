@@ -83,8 +83,8 @@ describe('useEnrollments', () => {
       expect(result.cards.value).toHaveLength(1)
     })
 
-    expect(result.cards.value[0].name).toBe('')
-    expect(result.cards.value[0].provider).toBe('')
+    expect(result.cards.value[0]?.name).toBe('')
+    expect(result.cards.value[0]?.provider).toBe('')
   })
 
   it('exposes an error state and empty cards when the enrollment request fails', async () => {

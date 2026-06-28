@@ -54,16 +54,38 @@ describe('useCardRecentSessions', () => {
   it('fetches the 3 most recent sessions and joins completed-session accuracy + last readiness delta', async () => {
     vi.mocked(sessionsControllerList).mockResolvedValue(
       sessionsEnvelope([
-        session({ id: 's1', status: 'completed', startedAt: '2026-06-20T00:00:00Z', focusArea: 'Networking' }),
-        session({ id: 's2', status: 'abandoned', startedAt: '2026-06-19T00:00:00Z', focusArea: 'Storage' }),
-        session({ id: 's3', status: 'completed', startedAt: '2026-06-18T00:00:00Z', focusArea: 'Security' }),
+        session({
+          id: 's1',
+          status: 'completed',
+          startedAt: '2026-06-20T00:00:00Z',
+          focusArea: 'Networking',
+        }),
+        session({
+          id: 's2',
+          status: 'abandoned',
+          startedAt: '2026-06-19T00:00:00Z',
+          focusArea: 'Storage',
+        }),
+        session({
+          id: 's3',
+          status: 'completed',
+          startedAt: '2026-06-18T00:00:00Z',
+          focusArea: 'Security',
+        }),
         // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
       ]) as any,
     )
+    const summariesById: Record<string, ReturnType<typeof summaryEnvelope>> = {
+      s1: summaryEnvelope(0.8, 5),
+      s3: summaryEnvelope(0.6, 3),
+    }
     vi.mocked(sessionSummaryControllerSummary).mockImplementation(async (id: string) => {
-      if (id === 's1') return summaryEnvelope(0.8, 5) as any
-      if (id === 's3') return summaryEnvelope(0.6, 3) as any
-      throw new Error(`unexpected summary fetch for ${id}`)
+      const summary = summariesById[id]
+      if (!summary) {
+        throw new Error(`unexpected summary fetch for ${id}`)
+      }
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      return summary as any
     })
 
     const { result } = renderComposable(() => useCardRecentSessions('enr-1', 'cert-1'))
@@ -84,7 +106,12 @@ describe('useCardRecentSessions', () => {
   it('exposes a null readiness delta when the latest completed session has none', async () => {
     vi.mocked(sessionsControllerList).mockResolvedValue(
       sessionsEnvelope([
-        session({ id: 's1', status: 'completed', startedAt: '2026-06-20T00:00:00Z', focusArea: 'Networking' }),
+        session({
+          id: 's1',
+          status: 'completed',
+          startedAt: '2026-06-20T00:00:00Z',
+          focusArea: 'Networking',
+        }),
         // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
       ]) as any,
     )
@@ -118,7 +145,12 @@ describe('useCardRecentSessions', () => {
   it('falls back to null accuracy when a completed session summary is unavailable', async () => {
     vi.mocked(sessionsControllerList).mockResolvedValue(
       sessionsEnvelope([
-        session({ id: 's1', status: 'completed', startedAt: '2026-06-20T00:00:00Z', focusArea: 'Networking' }),
+        session({
+          id: 's1',
+          status: 'completed',
+          startedAt: '2026-06-20T00:00:00Z',
+          focusArea: 'Networking',
+        }),
         // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
       ]) as any,
     )
