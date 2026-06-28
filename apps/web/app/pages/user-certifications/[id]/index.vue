@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import OverviewTab from '~/components/OverviewTab.vue'
 import { useCertDetail } from '~/composables/useCertDetail'
 
 type TabId = 'overview' | 'sessions' | 'exam-history'
@@ -7,7 +8,9 @@ type TabId = 'overview' | 'sessions' | 'exam-history'
 const route = useRoute()
 const enrollmentId = computed(() => String(route.params.id))
 
-const { name, provider, isLoading, isError, notFound } = useCertDetail(enrollmentId.value)
+const { name, provider, certificationId, domains, isLoading, isError, notFound } = useCertDetail(
+  enrollmentId.value,
+)
 
 const tabs: { id: TabId; label: string; panelTestId: string }[] = [
   { id: 'overview', label: 'Overview', panelTestId: 'cert-detail-tab-overview' },
@@ -86,7 +89,14 @@ function selectTab(id: TabId) {
         v-show="activeTab === tab.id"
         role="tabpanel"
         :data-testid="tab.panelTestId"
-      />
+      >
+        <OverviewTab
+          v-if="tab.id === 'overview'"
+          :enrollment-id="enrollmentId"
+          :certification-id="certificationId"
+          :domains="domains"
+        />
+      </div>
     </template>
   </section>
 </template>

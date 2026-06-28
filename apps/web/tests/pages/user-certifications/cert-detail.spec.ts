@@ -22,6 +22,7 @@ function stubCertDetail(
     name: computed(() => options.name ?? 'AWS Cloud Practitioner'),
     provider: computed(() => options.provider ?? 'AWS'),
     certificationId: computed(() => options.certificationId ?? 'cert-1'),
+    domains: computed(() => []),
     isLoading: computed(() => options.isLoading ?? false),
     isError: computed(() => options.isError ?? false),
     notFound: computed(() => options.notFound ?? false),
@@ -29,7 +30,9 @@ function stubCertDetail(
 }
 
 function mountPage() {
-  return mount(CertDetailPage)
+  return mount(CertDetailPage, {
+    global: { stubs: { OverviewTab: { template: '<div data-testid="overview-tab-stub" />' } } },
+  })
 }
 
 function tabs(wrapper: ReturnType<typeof mountPage>) {
