@@ -1,14 +1,19 @@
 import type { APIRequestContext } from '@playwright/test'
-import { Client } from 'pg'
-import { captureVerificationToken } from './mailpit-helpers'
+import {
+  type CertificationRow,
+  type CertificationsResponse,
+  CONTENT_TYPE_JSON,
+  ensureLiveCatalog,
+  newSeedClient,
+  registerVerifiedUser,
+  seedDueReview,
+} from './seed-helpers'
 
-// Seeds an authenticated user with active enrollments through the SAME running API
-// (127.0.0.1:3001) that the Nuxt dev server talks to — never the in-process Testcontainers
-// harness, which boots its own API on a random port the browser can't reach.
+// Seeds an authenticated user with active enrollments. Registration, email verification, and
+// enrollment go through the public API; see seed-helpers.ts for the shared scaffolding.
 //
-// Registration, email verification, and enrollment go through the public API. Two pieces of
-// dashboard state cannot be produced over the public API in a local environment because they
-// require the LLM-backed quiz/answer-verification path:
+// Two pieces of dashboard state cannot be produced over the public API in a local environment
+// because they require the LLM-backed quiz/answer-verification path:
 //   - a non-null readinessScore (calibration), and
 //   - graded answers / completed-session summaries.
 // Those remain null/empty here, which is itself a valid dashboard state the acceptance test
@@ -18,18 +23,10 @@ import { captureVerificationToken } from './mailpit-helpers'
 // the same Postgres database the running API reads from. That makes the SPEC-mandated
 // conditional "5-minute review" quick-start appear on a real card with a real dueCount.
 
-const databaseUrl =
-  process.env.READION_E2E_DATABASE_URL ?? 'postgresql://readion:readion@localhost:5432/readion'
-
 // Minimum live certifications the acceptance flow needs: three to enroll into plus one kept
 // aside for the "+ Add certification" flow.
 const MIN_LIVE_CERTIFICATIONS = 4
 
-const CONTENT_TYPE_JSON = { 'Content-Type': 'application/json' }
-
-type RegisterResponse = { data: { accessToken: string } }
-type CertificationRow = { id: string; name: string; provider: string }
-type CertificationsResponse = { data: CertificationRow[] }
 type EnrollmentRow = {
   id: string
   certificationId: string
@@ -80,114 +77,17 @@ function pickHero(enrollments: SeededEnrollment[]): SeededEnrollment {
   )
 }
 
-// Promotes draft certifications to `live` until the catalog has enough for the acceptance flow.
-// The catalog is normally admin-provisioned; in a freshly migrated local database it can be
-// empty of live certs, so the seed makes itself self-sufficient and idempotent.
-async function ensureLiveCatalog(client: Client): Promise<void> {
-  const { rows } = await client.query<{ count: string }>(
-    `SELECT count(*)::int AS count FROM certifications WHERE state = 'live'`,
-  )
-  const liveCount = Number(rows[0]?.count ?? 0)
-  const missing = MIN_LIVE_CERTIFICATIONS - liveCount
-  if (missing <= 0) {
-    return
-  }
-
-  await client.query(
-    `UPDATE certifications SET state = 'live', updated_at = now()
-     WHERE id IN (
-       SELECT id FROM certifications WHERE state = 'draft' ORDER BY name ASC LIMIT $1
-     )`,
-    [missing],
-  )
-}
-
-// Writes the FK chain (content_source → content_chunk → review_item) a due review needs, so the
-// running API's review-queue endpoint reports dueCount > 0 for this enrollment.
-async function seedDueReview(client: Client, enrollment: SeededEnrollment): Promise<void> {
-  const sourceResult = await client.query<{ id: string }>(
-    `INSERT INTO content_sources
-       (id, certification_id, type, url, enabled, recheck_interval_minutes, created_at, updated_at)
-     VALUES (gen_random_uuid(), $1, 'web', $2, true, 1440, now(), now())
-     RETURNING id`,
-    [enrollment.certificationId, `https://example.com/e2e-${enrollment.enrollmentId}`],
-  )
-  const contentSourceId = sourceResult.rows[0]?.id
-  if (contentSourceId === undefined) {
-    throw new Error('Seed failed to create a content source for the due review')
-  }
-
-  const chunkResult = await client.query<{ id: string }>(
-    `INSERT INTO content_chunks
-       (id, content_source_id, certification_id, text, content_hash,
-        domain_tags, primary_domain, metadata, state, created_at, updated_at)
-     VALUES (gen_random_uuid(), $1, $2, $3, $4,
-        $5::jsonb, $6, '{}'::jsonb, 'active', now(), now())
-     RETURNING id`,
-    [
-      contentSourceId,
-      enrollment.certificationId,
-      'Reviewable content for the dashboard e2e.',
-      `e2e-${enrollment.enrollmentId}`.padEnd(64, '0').slice(0, 64),
-      JSON.stringify([{ domain: 'Security', confidence: 0.95 }]),
-      'Security',
-    ],
-  )
-  const anchorChunkId = chunkResult.rows[0]?.id
-  if (anchorChunkId === undefined) {
-    throw new Error('Seed failed to create a content chunk for the due review')
-  }
-
-  await client.query(
-    `INSERT INTO review_items
-       (id, user_certification_id, anchor_chunk_id, box, state, due_at, created_at, updated_at)
-     VALUES (gen_random_uuid(), $1, $2, 1, 'active', now() - interval '1 day', now(), now())`,
-    [enrollment.enrollmentId, anchorChunkId],
-  )
-}
-
-async function registerVerifiedUser(
-  api: APIRequestContext,
-  mailpit: APIRequestContext,
-): Promise<{ email: string; password: string; accessToken: string }> {
-  const email = `dashboard.${Date.now()}.${Math.floor(Math.random() * 1e6)}@example.com`
-  const password = 'correcthorse'
-
-  const registerRes = await api.post('/api/v1/auth/register', {
-    headers: CONTENT_TYPE_JSON,
-    data: { email, password },
-  })
-  if (registerRes.status() !== 201) {
-    throw new Error(`Seed failed to register user: HTTP ${registerRes.status()}`)
-  }
-  const {
-    data: { accessToken },
-  } = (await registerRes.json()) as RegisterResponse
-
-  // Verify the email so the browser can sign in via the /login UI as the same seeded user.
-  const verificationToken = await captureVerificationToken(mailpit, email)
-  const verifyRes = await api.post('/api/v1/auth/verify-email', {
-    headers: CONTENT_TYPE_JSON,
-    data: { token: verificationToken },
-  })
-  if (verifyRes.status() !== 200 && verifyRes.status() !== 201) {
-    throw new Error(`Seed failed to verify email: HTTP ${verifyRes.status()}`)
-  }
-
-  return { email, password, accessToken }
-}
-
 export async function seedDashboardUser(
   api: APIRequestContext,
   mailpit: APIRequestContext,
 ): Promise<SeededDashboardUser> {
-  const client = new Client({ connectionString: databaseUrl })
+  const client = newSeedClient()
   await client.connect()
 
   try {
-    await ensureLiveCatalog(client)
+    await ensureLiveCatalog(client, MIN_LIVE_CERTIFICATIONS)
 
-    const { email, password, accessToken } = await registerVerifiedUser(api, mailpit)
+    const { email, password, accessToken } = await registerVerifiedUser(api, mailpit, 'dashboard')
     const authHeaders = { Authorization: `Bearer ${accessToken}` }
 
     const certsRes = await api.get('/api/v1/certifications', { headers: authHeaders })
@@ -246,7 +146,7 @@ export async function seedDashboardUser(
     })
 
     const heroEnrollment = pickHero(enrollments)
-    await seedDueReview(client, heroEnrollment)
+    await seedDueReview(client, heroEnrollment.enrollmentId, heroEnrollment.certificationId)
 
     return {
       email,
