@@ -69,25 +69,31 @@ export class AnalyticsService {
     const users: UserReadinessSamples[] = []
     for (const userId of userIds) {
       const enrollments = await em.find(UserCertification, { user: userId })
-      const samples: ReadinessSample[] = []
-      for (const enrollment of enrollments) {
-        const nowReadiness = await this.readiness.compute(enrollment.id)
-        const startReadiness = await this.asOfReadiness.computeAt(
-          enrollment.id,
-          windowStart,
-          threshold,
-        )
-        samples.push({
-          scoreNow: nowReadiness.score,
-          scoreAtT: startReadiness.score,
-          calibratedNow: nowReadiness.calibrated,
-          calibratedAtT: startReadiness.calibrated,
-        })
-      }
+      const samples = await Promise.all(
+        enrollments.map((e) => this.sampleReadiness(e.id, windowStart, threshold)),
+      )
       users.push({ userId, enrollments: samples })
     }
 
     return medianReadinessGain(users)
+  }
+
+  // Pairs an enrollment's current readiness (live ReadinessService) with its readiness as of the
+  // window start (AsOfReadiness — the single isolated seam over the timestamped rows). The gain
+  // exclusion logic lives in medianReadinessGain; this only assembles the paired sample.
+  private async sampleReadiness(
+    enrollmentId: string,
+    windowStart: Date,
+    threshold: number,
+  ): Promise<ReadinessSample> {
+    const nowReadiness = await this.readiness.compute(enrollmentId)
+    const startReadiness = await this.asOfReadiness.computeAt(enrollmentId, windowStart, threshold)
+    return {
+      scoreNow: nowReadiness.score,
+      scoreAtT: startReadiness.score,
+      calibratedNow: nowReadiness.calibrated,
+      calibratedAtT: startReadiness.calibrated,
+    }
   }
 
   async getSessionsPerWeek(now = this.window.now()): Promise<number> {
