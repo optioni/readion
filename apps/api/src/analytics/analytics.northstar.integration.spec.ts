@@ -1,8 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import {
-  createNorthstarHarness,
-  type NorthstarHarness,
-} from './test/analytics-northstar-harness'
+import { createNorthstarHarness, type NorthstarHarness } from './test/analytics-northstar-harness'
 
 // Integration coverage for the north-star readiness gain against a seeded Postgres population.
 // The as-of readiness at the 28-day window start is recomputed from the immutable timestamped

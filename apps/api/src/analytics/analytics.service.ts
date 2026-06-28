@@ -1,21 +1,28 @@
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { AgentConversation, AgentMessage, StudySession } from '@readion/db'
+import { AgentConversation, AgentMessage, StudySession, UserCertification } from '@readion/db'
 import {
   ANALYTICS_ACTIVE_MIN_SESSIONS_DEFAULT,
   ANALYTICS_ACTIVE_WINDOW_DAYS_DEFAULT,
+  ANALYTICS_NORTHSTAR_WINDOW_DAYS_DEFAULT,
+  READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT,
 } from '@readion/shared'
 import type { EnvConfig } from '../config/env.schema'
+import { ReadinessService } from '../readiness/readiness.service'
 import {
   agentEngagementFraction,
   completionRate,
+  medianReadinessGain,
   medianSessionsPerWeek,
+  type ReadinessSample,
   selectActiveUsers,
   type TerminalSession,
+  type UserReadinessSamples,
   type UserSessionGroup,
 } from './analytics.stats'
 import { AnalyticsWindow } from './analytics-window'
+import { AsOfReadiness } from './as-of-readiness'
 
 export interface ActiveUserPopulation {
   userIds: string[]
@@ -29,6 +36,8 @@ export class AnalyticsService {
     private readonly em: EntityManager,
     private readonly config: ConfigService<EnvConfig>,
     private readonly window: AnalyticsWindow,
+    private readonly readiness: ReadinessService,
+    private readonly asOfReadiness: AsOfReadiness,
   ) {}
 
   async getActiveUserPopulation(now = this.window.now()): Promise<ActiveUserPopulation> {
@@ -45,6 +54,40 @@ export class AnalyticsService {
       minSessions: this.minSessions(),
     })
     return { userIds, count: userIds.length, completedByUser }
+  }
+
+  // North-star: the median per-user readiness gain (readiness now − readiness at the 28-day
+  // window start) across the active population. Readiness-now reuses ReadinessService; the
+  // window-start value is recomputed as-of T from immutable rows (AsOfReadiness). An enrollment
+  // uncalibrated at either boundary is excluded from the median, never folded in as a zero.
+  async getReadinessGain(now = this.window.now()): Promise<number> {
+    const windowStart = this.window.start(this.northstarWindowDays(), now)
+    const { userIds } = await this.getActiveUserPopulation(now)
+    const threshold = this.calibrationThreshold()
+    const em = this.em.fork()
+
+    const users: UserReadinessSamples[] = []
+    for (const userId of userIds) {
+      const enrollments = await em.find(UserCertification, { user: userId })
+      const samples: ReadinessSample[] = []
+      for (const enrollment of enrollments) {
+        const nowReadiness = await this.readiness.compute(enrollment.id)
+        const startReadiness = await this.asOfReadiness.computeAt(
+          enrollment.id,
+          windowStart,
+          threshold,
+        )
+        samples.push({
+          scoreNow: nowReadiness.score,
+          scoreAtT: startReadiness.score,
+          calibratedNow: nowReadiness.calibrated,
+          calibratedAtT: startReadiness.calibrated,
+        })
+      }
+      users.push({ userId, enrollments: samples })
+    }
+
+    return medianReadinessGain(users)
   }
 
   async getSessionsPerWeek(now = this.window.now()): Promise<number> {
@@ -123,6 +166,20 @@ export class AnalyticsService {
     return (
       this.config.get('ANALYTICS_ACTIVE_MIN_SESSIONS', { infer: true }) ??
       ANALYTICS_ACTIVE_MIN_SESSIONS_DEFAULT
+    )
+  }
+
+  private northstarWindowDays(): number {
+    return (
+      this.config.get('ANALYTICS_NORTHSTAR_WINDOW_DAYS', { infer: true }) ??
+      ANALYTICS_NORTHSTAR_WINDOW_DAYS_DEFAULT
+    )
+  }
+
+  private calibrationThreshold(): number {
+    return (
+      this.config.get('READINESS_CALIBRATION_MIN_ANSWERS', { infer: true }) ??
+      READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT
     )
   }
 }
