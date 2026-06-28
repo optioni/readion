@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion — Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui; background: #c8c4bc; }
+    .canvas-wrap { padding: 48px 56px; }
+    .canvas-section { margin-bottom: 56px; }
+    .canvas-section-head { margin-bottom: 20px; }
+    .canvas-section-title { font-size: 17px; font-weight: 600; color: #2d2520; }
+    .canvas-section-sub { font-size: 12px; color: #7a6e65; margin-top: 3px; }
+    .canvas-row { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+    .artboard-wrap { flex-shrink: 0; }
+    .artboard-label { font-size: 11px; color: #7a6e65; margin-bottom: 7px; font-weight: 500; letter-spacing: 0.02em; }
+    .artboard-frame { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.js"></script>
+
+<script type="text/babel" src="app-shell.jsx"></script>
+<script type="text/babel">
+
+const Canvas = (p) => <div className="canvas-wrap">{p.children}</div>;
+const CanvasSection = (p) => (
+  <div className="canvas-section">
+    <div className="canvas-section-head">
+      <div className="canvas-section-title">{p.title}</div>
+      {p.subtitle && <div className="canvas-section-sub">{p.subtitle}</div>}
+    </div>
+    <div className="canvas-row">{p.children}</div>
+  </div>
+);
+const Artboard = (p) => (
+  <div className="artboard-wrap" style={{ width: p.width }}>
+    <div className="artboard-label">{p.label}</div>
+    <div className="artboard-frame" style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+  </div>
+);
+
+const T = {
+  base:     'var(--readion-background-base)',
+  surface:  'var(--readion-background-surface)',
+  elevated: 'var(--readion-background-elevated)',
+  overlay:  'var(--readion-background-overlay)',
+  primary:  'var(--readion-primary)',
+  accent:   'var(--readion-accent-label)',
+  tPrimary: 'var(--readion-text-primary)',
+  tSecond:  'var(--readion-text-secondary)',
+  tMuted:   'var(--readion-text-muted)',
+  tSubtle:  'var(--readion-text-subtle)',
+  border:   'var(--readion-border-strong)',
+  borderDef:'var(--readion-border-default)',
+  poor:     'var(--readion-status-poor)',
+  warn:     'var(--readion-status-warning)',
+  good:     'var(--readion-status-good)',
+  rMd:      'var(--readion-rounded-md)',
+  rLg:      'var(--readion-rounded-lg)',
+  rXl:      'var(--readion-rounded-xl)',
+  rFull:    'var(--readion-rounded-full)',
+};
+
+// ── App sidebar ───────────────────────────────────────────────────────────────
+const Shell = window.Shell;
+const AppSidebar = () => <Shell.AppSidebar active="Settings" admin={true} />;
+
+// ── Settings tabs ─────────────────────────────────────────────────────────────
+const SettingsTabs = ({ active }) => {
+  const tabs = ['Account', 'Study defaults', 'Notifications'];
+  return (
+    <div style={{ display: 'flex', borderBottom: '1px solid ' + T.border, background: T.elevated, padding: '0 28px', flexShrink: 0 }}>
+      {tabs.map((t) => (
+        <div key={t} style={{ padding: '12px 16px', fontSize: 13, color: t === active ? T.tPrimary : T.tMuted, borderBottom: '2px solid ' + (t === active ? T.accent : 'transparent'), cursor: 'pointer', marginBottom: -1 }}>
+          {t}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ── Settings layout ───────────────────────────────────────────────────────────
+const SettingsLayout = ({ tab, children }) => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AppSidebar />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <SettingsTabs active={tab} />
+      <div style={{ flex: 1, overflowY: 'auto', padding: '32px 40px' }}>
+        <div style={{ maxWidth: 580 }}>{children}</div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Shared primitives ─────────────────────────────────────────────────────────
+const SettingsSection = ({ title, children, last }) => (
+  <div style={{ paddingBottom: last ? 0 : 28, marginBottom: last ? 0 : 28, borderBottom: last ? 'none' : '1px solid ' + T.border }}>
+    {title && <div style={{ fontSize: 13, fontWeight: 600, color: T.tPrimary, marginBottom: 16 }}>{title}</div>}
+    {children}
+  </div>
+);
+
+const FieldRow = ({ label, hint, children }) => (
+  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24, marginBottom: 16 }}>
+    <div style={{ width: 160, flexShrink: 0, paddingTop: 8 }}>
+      <div style={{ fontSize: 13, color: T.tSecond }}>{label}</div>
+      {hint && <div style={{ fontSize: 11, color: T.tMuted, marginTop: 2, lineHeight: 1.5 }}>{hint}</div>}
+    </div>
+    <div style={{ flex: 1 }}>{children}</div>
+  </div>
+);
+
+const TextInput = ({ value, type, mono }) => (
+  <input readOnly defaultValue={value} type={type || 'text'} style={{ width: '100%', padding: '8px 12px', background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tPrimary, fontFamily: mono ? 'var(--readion-font-mono)' : 'inherit', outline: 'none' }} />
+);
+
+const SaveBtn = ({ label }) => (
+  <button style={{ padding: '8px 18px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>{label || 'Save changes'}</button>
+);
+
+const Toggle = ({ on, label, sub }) => (
+  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 14 }}>
+    <div>
+      <div style={{ fontSize: 13, color: T.tSecond }}>{label}</div>
+      {sub && <div style={{ fontSize: 11, color: T.tMuted, marginTop: 2 }}>{sub}</div>}
+    </div>
+    <div style={{ width: 36, height: 20, background: on ? T.primary : T.border, borderRadius: T.rFull, padding: 3, display: 'flex', alignItems: 'center', justifyContent: on ? 'flex-end' : 'flex-start', cursor: 'pointer', flexShrink: 0 }}>
+      <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#fff' }} />
+    </div>
+  </div>
+);
+
+const OBPills = ({ options, selected }) => (
+  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+    {options.map((o) => (
+      <div key={o} style={{ padding: '5px 12px', borderRadius: T.rFull, fontSize: 13, fontWeight: o === selected ? 500 : 400, background: o === selected ? T.primary : 'transparent', color: o === selected ? '#fff' : T.tSecond, border: '1px solid ' + (o === selected ? T.primary : T.border), cursor: 'pointer' }}>{o}</div>
+    ))}
+  </div>
+);
+
+// ── Tab 1: Account ────────────────────────────────────────────────────────────
+const AccountTab = () => (
+  <SettingsLayout tab="Account">
+    {/* Profile */}
+    <SettingsSection title="Profile">
+      <FieldRow label="Full name">
+        <TextInput value="Jamie Delacroix" />
+      </FieldRow>
+      <FieldRow label="Email" hint="Used for login and notifications">
+        <TextInput value="jamie@org.io" type="email" />
+      </FieldRow>
+      <FieldRow label="Avatar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 40, height: 40, borderRadius: '50%', background: T.overlay, border: '1px solid ' + T.border, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: T.accent }}>JD</span>
+          </div>
+          <div style={{ fontSize: 12, color: T.tMuted }}>Initials only &middot; no photo upload</div>
+        </div>
+      </FieldRow>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <SaveBtn />
+      </div>
+    </SettingsSection>
+
+    {/* Password */}
+    <SettingsSection title="Password">
+      <FieldRow label="Current password">
+        <TextInput value="••••••••••" type="password" />
+      </FieldRow>
+      <FieldRow label="New password">
+        <TextInput value="" type="password" />
+      </FieldRow>
+      <FieldRow label="Confirm new">
+        <TextInput value="" type="password" />
+      </FieldRow>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <SaveBtn label="Update password" />
+      </div>
+    </SettingsSection>
+
+    {/* Danger zone */}
+    <SettingsSection title="Danger zone" last={true}>
+      <div style={{ padding: '14px 16px', background: 'rgba(248,113,113,0.05)', border: '1px solid rgba(248,113,113,0.2)', borderRadius: T.rXl }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 13, color: T.tSecond, fontWeight: 500, marginBottom: 3 }}>Delete account</div>
+            <div style={{ fontSize: 12, color: T.tMuted, lineHeight: 1.55 }}>Permanently deletes your account, all sessions, and progress data. Cannot be undone.</div>
+          </div>
+          <button style={{ padding: '7px 14px', background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', borderRadius: T.rMd, fontSize: 12, color: T.poor, cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}>
+            Delete account
+          </button>
+        </div>
+      </div>
+    </SettingsSection>
+  </SettingsLayout>
+);
+
+// ── Tab 2: Study defaults ─────────────────────────────────────────────────────
+const StudyDefaultsTab = () => (
+  <SettingsLayout tab="Study defaults">
+    <SettingsSection title="Session preferences">
+      <div style={{ fontSize: 13, color: T.tMuted, marginBottom: 20, lineHeight: 1.6 }}>
+        These are your default starting values for each new session. Readion adjusts them over time based on your performance.
+      </div>
+
+      {/* Session length slider */}
+      <FieldRow label="Session length" hint="Default duration per session">
+        <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rLg, padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{ fontSize: 12, color: T.tMuted }}>Duration</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: T.accent }}>20 min</span>
+          </div>
+          <div style={{ position: 'relative', height: 18 }}>
+            <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 3, background: T.border, borderRadius: 2, transform: 'translateY(-50%)' }}>
+              <div style={{ height: '100%', width: '36%', background: T.primary, borderRadius: 2 }} />
+              <div style={{ position: 'absolute', top: '50%', left: '36%', width: 13, height: 13, background: '#fff', border: '2px solid ' + T.primary, borderRadius: '50%', transform: 'translate(-50%,-50%)', boxShadow: '0 1px 4px rgba(0,0,0,0.4)' }} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+            {['5m', '15m', '30m', '45m', '60m'].map((m) => <span key={m} style={{ fontSize: 10, color: T.tSubtle }}>{m}</span>)}
+          </div>
+        </div>
+      </FieldRow>
+
+      {[
+        { label: 'Content mix',    options: ['Questions', 'Mixed', 'Concepts first'], sel: 'Mixed' },
+        { label: 'Difficulty',     options: ['Adaptive', 'Easy', 'Medium', 'Hard'],   sel: 'Adaptive' },
+        { label: 'Learning style', options: ['Spaced rep.', 'Intensive'],              sel: 'Spaced rep.' },
+      ].map((p) => (
+        <FieldRow key={p.label} label={p.label}>
+          <OBPills options={p.options} selected={p.sel} />
+        </FieldRow>
+      ))}
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+        <SaveBtn label="Save defaults" />
+      </div>
+    </SettingsSection>
+  </SettingsLayout>
+);
+
+// ── Tab 3: Notifications ──────────────────────────────────────────────────────
+const NotificationsTab = () => (
+  <SettingsLayout tab="Notifications">
+    <SettingsSection title="Email notifications">
+      <Toggle on={true}  label="Weekly progress summary" sub="Every Monday — readiness change, sessions completed, weak areas." />
+      <Toggle on={true}  label="Review reminders" sub="When you have items due for spaced-repetition review." />
+      <Toggle on={false} label="Session streak alerts" sub="Nudge when your streak is at risk of breaking." />
+      <Toggle on={false} label="Exam countdown" sub="Daily reminder in the 7 days before your scheduled exam." />
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+        <SaveBtn label="Save preferences" />
+      </div>
+    </SettingsSection>
+
+    <SettingsSection title="In-app notifications" last={true}>
+      <Toggle on={true}  label="Session completion summary" sub="Show the summary card after every session ends." />
+      <Toggle on={true}  label="Readiness milestones" sub="Notify when your readiness crosses 10% thresholds." />
+      <Toggle on={false} label="Agent suggestions" sub="Let the study agent proactively suggest focus topics." />
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+        <SaveBtn label="Save preferences" />
+      </div>
+    </SettingsSection>
+  </SettingsLayout>
+);
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <Canvas>
+      <CanvasSection title="Settings" subtitle="Three tabs. Sidebar stays visible throughout — Settings active. Max-width content column for comfortable reading.">
+        <Artboard label="Account" width={1100} height={760}>
+          <AccountTab />
+        </Artboard>
+        <Artboard label="Study defaults" width={1100} height={680}>
+          <StudyDefaultsTab />
+        </Artboard>
+        <Artboard label="Notifications" width={1100} height={640}>
+          <NotificationsTab />
+        </Artboard>
+      </CanvasSection>
+    </Canvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

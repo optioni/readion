@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Readion — Production Email Templates</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#e7e5df;font-family:Inter,system-ui,sans-serif;color:#0f172a;padding:56px 32px 80px;}
+  .wrap{max-width:760px;margin:0 auto;}
+  .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#1d4ed8;font-weight:600;}
+  h1{font-size:30px;font-weight:700;letter-spacing:-.02em;margin-top:8px;}
+  .sub{font-size:15px;color:#64748b;margin-top:8px;line-height:1.55;max-width:580px;}
+  .grid{margin-top:32px;display:flex;flex-direction:column;gap:12px;}
+  a.card{display:flex;align-items:center;gap:16px;background:#fff;border:1px solid #e7e3da;border-radius:14px;padding:20px 22px;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s;}
+  a.card:hover{border-color:#1d4ed8;transform:translateY(-1px);}
+  .ic{width:44px;height:44px;border-radius:11px;background:#0f172a;color:#818cf8;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .ct{flex:1;}
+  .ct .t{font-size:16px;font-weight:600;}
+  .ct .d{font-size:13px;color:#64748b;margin-top:3px;line-height:1.45;}
+  .tag{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:4px 9px;border-radius:999px;flex-shrink:0;}
+  .tag.tx{color:#64748b;background:#eef0f3;}
+  .tag.life{color:#1d4ed8;background:#e7ecfb;}
+  .arrow{color:#cbd2dc;font-size:20px;}
+  .note{margin-top:28px;font-size:12.5px;color:#94a3b8;line-height:1.6;border-top:1px solid #d8d5cd;padding-top:18px;}
+  .note code{font-family:ui-monospace,Menlo,monospace;color:#475569;background:#f1efe9;padding:1px 5px;border-radius:4px;font-size:11.5px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Readion · Production HTML</div>
+  <h1>Email Templates</h1>
+  <p class="sub">Five sendable, table-based, inline-styled templates — client-safe across Gmail, Outlook and Apple Mail. Each opens standalone; merge fields are listed in a comment at the top of every file.</p>
+
+  <div class="grid">
+    <a class="card" href="verify-email.html">
+      <div class="ic">&#9993;</div>
+      <div class="ct"><div class="t">Email verification</div><div class="d">Sent on sign-up · verify link, 24-hour expiry, security note, no unsubscribe</div></div>
+      <span class="tag tx">Transactional</span>
+      <span class="arrow">&rsaquo;</span>
+    </a>
+    <a class="card" href="welcome.html">
+      <div class="ic">&#9733;</div>
+      <div class="ct"><div class="t">Welcome</div><div class="d">Sent on registration · selected cert card + diagnostic baseline CTA</div></div>
+      <span class="tag life">Lifecycle</span>
+      <span class="arrow">&rsaquo;</span>
+    </a>
+    <a class="card" href="weekly-digest.html">
+      <div class="ic">&#9776;</div>
+      <div class="ct"><div class="t">Weekly progress digest</div><div class="d">Coach narrative · readiness, weekly delta, weakest domain, due reviews · one-click unsubscribe</div></div>
+      <span class="tag life">Lifecycle</span>
+      <span class="arrow">&rsaquo;</span>
+    </a>
+    <a class="card" href="password-reset.html">
+      <div class="ic">&#128274;</div>
+      <div class="ct"><div class="t">Password reset</div><div class="d">Transactional · 1-hour expiry, security note, fallback link, no unsubscribe</div></div>
+      <span class="tag tx">Transactional</span>
+      <span class="arrow">&rsaquo;</span>
+    </a>
+    <a class="card" href="post-exam-nudge.html">
+      <div class="ic">&#10003;</div>
+      <div class="ct"><div class="t">Post-exam outcome nudge</div><div class="d">One-tap survey · Passed / Didn't pass / Not yet · one-time send</div></div>
+      <span class="tag life">Lifecycle</span>
+      <span class="arrow">&rsaquo;</span>
+    </a>
+  </div>
+
+  <p class="note">Sample values (Alex, SAA-C03, 71%) are shown inline so each file previews on its own. Replace the <code>{{merge_fields}}</code> server-side before sending — the digest's readiness bar fill width must also be set to <code>{{readiness}}%</code>. The design mockups remain in <code>Email Templates.html</code>.</p>
+</div>
+</body>
+</html>

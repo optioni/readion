@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion — Design Files</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%;
+      font-family: Inter, ui-sans-serif, system-ui;
+      background: var(--readion-background-base);
+      color: var(--readion-text-primary);
+    }
+
+    .page { max-width: 920px; margin: 0 auto; padding: 56px 40px 80px; }
+
+    /* Header */
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 48px; }
+    .logo { width: 32px; height: 32px; border-radius: 8px; background: var(--readion-accent-label); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .header-text { display: flex; flex-direction: column; gap: 2px; }
+    .header-title { font-size: 18px; font-weight: 700; color: var(--readion-text-primary); letter-spacing: -0.01em; }
+    .header-sub { font-size: 13px; color: var(--readion-text-muted); }
+
+    /* Group label */
+    .group { margin-bottom: 40px; }
+    .group-label {
+      font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--readion-text-subtle); margin-bottom: 12px; padding-bottom: 8px;
+      border-bottom: 1px solid var(--readion-border-strong);
+    }
+
+    /* Card grid */
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+    /* View card */
+    .card {
+      background: var(--readion-background-surface);
+      border: 1px solid var(--readion-border-strong);
+      border-radius: var(--readion-rounded-xl);
+      padding: 18px 20px;
+      text-decoration: none;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: border-color 0.15s, background 0.15s;
+      cursor: pointer;
+    }
+    .card:hover {
+      border-color: var(--readion-accent-label);
+      background: var(--readion-background-overlay);
+    }
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .card-icon {
+      width: 32px; height: 32px; border-radius: var(--readion-rounded-md);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .card-arrow { color: var(--readion-text-subtle); opacity: 0; transition: opacity 0.15s; }
+    .card:hover .card-arrow { opacity: 1; }
+    .card-name { font-size: 14px; font-weight: 600; color: var(--readion-text-primary); margin-bottom: 2px; }
+    .card-desc { font-size: 12px; color: var(--readion-text-muted); line-height: 1.55; }
+    .card-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+    .chip {
+      font-size: 10px; padding: 2px 7px;
+      background: var(--readion-background-elevated);
+      border: 1px solid var(--readion-border-strong);
+      border-radius: var(--readion-rounded-full);
+      color: var(--readion-text-subtle);
+      white-space: nowrap;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 56px; padding-top: 24px;
+      border-top: 1px solid var(--readion-border-strong);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .footer-left { font-size: 12px; color: var(--readion-text-subtle); }
+    .footer-ds { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--readion-text-subtle); }
+    .ds-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--readion-accent-label); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <svg width="16" height="16" viewBox="0 0 12 12" fill="none">
+        <path d="M6 1l1.5 3.5L11 5l-2.5 2.5.5 3.5L6 9.5 3 11l.5-3.5L1 5l3.5-.5z" fill="#0f172a"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <div class="header-title">Readion</div>
+      <div class="header-sub">Design files &middot; All views</div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="group">
+    <div class="group-label">Account</div>
+    <div class="grid">
+      <a class="card" href="Settings.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(124,140,248,0.12); border: 1px solid rgba(124,140,248,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Settings</div>
+          <div class="card-desc">Account, study defaults, and notifications.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Account</span>
+          <span class="chip">Study defaults</span>
+          <span class="chip">Notifications</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Auth -->
+  <div class="group">
+    <div class="group-label">Authentication</div>
+    <div class="grid">
+
+      <a class="card" href="Login.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(124,140,248,0.12); border: 1px solid rgba(124,140,248,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Login flow</div>
+          <div class="card-desc">Sign in, register, forgot password, email sent, set new password.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Sign in</span>
+          <span class="chip">Error state</span>
+          <span class="chip">Register</span>
+          <span class="chip">Reset flow</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- User flows -->
+  <div class="group">
+    <div class="group-label">User flows</div>
+    <div class="grid">
+
+      <a class="card" href="Onboarding.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(124,140,248,0.12); border: 1px solid rgba(124,140,248,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Onboarding</div>
+          <div class="card-desc">First-run wizard. Cert picker, study preferences, optional diagnostic.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">3 steps</span>
+          <span class="chip">2 edge cases</span>
+        </div>
+      </a>
+
+      <a class="card" href="Dashboard.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(29,78,216,0.12); border: 1px solid rgba(29,78,216,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Dashboard</div>
+          <div class="card-desc">Home screen. Cert cards with readiness scores, weak areas, quick-start review.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">2-cert state</span>
+          <span class="chip">3-cert state</span>
+        </div>
+      </a>
+
+      <a class="card" href="Session.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-good)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Study session</div>
+          <div class="card-desc">Split-panel interface with reading blocks, quiz cards, and AI agent chat.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Answering</span>
+          <span class="chip">Submitted</span>
+          <span class="chip">Agent collapsed</span>
+        </div>
+      </a>
+
+      <a class="card" href="MockExam.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-poor)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Mock exam</div>
+          <div class="card-desc">Full-screen timed exam. Question nav panel, results by domain, review mode.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Loading</span>
+          <span class="chip">Active</span>
+          <span class="chip">Results</span>
+          <span class="chip">Review</span>
+        </div>
+      </a>
+
+      <a class="card" href="Summary.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-good)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Session summary</div>
+          <div class="card-desc">Post-session breakdown. Readiness delta, domain accuracy, strongest/weakest Q, drill CTA.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Study session</span>
+          <span class="chip">Mock exam</span>
+        </div>
+      </a>
+
+      <a class="card" href="QuickReview.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(124,140,248,0.12); border: 1px solid rgba(124,140,248,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">5-min review</div>
+          <div class="card-desc">SRS flashcard loop. Card front, reveal, Again/Hard/Good/Easy rating, completion.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Queue</span>
+          <span class="chip">Front</span>
+          <span class="chip">Back + rating</span>
+          <span class="chip">Done</span>
+        </div>
+      </a>
+
+      <a class="card" href="Progress.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-medium)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Progress</div>
+          <div class="card-desc">Historical view. Readiness chart, domain scores, mastery controls, session history.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">With history</span>
+          <span class="chip">Early state</span>
+        </div>
+      </a>
+
+      <a class="card" href="CertDetail.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(29,78,216,0.12); border: 1px solid rgba(29,78,216,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Cert detail</div>
+          <div class="card-desc">Per-cert deep-dive. Domain scores, stats, recent sessions, type filter.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Overview</span>
+          <span class="chip">Sessions tab</span>
+        </div>
+      </a>
+
+      <a class="card" href="SessionStart.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-good)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5,3 19,12 5,21"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Session start</div>
+          <div class="card-desc">Quick start with defaults or customise domain focus, duration, and difficulty.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Quick start</span>
+          <span class="chip">Custom config</span>
+        </div>
+      </a>
+
+      <a class="card" href="AgentChat.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(124,140,248,0.12); border: 1px solid rgba(124,140,248,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Agent chat</div>
+          <div class="card-desc">Standalone general-knowledge tutor. No session context, 4h sliding TTL.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Active</span>
+          <span class="chip">Empty</span>
+          <span class="chip">Expiry warning</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- Admin flows -->
+  <div class="group">
+    <div class="group-label">Admin flows</div>
+    <div class="grid">
+
+      <a class="card" href="AdminCertSetup.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-warning)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Cert setup</div>
+          <div class="card-desc">Source confirmation, per-field citation panel, coverage progress, stale re-verification diff.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Source confirm</span>
+          <span class="chip">Field citations</span>
+          <span class="chip">Coverage</span>
+          <span class="chip">Stale diff</span>
+        </div>
+      </a>
+
+      <a class="card" href="AdminContentUsers.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-warning)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Content &amp; Users</div>
+          <div class="card-desc">Quarantine review with provenance, content sources, user table, append-only audit log.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Quarantine</span>
+          <span class="chip">Sources</span>
+          <span class="chip">Users</span>
+          <span class="chip">Audit log</span>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="footer-left">15 views &middot; 56 artboards</div>
+    <div class="footer-ds">
+      <div class="ds-dot"></div>
+      ReadionTokens design system
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

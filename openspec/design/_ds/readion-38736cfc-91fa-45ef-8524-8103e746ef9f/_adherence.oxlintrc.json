@@ -1,0 +1,149 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": []
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {},
+    "tokens": [
+      "--readion-accent-gradient",
+      "--readion-accent-label",
+      "--readion-accent-label-muted",
+      "--readion-background-base",
+      "--readion-background-elevated",
+      "--readion-background-overlay",
+      "--readion-background-surface",
+      "--readion-border-default",
+      "--readion-border-strong",
+      "--readion-font-mono",
+      "--readion-font-sans",
+      "--readion-font-size-base",
+      "--readion-font-size-heading",
+      "--readion-font-size-label",
+      "--readion-font-size-mono",
+      "--readion-font-size-score",
+      "--readion-letter-spacing-label",
+      "--readion-line-height-base",
+      "--readion-line-height-heading",
+      "--readion-primary",
+      "--readion-primary-100",
+      "--readion-primary-200",
+      "--readion-primary-300",
+      "--readion-primary-400",
+      "--readion-primary-50",
+      "--readion-primary-500",
+      "--readion-primary-600",
+      "--readion-primary-700",
+      "--readion-primary-800",
+      "--readion-primary-900",
+      "--readion-primary-950",
+      "--readion-primary-hover",
+      "--readion-rounded-full",
+      "--readion-rounded-lg",
+      "--readion-rounded-md",
+      "--readion-rounded-sm",
+      "--readion-rounded-xl",
+      "--readion-spacing-lg",
+      "--readion-spacing-md",
+      "--readion-spacing-sm",
+      "--readion-spacing-xl",
+      "--readion-spacing-xs",
+      "--readion-status-good",
+      "--readion-status-medium",
+      "--readion-status-poor",
+      "--readion-status-warning",
+      "--readion-text-muted",
+      "--readion-text-primary",
+      "--readion-text-secondary",
+      "--readion-text-subtle"
+    ],
+    "tokenKinds": {
+      "--readion-background-base": "color",
+      "--readion-background-surface": "color",
+      "--readion-background-elevated": "color",
+      "--readion-background-overlay": "color",
+      "--readion-primary": "color",
+      "--readion-primary-hover": "color",
+      "--readion-primary-50": "color",
+      "--readion-primary-100": "color",
+      "--readion-primary-200": "color",
+      "--readion-primary-300": "color",
+      "--readion-primary-400": "color",
+      "--readion-primary-500": "color",
+      "--readion-primary-600": "color",
+      "--readion-primary-700": "color",
+      "--readion-primary-800": "color",
+      "--readion-primary-900": "color",
+      "--readion-primary-950": "color",
+      "--readion-accent-label": "color",
+      "--readion-accent-label-muted": "color",
+      "--readion-accent-gradient": "color",
+      "--readion-text-primary": "font",
+      "--readion-text-secondary": "font",
+      "--readion-text-muted": "font",
+      "--readion-text-subtle": "font",
+      "--readion-status-poor": "color",
+      "--readion-status-warning": "color",
+      "--readion-status-medium": "color",
+      "--readion-status-good": "color",
+      "--readion-border-default": "color",
+      "--readion-border-strong": "color",
+      "--readion-rounded-sm": "radius",
+      "--readion-rounded-md": "radius",
+      "--readion-rounded-lg": "radius",
+      "--readion-rounded-xl": "radius",
+      "--readion-rounded-full": "radius",
+      "--readion-spacing-xs": "spacing",
+      "--readion-spacing-sm": "spacing",
+      "--readion-spacing-md": "spacing",
+      "--readion-spacing-lg": "spacing",
+      "--readion-spacing-xl": "spacing",
+      "--readion-font-sans": "font",
+      "--readion-font-mono": "font",
+      "--readion-font-size-base": "font",
+      "--readion-font-size-heading": "font",
+      "--readion-font-size-label": "font",
+      "--readion-font-size-score": "font",
+      "--readion-font-size-mono": "font",
+      "--readion-line-height-base": "font",
+      "--readion-line-height-heading": "font",
+      "--readion-letter-spacing-label": "font"
+    },
+    "fontFamilies": []
+  }
+}

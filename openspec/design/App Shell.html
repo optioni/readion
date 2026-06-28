@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion — App Shell &amp; Readiness (shared spec)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui; background: #d8d5cf; }
+    .canvas-wrap { padding: 48px 56px; }
+    .canvas-section { margin-bottom: 56px; }
+    .canvas-section-head { margin-bottom: 20px; }
+    .canvas-section-title { font-size: 17px; font-weight: 600; color: #2d2520; font-family: -apple-system, system-ui, sans-serif; }
+    .canvas-section-sub { font-size: 12px; color: #7a6e65; margin-top: 3px; max-width: 720px; line-height: 1.5; }
+    .canvas-row { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+    .artboard-wrap { flex-shrink: 0; }
+    .artboard-label { font-size: 11px; color: #7a6e65; margin-bottom: 7px; font-weight: 500; font-family: -apple-system, system-ui, sans-serif; letter-spacing: 0.02em; }
+    .artboard-frame { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 32px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.08); }
+    .spec-head { margin-bottom: 40px; }
+    .spec-title { font-size: 24px; font-weight: 700; color: #2d2520; font-family: -apple-system, system-ui, sans-serif; }
+    .spec-sub { font-size: 13px; color: #6b5f56; margin-top: 6px; max-width: 760px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.js"></script>
+<script type="text/babel" src="app-shell.jsx"></script>
+
+<script type="text/babel">
+const { T, Canvas, CanvasSection, Artboard, AppFrame, AppSidebar, PageHeader, ReadinessRing, ReadinessBar, DomainBadge, DomainScoreRow, scoreColor, scoreBg, scoreLabel } = window.Shell;
+
+const Frame = ({ children, h }) => (
+  <div style={{ background: T.base, fontFamily: T.sans, minHeight: h || 'auto' }}>{children}</div>
+);
+
+const Panel = ({ title, children, w }) => (
+  <div style={{ width: w, background: T.base, borderRadius: 10, padding: 28, fontFamily: T.sans }}>
+    {title && <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 18 }}>{title}</div>}
+    {children}
+  </div>
+);
+
+// Faux content beside the sidebar so the chrome reads in context
+const ChromeDemo = ({ active, admin }) => (
+  <AppFrame active={active} admin={admin} minHeight={440}>
+    <PageHeader
+      eyebrow={active}
+      title={active === 'Dashboard' ? 'Your certifications' : active}
+      right={<div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: T.tMuted }}>
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: T.good }} />2 active
+      </div>}
+    />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {[0, 1].map(i => (
+        <div key={i} style={{ height: 64, background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl }} />
+      ))}
+      <div style={{ height: 64, border: '1px dashed ' + T.border, borderRadius: T.rXl }} />
+    </div>
+  </AppFrame>
+);
+
+const DOMAINS = [
+  { label: 'IAM & Security', pct: 38, focus: true },
+  { label: 'Networking', pct: 44, focus: true },
+  { label: 'Cost Optimization', pct: 58 },
+  { label: 'Compute', pct: 67 },
+  { label: 'Storage & Databases', pct: 81 },
+];
+
+function App() {
+  return (
+    <Canvas>
+      <div className="spec-head">
+        <div className="spec-title">App Shell &amp; Readiness</div>
+        <div className="spec-sub">The shared building blocks every Readion view composes from — defined once in <b>app-shell.jsx</b>, exported on <code>window.Shell</code>. Build the remaining views against these so chrome and the readiness language never drift.</div>
+      </div>
+
+      <CanvasSection title="App chrome" subtitle="AppSidebar + AppFrame. One nav shell, configurable active item. The Admin panel link is role-gated (admin prop). The user card sits at the bottom.">
+        <Artboard label="active = Dashboard" width={760}><ChromeDemo active="Dashboard" /></Artboard>
+        <Artboard label="active = Progress · admin role" width={760}><ChromeDemo active="Progress" admin={true} /></Artboard>
+      </CanvasSection>
+
+      <CanvasSection title="Readiness — colour scale" subtitle="One function drives every score colour. <50 poor · 50–64 building · 65–74 on track · 75+ exam-ready. Null renders as ‘not assessed’.">
+        <Artboard label="ReadinessRing" width={620}>
+          <Frame>
+            <Panel>
+              <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                {[42, 58, 71, 88, null].map((p, i) => (
+                  <div key={i} style={{ textAlign: 'center' }}>
+                    <ReadinessRing pct={p} size={108} />
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          </Frame>
+        </Artboard>
+      </CanvasSection>
+
+      <CanvasSection title="Readiness — inline" subtitle="ReadinessBar for compact contexts, DomainBadge for weak-area chips, DomainScoreRow for breakdowns (focus areas flagged).">
+        <Artboard label="ReadinessBar + DomainBadge" width={420}>
+          <Frame>
+            <Panel title="Bars">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 24 }}>
+                {[42, 67, 88].map(p => (
+                  <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <ReadinessBar pct={p} />
+                    <span style={{ fontSize: 12, color: scoreColor(p), fontWeight: 600, width: 32, textAlign: 'right' }}>{p}%</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 12 }}>Badges</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <DomainBadge label="IAM & Security" pct={38} />
+                <DomainBadge label="Networking" pct={58} />
+                <DomainBadge label="Compute" pct={71} />
+                <DomainBadge label="Storage" pct={88} />
+              </div>
+            </Panel>
+          </Frame>
+        </Artboard>
+
+        <Artboard label="DomainScoreRow breakdown" width={480}>
+          <Frame>
+            <Panel title="Domain breakdown">
+              {DOMAINS.map(d => <DomainScoreRow key={d.label} label={d.label} pct={d.pct} focus={d.focus} labelWidth={170} />)}
+            </Panel>
+          </Frame>
+        </Artboard>
+      </CanvasSection>
+    </Canvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

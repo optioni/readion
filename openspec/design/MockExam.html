@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion — Mock Exam</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui; background: #c2bfb8; }
+    .canvas-wrap { padding: 48px 56px; }
+    .canvas-section { margin-bottom: 56px; }
+    .canvas-section-head { margin-bottom: 20px; }
+    .canvas-section-title { font-size: 17px; font-weight: 600; color: #2d2520; }
+    .canvas-section-sub { font-size: 12px; color: #7a6e65; margin-top: 3px; }
+    .canvas-row { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+    .artboard-wrap { flex-shrink: 0; }
+    .artboard-label { font-size: 11px; color: #7a6e65; margin-bottom: 7px; font-weight: 500; letter-spacing: 0.02em; }
+    .artboard-frame { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.js"></script>
+
+<script type="text/babel">
+
+// ── Canvas shell ─────────────────────────────────────────────────────────────
+const Canvas = (p) => <div className="canvas-wrap">{p.children}</div>;
+const CanvasSection = (p) => (
+  <div className="canvas-section">
+    <div className="canvas-section-head">
+      <div className="canvas-section-title">{p.title}</div>
+      {p.subtitle && <div className="canvas-section-sub">{p.subtitle}</div>}
+    </div>
+    <div className="canvas-row">{p.children}</div>
+  </div>
+);
+const Artboard = (p) => (
+  <div className="artboard-wrap" style={{ width: p.width }}>
+    <div className="artboard-label">{p.label}</div>
+    <div className="artboard-frame" style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+  </div>
+);
+
+// ── Tokens ───────────────────────────────────────────────────────────────────
+const T = {
+  base:     'var(--readion-background-base)',
+  surface:  'var(--readion-background-surface)',
+  elevated: 'var(--readion-background-elevated)',
+  overlay:  'var(--readion-background-overlay)',
+  primary:  'var(--readion-primary)',
+  accent:   'var(--readion-accent-label)',
+  tPrimary: 'var(--readion-text-primary)',
+  tSecond:  'var(--readion-text-secondary)',
+  tMuted:   'var(--readion-text-muted)',
+  tSubtle:  'var(--readion-text-subtle)',
+  border:   'var(--readion-border-strong)',
+  borderDef:'var(--readion-border-default)',
+  poor:     'var(--readion-status-poor)',
+  warn:     'var(--readion-status-warning)',
+  medium:   'var(--readion-status-medium)',
+  good:     'var(--readion-status-good)',
+  rSm:      'var(--readion-rounded-sm)',
+  rMd:      'var(--readion-rounded-md)',
+  rLg:      'var(--readion-rounded-lg)',
+  rXl:      'var(--readion-rounded-xl)',
+  rFull:    'var(--readion-rounded-full)',
+};
+
+// ── Exam header ───────────────────────────────────────────────────────────────
+const ExamHeader = ({ mode, qCurrent, qTotal, timeStr, onFlag, flagged, timeReady }) => (
+  <div style={{ height: 52, borderBottom: '1px solid ' + T.border, background: T.elevated, display: 'flex', alignItems: 'center', padding: '0 28px', gap: 20, flexShrink: 0 }}>
+    {/* Logo mark */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+      <div style={{ width: 20, height: 20, borderRadius: 5, background: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 1l1.5 3.5L11 5l-2.5 2.5.5 3.5L6 9.5 3 11l.5-3.5L1 5l3.5-.5z" fill="#0f172a"/></svg>
+      </div>
+      <span style={{ fontSize: 11, fontWeight: 600, color: T.tMuted, letterSpacing: '0.06em', textTransform: 'uppercase' }}>SAA-C03</span>
+    </div>
+
+    <div style={{ width: 1, height: 16, background: T.border }} />
+
+    {/* Mode label */}
+    <span style={{ fontSize: 12, color: T.tSecond }}>
+      {mode === 'loading' ? 'Preparing exam…' : mode === 'review' ? 'Review mode' : 'Mock Exam'}
+    </span>
+
+    <div style={{ flex: 1 }} />
+
+    {/* Q count */}
+    {qCurrent != null && (
+      <span style={{ fontSize: 13, color: T.tSecond, fontFamily: 'var(--readion-font-mono)' }}>
+        Q <span style={{ color: T.tPrimary, fontWeight: 500 }}>{qCurrent}</span>
+        <span style={{ color: T.tSubtle }}>/{qTotal}</span>
+      </span>
+    )}
+
+    {/* Timer */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', background: timeReady ? 'rgba(248,113,113,0.08)' : T.surface, border: '1px solid ' + (timeReady ? 'rgba(248,113,113,0.25)' : T.border), borderRadius: T.rMd }}>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={timeReady ? T.poor : T.tMuted} strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      <span style={{ fontSize: 13, fontFamily: 'var(--readion-font-mono)', color: timeReady ? T.poor : T.tMuted, letterSpacing: '0.04em' }}>{timeStr}</span>
+    </div>
+
+    {/* Flag (only during active exam) */}
+    {mode === 'active' && (
+      <button style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', background: flagged ? 'rgba(251,146,60,0.1)' : 'transparent', border: '1px solid ' + (flagged ? 'rgba(251,146,60,0.35)' : T.border), borderRadius: T.rMd, cursor: 'pointer' }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill={flagged ? T.warn : 'none'} stroke={flagged ? T.warn : T.tMuted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+        </svg>
+        <span style={{ fontSize: 12, color: flagged ? T.warn : T.tMuted }}>Flag</span>
+      </button>
+    )}
+
+    {/* Review back link */}
+    {mode === 'review' && (
+      <span style={{ fontSize: 12, color: T.accent, cursor: 'pointer' }}>&#8592; Back to results</span>
+    )}
+  </div>
+);
+
+// ── Quiz option (shared with session view) ────────────────────────────────────
+const QuizOption = ({ letter, text, state }) => {
+  const map = {
+    rest:      { bg: T.base,    border: T.borderDef, color: T.tSecond,  lc: T.tMuted   },
+    selected:  { bg: T.primary, border: T.primary,   color: '#fff',      lc: 'rgba(255,255,255,0.6)' },
+    correct:   { bg: T.base,    border: T.good,       color: T.good,      lc: T.good     },
+    incorrect: { bg: T.base,    border: T.poor,       color: T.poor,      lc: T.poor     },
+    dim:       { bg: T.base,    border: T.borderDef,  color: T.tSubtle,   lc: T.tSubtle  },
+  };
+  const s = map[state] || map.rest;
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 14px', background: s.bg, border: '1px solid ' + s.border, borderRadius: T.rMd, cursor: state === 'dim' || state === 'correct' ? 'default' : 'pointer' }}>
+      <div style={{ width: 20, height: 20, borderRadius: T.rSm, background: state === 'selected' ? 'rgba(255,255,255,0.2)' : T.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.lc, fontFamily: 'var(--readion-font-mono)' }}>{letter}</span>
+      </div>
+      <span style={{ fontSize: 14, color: s.color, lineHeight: 1.55, flex: 1 }}>{text}</span>
+      {state === 'correct' && (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
+          <circle cx="8" cy="8" r="7" fill="rgba(52,211,153,0.12)" stroke="var(--readion-status-good)" strokeWidth="1.2"/>
+          <path d="M5 8l2 2 4-4" stroke="var(--readion-status-good)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      )}
+      {state === 'incorrect' && (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
+          <circle cx="8" cy="8" r="7" fill="rgba(248,113,113,0.1)" stroke="var(--readion-status-poor)" strokeWidth="1.2"/>
+          <path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="var(--readion-status-poor)" strokeWidth="1.4" strokeLinecap="round"/>
+        </svg>
+      )}
+    </div>
+  );
+};
+
+// ── Question nav panel ────────────────────────────────────────────────────────
+// squareState per Q: 'unanswered' | 'answered' | 'current' | 'flagged' | 'correct' | 'incorrect' | 'skipped'
+const NavPanel = ({ total, squareStates, loaded, mode, loadedCount }) => {
+  const colors = {
+    unanswered: { bg: T.surface,  border: T.border,             text: T.tMuted   },
+    answered:   { bg: T.primary,  border: T.primary,            text: '#fff'      },
+    current:    { bg: T.surface,  border: T.accent,             text: T.accent    },
+    flagged:    { bg: 'rgba(251,146,60,0.1)', border: T.warn,   text: T.warn      },
+    loading:    { bg: T.elevated, border: T.borderDef,          text: T.tSubtle   },
+    pending:    { bg: T.elevated, border: T.borderDef,          text: 'transparent'},
+    correct:    { bg: 'rgba(52,211,153,0.15)',  border: T.good,  text: T.good     },
+    incorrect:  { bg: 'rgba(248,113,113,0.12)', border: T.poor,  text: T.poor     },
+    skipped:    { bg: T.surface,  border: T.borderDef,          text: T.tSubtle   },
+  };
+
+  return (
+    <div style={{ width: 216, flexShrink: 0, background: T.elevated, borderLeft: '1px solid ' + T.border, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '14px 16px 10px', borderBottom: '1px solid ' + T.border, flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: mode === 'loading' ? 8 : 0 }}>
+          <span style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted }}>Questions</span>
+          {mode === 'loading' ? (
+            <span style={{ fontSize: 11, color: T.accent }}>{loadedCount}/{total} ready</span>
+          ) : (
+            <span style={{ fontSize: 11, color: T.tMuted }}>{total} total</span>
+          )}
+        </div>
+        {mode === 'loading' && (
+          <div style={{ height: 2, background: T.border, borderRadius: 2 }}>
+            <div style={{ height: '100%', width: ((loadedCount / total) * 100) + '%', background: T.accent, borderRadius: 2 }} />
+          </div>
+        )}
+      </div>
+
+      {/* Legend */}
+      {(mode === 'active' || mode === 'review') && (
+        <div style={{ padding: '8px 16px', borderBottom: '1px solid ' + T.borderDef, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {(mode === 'active' ? [
+            { label: 'Answered', bg: T.primary },
+            { label: 'Flagged',  bg: T.warn    },
+          ] : [
+            { label: 'Correct',   bg: T.good },
+            { label: 'Incorrect', bg: T.poor },
+            { label: 'Skipped',   bg: T.tSubtle },
+          ]).map((item) => (
+            <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div style={{ width: 8, height: 8, borderRadius: 2, background: item.bg }} />
+              <span style={{ fontSize: 10, color: T.tSubtle }}>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Grid */}
+      <div style={{ flex: 1, padding: '12px 16px', display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 5, alignContent: 'flex-start', overflowY: 'auto' }}>
+        {Array.from({ length: total }, (_, i) => {
+          const st = squareStates[i] || (i < loadedCount ? 'unanswered' : i === loadedCount ? 'loading' : 'pending');
+          const c = colors[st] || colors.unanswered;
+          return (
+            <div key={i} style={{ width: 28, height: 28, borderRadius: T.rSm, background: c.bg, border: '1px solid ' + c.border, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: st === 'pending' ? 'default' : 'pointer' }}>
+              <span style={{ fontSize: 10, fontFamily: 'var(--readion-font-mono)', color: c.text, fontWeight: 500 }}>{st === 'pending' ? '' : i + 1}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Submit / actions */}
+      {mode === 'active' && (
+        <div style={{ padding: '14px 16px', borderTop: '1px solid ' + T.border, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button style={{ width: '100%', padding: '10px 0', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+            Submit exam
+          </button>
+          <div style={{ fontSize: 11, color: T.tSubtle, textAlign: 'center' }}>11 of 65 answered</div>
+        </div>
+      )}
+      {mode === 'review' && (
+        <div style={{ padding: '14px 16px', borderTop: '1px solid ' + T.border, flexShrink: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: T.tMuted, marginBottom: 6 }}>
+            <span style={{ color: T.good }}>46 correct</span>
+            <span style={{ color: T.poor }}>15 incorrect</span>
+            <span style={{ color: T.tSubtle }}>4 skipped</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Loading state ────────────────────────────────────────────────────────────
+const loadingSquares = {};
+for (let i = 0; i < 65; i++) {
+  if (i < 43) loadingSquares[i] = 'unanswered';
+}
+
+const ExamLoading = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', background: T.base, height: '100%' }}>
+    <ExamHeader mode="loading" qCurrent={null} qTotal={65} timeStr="-- : -- : --" timeReady={false} />
+    <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 48, gap: 20 }}>
+        <div style={{ width: 48, height: 48, borderRadius: T.rXl, background: T.surface, border: '1px solid ' + T.border, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 12l2 2 4-4"/>
+          </svg>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 18, fontWeight: 600, color: T.tPrimary, marginBottom: 6 }}>Preparing your exam</div>
+          <div style={{ fontSize: 13, color: T.tSecond, marginBottom: 4 }}>Verifying question bank integrity…</div>
+          <div style={{ fontSize: 12, color: T.tMuted }}>The timer starts once all 65 questions are ready.</div>
+        </div>
+        <div style={{ width: 280 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontSize: 11, color: T.tMuted }}>Questions verified</span>
+            <span style={{ fontSize: 11, color: T.accent }}>43 / 65</span>
+          </div>
+          <div style={{ height: 4, background: T.border, borderRadius: 4 }}>
+            <div style={{ height: '100%', width: '66%', background: T.accent, borderRadius: 4 }} />
+          </div>
+        </div>
+        <div style={{ padding: '10px 16px', background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rLg, fontSize: 12, color: T.tMuted, maxWidth: 280, textAlign: 'center', lineHeight: 1.6 }}>
+          Your exam is resumable within the 130-minute window. If you close this tab, the clock keeps running.
+        </div>
+      </div>
+      <NavPanel total={65} squareStates={loadingSquares} loaded={true} mode="loading" loadedCount={43} />
+    </div>
+  </div>
+);
+
+// ── Active exam ───────────────────────────────────────────────────────────────
+const QUESTION_ACTIVE = "A company needs to ensure its application can survive the failure of a single Availability Zone. The application uses an Amazon RDS Multi-AZ deployment and an Auto Scaling group behind an Application Load Balancer. Which additional configuration is required to make the application fully AZ-resilient?";
+
+const OPTIONS_ACTIVE = [
+  { letter: 'A', text: 'Enable cross-zone load balancing on the Application Load Balancer', state: 'rest' },
+  { letter: 'B', text: 'Configure the Auto Scaling group to span at least two Availability Zones and set the minimum capacity to 2', state: 'selected' },
+  { letter: 'C', text: 'Enable RDS read replicas in each Availability Zone', state: 'rest' },
+  { letter: 'D', text: 'Use a Network Load Balancer instead of an Application Load Balancer for faster failover', state: 'rest' },
+];
+
+const activeSquares = {};
+for (let i = 0; i < 65; i++) {
+  if (i < 11) activeSquares[i] = 'answered';
+  else if (i === 11) activeSquares[i] = 'current';
+  else if (i === 12) activeSquares[i] = 'flagged';
+}
+
+const ExamActive = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', background: T.base, height: '100%' }}>
+    <ExamHeader mode="active" qCurrent={12} qTotal={65} timeStr="01:47:23" timeReady={false} flagged={false} />
+    <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '32px 48px' }}>
+        <div style={{ maxWidth: 720 }}>
+          {/* Domain tag */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 10px', background: 'rgba(124,140,248,0.08)', border: '1px solid rgba(124,140,248,0.15)', borderRadius: T.rFull, marginBottom: 20 }}>
+            <span style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.accent }}>Design Resilient Architectures</span>
+          </div>
+
+          <p style={{ fontSize: 16, color: T.tPrimary, lineHeight: 1.7, marginBottom: 28, fontWeight: 400 }}>
+            {QUESTION_ACTIVE}
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 32 }}>
+            {OPTIONS_ACTIVE.map((o) => <QuizOption key={o.letter} letter={o.letter} text={o.text} state={o.state} />)}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button style={{ padding: '8px 18px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer' }}>
+              &#8592; Previous
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 13, color: T.tMuted, cursor: 'pointer' }}>Skip</span>
+              <button style={{ padding: '8px 20px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+                Next &#8594;
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <NavPanel total={65} squareStates={activeSquares} loaded={true} mode="active" loadedCount={65} />
+    </div>
+  </div>
+);
+
+// ── Score breakdown ────────────────────────────────────────────────────────────
+const DOMAINS = [
+  { name: 'Design Resilient Architectures',       score: 79, threshold: 72, weight: '26%' },
+  { name: 'Design High-Performing Architectures', score: 72, threshold: 72, weight: '24%' },
+  { name: 'Design Secure Applications',           score: 61, threshold: 72, weight: '30%' },
+  { name: 'Design Cost-Optimized Architectures',  score: 74, threshold: 72, weight: '20%' },
+];
+
+const ExamResults = () => {
+  const overall = 73;
+  const pass = overall >= 72;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', background: T.base, height: '100%' }}>
+      {/* Minimal results header */}
+      <div style={{ height: 52, borderBottom: '1px solid ' + T.border, background: T.elevated, display: 'flex', alignItems: 'center', padding: '0 28px', gap: 10, flexShrink: 0 }}>
+        <div style={{ width: 20, height: 20, borderRadius: 5, background: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M6 1l1.5 3.5L11 5l-2.5 2.5.5 3.5L6 9.5 3 11l.5-3.5L1 5l3.5-.5z" fill="#0f172a"/></svg>
+        </div>
+        <span style={{ fontSize: 11, fontWeight: 600, color: T.tMuted, letterSpacing: '0.06em', textTransform: 'uppercase' }}>SAA-C03</span>
+        <div style={{ width: 1, height: 16, background: T.border }} />
+        <span style={{ fontSize: 12, color: T.tSecond }}>Exam results</span>
+        <div style={{ flex: 1 }} />
+        <span style={{ fontSize: 12, color: T.tMuted }}>Submitted 2 min ago</span>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 32px' }}>
+        <div style={{ width: '100%', maxWidth: 640 }}>
+
+          {/* Score hero */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 32, marginBottom: 40, padding: '32px 36px', background: T.surface, borderRadius: T.rXl, border: '1px solid ' + T.border }}>
+            <div style={{ textAlign: 'center', flexShrink: 0 }}>
+              <div style={{ fontSize: 'var(--readion-font-size-score)', fontSize: 56, fontWeight: 700, color: pass ? T.good : T.poor, lineHeight: 1 }}>{overall}%</div>
+              <div style={{ fontSize: 12, color: T.tMuted, marginTop: 6 }}>overall score</div>
+            </div>
+            <div style={{ width: 1, height: 60, background: T.border }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <div style={{ padding: '3px 10px', background: pass ? 'rgba(52,211,153,0.12)' : 'rgba(248,113,113,0.1)', border: '1px solid ' + (pass ? T.good : T.poor), borderRadius: T.rFull }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: pass ? T.good : T.poor }}>{pass ? 'PASS' : 'FAIL'}</span>
+                </div>
+                <span style={{ fontSize: 12, color: T.tMuted }}>Passing score: 72%</span>
+              </div>
+              <div style={{ fontSize: 13, color: T.tSecond, lineHeight: 1.55 }}>
+                46 correct &nbsp;&middot;&nbsp; 15 incorrect &nbsp;&middot;&nbsp; 4 unanswered
+              </div>
+              <div style={{ fontSize: 12, color: T.tMuted, marginTop: 4 }}>Completed in 1h 47m of 2h 10m allowed</div>
+            </div>
+          </div>
+
+          {/* Domain breakdown */}
+          <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', padding: '0 4px' }}>
+            <span style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted }}>Domain</span>
+            <div style={{ display: 'flex', gap: 24 }}>
+              <span style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, width: 40, textAlign: 'right' }}>Weight</span>
+              <span style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, width: 40, textAlign: 'right' }}>Score</span>
+            </div>
+          </div>
+
+          <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, overflow: 'hidden', marginBottom: 32 }}>
+            {DOMAINS.map((d, i) => {
+              const domainPass = d.score >= d.threshold;
+              const color = d.score < 65 ? T.poor : d.score < 72 ? T.warn : T.good;
+              return (
+                <div key={d.name}>
+                  <div style={{ padding: '16px 20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: domainPass ? T.good : T.poor, flexShrink: 0, marginTop: 1 }} />
+                        <span style={{ fontSize: 13, color: T.tSecond }}>{d.name}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: 24, flexShrink: 0, marginLeft: 16 }}>
+                        <span style={{ fontSize: 12, color: T.tMuted, width: 40, textAlign: 'right' }}>{d.weight}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: color, width: 40, textAlign: 'right' }}>{d.score}%</span>
+                      </div>
+                    </div>
+                    <div style={{ height: 4, background: T.border, borderRadius: 4, position: 'relative' }}>
+                      <div style={{ height: '100%', width: d.score + '%', background: color, borderRadius: 4 }} />
+                      {/* Passing threshold marker */}
+                      <div style={{ position: 'absolute', top: -3, left: d.threshold + '%', width: 1, height: 10, background: T.tSubtle, transform: 'translateX(-50%)' }} />
+                    </div>
+                    {!domainPass && (
+                      <div style={{ marginTop: 6, fontSize: 11, color: T.poor }}>Below passing threshold ({d.threshold}%) — prioritize in your next session</div>
+                    )}
+                  </div>
+                  {i < DOMAINS.length - 1 && <div style={{ height: 1, background: T.border }} />}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+            <button style={{ padding: '10px 24px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+              Review all answers
+            </button>
+            <button style={{ padding: '10px 24px', background: 'transparent', color: T.tSecond, border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 14, cursor: 'pointer' }}>
+              Return to dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Review mode ───────────────────────────────────────────────────────────────
+const QUESTION_REVIEW = "A company needs to ensure its application can survive the failure of a single Availability Zone. The application uses an Amazon RDS Multi-AZ deployment and an Auto Scaling group behind an Application Load Balancer. Which additional configuration is required to make the application fully AZ-resilient?";
+
+const OPTIONS_REVIEW = [
+  { letter: 'A', text: 'Enable cross-zone load balancing on the Application Load Balancer', state: 'dim' },
+  { letter: 'B', text: 'Configure the Auto Scaling group to span at least two Availability Zones and set the minimum capacity to 2', state: 'correct' },
+  { letter: 'C', text: 'Enable RDS read replicas in each Availability Zone', state: 'incorrect' },
+  { letter: 'D', text: 'Use a Network Load Balancer instead of an Application Load Balancer for faster failover', state: 'dim' },
+];
+
+const reviewSquares = {};
+for (let i = 0; i < 65; i++) {
+  if (i < 46) reviewSquares[i] = 'correct';
+  else if (i === 46 || i === 48 || i === 51 || i === 55) reviewSquares[i] = 'skipped';
+  else if (i === 11) reviewSquares[i] = 'current';
+  else reviewSquares[i] = 'incorrect';
+}
+reviewSquares[11] = 'current';
+
+const ExamReview = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', background: T.base, height: '100%' }}>
+    <ExamHeader mode="review" qCurrent={12} qTotal={65} timeStr="01:47:23" timeReady={false} />
+    <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '32px 48px' }}>
+        <div style={{ maxWidth: 720 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 10px', background: 'rgba(124,140,248,0.08)', border: '1px solid rgba(124,140,248,0.15)', borderRadius: T.rFull, marginBottom: 20 }}>
+            <span style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.accent }}>Design Resilient Architectures</span>
+          </div>
+
+          <p style={{ fontSize: 16, color: T.tPrimary, lineHeight: 1.7, marginBottom: 28 }}>{QUESTION_REVIEW}</p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+            {OPTIONS_REVIEW.map((o) => <QuizOption key={o.letter} letter={o.letter} text={o.text} state={o.state} />)}
+          </div>
+
+          {/* Explanation block */}
+          <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '20px 24px', marginBottom: 28 }}>
+            <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.accent, marginBottom: 12 }}>Explanation</div>
+            <p style={{ fontSize: 13, color: T.tSecond, lineHeight: 1.7, marginBottom: 10 }}>
+              RDS Multi-AZ handles database-layer resilience automatically. The weak point here is the EC2 layer — if the Auto Scaling group is configured in only one AZ with a minimum of 1, a single AZ failure takes the application down.
+            </p>
+            <p style={{ fontSize: 13, color: T.tSecond, lineHeight: 1.7, marginBottom: 12 }}>
+              <strong style={{ color: T.tPrimary }}>Option A</strong> is incorrect: cross-zone load balancing distributes traffic evenly but doesn't add AZ coverage. <strong style={{ color: T.tPrimary }}>Option C</strong> (read replicas) doesn't affect failover — Multi-AZ already handles that. <strong style={{ color: T.tPrimary }}>Option D</strong> introduces unnecessary infrastructure change.
+            </p>
+            <div style={{ height: 1, background: T.border, marginBottom: 12 }} />
+            <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: 'rgba(124,140,248,0.08)', border: '1px solid rgba(124,140,248,0.2)', borderRadius: T.rFull }}>
+                <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M6 1h4a1 1 0 011 1v9a1 1 0 01-1 1H2a1 1 0 01-1-1V5l4-4z" stroke="var(--readion-accent-label)" strokeWidth="1.2" strokeLinejoin="round"/><path d="M6 1v4h4" stroke="var(--readion-accent-label)" strokeWidth="1.2" strokeLinejoin="round"/></svg>
+                <span style={{ fontSize: 10, color: T.accent }}>AWS Docs: Auto Scaling AZ</span>
+              </div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: 'rgba(124,140,248,0.08)', border: '1px solid rgba(124,140,248,0.2)', borderRadius: T.rFull }}>
+                <svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M6 1h4a1 1 0 011 1v9a1 1 0 01-1 1H2a1 1 0 01-1-1V5l4-4z" stroke="var(--readion-accent-label)" strokeWidth="1.2" strokeLinejoin="round"/><path d="M6 1v4h4" stroke="var(--readion-accent-label)" strokeWidth="1.2" strokeLinejoin="round"/></svg>
+                <span style={{ fontSize: 10, color: T.accent }}>AWS Docs: RDS Multi-AZ</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button style={{ padding: '8px 18px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer' }}>&#8592; Previous</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 13, color: T.tMuted, cursor: 'pointer' }}>Skip</span>
+            <button style={{ padding: '8px 20px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Next &#8594;</button>
+          </div>
+          </div>
+        </div>
+      </div>
+      <NavPanel total={65} squareStates={reviewSquares} loaded={true} mode="review" loadedCount={65} />
+    </div>
+  </div>
+);
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <Canvas>
+      <CanvasSection
+        title="Mock exam"
+        subtitle="Full-screen, no agent, no sidebar nav. Question nav panel right. Timer paused until all questions ready. Status colors revealed only on submit/review."
+      >
+        <Artboard label="Loading — questions streaming in, timer paused" width={1100} height={740}>
+          <ExamLoading />
+        </Artboard>
+        <Artboard label="Active — option selected (not submitted)" width={1100} height={740}>
+          <ExamActive />
+        </Artboard>
+        <Artboard label="Results — score breakdown by domain" width={1100} height={740}>
+          <ExamResults />
+        </Artboard>
+        <Artboard label="Review mode — correct / incorrect revealed with explanation" width={1100} height={740}>
+          <ExamReview />
+        </Artboard>
+      </CanvasSection>
+    </Canvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

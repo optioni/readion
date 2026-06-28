@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion — 5-min Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui; background: #b6b2ab; }
+    .canvas-wrap { padding: 48px 56px; }
+    .canvas-section { margin-bottom: 56px; }
+    .canvas-section-head { margin-bottom: 20px; }
+    .canvas-section-title { font-size: 17px; font-weight: 600; color: #2d2520; }
+    .canvas-section-sub { font-size: 12px; color: #7a6e65; margin-top: 3px; }
+    .canvas-row { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+    .artboard-wrap { flex-shrink: 0; }
+    .artboard-label { font-size: 11px; color: #7a6e65; margin-bottom: 7px; font-weight: 500; letter-spacing: 0.02em; }
+    .artboard-frame { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.js"></script>
+
+<script type="text/babel">
+
+// ── Canvas shell ─────────────────────────────────────────────────────────────
+const Canvas = (p) => <div className="canvas-wrap">{p.children}</div>;
+const CanvasSection = (p) => (
+  <div className="canvas-section">
+    <div className="canvas-section-head">
+      <div className="canvas-section-title">{p.title}</div>
+      {p.subtitle && <div className="canvas-section-sub">{p.subtitle}</div>}
+    </div>
+    <div className="canvas-row">{p.children}</div>
+  </div>
+);
+const Artboard = (p) => (
+  <div className="artboard-wrap" style={{ width: p.width }}>
+    <div className="artboard-label">{p.label}</div>
+    <div className="artboard-frame" style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+  </div>
+);
+
+// ── Tokens ───────────────────────────────────────────────────────────────────
+const T = {
+  base:     'var(--readion-background-base)',
+  surface:  'var(--readion-background-surface)',
+  elevated: 'var(--readion-background-elevated)',
+  overlay:  'var(--readion-background-overlay)',
+  primary:  'var(--readion-primary)',
+  accent:   'var(--readion-accent-label)',
+  tPrimary: 'var(--readion-text-primary)',
+  tSecond:  'var(--readion-text-secondary)',
+  tMuted:   'var(--readion-text-muted)',
+  tSubtle:  'var(--readion-text-subtle)',
+  border:   'var(--readion-border-strong)',
+  borderDef:'var(--readion-border-default)',
+  poor:     'var(--readion-status-poor)',
+  warn:     'var(--readion-status-warning)',
+  medium:   'var(--readion-status-medium)',
+  good:     'var(--readion-status-good)',
+  rSm:      'var(--readion-rounded-sm)',
+  rMd:      'var(--readion-rounded-md)',
+  rLg:      'var(--readion-rounded-lg)',
+  rXl:      'var(--readion-rounded-xl)',
+  rFull:    'var(--readion-rounded-full)',
+};
+
+// ── Review header ─────────────────────────────────────────────────────────────
+const ReviewHeader = ({ certCode, current, total, timeStr, timeUrgent }) => (
+  <div style={{ height: 52, borderBottom: '1px solid ' + T.border, background: T.elevated, display: 'flex', alignItems: 'center', padding: '0 28px', gap: 16, flexShrink: 0 }}>
+    {/* Back */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--readion-text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      <span style={{ fontSize: 12, color: T.tMuted }}>Dashboard</span>
+    </div>
+
+    <div style={{ width: 1, height: 16, background: T.border }} />
+
+    {/* Cert code */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <span style={{ fontSize: 11, fontFamily: 'var(--readion-font-mono)', color: T.tMuted, background: T.surface, border: '1px solid ' + T.border, padding: '2px 6px', borderRadius: T.rSm }}>{certCode}</span>
+      <span style={{ fontSize: 12, color: T.tSecond }}>Quick review</span>
+    </div>
+
+    <div style={{ flex: 1 }} />
+
+    {/* Progress */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ width: 120, height: 3, background: T.border, borderRadius: 3 }}>
+        <div style={{ height: '100%', width: ((current / total) * 100) + '%', background: T.accent, borderRadius: 3 }} />
+      </div>
+      <span style={{ fontSize: 12, fontFamily: 'var(--readion-font-mono)', color: T.tSecond }}>
+        <span style={{ color: T.tPrimary, fontWeight: 500 }}>{current}</span>
+        <span style={{ color: T.tMuted }}>/{total}</span>
+      </span>
+    </div>
+
+    {/* Timer */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', background: timeUrgent ? 'rgba(248,113,113,0.08)' : T.surface, border: '1px solid ' + (timeUrgent ? 'rgba(248,113,113,0.25)' : T.border), borderRadius: T.rMd }}>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={timeUrgent ? T.poor : T.tMuted} strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      <span style={{ fontSize: 12, fontFamily: 'var(--readion-font-mono)', color: timeUrgent ? T.poor : T.tMuted }}>{timeStr}</span>
+    </div>
+  </div>
+);
+
+// ── Domain tag ────────────────────────────────────────────────────────────────
+const DomainTag = ({ label }) => (
+  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', background: 'rgba(124,140,248,0.08)', border: '1px solid rgba(124,140,248,0.18)', borderRadius: T.rFull, fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.accent }}>
+    {label}
+  </span>
+);
+
+// ── SRS rating button ─────────────────────────────────────────────────────────
+// rating: 'again' | 'hard' | 'good' | 'easy'
+const SRSButton = ({ rating, interval }) => {
+  const config = {
+    again: { label: 'Again',  color: T.poor,   bg: 'rgba(248,113,113,0.1)',  border: 'rgba(248,113,113,0.3)',  sub: '< 1 day'  },
+    hard:  { label: 'Hard',   color: T.warn,   bg: 'rgba(251,146,60,0.1)',  border: 'rgba(251,146,60,0.3)',  sub: interval   },
+    good:  { label: 'Good',   color: T.good,   bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.3)',  sub: interval   },
+    easy:  { label: 'Easy',   color: T.accent, bg: 'rgba(124,140,248,0.1)', border: 'rgba(124,140,248,0.3)', sub: interval   },
+  };
+  const c = config[rating];
+  return (
+    <button style={{ flex: 1, padding: '10px 8px', background: c.bg, border: '1px solid ' + c.border, borderRadius: T.rLg, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      <span style={{ fontSize: 14, fontWeight: 600, color: c.color }}>{c.label}</span>
+      <span style={{ fontSize: 10, color: c.color, opacity: 0.7 }}>{c.sub}</span>
+    </button>
+  );
+};
+
+// ── Flashcard: front ──────────────────────────────────────────────────────────
+const CardFront = ({ question, domain, hint }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '32px 36px', minHeight: 260, position: 'relative' }}>
+    {/* Card type label */}
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <DomainTag label={domain} />
+      <span style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tSubtle }}>Flashcard</span>
+    </div>
+
+    <p style={{ fontSize: 16, color: T.tPrimary, lineHeight: 1.7, flex: 1 }}>{question}</p>
+
+    {hint && (
+      <div style={{ marginTop: 16, padding: '8px 12px', background: T.base, borderRadius: T.rMd, border: '1px solid ' + T.borderDef }}>
+        <span style={{ fontSize: 11, color: T.tSubtle, fontStyle: 'italic' }}>Hint: {hint}</span>
+      </div>
+    )}
+
+    {/* Bottom blur / gradient suggesting more below */}
+    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 64, borderRadius: '0 0 ' + T.rXl + ' ' + T.rXl, background: 'linear-gradient(transparent, ' + T.surface + ')', pointerEvents: 'none' }} />
+  </div>
+);
+
+// ── Flashcard: back ───────────────────────────────────────────────────────────
+const CardBack = ({ question, answer, domain }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, overflow: 'hidden' }}>
+    {/* Question (dimmed) */}
+    <div style={{ padding: '16px 24px', borderBottom: '1px solid ' + T.border, background: T.elevated }}>
+      <div style={{ fontSize: 11, color: T.tSubtle, marginBottom: 4, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Question</div>
+      <p style={{ fontSize: 13, color: T.tMuted, lineHeight: 1.6 }}>{question}</p>
+    </div>
+
+    {/* Answer */}
+    <div style={{ padding: '20px 24px', flex: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'rgba(52,211,153,0.15)', border: '1px solid ' + T.good, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <svg width="8" height="8" viewBox="0 0 9 9" fill="none"><path d="M2 4.5l2 2 3-3" stroke="var(--readion-status-good)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </div>
+        <span style={{ fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.good }}>Answer</span>
+      </div>
+      <p style={{ fontSize: 14, color: T.tPrimary, lineHeight: 1.7 }}>{answer}</p>
+    </div>
+  </div>
+);
+
+// ── Queue entry screen ────────────────────────────────────────────────────────
+const QueueEntry = ({ certCode, total, domains }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', background: T.base, height: '100%' }}>
+    <ReviewHeader certCode={certCode} current={0} total={total} timeStr="5:00" timeUrgent={false} />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 48px', gap: 28 }}>
+      {/* Icon */}
+      <div style={{ width: 52, height: 52, borderRadius: T.rXl, background: 'rgba(124,140,248,0.1)', border: '1px solid rgba(124,140,248,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+          <path d="M9 7h6M9 11h6M9 15h4"/>
+        </svg>
+      </div>
+
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 22, fontWeight: 700, color: T.tPrimary, lineHeight: 1, marginBottom: 8 }}>{total}</div>
+        <div style={{ fontSize: 16, fontWeight: 600, color: T.tPrimary, marginBottom: 6 }}>items due for review</div>
+        <div style={{ fontSize: 13, color: T.tMuted }}>Scheduled by spaced repetition &middot; ~5 minutes</div>
+      </div>
+
+      {/* Domain breakdown */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+        {domains.map((d) => (
+          <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rFull }}>
+            <span style={{ fontSize: 12, color: T.tSecond }}>{d.label}</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: T.accent }}>{d.count}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* CTAs */}
+      <div style={{ display: 'flex', gap: 10, width: '100%', maxWidth: 380 }}>
+        <button style={{ flex: 1, padding: '11px 0', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+          Start review &#8594;
+        </button>
+        <button style={{ padding: '11px 16px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          Review all 23
+        </button>
+      </div>
+
+      <div style={{ fontSize: 12, color: T.tSubtle }}>
+        Oldest due: <span style={{ color: T.warn }}>3 items overdue by 2 days</span>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Card front screen ─────────────────────────────────────────────────────────
+const CardFrontScreen = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', background: T.base, height: '100%' }}>
+    <ReviewHeader certCode="SAA-C03" current={3} total={23} timeStr="4:12" timeUrgent={false} />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 48px', gap: 20 }}>
+      <div style={{ width: '100%', maxWidth: 560 }}>
+        <CardFront
+          domain="IAM & Security"
+          question="What is the key behavioral difference between an SCP and an IAM Permission Boundary when both deny the same action?"
+          hint="Think about which AWS principal types each one can affect"
+        />
+      </div>
+      <button style={{ padding: '11px 36px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+        Reveal answer
+      </button>
+      <div style={{ display: 'flex', gap: 20 }}>
+        <span style={{ fontSize: 12, color: T.tSubtle, cursor: 'pointer' }}>Skip</span>
+        <span style={{ fontSize: 12, color: T.tSubtle, cursor: 'pointer' }}>Flag this card</span>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Card back screen ──────────────────────────────────────────────────────────
+const CardBackScreen = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', background: T.base, height: '100%' }}>
+    <ReviewHeader certCode="SAA-C03" current={3} total={23} timeStr="3:58" timeUrgent={false} />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '28px 48px', gap: 18 }}>
+      <div style={{ width: '100%', maxWidth: 560 }}>
+        <CardBack
+          domain="IAM & Security"
+          question="What is the key behavioral difference between an SCP and an IAM Permission Boundary when both deny the same action?"
+          answer="SCPs restrict the entire AWS account — including the root user — and are set at the Organization level. Permission Boundaries restrict a specific IAM user or role only; the root user is never affected by them. Both deny the action independently, so both must allow it for access to succeed."
+        />
+      </div>
+
+      {/* SRS rating */}
+      <div style={{ width: '100%', maxWidth: 560 }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 10, textAlign: 'center' }}>How well did you know this?</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <SRSButton rating="again" interval="< 1 day" />
+          <SRSButton rating="hard"  interval="2 days"  />
+          <SRSButton rating="good"  interval="5 days"  />
+          <SRSButton rating="easy"  interval="14 days" />
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 20 }}>
+        <span style={{ fontSize: 12, color: T.tSubtle, cursor: 'pointer' }}>Flag this card</span>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Completion screen ─────────────────────────────────────────────────────────
+const CompletionScreen = () => {
+  const results = [
+    { rating: 'again', count: 3, color: T.poor,   label: 'Again'  },
+    { rating: 'hard',  count: 5, color: T.warn,   label: 'Hard'   },
+    { rating: 'good',  count: 10, color: T.good,  label: 'Good'   },
+    { rating: 'easy',  count: 5, color: T.accent, label: 'Easy'   },
+  ];
+  const total = results.reduce((s, r) => s + r.count, 0);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', background: T.base, height: '100%' }}>
+      <ReviewHeader certCode="SAA-C03" current={23} total={23} timeStr="3:41" timeUrgent={false} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 48px', gap: 24 }}>
+
+        {/* Done badge */}
+        <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(52,211,153,0.12)', border: '1px solid ' + T.good, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-good)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 20, fontWeight: 600, color: T.tPrimary, marginBottom: 4 }}>Review complete</div>
+          <div style={{ fontSize: 13, color: T.tMuted }}>23 cards &middot; 1 min 19 sec</div>
+        </div>
+
+        {/* Result breakdown */}
+        <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '20px 28px', width: '100%', maxWidth: 420 }}>
+          <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 14, textAlign: 'center' }}>Session breakdown</div>
+          {/* Bar */}
+          <div style={{ height: 8, borderRadius: 8, overflow: 'hidden', display: 'flex', marginBottom: 14 }}>
+            {results.map((r) => (
+              <div key={r.rating} style={{ flex: r.count, background: r.color }} />
+            ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            {results.map((r) => (
+              <div key={r.rating} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: r.color, lineHeight: 1 }}>{r.count}</div>
+                <div style={{ fontSize: 10, color: T.tSubtle, marginTop: 3 }}>{r.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Next due */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: T.elevated, border: '1px solid ' + T.border, borderRadius: T.rLg }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--readion-text-muted)" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span style={{ fontSize: 12, color: T.tSecond }}>
+            Next review: <span style={{ color: T.accent, fontWeight: 500 }}>3 cards due tomorrow</span>
+            <span style={{ color: T.tMuted }}>, 8 in 2 days</span>
+          </span>
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button style={{ padding: '10px 24px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+            Back to dashboard
+          </button>
+          <button style={{ padding: '10px 18px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer' }}>
+            Drill the 3 "Again" cards
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  const domains = [
+    { label: 'IAM & Security',    count: 11 },
+    { label: 'Networking',        count:  8 },
+    { label: 'Cost Optimization', count:  4 },
+  ];
+
+  return (
+    <Canvas>
+      <CanvasSection
+        title="5-min review"
+        subtitle="SRS flashcard loop triggered from dashboard. Front shows question, reveal shows answer, SRS rating schedules next repetition."
+      >
+        <Artboard label="Queue entry — items due by domain" width={780} height={660}>
+          <QueueEntry certCode="SAA-C03" total={23} domains={domains} />
+        </Artboard>
+        <Artboard label="Card front — question, hint, reveal CTA" width={780} height={660}>
+          <CardFrontScreen />
+        </Artboard>
+        <Artboard label="Card back — answer revealed + SRS rating" width={780} height={660}>
+          <CardBackScreen />
+        </Artboard>
+        <Artboard label="Completion — breakdown + next due" width={780} height={660}>
+          <CompletionScreen />
+        </Artboard>
+      </CanvasSection>
+    </Canvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion Admin — Cert Setup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui; background: #b8b4ac; }
+    .canvas-wrap { padding: 48px 56px; }
+    .canvas-section { margin-bottom: 56px; }
+    .canvas-section-head { margin-bottom: 20px; }
+    .canvas-section-title { font-size: 17px; font-weight: 600; color: #2d2520; }
+    .canvas-section-sub { font-size: 12px; color: #7a6e65; margin-top: 3px; }
+    .canvas-row { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+    .artboard-wrap { flex-shrink: 0; }
+    .artboard-label { font-size: 11px; color: #7a6e65; margin-bottom: 7px; font-weight: 500; letter-spacing: 0.02em; }
+    .artboard-frame { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.js"></script>
+
+<script type="text/babel" src="app-shell.jsx"></script>
+<script type="text/babel">
+
+// ── Canvas ────────────────────────────────────────────────────────────────────
+const Canvas = (p) => <div className="canvas-wrap">{p.children}</div>;
+const CanvasSection = (p) => (
+  <div className="canvas-section">
+    <div className="canvas-section-head">
+      <div className="canvas-section-title">{p.title}</div>
+      {p.subtitle && <div className="canvas-section-sub">{p.subtitle}</div>}
+    </div>
+    <div className="canvas-row">{p.children}</div>
+  </div>
+);
+const Artboard = (p) => (
+  <div className="artboard-wrap" style={{ width: p.width }}>
+    <div className="artboard-label">{p.label}</div>
+    <div className="artboard-frame" style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+  </div>
+);
+
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const T = {
+  base:     'var(--readion-background-base)',
+  surface:  'var(--readion-background-surface)',
+  elevated: 'var(--readion-background-elevated)',
+  overlay:  'var(--readion-background-overlay)',
+  primary:  'var(--readion-primary)',
+  accent:   'var(--readion-accent-label)',
+  tPrimary: 'var(--readion-text-primary)',
+  tSecond:  'var(--readion-text-secondary)',
+  tMuted:   'var(--readion-text-muted)',
+  tSubtle:  'var(--readion-text-subtle)',
+  border:   'var(--readion-border-strong)',
+  borderDef:'var(--readion-border-default)',
+  poor:     'var(--readion-status-poor)',
+  warn:     'var(--readion-status-warning)',
+  medium:   'var(--readion-status-medium)',
+  good:     'var(--readion-status-good)',
+  rSm:      'var(--readion-rounded-sm)',
+  rMd:      'var(--readion-rounded-md)',
+  rLg:      'var(--readion-rounded-lg)',
+  rXl:      'var(--readion-rounded-xl)',
+  rFull:    'var(--readion-rounded-full)',
+};
+
+// ── Admin sidebar ─────────────────────────────────────────────────────────────
+const Shell = window.Shell;
+const AdminSidebar = ({ active }) => <Shell.AdminSidebar active={active} />;
+
+// ── Setup header ──────────────────────────────────────────────────────────────
+const SetupHeader = ({ certCode, certName, step, totalSteps, stepLabel }) => (
+  <div style={{ borderBottom: '1px solid ' + T.border, padding: '14px 28px', background: T.elevated, flexShrink: 0 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+          <span style={{ fontSize: 11, color: T.tMuted }}>Certifications</span>
+          <span style={{ fontSize: 11, color: T.tSubtle }}>›</span>
+          <span style={{ fontSize: 11, color: T.tMuted }}>New</span>
+          <span style={{ fontSize: 11, color: T.tSubtle }}>›</span>
+          <span style={{ fontSize: 11, color: T.tSecond }}>{certCode || 'Setup'}</span>
+        </div>
+        <div style={{ fontSize: 16, fontWeight: 600, color: T.tPrimary }}>{certName || 'New certification'}</div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+        <span style={{ fontSize: 12, color: T.tMuted }}>Step {step} of {totalSteps} &middot; {stepLabel}</span>
+        <div style={{ width: 120, height: 3, background: T.border, borderRadius: 3 }}>
+          <div style={{ height: '100%', width: ((step / totalSteps) * 100) + '%', background: T.accent, borderRadius: 3 }} />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Step 1: Source search & confirmation ──────────────────────────────────────
+const SourceResult = ({ url, title, type, updated, confidence, selected, alt }) => (
+  <div style={{ padding: '14px 16px', background: selected ? 'rgba(29,78,216,0.08)' : T.elevated, border: '1px solid ' + (selected ? T.primary : T.border), borderRadius: T.rLg, marginBottom: 8, cursor: 'pointer' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        {selected && (
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="var(--readion-primary)"/><path d="M5 8l2 2 4-4" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        )}
+        <span style={{ fontSize: 13, fontWeight: selected ? 500 : 400, color: selected ? T.tPrimary : T.tSecond }}>{title}</span>
+      </div>
+      <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 12 }}>
+        <span style={{ fontSize: 10, padding: '2px 7px', background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rFull, color: T.tMuted }}>{type}</span>
+        {confidence && <span style={{ fontSize: 10, padding: '2px 7px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: T.rFull, color: T.good }}>{confidence} confidence</span>}
+      </div>
+    </div>
+    <div style={{ fontSize: 11, color: T.accent, marginBottom: 4, fontFamily: 'var(--readion-font-mono)', wordBreak: 'break-all' }}>{url}</div>
+    {updated && <div style={{ fontSize: 11, color: T.tSubtle }}>Last updated: {updated}</div>}
+    {alt && <div style={{ fontSize: 11, color: T.tMuted, marginTop: 4, fontStyle: 'italic' }}>{alt}</div>}
+  </div>
+);
+
+const SourceConfirmationScreen = () => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AdminSidebar active="Certifications" />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <SetupHeader certCode="CKS" certName="Certified Kubernetes Security Specialist" step={1} totalSteps={4} stepLabel="Source confirmation" />
+      <div style={{ flex: 1, padding: '28px 40px', overflowY: 'auto' }}>
+        <div style={{ maxWidth: 640 }}>
+          <div style={{ fontSize: 13, color: T.tMuted, marginBottom: 20, lineHeight: 1.6 }}>
+            The setup agent searched for the official CKS exam guide and candidate handbook. Confirm the primary source before field extraction begins.
+          </div>
+
+          {/* Agent status */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.18)', borderRadius: T.rLg, marginBottom: 20 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-good)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span style={{ fontSize: 12, color: T.good }}>Found 3 candidate sources. Official handbook identified with high confidence.</span>
+          </div>
+
+          <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 10 }}>Select primary source</div>
+
+          <SourceResult
+            selected={true}
+            title="CKS Candidate Handbook — CNCF"
+            url="https://training.linuxfoundation.org/certification/certified-kubernetes-security-specialist/"
+            type="Web page + linked PDF"
+            updated="March 2024"
+            confidence="High"
+          />
+          <SourceResult
+            title="CKS Exam Curriculum (GitHub)"
+            url="https://github.com/cncf/curriculum/blob/master/CKS_Curriculum.pdf"
+            type="PDF"
+            updated="February 2024"
+            confidence="Medium"
+            alt="Curriculum only — no cost/duration/passing score data"
+          />
+          <SourceResult
+            title="Linux Foundation Training FAQ"
+            url="https://training.linuxfoundation.org/about/faqs/"
+            type="Web page"
+            updated="Unknown"
+            alt="May contain cost data but not exam-specific"
+          />
+
+          {/* Manual URL input */}
+          <div style={{ marginTop: 16, padding: '12px 14px', background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rLg }}>
+            <div style={{ fontSize: 11, color: T.tMuted, marginBottom: 8 }}>Or enter a URL manually</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input readOnly defaultValue="" placeholder="https://..." style={{ flex: 1, background: T.base, border: '1px solid ' + T.border, borderRadius: T.rMd, padding: '7px 10px', fontSize: 13, color: T.tPrimary, fontFamily: 'var(--readion-font-mono)', outline: 'none' }} />
+              <button style={{ padding: '7px 14px', background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 12, color: T.tSecond, cursor: 'pointer', whiteSpace: 'nowrap' }}>Verify</button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 28, paddingTop: 20, borderTop: '1px solid ' + T.border }}>
+            <button style={{ padding: '8px 18px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer' }}>Cancel</button>
+            <button style={{ padding: '8px 20px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+              Confirm source &amp; extract fields &#8594;
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Step 2: Field extraction with citation panel ───────────────────────────────
+
+const STATUS = {
+  confirmed:  { label: 'Confirmed',  color: T.good, bg: 'rgba(52,211,153,0.1)',   border: 'rgba(52,211,153,0.2)' },
+  unverified: { label: 'Unverified', color: T.warn, bg: 'rgba(251,146,60,0.1)',  border: 'rgba(251,146,60,0.2)' },
+  pending:    { label: 'Pending',    color: T.tSubtle, bg: T.elevated, border: T.border },
+};
+
+const StatusBadge = ({ status }) => {
+  const s = STATUS[status] || STATUS.pending;
+  return (
+    <span style={{ fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '2px 7px', background: s.bg, border: '1px solid ' + s.border, borderRadius: T.rFull, color: s.color, whiteSpace: 'nowrap' }}>
+      {s.label}
+    </span>
+  );
+};
+
+const FIELDS = [
+  { id: 'code',     label: 'Exam code',        value: 'CKS',                               status: 'confirmed'  },
+  { id: 'fullname', label: 'Full name',         value: 'Certified Kubernetes Security Spec.', status: 'confirmed'  },
+  { id: 'vendor',   label: 'Certifying body',   value: 'CNCF / Linux Foundation',            status: 'confirmed'  },
+  { id: 'duration', label: 'Duration',          value: '2 hours',                            status: 'confirmed'  },
+  { id: 'format',   label: 'Format',            value: 'Performance-based (live cluster)',    status: 'confirmed',   selected: true },
+  { id: 'passing',  label: 'Passing score',     value: '67%',                                status: 'confirmed'  },
+  { id: 'prereq',   label: 'Prerequisite',      value: 'CKA required',                       status: 'confirmed'  },
+  { id: 'validity', label: 'Certification valid', value: '2 years',                          status: 'confirmed'  },
+  { id: 'qcount',   label: 'Question count',    value: '~15–20 performance tasks',           status: 'unverified' },
+  { id: 'cost',     label: 'Exam cost',         value: '$395 USD',                           status: 'unverified' },
+  { id: 'domains',  label: 'Exam domains',      value: '5 domains (partial)',                status: 'pending'    },
+];
+
+const FieldExtractionScreen = () => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AdminSidebar active="Certifications" />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <SetupHeader certCode="CKS" certName="Certified Kubernetes Security Specialist" step={2} totalSteps={4} stepLabel="Field review" />
+
+      {/* Summary strip */}
+      <div style={{ borderBottom: '1px solid ' + T.border, padding: '8px 28px', background: T.surface, display: 'flex', gap: 20, flexShrink: 0 }}>
+        {[['8', 'confirmed', T.good], ['2', 'unverified', T.warn], ['1', 'pending', T.tSubtle]].map(([n, l, c]) => (
+          <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
+            <span style={{ fontWeight: 600, color: c }}>{n}</span>
+            <span style={{ color: T.tMuted }}>{l}</span>
+          </div>
+        ))}
+        <div style={{ flex: 1 }} />
+        <span style={{ fontSize: 12, color: T.tMuted }}>Source: training.linuxfoundation.org &middot; March 2024</span>
+      </div>
+
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        {/* Left: field list */}
+        <div style={{ width: 310, flexShrink: 0, borderRight: '1px solid ' + T.border, overflowY: 'auto', background: T.elevated }}>
+          {FIELDS.map((f) => (
+            <div key={f.id} style={{ padding: '10px 16px', borderBottom: '1px solid ' + T.borderDef, background: f.selected ? 'rgba(29,78,216,0.1)' : 'transparent', borderLeft: '3px solid ' + (f.selected ? T.primary : 'transparent'), cursor: 'pointer' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', color: f.selected ? T.accent : T.tSubtle, marginBottom: 3 }}>{f.label}</div>
+                  <div style={{ fontSize: 13, color: f.selected ? T.tPrimary : T.tSecond, fontWeight: f.selected ? 500 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.value}</div>
+                </div>
+                <div style={{ flexShrink: 0, marginTop: 2 }}>
+                  {f.status === 'confirmed'  && <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="rgba(52,211,153,0.15)" stroke="var(--readion-status-good)" strokeWidth="1.2"/><path d="M5 8l2 2 4-4" stroke="var(--readion-status-good)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                  {f.status === 'unverified' && <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="rgba(251,146,60,0.12)" stroke="var(--readion-status-warning)" strokeWidth="1.2"/><path d="M8 5v4M8 11h.01" stroke="var(--readion-status-warning)" strokeWidth="1.4" strokeLinecap="round"/></svg>}
+                  {f.status === 'pending'    && <div style={{ width: 14, height: 14, borderRadius: '50%', border: '1.5px solid ' + T.border, marginTop: 0 }} />}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Right: citation panel for selected field (Format) */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 10, letterSpacing: '0.09em', textTransform: 'uppercase', color: T.accent, marginBottom: 6 }}>Reviewing field</div>
+            <div style={{ fontSize: 18, fontWeight: 600, color: T.tPrimary, marginBottom: 4 }}>Format</div>
+            <StatusBadge status="confirmed" />
+          </div>
+
+          {/* Extracted value */}
+          <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '16px 18px' }}>
+            <div style={{ fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 8 }}>Extracted value</div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <input readOnly defaultValue="Performance-based (live cluster tasks)" style={{ flex: 1, background: T.base, border: '1px solid ' + T.border, borderRadius: T.rMd, padding: '7px 10px', fontSize: 14, color: T.tPrimary, fontFamily: 'inherit', outline: 'none' }} />
+              <button style={{ padding: '7px 12px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 12, color: T.tSecond, cursor: 'pointer' }}>Edit</button>
+            </div>
+          </div>
+
+          {/* Source passage */}
+          <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '16px 18px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tMuted }}>Source passage</div>
+              <div style={{ display: 'flex', align: 'center', gap: 8 }}>
+                <span style={{ fontSize: 10, color: T.tSubtle, fontFamily: 'var(--readion-font-mono)' }}>training.linuxfoundation.org</span>
+                <span style={{ fontSize: 10, color: T.tSubtle }}>p. 3</span>
+              </div>
+            </div>
+
+            {/* Blockquote with highlight */}
+            <div style={{ padding: '12px 14px', background: T.base, borderRadius: T.rLg, borderLeft: '3px solid ' + T.accent, marginBottom: 10 }}>
+              <p style={{ fontSize: 13, color: T.tSecond, lineHeight: 1.7 }}>
+                "The CKS exam is a <mark style={{ background: 'rgba(124,140,248,0.25)', color: T.tPrimary, borderRadius: 2, padding: '1px 2px' }}>performance-based exam that requires solving multiple tasks from the command line</mark>. Candidates will be scored on whether they complete all the stipulated objectives within the test environment, which is a{' '}
+                <mark style={{ background: 'rgba(124,140,248,0.25)', color: T.tPrimary, borderRadius: 2, padding: '1px 2px' }}>live Kubernetes cluster</mark>."
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1h4a1 1 0 011 1v9a1 1 0 01-1 1H2a1 1 0 01-1-1V5l4-4z" stroke="var(--readion-accent-label)" strokeWidth="1.2" strokeLinejoin="round"/><path d="M6 1v4h4" stroke="var(--readion-accent-label)" strokeWidth="1.2" strokeLinejoin="round"/></svg>
+              <span style={{ fontSize: 11, color: T.accent }}>CKS Candidate Handbook, Section 2 — Exam Details</span>
+            </div>
+          </div>
+
+          {/* Field actions */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4 }}>
+            <button style={{ fontSize: 12, color: T.tMuted, background: 'none', border: 'none', cursor: 'pointer' }}>&#8592; Previous field</button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button style={{ padding: '7px 14px', background: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.25)', borderRadius: T.rMd, fontSize: 12, color: T.warn, cursor: 'pointer' }}>Flag as uncertain</button>
+              <button style={{ padding: '7px 16px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>Confirm &#8594; Next field</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Step 3: Content sources + coverage ────────────────────────────────────────
+const CoverageBar = ({ label, current, target, unit }) => {
+  const pct = Math.min((current / target) * 100, 100);
+  const color = pct >= 100 ? T.good : pct >= 70 ? T.medium : T.warn;
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+        <span style={{ fontSize: 12, color: T.tSecond }}>{label}</span>
+        <span style={{ fontSize: 11, color: T.tMuted, fontFamily: 'var(--readion-font-mono)' }}>
+          {current.toLocaleString()} / {target.toLocaleString()} {unit}
+        </span>
+      </div>
+      <div style={{ height: 6, background: T.border, borderRadius: 4, position: 'relative' }}>
+        <div style={{ height: '100%', width: pct + '%', background: color, borderRadius: 4, transition: 'width 0.3s' }} />
+        {/* Go-live threshold marker */}
+        <div style={{ position: 'absolute', top: -4, left: '80%', width: 1, height: 14, background: T.accent, opacity: 0.6 }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+        <span style={{ fontSize: 10, color: color }}>{Math.round(pct)}% of target</span>
+        <span style={{ fontSize: 10, color: T.tSubtle }}>Go-live threshold: 80%</span>
+      </div>
+    </div>
+  );
+};
+
+const SourceChip = ({ label, type, status }) => {
+  const statusColors = { ingested: T.good, ingesting: T.accent, pending: T.tSubtle, error: T.poor };
+  const c = statusColors[status] || T.tMuted;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 14px', background: T.elevated, border: '1px solid ' + T.border, borderRadius: T.rLg, marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 28, height: 28, borderRadius: T.rSm, background: T.surface, border: '1px solid ' + T.border, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1h4a1 1 0 011 1v9a1 1 0 01-1 1H2a1 1 0 01-1-1V5l4-4z" stroke="var(--readion-text-muted)" strokeWidth="1.2" strokeLinejoin="round"/><path d="M6 1v4h4" stroke="var(--readion-text-muted)" strokeWidth="1.2" strokeLinejoin="round"/></svg>
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: T.tSecond, fontWeight: 500 }}>{label}</div>
+          <div style={{ fontSize: 10, color: T.tMuted, marginTop: 1 }}>{type}</div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 11, color: c, fontWeight: 500, textTransform: 'capitalize' }}>{status}</span>
+        {status !== 'ingesting' && (
+          <button style={{ padding: '3px 8px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rFull, fontSize: 11, color: T.tMuted, cursor: 'pointer' }}>Remove</button>
+        )}
+        {status === 'ingesting' && (
+          <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid ' + T.accent, borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }} />
+        )}
+      </div>
+    </div>
+  );
+};
+
+const ContentSourcesScreen = () => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AdminSidebar active="Certifications" />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <SetupHeader certCode="CKS" certName="Certified Kubernetes Security Specialist" step={3} totalSteps={4} stepLabel="Content sources" />
+      <div style={{ flex: 1, overflowY: 'auto', padding: '28px 40px' }}>
+        <div style={{ display: 'flex', gap: 24 }}>
+          {/* Left: sources */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 12 }}>Ingestion sources</div>
+            <SourceChip label="CKS Candidate Handbook (web)" type="Web page · 12 pages" status="ingested" />
+            <SourceChip label="CKS Curriculum v1.29 (PDF)" type="PDF · 8 pages" status="ingested" />
+            <SourceChip label="Kubernetes Security Best Practices" type="Web page · crawling" status="ingesting" />
+            <SourceChip label="CKS Sample Questions (CNCF blog)" type="Web page · pending review" status="pending" />
+
+            <button style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'transparent', border: '1px dashed ' + T.border, borderRadius: T.rLg, fontSize: 13, color: T.tMuted, cursor: 'pointer', width: '100%', marginTop: 4 }}>
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+              Add source URL or upload PDF
+            </button>
+
+            <div style={{ marginTop: 20, padding: '10px 14px', background: 'rgba(251,146,60,0.06)', border: '1px solid rgba(251,146,60,0.2)', borderRadius: T.rLg }}>
+              <div style={{ fontSize: 11, color: T.warn, marginBottom: 4 }}>Review required before ingestion</div>
+              <div style={{ fontSize: 12, color: T.tSecond, lineHeight: 1.55 }}>
+                "CKS Sample Questions" was proposed by the agent. Review and approve the URL before chunks are extracted and embedded.
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <button style={{ padding: '5px 12px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 12, cursor: 'pointer' }}>Approve</button>
+                <button style={{ padding: '5px 12px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 12, color: T.tSecond, cursor: 'pointer' }}>Reject</button>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: coverage bars */}
+          <div style={{ width: 280, flexShrink: 0 }}>
+            <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 12 }}>Coverage progress</div>
+            <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '18px 20px', marginBottom: 16 }}>
+              <CoverageBar label="Total chunks" current={1240} target={1500} unit="chunks" />
+              <CoverageBar label="Domain coverage" current={4} target={5} unit="domains" />
+              <CoverageBar label="Practice questions" current={48} target={80} unit="Qs" />
+            </div>
+
+            <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '14px 16px' }}>
+              <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 10 }}>Go-live readiness</div>
+              {[
+                ['Metadata confirmed', true],
+                ['All domains indexed', false],
+                ['Min. chunk threshold', true],
+                ['Practice Qs threshold', false],
+                ['Admin review sign-off', false],
+              ].map(([label, done]) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  {done
+                    ? <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="rgba(52,211,153,0.12)" stroke="var(--readion-status-good)" strokeWidth="1.2"/><path d="M5 8l2 2 4-4" stroke="var(--readion-status-good)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    : <div style={{ width: 13, height: 13, borderRadius: '50%', border: '1.5px solid ' + T.border }} />
+                  }
+                  <span style={{ fontSize: 12, color: done ? T.tSecond : T.tSubtle }}>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 28, paddingTop: 20, borderTop: '1px solid ' + T.border }}>
+          <button style={{ padding: '8px 16px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer' }}>&#8592; Back</button>
+          <button style={{ padding: '8px 20px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+            Continue to review &#8594;
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Stale cert re-verification ────────────────────────────────────────────────
+const DiffRow = ({ field, old, next, changed }) => (
+  <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid ' + T.borderDef }}>
+    <div style={{ width: 140, flexShrink: 0, padding: '9px 12px', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: T.tMuted, background: T.elevated }}>{field}</div>
+    <div style={{ flex: 1, padding: '9px 12px', fontSize: 13, color: changed ? T.poor : T.tSubtle, background: changed ? 'rgba(248,113,113,0.05)' : 'transparent', textDecoration: changed ? 'line-through' : 'none' }}>{old}</div>
+    <div style={{ flex: 1, padding: '9px 12px', fontSize: 13, color: changed ? T.good : T.tSubtle, background: changed ? 'rgba(52,211,153,0.05)' : 'transparent', fontWeight: changed ? 500 : 400 }}>{next}</div>
+    <div style={{ width: 80, flexShrink: 0, padding: '9px 12px', display: 'flex', justifyContent: 'flex-end' }}>
+      {changed && <button style={{ padding: '3px 8px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rFull, fontSize: 10, cursor: 'pointer' }}>Accept</button>}
+    </div>
+  </div>
+);
+
+const StaleRecertScreen = () => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AdminSidebar active="Certifications" />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ borderBottom: '1px solid ' + T.border, padding: '14px 28px', background: T.elevated, flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <span style={{ fontSize: 11, color: T.tMuted }}>Certifications</span>
+              <span style={{ fontSize: 11, color: T.tSubtle }}>›</span>
+              <span style={{ fontSize: 11, color: T.tSecond }}>SAA-C03</span>
+              <span style={{ fontSize: 11, color: T.tSubtle }}>›</span>
+              <span style={{ fontSize: 11, color: T.warn }}>Re-verification required</span>
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: T.tPrimary }}>Solutions Architect – Associate</div>
+          </div>
+          <div style={{ padding: '5px 12px', background: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.25)', borderRadius: T.rFull }}>
+            <span style={{ fontSize: 11, color: T.warn, fontWeight: 500 }}>Metadata stale · action required</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 36px' }}>
+        {/* Stale reason */}
+        <div style={{ display: 'flex', gap: 12, padding: '14px 16px', background: 'rgba(251,146,60,0.06)', border: '1px solid rgba(251,146,60,0.2)', borderRadius: T.rXl, marginBottom: 24 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-warning)" strokeWidth="1.8" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: T.warn, marginBottom: 4 }}>Exam guide updated — November 2024</div>
+            <div style={{ fontSize: 12, color: T.tSecond, lineHeight: 1.6 }}>
+              AWS published a revised SAA-C03 exam guide. The agent identified changes to domain weightings and 2 renamed domains. Review and confirm the proposed updates below.
+            </div>
+          </div>
+        </div>
+
+        {/* Diff table */}
+        <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 10 }}>Field changes detected</div>
+        <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, overflow: 'hidden', marginBottom: 24 }}>
+          {/* Header */}
+          <div style={{ display: 'flex', gap: 0, background: T.elevated, borderBottom: '1px solid ' + T.border }}>
+            <div style={{ width: 140, flexShrink: 0, padding: '8px 12px', fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tSubtle }}>Field</div>
+            <div style={{ flex: 1, padding: '8px 12px', fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.poor }}>Current (outdated)</div>
+            <div style={{ flex: 1, padding: '8px 12px', fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.good }}>Proposed (new guide)</div>
+            <div style={{ width: 80 }} />
+          </div>
+          <DiffRow field="Domain 1 name"   old="Design Resilient Architectures"       next="Design Resilient Architectures"             changed={false} />
+          <DiffRow field="Domain 1 weight" old="30%"                                  next="26%"                                        changed={true}  />
+          <DiffRow field="Domain 3 name"   old="Design Secure Applications"           next="Design Secure and Compliant Architectures" changed={true}  />
+          <DiffRow field="Domain 3 weight" old="26%"                                  next="30%"                                        changed={true}  />
+          <DiffRow field="Domain 4 weight" old="24%"                                  next="20%"                                        changed={true}  />
+          <DiffRow field="Validity period" old="3 years"                              next="2 years"                                    changed={true}  />
+          <DiffRow field="Exam version"    old="SAA-C03"                              next="SAA-C03 (rev. Nov 2024)"                   changed={true}  />
+          <DiffRow field="Passing score"   old="720/1000"                             next="720/1000"                                   changed={false} />
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}>
+          <button style={{ padding: '8px 16px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer' }}>Review source URL first</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button style={{ padding: '8px 16px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer' }}>Accept all changes</button>
+            <button style={{ padding: '8px 20px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Save &amp; mark verified</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Step 4: Review & publish ──────────────────────────────────────────────────
+const ReviewPublishScreen = () => {
+  const confirmed = FIELDS.filter((f) => f.status === 'confirmed');
+  const unresolved = FIELDS.filter((f) => f.status !== 'confirmed');
+  return (
+    <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+      <AdminSidebar active="Certifications" />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SetupHeader certCode="CKS" certName="Certified Kubernetes Security Specialist" step={4} totalSteps={4} stepLabel="Review & publish" />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 36px' }}>
+          {/* Verdict banner */}
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 16px', background: 'rgba(251,146,60,0.06)', border: '1px solid rgba(251,146,60,0.2)', borderRadius: T.rXl, marginBottom: 24 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-warning)" strokeWidth="1.8" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: T.warn, marginBottom: 3 }}>Almost ready &mdash; 3 items need attention</div>
+              <div style={{ fontSize: 12, color: T.tSecond, lineHeight: 1.6 }}>3 metadata fields are unverified and practice-question coverage is below the 80% go-live threshold. Resolve them now, or publish and they&rsquo;ll stay hidden from learners until confirmed.</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+            {/* Left: summary */}
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '18px 20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: T.tPrimary }}>Certification metadata</div>
+                  <span style={{ fontSize: 11, color: T.tMuted }}>{confirmed.length} of {FIELDS.length} confirmed</span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                  {confirmed.map((f) => (
+                    <span key={f.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, padding: '3px 9px', background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: T.rFull, color: T.tSecond }}>
+                      <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M2 4.5l2 2 3-3" stroke="var(--readion-status-good)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      {f.label}
+                    </span>
+                  ))}
+                </div>
+                <div style={{ height: 1, background: T.border, marginBottom: 4 }} />
+                <div style={{ fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tMuted, margin: '12px 0 4px' }}>Needs attention</div>
+                {unresolved.map((f) => (
+                  <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderTop: '1px solid ' + T.borderDef }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.tSubtle, marginBottom: 2 }}>{f.label}</div>
+                      <div style={{ fontSize: 13, color: T.tSecond, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.value}</div>
+                    </div>
+                    <StatusBadge status={f.status} />
+                    <button style={{ padding: '5px 12px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 12, color: T.accent, cursor: 'pointer', flexShrink: 0 }}>Resolve</button>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '18px 20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: T.tPrimary }}>Content &amp; coverage</div>
+                  <span style={{ fontSize: 11, color: T.tMuted }}>3 of 4 sources ingested &middot; 1 pending</span>
+                </div>
+                <CoverageBar label="Total chunks" current={1240} target={1500} unit="chunks" />
+                <CoverageBar label="Domain coverage" current={4} target={5} unit="domains" />
+                <CoverageBar label="Practice questions" current={48} target={80} unit="Qs" />
+              </div>
+            </div>
+
+            {/* Right: gates + publish */}
+            <div style={{ width: 290, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '16px 18px' }}>
+                <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 12 }}>Go-live readiness</div>
+                {[
+                  ['Primary source confirmed', true],
+                  ['Metadata confirmed', false],
+                  ['All domains indexed', false],
+                  ['Chunk threshold met', true],
+                  ['Practice-Q threshold', false],
+                ].map(([label, done]) => (
+                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9 }}>
+                    {done
+                      ? <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="rgba(52,211,153,0.12)" stroke="var(--readion-status-good)" strokeWidth="1.2"/><path d="M5 8l2 2 4-4" stroke="var(--readion-status-good)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      : <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="rgba(251,146,60,0.1)" stroke="var(--readion-status-warning)" strokeWidth="1.2"/><path d="M8 5v4M8 11h.01" stroke="var(--readion-status-warning)" strokeWidth="1.3" strokeLinecap="round"/></svg>
+                    }
+                    <span style={{ fontSize: 12, color: done ? T.tSecond : T.tMuted }}>{label}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '16px 18px' }}>
+                <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start', marginBottom: 14 }}>
+                  <div style={{ width: 16, height: 16, borderRadius: 4, border: '1.5px solid ' + T.border, flexShrink: 0, marginTop: 1 }} />
+                  <span style={{ fontSize: 12, color: T.tSecond, lineHeight: 1.5 }}>I&rsquo;ve reviewed the extracted metadata and content sources for accuracy.</span>
+                </div>
+                <button style={{ width: '100%', padding: '10px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: 'pointer', marginBottom: 8 }}>Publish certification</button>
+                <button style={{ width: '100%', padding: '9px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer' }}>Save as draft</button>
+                <div style={{ fontSize: 11, color: T.tSubtle, lineHeight: 1.5, marginTop: 10 }}>Unverified fields stay hidden from learners until confirmed. You can publish now and resolve them later.</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: 24, paddingTop: 20, borderTop: '1px solid ' + T.border }}>
+            <button style={{ padding: '8px 16px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer' }}>&#8592; Back to content sources</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <Canvas>
+      <CanvasSection
+        title="Admin — Certification Setup"
+        subtitle="Step-by-step flow. Per-field citation panel, unverified fields carry warning state, coverage bars vs go-live threshold, then a final review & publish gate. Plus stale-cert re-verification diff."
+      >
+        <Artboard label="Step 1 — Source search &amp; confirmation" width={1050} height={780}>
+          <SourceConfirmationScreen />
+        </Artboard>
+        <Artboard label="Step 2 — Field extraction with citation panel" width={1050} height={780}>
+          <FieldExtractionScreen />
+        </Artboard>
+        <Artboard label="Step 3 — Content sources + coverage progress" width={1050} height={780}>
+          <ContentSourcesScreen />
+        </Artboard>
+        <Artboard label="Step 4 — Review & publish" width={1050} height={780}>
+          <ReviewPublishScreen />
+        </Artboard>
+        <Artboard label="Stale cert — re-verification diff view" width={1050} height={780}>
+          <StaleRecertScreen />
+        </Artboard>
+      </CanvasSection>
+    </Canvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

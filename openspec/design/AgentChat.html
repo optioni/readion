@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion — Agent Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui; background: #bab6ae; }
+    .canvas-wrap { padding: 48px 56px; }
+    .canvas-section { margin-bottom: 56px; }
+    .canvas-section-head { margin-bottom: 20px; }
+    .canvas-section-title { font-size: 17px; font-weight: 600; color: #2d2520; }
+    .canvas-section-sub { font-size: 12px; color: #7a6e65; margin-top: 3px; }
+    .canvas-row { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+    .artboard-wrap { flex-shrink: 0; }
+    .artboard-label { font-size: 11px; color: #7a6e65; margin-bottom: 7px; font-weight: 500; letter-spacing: 0.02em; }
+    .artboard-frame { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1); }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    .cursor { display: inline-block; width: 2px; height: 13px; background: rgba(255,255,255,0.8); margin-left: 2px; vertical-align: text-bottom; animation: blink 1s step-end infinite; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.js"></script>
+
+<script type="text/babel" src="app-shell.jsx"></script>
+<script type="text/babel">
+
+// ── Canvas shell ─────────────────────────────────────────────────────────────
+const Canvas = (p) => <div className="canvas-wrap">{p.children}</div>;
+const CanvasSection = (p) => (
+  <div className="canvas-section">
+    <div className="canvas-section-head">
+      <div className="canvas-section-title">{p.title}</div>
+      {p.subtitle && <div className="canvas-section-sub">{p.subtitle}</div>}
+    </div>
+    <div className="canvas-row">{p.children}</div>
+  </div>
+);
+const Artboard = (p) => (
+  <div className="artboard-wrap" style={{ width: p.width }}>
+    <div className="artboard-label">{p.label}</div>
+    <div className="artboard-frame" style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+  </div>
+);
+
+// ── Tokens ───────────────────────────────────────────────────────────────────
+const T = {
+  base:     'var(--readion-background-base)',
+  surface:  'var(--readion-background-surface)',
+  elevated: 'var(--readion-background-elevated)',
+  overlay:  'var(--readion-background-overlay)',
+  primary:  'var(--readion-primary)',
+  accent:   'var(--readion-accent-label)',
+  tPrimary: 'var(--readion-text-primary)',
+  tSecond:  'var(--readion-text-secondary)',
+  tMuted:   'var(--readion-text-muted)',
+  tSubtle:  'var(--readion-text-subtle)',
+  border:   'var(--readion-border-strong)',
+  borderDef:'var(--readion-border-default)',
+  poor:     'var(--readion-status-poor)',
+  warn:     'var(--readion-status-warning)',
+  good:     'var(--readion-status-good)',
+  rSm:      'var(--readion-rounded-sm)',
+  rMd:      'var(--readion-rounded-md)',
+  rLg:      'var(--readion-rounded-lg)',
+  rXl:      'var(--readion-rounded-xl)',
+  rFull:    'var(--readion-rounded-full)',
+};
+
+// ── App sidebar ───────────────────────────────────────────────────────────────
+const Shell = window.Shell;
+const AppSidebar = () => <Shell.AppSidebar active="Ask AI" admin={false} />;
+
+// ── Chat header ───────────────────────────────────────────────────────────────
+const ChatHeader = ({ ttl, expired }) => (
+  <div style={{ height: 52, borderBottom: '1px solid ' + T.border, background: T.elevated, display: 'flex', alignItems: 'center', padding: '0 24px', gap: 12, flexShrink: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+      <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(124,140,248,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width="13" height="13" viewBox="0 0 12 12" fill="none"><path d="M6 1l1.5 3.5L11 5l-2.5 2.5.5 3.5L6 9.5 3 11l.5-3.5L1 5l3.5-.5z" fill="var(--readion-accent-label)"/></svg>
+      </div>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 500, color: T.tPrimary }}>Study assistant</div>
+        <div style={{ fontSize: 10, color: T.tMuted }}>General knowledge · no session context</div>
+      </div>
+    </div>
+    {/* TTL indicator */}
+    {ttl && (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', background: expired ? 'rgba(248,113,113,0.08)' : T.surface, border: '1px solid ' + (expired ? 'rgba(248,113,113,0.2)' : T.border), borderRadius: T.rFull }}>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={expired ? T.poor : T.tSubtle} strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span style={{ fontSize: 11, color: expired ? T.poor : T.tSubtle }}>
+          {expired ? 'Expires in ' + ttl : 'Resets after 4h idle · ' + ttl + ' remaining'}
+        </span>
+      </div>
+    )}
+    <button style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 12, color: T.tMuted, cursor: 'pointer' }}>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+      New chat
+    </button>
+  </div>
+);
+
+// ── Message bubbles ───────────────────────────────────────────────────────────
+const UserBubble = ({ text }) => (
+  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+    <div style={{ maxWidth: '72%', padding: '10px 14px', background: T.surface, border: '1px solid ' + T.border, borderRadius: '12px 12px 2px 12px', fontSize: 14, color: T.tSecond, lineHeight: 1.6 }}>
+      {text}
+    </div>
+  </div>
+);
+
+// Para splitter for assistant messages
+const AssistantPara = ({ children }) => (
+  <p style={{ margin: 0, marginBottom: 10, fontSize: 14, color: '#fff', lineHeight: 1.65 }}>{children}</p>
+);
+
+const AssistantBubble = ({ paragraphs, streaming }) => (
+  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 16 }}>
+    <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1l1.5 3.5L11 5l-2.5 2.5.5 3.5L6 9.5 3 11l.5-3.5L1 5l3.5-.5z" fill="#fff"/></svg>
+    </div>
+    <div style={{ maxWidth: '80%', padding: '12px 16px', background: T.primary, borderRadius: '2px 12px 12px 12px' }}>
+      {paragraphs.map((p, i) => (
+        <AssistantPara key={i}>
+          {p}
+          {streaming && i === paragraphs.length - 1 && <span className="cursor" />}
+        </AssistantPara>
+      ))}
+    </div>
+  </div>
+);
+
+// ── Input bar ─────────────────────────────────────────────────────────────────
+const InputBar = ({ value }) => (
+  <div style={{ padding: '14px 24px', borderTop: '1px solid ' + T.border, background: T.elevated, flexShrink: 0 }}>
+    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '10px 14px' }}>
+      <textarea
+        readOnly
+        placeholder="Ask anything…"
+        defaultValue={value || ''}
+        style={{ flex: 1, background: 'none', border: 'none', outline: 'none', resize: 'none', fontSize: 14, color: T.tPrimary, fontFamily: 'inherit', lineHeight: 1.5, minHeight: 22, maxHeight: 120 }}
+        rows={1}
+      />
+      <button style={{ width: 32, height: 32, flexShrink: 0, background: value ? T.primary : T.border, border: 'none', borderRadius: T.rMd, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.15s' }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      </button>
+    </div>
+    <div style={{ marginTop: 8, fontSize: 11, color: T.tSubtle, textAlign: 'center' }}>
+      Answers from general knowledge only &middot; no exam-specific tools attached
+    </div>
+  </div>
+);
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+const SUGGESTIONS = [
+  'What\'s the difference between TCP and UDP?',
+  'Explain eventual consistency in plain language',
+  'How does TLS handshake work?',
+  'When would I use a queue vs a topic?',
+];
+
+const EmptyState = () => (
+  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 32px', gap: 24 }}>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(124,140,248,0.12)', border: '1px solid rgba(124,140,248,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+        <svg width="22" height="22" viewBox="0 0 12 12" fill="none"><path d="M6 1l1.5 3.5L11 5l-2.5 2.5.5 3.5L6 9.5 3 11l.5-3.5L1 5l3.5-.5z" fill="var(--readion-accent-label)"/></svg>
+      </div>
+      <div style={{ fontSize: 17, fontWeight: 600, color: T.tPrimary, marginBottom: 6 }}>Study assistant</div>
+      <div style={{ fontSize: 13, color: T.tMuted, lineHeight: 1.6, maxWidth: 380 }}>
+        Ask me anything — concepts, explanations, analogies. No exam corpus attached here; answers from general knowledge only.
+      </div>
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', maxWidth: 440 }}>
+      <div style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tSubtle, marginBottom: 2, textAlign: 'center' }}>Suggestions</div>
+      {SUGGESTIONS.map((s) => (
+        <div key={s} style={{ padding: '9px 14px', background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rLg, fontSize: 13, color: T.tSecond, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <span>{s}</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--readion-text-subtle)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// ── Expiry banner ─────────────────────────────────────────────────────────────
+const ExpiryBanner = () => (
+  <div style={{ margin: '0 24px 12px', padding: '10px 14px', background: 'rgba(251,146,60,0.08)', border: '1px solid rgba(251,146,60,0.25)', borderRadius: T.rLg, display: 'flex', alignItems: 'center', gap: 10 }}>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-warning)" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+    <span style={{ fontSize: 12, color: T.warn, flex: 1 }}>
+      This conversation resets in <strong>12 minutes</strong> due to inactivity. Send a message to reset the timer.
+    </span>
+    <button style={{ fontSize: 12, color: T.warn, background: 'transparent', border: 'none', cursor: 'pointer', textDecoration: 'underline', whiteSpace: 'nowrap' }}>Dismiss</button>
+  </div>
+);
+
+// ── Chat page ─────────────────────────────────────────────────────────────────
+const ChatPage = ({ messages, streaming, inputValue, ttl, showExpiryBanner, emptyState }) => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AppSidebar />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <ChatHeader ttl={ttl} expired={showExpiryBanner} />
+      {emptyState ? (
+        <>
+          <EmptyState />
+          <InputBar value={inputValue} />
+        </>
+      ) : (
+        <>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', display: 'flex', flexDirection: 'column' }}>
+            {showExpiryBanner && <ExpiryBanner />}
+            {messages.map((m, i) =>
+              m.role === 'user'
+                ? <UserBubble key={i} text={m.text} />
+                : <AssistantBubble key={i} paragraphs={m.paragraphs} streaming={streaming && i === messages.length - 1} />
+            )}
+          </div>
+          <InputBar value={inputValue} />
+        </>
+      )}
+    </div>
+  </div>
+);
+
+// ── Conversation data ─────────────────────────────────────────────────────────
+
+const MSGS_ACTIVE = [
+  {
+    role: 'user',
+    text: 'What\'s the practical difference between an IAM permission boundary and an SCP?',
+  },
+  {
+    role: 'agent',
+    paragraphs: [
+      'Both limit what permissions an entity can use, but they operate at completely different levels of AWS.',
+      'An IAM permission boundary is attached to a specific IAM user or role. It defines the maximum permissions that entity can ever be granted — even if an IAM policy tries to give it more. It\'s a ceiling on a single principal. Crucially, it doesn\'t grant anything by itself: a permission boundary of EC2:* plus an IAM policy that allows S3:GetObject results in... no access to either, because the boundary never allowed S3.',
+      'An SCP (Service Control Policy) is attached to AWS Organizations units — an account, an OU, or the root. It constrains what anyone in that account can do, including the root user of the account (one of the few things that can). Think of it as a firewall around the whole account rather than a leash on one user.',
+    ],
+  },
+  {
+    role: 'user',
+    text: 'So if I have both on the same account, which one takes precedence?',
+  },
+  {
+    role: 'agent',
+    paragraphs: [
+      'Neither "wins" — AWS uses a logical AND across all of them. For an action to succeed, it must be allowed by every applicable policy layer: the SCP, the identity policy (IAM policy), and any permission boundary. A deny at any layer blocks the action regardless of what the others say.',
+      'A useful mental model: the SCP sets the outer boundary for the account, the permission boundary sets an inner ceiling for the individual principal, and the IAM policy is the actual grant. All three rings must overlap for access to succeed.',
+    ],
+    streaming: false,
+  },
+  {
+    role: 'user',
+    text: 'Can you walk me through what happens when a root user tries to do something an SCP denies?',
+  },
+  {
+    role: 'agent',
+    paragraphs: [
+      'Denied — and this surprises a lot of people. The AWS root user of a member account is normally considered all-powerful within that account, but SCPs are one of the few controls that can restrict even root.',
+    ],
+    streaming: true,
+  },
+];
+
+const MSGS_EXPIRY = [
+  {
+    role: 'user',
+    text: 'Quick one — what\'s the CAP theorem?',
+  },
+  {
+    role: 'agent',
+    paragraphs: [
+      'CAP theorem states that a distributed system can guarantee at most two of three properties simultaneously: Consistency (every read gets the most recent write), Availability (every request gets a response, even if it\'s not the latest data), and Partition tolerance (the system keeps working despite network splits between nodes).',
+      'In practice, partition tolerance is non-negotiable in real networks — network failures happen. So the real trade-off is between consistency and availability during a partition. DynamoDB in its default mode leans toward availability (eventual consistency); with strongly consistent reads it leans toward consistency at some latency cost.',
+    ],
+  },
+];
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <Canvas>
+      <CanvasSection
+        title="Agent Chat — standalone"
+        subtitle="Free-form tutor. User bubbles: surface + secondary text. Agent bubbles: primary.default + white. No tool cards. Sliding 4h inactivity TTL."
+      >
+        <Artboard label="Active conversation — streaming response" width={1100} height={740}>
+          <ChatPage
+            messages={MSGS_ACTIVE}
+            streaming={true}
+            inputValue=""
+            ttl="3h 42m"
+            showExpiryBanner={false}
+            emptyState={false}
+          />
+        </Artboard>
+        <Artboard label="Empty state — new chat, suggestion chips" width={1100} height={740}>
+          <ChatPage
+            messages={[]}
+            streaming={false}
+            inputValue=""
+            ttl={null}
+            showExpiryBanner={false}
+            emptyState={true}
+          />
+        </Artboard>
+        <Artboard label="Expiry warning — 12 min idle, banner visible" width={1100} height={740}>
+          <ChatPage
+            messages={MSGS_EXPIRY}
+            streaming={false}
+            inputValue=""
+            ttl="12 min"
+            showExpiryBanner={true}
+            emptyState={false}
+          />
+        </Artboard>
+      </CanvasSection>
+    </Canvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

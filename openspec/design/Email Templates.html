@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Readion — Email Templates</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* Light email surface */
+    --bg:      #e7e5df;   /* page backdrop (warm gray, echoes app canvas) */
+    --card:    #ffffff;   /* email body */
+    --navy:    #0f172a;   /* masthead — Readion base */
+    --navy-2:  #1e293b;
+    /* Ink scale on white */
+    --ink:     #0f172a;
+    --body:    #3f4b5e;
+    --soft:    #64748b;
+    --faint:   #94a3b8;
+    --line:    #e9ebf0;
+    --line-2:  #f1f3f7;
+    /* Brand accents (Readion) */
+    --brand:   #1d4ed8;
+    --brand-d: #1e40af;
+    --accent:  #818cf8;   /* light accent for dark masthead */
+    --accent-d:#4f46e5;
+    /* Status (legible on white) */
+    --good:    #15a06a;  --good-bg:#eafaf3;
+    --warn:    #d9760a;  --warn-bg:#fdf4e7;
+    --poor:    #dc2626;
+  }
+
+  html, body { background: var(--bg); font-family: Inter, ui-sans-serif, system-ui; -webkit-font-smoothing: antialiased; color: var(--ink); }
+
+  /* ── Page scaffold ─────────────────────────────────────────── */
+  .page { padding: 56px 56px 96px; }
+  .page-head { max-width: 1280px; margin: 0 auto 8px; }
+  .kicker { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--brand); font-weight: 600; }
+  .page-title { font-size: 30px; font-weight: 700; color: var(--ink); margin-top: 8px; letter-spacing: -0.02em; }
+  .page-sub { font-size: 15px; color: var(--soft); margin-top: 8px; max-width: 620px; line-height: 1.55; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 18px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--soft); }
+  .swatch { width: 13px; height: 13px; border-radius: 4px; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
+
+  .section { max-width: 1280px; margin: 0 auto; padding-top: 52px; }
+  .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 22px; padding-bottom: 14px; border-bottom: 1px solid #d8d5cd; }
+  .section-title { font-size: 18px; font-weight: 700; color: var(--ink); }
+  .section-meta { font-size: 13px; color: var(--soft); }
+
+  .row { display: flex; gap: 52px; flex-wrap: wrap; align-items: flex-start; }
+
+  /* ── Inbox preview chrome (not part of the email) ──────────── */
+  .col { width: 600px; flex-shrink: 0; }
+  .vlabel { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand); background: #e7ecfb; border: 1px solid #d4ddf8; padding: 4px 10px; border-radius: 999px; margin-bottom: 12px; }
+  .vlabel.alt { color: var(--accent-d); background: #ecebfb; border-color: #ddd9f6; }
+  .vlabel.tx  { color: var(--soft); background: #eef0f3; border-color: #e3e6ea; }
+  .client { display: flex; align-items: center; gap: 12px; padding: 0 4px 14px; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; letter-spacing: -0.02em; }
+  .client-meta { min-width: 0; flex: 1; }
+  .client-from { font-size: 13.5px; color: var(--ink); font-weight: 600; }
+  .client-from span { color: var(--faint); font-weight: 400; }
+  .client-subj { font-size: 13.5px; color: var(--body); margin-top: 2px; }
+  .client-subj b { color: var(--ink); font-weight: 600; }
+  .client-pre { font-size: 12.5px; color: var(--faint); margin-top: 1px; }
+
+  /* ── Email body ────────────────────────────────────────────── */
+  .mail { background: var(--card); border-radius: 16px; overflow: hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.06), 0 18px 50px -22px rgba(15,23,42,0.32); border: 1px solid rgba(15,23,42,0.04); }
+  .masthead { background: var(--navy); padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; }
+  .wordmark { display: flex; align-items: center; gap: 9px; }
+  .mark { width: 24px; height: 24px; border-radius: 7px; background: linear-gradient(135deg, var(--brand), var(--accent-d)); display: flex; align-items: center; justify-content: center; }
+  .mark svg { display: block; }
+  .wordmark-txt { font-size: 17px; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+  .masthead-tag { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8ea2c7; font-weight: 500; }
+
+  .pad { padding: 36px 40px 32px; }
+  .eyebrow { font-size: 11.5px; letter-spacing: 0.13em; text-transform: uppercase; font-weight: 600; color: var(--brand); margin-bottom: 12px; }
+  .eyebrow.good { color: var(--good); }
+  .eyebrow.warn { color: var(--warn); }
+  h1.h { font-size: 27px; line-height: 1.18; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; }
+  .lead { font-size: 16px; line-height: 1.6; color: var(--body); margin-top: 12px; }
+  p.t { font-size: 15px; line-height: 1.62; color: var(--body); }
+  .mt16 { margin-top: 16px; } .mt20 { margin-top: 20px; } .mt24 { margin-top: 24px; } .mt28 { margin-top: 28px; } .mt12 { margin-top: 12px; }
+
+  .btn { display: inline-block; background: var(--brand); color: #fff; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 30px; border-radius: 9px; box-shadow: 0 1px 2px rgba(29,78,216,0.3), 0 8px 18px -8px rgba(29,78,216,0.5); }
+  .btn.full { display: block; text-align: center; }
+  .btn.ghost { background: #fff; color: var(--brand); box-shadow: inset 0 0 0 1.5px #cdd9f6; }
+  .btn-note { font-size: 12.5px; color: var(--faint); margin-top: 10px; }
+  .link { color: var(--brand); font-weight: 600; text-decoration: none; font-size: 14.5px; }
+  .link.muted { color: var(--soft); font-weight: 500; }
+
+  /* numbered steps */
+  .steps { margin-top: 24px; display: flex; flex-direction: column; gap: 4px; }
+  .step { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--line-2); }
+  .step:first-child { border-top: none; }
+  .step-n { width: 26px; height: 26px; border-radius: 50%; background: #eef2fe; color: var(--brand); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .step-t { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .step-d { font-size: 13.5px; color: var(--soft); margin-top: 2px; line-height: 1.5; }
+
+  .divider { height: 1px; background: var(--line); margin: 28px 0; }
+
+  /* cert card */
+  .cert { display: flex; align-items: center; gap: 14px; background: #f7f8fb; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .cert-badge { width: 50px; height: 50px; border-radius: 10px; background: var(--navy); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .cert-name { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .cert-vendor { font-size: 12.5px; color: var(--soft); margin-top: 2px; }
+  .cert-chip { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--good); background: var(--good-bg); padding: 4px 9px; border-radius: 999px; }
+
+  /* feature block */
+  .feature { background: #f7f8fb; border: 1px solid var(--line); border-radius: 14px; padding: 22px; margin-top: 22px; }
+  .feature-h { font-size: 16px; font-weight: 700; color: var(--ink); }
+  .feature-list { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .fl { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--body); line-height: 1.45; }
+  .tick { width: 18px; height: 18px; border-radius: 50%; background: var(--good-bg); flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+
+  /* ── Digest data viz ───────────────────────────────────────── */
+  .ring-wrap { display: flex; align-items: center; gap: 26px; margin-top: 24px; }
+  .ring { width: 128px; height: 128px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .ring-inner { width: 96px; height: 96px; border-radius: 50%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-num { font-size: 32px; font-weight: 700; color: var(--ink); line-height: 1; letter-spacing: -0.02em; }
+  .ring-lbl { font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-top: 4px; }
+  .delta { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; font-weight: 700; color: var(--good); background: var(--good-bg); padding: 6px 12px; border-radius: 999px; }
+  .ring-side .lead { margin-top: 6px; }
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 26px; }
+  .stat { background: #f7f8fb; border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .stat-k { font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--soft); }
+  .stat-v { font-size: 24px; font-weight: 700; color: var(--ink); margin-top: 6px; letter-spacing: -0.01em; }
+  .stat-v small { font-size: 13px; font-weight: 600; color: var(--soft); }
+
+  .callout { display: flex; align-items: center; gap: 14px; border-radius: 12px; padding: 16px; margin-top: 14px; background: var(--warn-bg); border: 1px solid #f5e2c4; }
+  .callout-ic { width: 38px; height: 38px; border-radius: 9px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .callout-k { font-size: 11.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--warn); font-weight: 600; }
+  .callout-v { font-size: 15px; font-weight: 600; color: var(--ink); margin-top: 2px; }
+  .callout .link { margin-left: auto; font-size: 13.5px; white-space: nowrap; }
+
+  /* digest B table */
+  .drow { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-top: 1px solid var(--line); }
+  .drow:first-child { border-top: none; }
+  .drow-k { font-size: 14.5px; color: var(--body); display: flex; align-items: center; gap: 10px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .drow-v { font-size: 15px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+  .bar { width: 90px; height: 7px; border-radius: 999px; background: var(--line); overflow: hidden; }
+  .bar > i { display: block; height: 100%; border-radius: 999px; }
+  .focus { background: var(--navy); border-radius: 14px; padding: 22px; margin-top: 24px; color: #cdd6e8; }
+  .focus-k { font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .focus-h { font-size: 17px; font-weight: 700; color: #fff; margin-top: 8px; }
+  .focus-p { font-size: 13.5px; line-height: 1.55; margin-top: 8px; color: #9fb0cc; }
+
+  /* survey */
+  .survey { display: flex; flex-direction: column; gap: 10px; margin-top: 26px; }
+  .sv { display: flex; align-items: center; gap: 13px; text-decoration: none; padding: 16px 18px; border-radius: 12px; border: 1.5px solid var(--line); background: #fff; }
+  .sv.pass { border-color: #bfe9d4; background: var(--good-bg); }
+  .sv-ic { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sv-t { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .sv-d { font-size: 12.5px; color: var(--soft); margin-top: 1px; }
+  .sv-arrow { margin-left: auto; color: var(--faint); }
+
+  /* security note */
+  .note { display: flex; gap: 12px; background: #f7f8fb; border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-top: 24px; }
+  .note-ic { flex-shrink: 0; margin-top: 1px; }
+  .note-t { font-size: 13.5px; color: var(--soft); line-height: 1.55; }
+  .fallback { font-size: 12.5px; color: var(--faint); line-height: 1.6; margin-top: 20px; word-break: break-all; }
+  .fallback a { color: var(--brand); text-decoration: none; }
+
+  /* ── Footer ────────────────────────────────────────────────── */
+  .footer { background: #f7f8fb; border-top: 1px solid var(--line); padding: 26px 40px 30px; }
+  .foot-brand { display: flex; align-items: center; gap: 8px; }
+  .foot-mark { width: 18px; height: 18px; border-radius: 5px; background: var(--navy); display: flex; align-items: center; justify-content: center; }
+  .foot-name { font-size: 13px; font-weight: 700; color: var(--ink); }
+  .foot-t { font-size: 12px; color: var(--faint); line-height: 1.6; margin-top: 12px; }
+  .foot-links { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  .foot-links a { font-size: 12px; color: var(--soft); text-decoration: none; font-weight: 500; }
+  .foot-links span { color: #d2d6dd; font-size: 11px; }
+  .foot-addr { font-size: 11.5px; color: var(--faint); margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-head">
+    <div class="kicker">Readion · Lifecycle Email</div>
+    <div class="page-title">Email Templates</div>
+    <div class="page-sub">Five transactional &amp; lifecycle emails around the onboarding flow. Light body with the dark Readion navy masthead and blue / status accents — the client-safe way to carry the app's look into the inbox.</div>
+    <div class="legend">
+      <div class="legend-item"><span class="swatch" style="background:#0f172a"></span> Masthead navy</div>
+      <div class="legend-item"><span class="swatch" style="background:#1d4ed8"></span> Primary action</div>
+      <div class="legend-item"><span class="swatch" style="background:#15a06a"></span> Readiness / positive</div>
+      <div class="legend-item"><span class="swatch" style="background:#d9760a"></span> Focus / attention</div>
+      <div class="legend-item"><span class="swatch" style="background:#ffffff"></span> Email body</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ EMAIL VERIFICATION ════════════════════ -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">Email verification</div>
+      <div class="section-meta">Sent on sign-up · before Welcome · verify link, 24-hour expiry</div>
+    </div>
+    <div class="row">
+
+      <!-- Verify -->
+      <div class="col">
+        <div class="vlabel tx">Transactional · Email verification</div>
+        <div class="client">
+          <div class="avatar">R</div>
+          <div class="client-meta">
+            <div class="client-from">Readion Security <span>&lt;security@readion.app&gt;</span></div>
+            <div class="client-subj"><b>Verify your Readion email</b></div>
+            <div class="client-pre">Confirm your email — the link expires in 24 hours.</div>
+          </div>
+        </div>
+        <div class="mail">
+          <div class="masthead">
+            <div class="wordmark">
+              <span class="mark"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2.4h5.2c1.6 0 2.6 1 2.6 2.4S9.8 7.2 8.2 7.2H3z" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.4 7.2 11 11.6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+              <span class="wordmark-txt">Readion</span>
+            </div>
+            <div class="masthead-tag">Account Security</div>
+          </div>
+          <div class="pad">
+            <h1 class="h">Confirm your email</h1>
+            <p class="lead">Welcome, Alex. One quick step to activate the Readion account for <b>alex.chen@email.com</b> — verify it's really you and we'll get your prep set up.</p>
+            <div class="mt28"><a class="btn full" href="#">Verify email address</a><div class="btn-note" style="text-align:center;">This link expires in 24 hours.</div></div>
+            <div class="note">
+              <span class="note-ic"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2 2 5.5v3.2C2 12.8 5 15.4 9 16.5c4-1.1 7-3.7 7-7.8V5.5L9 2Z" stroke="#94a3b8" stroke-width="1.4" stroke-linejoin="round"/><path d="M6.6 9 8.3 10.7 11.5 7.3" stroke="#94a3b8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <div class="note-t">Didn't create a Readion account? You can safely ignore this email — no account will be activated without confirming via the link above.</div>
+            </div>
+            <div class="fallback">If the button doesn't work, copy and paste this link into your browser:<br/><a href="#">https://app.readion.app/verify?token=2b7e…c40a</a></div>
+          </div>
+          <div class="footer">
+            <div class="foot-brand"><span class="foot-mark"><svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M3 2.4h5.2c1.6 0 2.6 1 2.6 2.4S9.8 7.2 8.2 7.2H3z" stroke="#818cf8" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.4 7.2 11 11.6" stroke="#818cf8" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="foot-name">Readion</span></div>
+            <div class="foot-t">This is an automated security message. Questions about your account? <a href="mailto:support@readion.app" style="color:#1d4ed8;text-decoration:none;font-weight:600;">support@readion.app</a>.</div>
+            <div class="foot-addr">Readion, Inc. · 2261 Market Street, San Francisco, CA 94114</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════ WELCOME ════════════════════ -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">Welcome</div>
+      <div class="section-meta">Sent on registration</div>
+    </div>
+    <div class="row">
+
+      <!-- Welcome -->
+      <div class="col">
+        <div class="vlabel">Welcome · Card-driven</div>
+        <div class="client">
+          <div class="avatar">R</div>
+          <div class="client-meta">
+            <div class="client-from">Readion <span>&lt;hello@readion.app&gt;</span></div>
+            <div class="client-subj"><b>Your SAA-C03 prep is ready</b></div>
+            <div class="client-pre">Run a quick baseline and we'll build your plan.</div>
+          </div>
+        </div>
+        <div class="mail">
+          <div class="masthead">
+            <div class="wordmark">
+              <span class="mark"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2.4h5.2c1.6 0 2.6 1 2.6 2.4S9.8 7.2 8.2 7.2H3z" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.4 7.2 11 11.6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+              <span class="wordmark-txt">Readion</span>
+            </div>
+            <div class="masthead-tag">Certification Prep</div>
+          </div>
+          <div class="pad">
+            <h1 class="h">Welcome to Readion</h1>
+            <p class="lead">Adaptive, no-fluff prep that learns what you know and focuses on what you don't. Here's the certification you're working toward:</p>
+            <div class="cert mt20">
+              <div class="cert-badge">SAA<br/>C03</div>
+              <div>
+                <div class="cert-name">Solutions Architect – Associate</div>
+                <div class="cert-vendor">Amazon Web Services</div>
+              </div>
+              <div class="cert-chip">Active</div>
+            </div>
+            <div class="feature">
+              <div class="feature-h">Start with a baseline snapshot</div>
+              <div class="feature-list">
+                <div class="fl"><span class="tick"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M2 4.6l2 2 3-3.4" stroke="#15a06a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Maps your knowledge across all exam domains</div>
+                <div class="fl"><span class="tick"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M2 4.6l2 2 3-3.4" stroke="#15a06a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Front-loads your weakest areas in session one</div>
+                <div class="fl"><span class="tick"><svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M2 4.6l2 2 3-3.4" stroke="#15a06a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Calibrates difficulty so you're never bored or buried</div>
+              </div>
+              <div class="mt20"><a class="btn full" href="#">Start the diagnostic · ~15 min</a></div>
+            </div>
+            <div class="mt20" style="text-align:center;"><a class="link muted" href="#">Skip — I'll set my own pace →</a></div>
+          </div>
+          <div class="footer">
+            <div class="foot-brand"><span class="foot-mark"><svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M3 2.4h5.2c1.6 0 2.6 1 2.6 2.4S9.8 7.2 8.2 7.2H3z" stroke="#818cf8" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.4 7.2 11 11.6" stroke="#818cf8" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="foot-name">Readion</span></div>
+            <div class="foot-t">You're receiving this because you created a Readion account. Need a hand? Reach us at <a href="mailto:support@readion.app" style="color:#1d4ed8;text-decoration:none;font-weight:600;">support@readion.app</a>.</div>
+            <div class="foot-addr">Readion, Inc. · 2261 Market Street, San Francisco, CA 94114</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════ WEEKLY DIGEST ════════════════════ -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">Weekly progress digest</div>
+      <div class="section-meta">Opt-out · weekly in the user's timezone · readiness, delta, weakest domain, due reviews</div>
+    </div>
+    <div class="row">
+
+      <!-- Digest -->
+      <div class="col">
+        <div class="vlabel">Weekly digest · Coach narrative</div>
+        <div class="client">
+          <div class="avatar">R</div>
+          <div class="client-meta">
+            <div class="client-from">Readion <span>&lt;digest@readion.app&gt;</span></div>
+            <div class="client-subj"><b>Steady week, Alex — here's where you stand</b></div>
+            <div class="client-pre">71% ready, 18 reviews waiting, one area to focus next.</div>
+          </div>
+        </div>
+        <div class="mail">
+          <div class="masthead">
+            <div class="wordmark">
+              <span class="mark"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2.4h5.2c1.6 0 2.6 1 2.6 2.4S9.8 7.2 8.2 7.2H3z" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.4 7.2 11 11.6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+              <span class="wordmark-txt">Readion</span>
+            </div>
+            <div class="masthead-tag">Weekly Digest</div>
+          </div>
+          <div class="pad">
+            <div class="eyebrow">Your week · Jun 16–22</div>
+            <h1 class="h">Steady progress this week</h1>
+            <p class="lead">You put in five sessions and moved your readiness from 65% to <b>71%</b>. That's real ground — most of the gain came from your Storage and Compute reps paying off.</p>
+            <div class="mt24">
+              <div class="drow"><div class="drow-k"><span class="dot" style="background:#15a06a;"></span>Exam readiness</div><div class="drow-v"><span class="bar"><i style="width:71%;background:#15a06a;"></i></span>71% <span style="color:#15a06a;font-size:13px;">+6</span></div></div>
+              <div class="drow"><div class="drow-k"><span class="dot" style="background:#1d4ed8;"></span>Reviews due now</div><div class="drow-v">18 cards</div></div>
+              <div class="drow"><div class="drow-k"><span class="dot" style="background:#d9760a;"></span>Weakest domain</div><div class="drow-v" style="font-size:14px;">Networking &amp; Content Delivery</div></div>
+            </div>
+            <div class="focus">
+              <div class="focus-k">This week's focus</div>
+              <div class="focus-h">Spend two sessions on Networking</div>
+              <div class="focus-p">It's the one domain holding your score back. A couple of focused sessions here should move your readiness the most — then clear those 18 reviews before they stack up.</div>
+            </div>
+            <div class="mt24"><a class="btn full" href="#">Jump into Networking →</a></div>
+          </div>
+          <div class="footer">
+            <div class="foot-brand"><span class="foot-mark"><svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M3 2.4h5.2c1.6 0 2.6 1 2.6 2.4S9.8 7.2 8.2 7.2H3z" stroke="#818cf8" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.4 7.2 11 11.6" stroke="#818cf8" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="foot-name">Readion</span></div>
+            <div class="foot-t">You get this digest once a week because it's switched on in your preferences.</div>
+            <div class="foot-links"><a href="#">Manage email preferences</a><span>·</span><a href="#">Unsubscribe from weekly digests</a></div>
+            <div class="foot-addr">Readion, Inc. · 2261 Market Street, San Francisco, CA 94114</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════ TRANSACTIONAL ════════════════════ -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title">Transactional &amp; lifecycle</div>
+      <div class="section-meta">Password reset · post-exam outcome nudge</div>
+    </div>
+    <div class="row">
+
+      <!-- Password reset -->
+      <div class="col">
+        <div class="vlabel tx">Transactional · Password reset</div>
+        <div class="client">
+          <div class="avatar">R</div>
+          <div class="client-meta">
+            <div class="client-from">Readion Security <span>&lt;security@readion.app&gt;</span></div>
+            <div class="client-subj"><b>Reset your Readion password</b></div>
+            <div class="client-pre">This link expires in 1 hour.</div>
+          </div>
+        </div>
+        <div class="mail">
+          <div class="masthead">
+            <div class="wordmark">
+              <span class="mark"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2.4h5.2c1.6 0 2.6 1 2.6 2.4S9.8 7.2 8.2 7.2H3z" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.4 7.2 11 11.6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+              <span class="wordmark-txt">Readion</span>
+            </div>
+            <div class="masthead-tag">Account Security</div>
+          </div>
+          <div class="pad">
+            <h1 class="h">Reset your password</h1>
+            <p class="lead">We got a request to reset the password for the Readion account linked to <b>alex.chen@email.com</b>. Choose a new one below.</p>
+            <div class="mt28"><a class="btn full" href="#">Reset password</a><div class="btn-note" style="text-align:center;">This link expires in 1 hour for your security.</div></div>
+            <div class="note">
+              <span class="note-ic"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2 2 5.5v3.2C2 12.8 5 15.4 9 16.5c4-1.1 7-3.7 7-7.8V5.5L9 2Z" stroke="#94a3b8" stroke-width="1.4" stroke-linejoin="round"/><path d="M6.6 9 8.3 10.7 11.5 7.3" stroke="#94a3b8" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <div class="note-t">Didn't request this? You can safely ignore this email — your password won't change until you create a new one using the link above.</div>
+            </div>
+            <div class="fallback">If the button doesn't work, copy and paste this link into your browser:<br/><a href="#">https://app.readion.app/reset-password?token=8f3c…a91e</a></div>
+          </div>
+          <div class="footer">
+            <div class="foot-brand"><span class="foot-mark"><svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M3 2.4h5.2c1.6 0 2.6 1 2.6 2.4S9.8 7.2 8.2 7.2H3z" stroke="#818cf8" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.4 7.2 11 11.6" stroke="#818cf8" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="foot-name">Readion</span></div>
+            <div class="foot-t">This is an automated security message. Questions about your account? <a href="mailto:support@readion.app" style="color:#1d4ed8;text-decoration:none;font-weight:600;">support@readion.app</a>.</div>
+            <div class="foot-addr">Readion, Inc. · 2261 Market Street, San Francisco, CA 94114</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post-exam nudge -->
+      <div class="col">
+        <div class="vlabel tx">Lifecycle · Post-exam nudge</div>
+        <div class="client">
+          <div class="avatar">R</div>
+          <div class="client-meta">
+            <div class="client-from">Readion <span>&lt;hello@readion.app&gt;</span></div>
+            <div class="client-subj"><b>Did you take your SAA-C03 exam?</b></div>
+            <div class="client-pre">One tap — no studying required.</div>
+          </div>
+        </div>
+        <div class="mail">
+          <div class="masthead">
+            <div class="wordmark">
+              <span class="mark"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 2.4h5.2c1.6 0 2.6 1 2.6 2.4S9.8 7.2 8.2 7.2H3z" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.4 7.2 11 11.6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+              <span class="wordmark-txt">Readion</span>
+            </div>
+            <div class="masthead-tag">Checking In</div>
+          </div>
+          <div class="pad">
+            <div class="eyebrow good">You hit exam-ready</div>
+            <h1 class="h">How did it go?</h1>
+            <p class="lead">You crossed the exam-ready line a couple of weeks back and things have gone quiet since. If you've sat the SAA-C03, we'd love to know how it went — it's one tap, and it helps us help the next person.</p>
+            <div class="survey">
+              <a class="sv pass" href="#">
+                <span class="sv-ic" style="background:#d6f3e5;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7.5" stroke="#15a06a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div><div class="sv-t">I passed</div><div class="sv-d">Congratulations — tell us the good news</div></div>
+                <span class="sv-arrow"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </a>
+              <a class="sv" href="#">
+                <span class="sv-ic" style="background:#f1f3f7;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5 8h6" stroke="#64748b" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+                <div><div class="sv-t">Didn't pass this time</div><div class="sv-d">We'll help you regroup for the retake</div></div>
+                <span class="sv-arrow"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </a>
+              <a class="sv" href="#">
+                <span class="sv-ic" style="background:#f1f3f7;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="#64748b" stroke-width="1.5"/><path d="M8 5.5V8l1.6 1.2" stroke="#64748b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <div><div class="sv-t">Not yet</div><div class="sv-d">Still planning to sit it — keep me sharp</div></div>
+                <span class="sv-arrow"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              </a>
+            </div>
+            <p class="t mt20" style="color:#94a3b8;font-size:13px;">No pressure either way — we'll only ask this once.</p>
+          </div>
+          <div class="footer">
+            <div class="foot-brand"><span class="foot-mark"><svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M3 2.4h5.2c1.6 0 2.6 1 2.6 2.4S9.8 7.2 8.2 7.2H3z" stroke="#818cf8" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.4 7.2 11 11.6" stroke="#818cf8" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="foot-name">Readion</span></div>
+            <div class="foot-t">A one-time check-in tied to your exam progress, not a recurring email.</div>
+            <div class="foot-links"><a href="#">Manage email preferences</a><span>·</span><a href="#">Unsubscribe</a></div>
+            <div class="foot-addr">Readion, Inc. · 2261 Market Street, San Francisco, CA 94114</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

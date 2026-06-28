@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion — End-of-Session Summary</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui; background: #c4c0b8; }
+    .canvas-wrap { padding: 48px 56px; }
+    .canvas-section { margin-bottom: 56px; }
+    .canvas-section-head { margin-bottom: 20px; }
+    .canvas-section-title { font-size: 17px; font-weight: 600; color: #2d2520; }
+    .canvas-section-sub { font-size: 12px; color: #7a6e65; margin-top: 3px; }
+    .canvas-row { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+    .artboard-wrap { flex-shrink: 0; }
+    .artboard-label { font-size: 11px; color: #7a6e65; margin-bottom: 7px; font-weight: 500; letter-spacing: 0.02em; }
+    .artboard-frame { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.js"></script>
+
+<script type="text/babel" src="app-shell.jsx"></script>
+<script type="text/babel">
+
+// ── Canvas shell ─────────────────────────────────────────────────────────────
+const Canvas = (p) => <div className="canvas-wrap">{p.children}</div>;
+const CanvasSection = (p) => (
+  <div className="canvas-section">
+    <div className="canvas-section-head">
+      <div className="canvas-section-title">{p.title}</div>
+      {p.subtitle && <div className="canvas-section-sub">{p.subtitle}</div>}
+    </div>
+    <div className="canvas-row">{p.children}</div>
+  </div>
+);
+const Artboard = (p) => (
+  <div className="artboard-wrap" style={{ width: p.width }}>
+    <div className="artboard-label">{p.label}</div>
+    <div className="artboard-frame" style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+  </div>
+);
+
+// ── Tokens ───────────────────────────────────────────────────────────────────
+const T = {
+  base:     'var(--readion-background-base)',
+  surface:  'var(--readion-background-surface)',
+  elevated: 'var(--readion-background-elevated)',
+  overlay:  'var(--readion-background-overlay)',
+  primary:  'var(--readion-primary)',
+  accent:   'var(--readion-accent-label)',
+  tPrimary: 'var(--readion-text-primary)',
+  tSecond:  'var(--readion-text-secondary)',
+  tMuted:   'var(--readion-text-muted)',
+  tSubtle:  'var(--readion-text-subtle)',
+  border:   'var(--readion-border-strong)',
+  borderDef:'var(--readion-border-default)',
+  poor:     'var(--readion-status-poor)',
+  warn:     'var(--readion-status-warning)',
+  medium:   'var(--readion-status-medium)',
+  good:     'var(--readion-status-good)',
+  rSm:      'var(--readion-rounded-sm)',
+  rMd:      'var(--readion-rounded-md)',
+  rLg:      'var(--readion-rounded-lg)',
+  rXl:      'var(--readion-rounded-xl)',
+  rFull:    'var(--readion-rounded-full)',
+};
+
+function domainColor(pct) {
+  if (pct < 50) return T.poor;
+  if (pct < 65) return T.warn;
+  if (pct < 75) return T.medium;
+  return T.good;
+}
+
+// ── App sidebar ───────────────────────────────────────────────────────────────
+const Shell = window.Shell;
+const AppSidebar = () => <Shell.AppSidebar active="Sessions" admin={false} />;
+
+// ── Section card ──────────────────────────────────────────────────────────────
+const Card = ({ children, style }) => (
+  <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '20px 24px', ...style }}>
+    {children}
+  </div>
+);
+
+const CardLabel = ({ children }) => (
+  <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 14 }}>{children}</div>
+);
+
+// ── Delta badge ───────────────────────────────────────────────────────────────
+const Delta = ({ value, suffix }) => {
+  const pos = value >= 0;
+  const color = pos ? T.good : T.poor;
+  const bg = pos ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)';
+  const border = pos ? 'rgba(52,211,153,0.2)' : 'rgba(248,113,113,0.2)';
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, padding: '2px 7px', background: bg, border: '1px solid ' + border, borderRadius: T.rFull, fontSize: 11, fontWeight: 500, color }}>
+      {pos ? '↑' : '↓'}{Math.abs(value)}{suffix || '%'}
+    </span>
+  );
+};
+
+// ── Stats strip ───────────────────────────────────────────────────────────────
+const StatCell = ({ label, value, sub, accent }) => (
+  <div style={{ flex: 1, padding: '16px 20px', borderRight: '1px solid ' + T.border }}>
+    <div style={{ fontSize: 11, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 6 }}>{label}</div>
+    <div style={{ fontSize: 22, fontWeight: 700, color: accent || T.tPrimary, lineHeight: 1 }}>{value}</div>
+    {sub && <div style={{ fontSize: 11, color: T.tSubtle, marginTop: 4 }}>{sub}</div>}
+  </div>
+);
+
+const StatsStrip = ({ stats }) => (
+  <div style={{ display: 'flex', background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, overflow: 'hidden' }}>
+    {stats.map((s, i) => (
+      <div key={s.label} style={{ flex: 1, padding: '16px 20px', borderRight: i < stats.length - 1 ? '1px solid ' + T.border : 'none' }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 6 }}>{s.label}</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: s.accent || T.tPrimary, lineHeight: 1 }}>{s.value}</div>
+        {s.sub && <div style={{ fontSize: 11, color: T.tSubtle, marginTop: 4 }}>{s.sub}</div>}
+      </div>
+    ))}
+  </div>
+);
+
+// ── Readiness change ──────────────────────────────────────────────────────────
+const ReadinessChange = ({ before, after }) => {
+  const delta = after - before;
+  return (
+    <Card style={{ padding: '14px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, flexShrink: 0 }}>Readiness score</div>
+        <div style={{ width: 1, height: 16, background: T.border, flexShrink: 0 }} />
+        <span style={{ fontSize: 22, fontWeight: 700, color: T.tMuted, lineHeight: 1, flexShrink: 0 }}>{before}%</span>
+        <div style={{ flex: 1, position: 'relative', height: 3, background: T.border, borderRadius: 3, minWidth: 40 }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(124,140,248,0.3), ' + T.good + ')', borderRadius: 3 }} />
+          <div style={{ position: 'absolute', right: -1, top: '50%', transform: 'translateY(-50%)', width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid ' + T.good }} />
+        </div>
+        <span style={{ fontSize: 22, fontWeight: 700, color: T.good, lineHeight: 1, flexShrink: 0 }}>{after}%</span>
+        <div style={{ width: 1, height: 16, background: T.border, flexShrink: 0 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <Delta value={delta} />
+          <span style={{ fontSize: 11, color: T.tSubtle }}>this session</span>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+// ── Domains covered ───────────────────────────────────────────────────────────
+const DomainsCard = ({ domains }) => (
+  <Card>
+    <CardLabel>Domains covered</CardLabel>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {domains.map((d, i) => {
+        const accuracyPct = Math.round((d.correct / d.total) * 100);
+        const color = domainColor(d.scorePct);
+        return (
+          <div key={d.name}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0' }}>
+              {/* Domain name */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, color: T.tSecond, marginBottom: 5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</div>
+                <div style={{ height: 3, background: T.border, borderRadius: 3 }}>
+                  <div style={{ height: '100%', width: accuracyPct + '%', background: color, borderRadius: 3 }} />
+                </div>
+              </div>
+              {/* Q count */}
+              <div style={{ flexShrink: 0, width: 52, textAlign: 'right' }}>
+                <span style={{ fontSize: 12, fontFamily: 'var(--readion-font-mono)', color: T.tSecond }}>{d.correct}/{d.total}</span>
+              </div>
+              {/* Accuracy % */}
+              <div style={{ flexShrink: 0, width: 36, textAlign: 'right' }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color }}>{accuracyPct}%</span>
+              </div>
+              {/* Delta */}
+              <div style={{ flexShrink: 0, width: 48 }}>
+                <Delta value={d.delta} />
+              </div>
+            </div>
+            {i < domains.length - 1 && <div style={{ height: 1, background: T.borderDef }} />}
+          </div>
+        );
+      })}
+    </div>
+  </Card>
+);
+
+// ── Weak area deltas ──────────────────────────────────────────────────────────
+const WeakAreasCard = ({ areas }) => (
+  <Card>
+    <CardLabel>Weak area movement</CardLabel>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {areas.map((a) => {
+        const delta = a.after - a.before;
+        const color = domainColor(a.after);
+        return (
+          <div key={a.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ flex: 1, fontSize: 12, color: T.tSecond }}>{a.label}</div>
+            {/* Before → after */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+              <span style={{ fontSize: 12, color: T.tMuted, fontFamily: 'var(--readion-font-mono)' }}>{a.before}%</span>
+              <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+                <path d="M1 4h11M9 1l3 3-3 3" stroke="var(--readion-text-subtle)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span style={{ fontSize: 12, fontWeight: 600, color, fontFamily: 'var(--readion-font-mono)' }}>{a.after}%</span>
+            </div>
+            <div style={{ flexShrink: 0, width: 44, textAlign: 'right' }}>
+              <Delta value={delta} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </Card>
+);
+
+// ── Question highlight card ───────────────────────────────────────────────────
+const QuestionHighlight = ({ type, question, chosen, correct, timeSec }) => {
+  const isStrong = type === 'strongest';
+  const color = isStrong ? T.good : T.poor;
+  const bg = isStrong ? 'rgba(52,211,153,0.06)' : 'rgba(248,113,113,0.06)';
+  const border = isStrong ? 'rgba(52,211,153,0.2)' : 'rgba(248,113,113,0.2)';
+  const icon = isStrong ? (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="rgba(52,211,153,0.15)" stroke="var(--readion-status-good)" strokeWidth="1.2"/><path d="M5 8l2 2 4-4" stroke="var(--readion-status-good)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ) : (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="rgba(248,113,113,0.12)" stroke="var(--readion-status-poor)" strokeWidth="1.2"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="var(--readion-status-poor)" strokeWidth="1.4" strokeLinecap="round"/></svg>
+  );
+
+  return (
+    <div style={{ flex: 1, background: bg, border: '1px solid ' + border, borderRadius: T.rXl, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+        {icon}
+        <span style={{ fontSize: 11, letterSpacing: '0.07em', textTransform: 'uppercase', color, fontWeight: 500 }}>
+          {isStrong ? 'Strongest' : 'Weakest'}
+        </span>
+      </div>
+
+      <p style={{ fontSize: 13, color: T.tSecond, lineHeight: 1.55 }}>
+        {question}
+      </p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {isStrong ? (
+          <>
+            <div style={{ fontSize: 11, color: T.tMuted }}>
+              Answered <span style={{ color: T.good, fontWeight: 500 }}>correctly</span> in {timeSec}s &middot; Selected {chosen}
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: 11, color: T.tMuted }}>
+              Selected <span style={{ color: T.poor, fontWeight: 500 }}>{chosen}</span> &middot; Correct was <span style={{ color: T.tSecond, fontWeight: 500 }}>{correct}</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      <button style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', background: 'transparent', border: '1px solid ' + border, borderRadius: T.rFull, fontSize: 12, color, cursor: 'pointer', alignSelf: 'flex-start' }}>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Ask agent about this
+      </button>
+    </div>
+  );
+};
+
+// ── Next session suggestion ───────────────────────────────────────────────────
+const NextSessionCard = ({ domain, reason }) => (
+  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '16px 20px', background: 'rgba(124,140,248,0.06)', border: '1px solid rgba(124,140,248,0.18)', borderRadius: T.rXl }}>
+    <div style={{ width: 32, height: 32, borderRadius: T.rMd, background: 'rgba(124,140,248,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+      </svg>
+    </div>
+    <div>
+      <div style={{ fontSize: 11, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.accent, marginBottom: 5 }}>Suggested focus next session</div>
+      <div style={{ fontSize: 13, fontWeight: 500, color: T.tPrimary, marginBottom: 3 }}>{domain}</div>
+      <div style={{ fontSize: 12, color: T.tSecond, lineHeight: 1.55 }}>{reason}</div>
+    </div>
+  </div>
+);
+
+// ── CTA row ───────────────────────────────────────────────────────────────────
+const CTARow = ({ missCount }) => (
+  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+    <button style={{ flex: 1, padding: '11px 0', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5,3 19,12 5,21"/></svg>
+      Drill my misses &middot; {missCount} questions &#8594;
+    </button>
+    <button style={{ padding: '11px 20px', background: 'transparent', color: T.tSecond, border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+      Back to dashboard
+    </button>
+  </div>
+);
+
+// ── Summary page layout ───────────────────────────────────────────────────────
+const SummaryPage = ({ sessionType, certCode, certName, duration, stats, readinessBefore, readinessAfter, domains, weakAreas, strongest, weakest, nextDomain, nextReason, missCount }) => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AppSidebar />
+    <div style={{ flex: 1, overflowY: 'auto', padding: '28px 36px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+      {/* Page header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', paddingBottom: 14, borderBottom: '1px solid ' + T.border }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(52,211,153,0.15)', border: '1px solid ' + T.good, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="var(--readion-status-good)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </div>
+            <span style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.good }}>Session complete</span>
+          </div>
+          <div style={{ fontSize: 20, fontWeight: 600, color: T.tPrimary, lineHeight: 1.25, marginBottom: 4 }}>
+            {sessionType === 'mock' ? 'Mock Exam' : 'Study Session'} · {certCode}
+          </div>
+          <div style={{ fontSize: 12, color: T.tMuted }}>{certName} &middot; {duration}</div>
+        </div>
+        <div style={{ fontSize: 11, color: T.tSubtle }}>Today at 3:42 PM</div>
+      </div>
+
+      {/* Stats strip */}
+      <StatsStrip stats={stats} />
+
+      {/* Readiness strip */}
+      <ReadinessChange before={readinessBefore} after={readinessAfter} />
+
+      {/* Domains covered */}
+      <DomainsCard domains={domains} />
+
+      {/* Weak areas */}
+      <WeakAreasCard areas={weakAreas} />
+
+      {/* Strongest + weakest */}
+      <div style={{ display: 'flex', gap: 14 }}>
+        <QuestionHighlight type="strongest" {...strongest} />
+        <QuestionHighlight type="weakest" {...weakest} />
+      </div>
+
+      {/* Next session suggestion */}
+      <NextSessionCard domain={nextDomain} reason={nextReason} />
+
+      {/* CTA */}
+      <CTARow missCount={missCount} />
+    </div>
+  </div>
+);
+
+// ── Scene data ────────────────────────────────────────────────────────────────
+
+const STUDY_SESSION = {
+  sessionType: 'study',
+  certCode: 'SAA-C03',
+  certName: 'Solutions Architect – Associate',
+  duration: '20 min 34 sec',
+  stats: [
+    { label: 'Accuracy',   value: '8/12',  sub: '67% correct',          accent: undefined },
+    { label: 'Readiness',  value: '+3%',   sub: '72% → 75%',            accent: T.good    },
+    { label: 'Time',       value: '20:34', sub: '1.7 min per question',  accent: undefined },
+    { label: 'Streak',     value: '4',     sub: 'sessions in a row',     accent: T.accent  },
+  ],
+  readinessBefore: 72,
+  readinessAfter:  75,
+  domains: [
+    { name: 'IAM & Security',     correct: 8, total: 10, scorePct: 80, delta:  7 },
+    { name: 'Networking',         correct: 4, total:  7, scorePct: 57, delta:  2 },
+    { name: 'Cost Optimization',  correct: 3, total:  5, scorePct: 60, delta:  4 },
+  ],
+  weakAreas: [
+    { label: 'IAM & Security',    before: 38, after: 45 },
+    { label: 'Networking',        before: 41, after: 43 },
+    { label: 'Cost Optimization', before: 48, after: 52 },
+  ],
+  strongest: {
+    question: 'Which statement about AWS SCP inheritance is correct when an explicit deny exists at a parent OU?',
+    chosen: 'B',
+    correct: 'B',
+    timeSec: 38,
+  },
+  weakest: {
+    question: 'A company needs to minimise data transfer costs between EC2 instances in the same region but different VPCs. Which solution achieves this?',
+    chosen: 'C',
+    correct: 'B',
+    timeSec: null,
+  },
+  nextDomain: 'Networking & Content Delivery',
+  nextReason: 'Your Networking score (43%) is your largest gap from passing. Your session mix will front-load VPC peering, Transit Gateway, and Route 53.',
+  missCount: 4,
+};
+
+const MOCK_SESSION = {
+  sessionType: 'mock',
+  certCode: 'SAA-C03',
+  certName: 'Solutions Architect – Associate',
+  duration: '1h 47m',
+  stats: [
+    { label: 'Score',      value: '73%',   sub: 'PASS · threshold 72%',    accent: T.good   },
+    { label: 'Accuracy',   value: '46/65', sub: '71% correct',             accent: undefined },
+    { label: 'Readiness',  value: '+8%',   sub: '65% → 73%',              accent: T.good    },
+    { label: 'Time',       value: '1:47',  sub: '23 min remaining',        accent: undefined },
+  ],
+  readinessBefore: 65,
+  readinessAfter:  73,
+  domains: [
+    { name: 'Design Resilient Architectures',       correct: 14, total: 17, scorePct: 82, delta:  9 },
+    { name: 'Design High-Performing Architectures', correct: 11, total: 15, scorePct: 73, delta:  5 },
+    { name: 'Design Secure Applications',           correct: 12, total: 20, scorePct: 60, delta: -2 },
+    { name: 'Design Cost-Optimized Architectures',  correct:  9, total: 13, scorePct: 69, delta:  6 },
+  ],
+  weakAreas: [
+    { label: 'Design Secure Applications',           before: 63, after: 60 },
+    { label: 'Design High-Performing Architectures', before: 68, after: 73 },
+    { label: 'Design Cost-Optimized Architectures',  before: 63, after: 69 },
+  ],
+  strongest: {
+    question: 'A company needs cross-region disaster recovery for an RDS database with RPO < 1 hour. Which option achieves this with minimum operational overhead?',
+    chosen: 'A',
+    correct: 'A',
+    timeSec: 52,
+  },
+  weakest: {
+    question: 'A company must encrypt data in transit between on-premises systems and AWS. The connection uses AWS Direct Connect. Which solution meets this requirement?',
+    chosen: 'D',
+    correct: 'B',
+    timeSec: null,
+  },
+  nextDomain: 'Design Secure Applications & Architectures',
+  nextReason: 'Your score dropped 3% here during the mock. This is also the highest-weighted domain (30%) — addressing it has the highest score leverage before exam day.',
+  missCount: 19,
+};
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <Canvas>
+      <CanvasSection
+        title="End-of-session summary"
+        subtitle="Shown after every study session and mock exam. Deltas use status colour scale. Drill my misses is the primary CTA."
+      >
+        <Artboard label="After study session — 20 min, 12 questions" width={1100} height={900}>
+          <SummaryPage {...STUDY_SESSION} />
+        </Artboard>
+        <Artboard label="After mock exam — 1h 47m, 65 questions, PASS" width={1100} height={900}>
+          <SummaryPage {...MOCK_SESSION} />
+        </Artboard>
+      </CanvasSection>
+    </Canvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

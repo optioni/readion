@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion Admin — Content & Users</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui; background: #b3afa7; }
+    .canvas-wrap { padding: 48px 56px; }
+    .canvas-section { margin-bottom: 56px; }
+    .canvas-section-head { margin-bottom: 20px; }
+    .canvas-section-title { font-size: 17px; font-weight: 600; color: #2d2520; }
+    .canvas-section-sub { font-size: 12px; color: #7a6e65; margin-top: 3px; }
+    .canvas-row { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+    .artboard-wrap { flex-shrink: 0; }
+    .artboard-label { font-size: 11px; color: #7a6e65; margin-bottom: 7px; font-weight: 500; letter-spacing: 0.02em; }
+    .artboard-frame { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.js"></script>
+
+<script type="text/babel" src="app-shell.jsx"></script>
+<script type="text/babel">
+
+const Canvas = (p) => <div className="canvas-wrap">{p.children}</div>;
+const CanvasSection = (p) => (
+  <div className="canvas-section">
+    <div className="canvas-section-head">
+      <div className="canvas-section-title">{p.title}</div>
+      {p.subtitle && <div className="canvas-section-sub">{p.subtitle}</div>}
+    </div>
+    <div className="canvas-row">{p.children}</div>
+  </div>
+);
+const Artboard = (p) => (
+  <div className="artboard-wrap" style={{ width: p.width }}>
+    <div className="artboard-label">{p.label}</div>
+    <div className="artboard-frame" style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+  </div>
+);
+
+const T = {
+  base:     'var(--readion-background-base)',
+  surface:  'var(--readion-background-surface)',
+  elevated: 'var(--readion-background-elevated)',
+  overlay:  'var(--readion-background-overlay)',
+  primary:  'var(--readion-primary)',
+  accent:   'var(--readion-accent-label)',
+  tPrimary: 'var(--readion-text-primary)',
+  tSecond:  'var(--readion-text-secondary)',
+  tMuted:   'var(--readion-text-muted)',
+  tSubtle:  'var(--readion-text-subtle)',
+  border:   'var(--readion-border-strong)',
+  borderDef:'var(--readion-border-default)',
+  poor:     'var(--readion-status-poor)',
+  warn:     'var(--readion-status-warning)',
+  medium:   'var(--readion-status-medium)',
+  good:     'var(--readion-status-good)',
+  rSm:      'var(--readion-rounded-sm)',
+  rMd:      'var(--readion-rounded-md)',
+  rLg:      'var(--readion-rounded-lg)',
+  rXl:      'var(--readion-rounded-xl)',
+  rFull:    'var(--readion-rounded-full)',
+};
+
+// ── Admin sidebar ──────────────────────────────────────────────────────────────
+const Shell = window.Shell;
+const AdminSidebar = ({ active = 'Review queue' } = {}) => <Shell.AdminSidebar active={active} />;
+
+// ── Page tabs ─────────────────────────────────────────────────────────────────
+const AdminTabs = ({ tabs, active }) => (
+  <div style={{ display: 'flex', borderBottom: '1px solid ' + T.border, background: T.elevated, padding: '0 28px', flexShrink: 0 }}>
+    {tabs.map((t) => (
+      <div key={t.label} style={{ padding: '12px 16px', fontSize: 13, color: t.label === active ? T.tPrimary : T.tMuted, borderBottom: '2px solid ' + (t.label === active ? T.accent : 'transparent'), cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, marginBottom: -1 }}>
+        {t.label}
+        {t.count != null && (
+          <span style={{ fontSize: 10, padding: '1px 6px', background: t.label === active ? 'rgba(124,140,248,0.15)' : T.surface, border: '1px solid ' + (t.label === active ? 'rgba(124,140,248,0.3)' : T.border), borderRadius: T.rFull, color: t.label === active ? T.accent : T.tSubtle }}>{t.count}</span>
+        )}
+      </div>
+    ))}
+  </div>
+);
+
+// ── Table primitives ──────────────────────────────────────────────────────────
+const THead = ({ cols }) => (
+  <div style={{ display: 'flex', padding: '8px 16px', background: T.elevated, borderBottom: '1px solid ' + T.border }}>
+    {cols.map((c) => (
+      <div key={c.label} style={{ flex: c.flex || 1, fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tSubtle }}>{c.label}</div>
+    ))}
+  </div>
+);
+
+const TRow = ({ cols, selected, onClick }) => (
+  <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid ' + T.borderDef, background: selected ? 'rgba(29,78,216,0.08)' : 'transparent', borderLeft: '3px solid ' + (selected ? T.primary : 'transparent'), cursor: onClick ? 'pointer' : 'default' }}>
+    {cols.map((c, i) => (
+      <div key={i} style={{ flex: c.flex || 1, fontSize: 13, color: c.muted ? T.tMuted : c.color || T.tSecond, fontFamily: c.mono ? 'var(--readion-font-mono)' : 'inherit', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {c.content}
+      </div>
+    ))}
+  </div>
+);
+
+// ── Flag badge ────────────────────────────────────────────────────────────────
+const FlagBadge = ({ type }) => {
+  const cfg = {
+    auto:     { label: 'Auto-flagged', color: T.warn,  bg: 'rgba(251,146,60,0.1)',  border: 'rgba(251,146,60,0.25)'  },
+    reported: { label: 'User-reported', color: T.poor, bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)' },
+    duplicate:{ label: 'Duplicate',    color: T.tMuted, bg: T.elevated, border: T.border },
+  };
+  const c = cfg[type] || cfg.auto;
+  return <span style={{ fontSize: 10, padding: '2px 7px', background: c.bg, border: '1px solid ' + c.border, borderRadius: T.rFull, color: c.color, whiteSpace: 'nowrap' }}>{c.label}</span>;
+};
+
+// ── Verdict badge ─────────────────────────────────────────────────────────────
+const VerdictBadge = ({ verdict }) => {
+  const cfg = {
+    confirmed:  { label: 'Answer confirmed',   color: T.good, bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.2)'  },
+    disputed:   { label: 'Answer disputed',    color: T.poor, bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.2)' },
+    ambiguous:  { label: 'Ambiguous result',   color: T.warn, bg: 'rgba(251,146,60,0.1)',  border: 'rgba(251,146,60,0.2)'  },
+    key_error:  { label: 'Answer key error',   color: T.poor, bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.2)' },
+  };
+  const c = cfg[verdict] || cfg.ambiguous;
+  return <span style={{ fontSize: 11, padding: '3px 9px', background: c.bg, border: '1px solid ' + c.border, borderRadius: T.rFull, color: c.color, fontWeight: 500 }}>{c.label}</span>;
+};
+
+// ── Quarantine list ───────────────────────────────────────────────────────────
+const Q_ITEMS = [
+  { id: 'Q#4821', cert: 'SAA-C03', snippet: 'Which statement about SCP inheritance is correct when a deny exists at a parent OU?', flag: 'auto', reports: 2, verdict: 'ambiguous', date: 'Today' },
+  { id: 'Q#4798', cert: 'SAA-C03', snippet: 'What is the maximum size of a single S3 object uploaded via multipart?', flag: 'reported', reports: 5, verdict: 'key_error', date: 'Today', selected: true },
+  { id: 'Q#4752', cert: 'CKA',     snippet: 'Which kubectl command lists all pods across all namespaces?', flag: 'duplicate', reports: 0, verdict: 'confirmed', date: 'Yesterday' },
+  { id: 'Q#4701', cert: 'SAA-C03', snippet: 'A company needs to reduce inter-AZ data transfer costs between EC2 instances...', flag: 'auto', reports: 1, verdict: 'ambiguous', date: 'Jun 21' },
+];
+
+// ── Review queue — provenance review (decision-led, paired evidence) ──────────
+const QueueList = () => (
+  <div style={{ width: 320, flexShrink: 0, borderRight: '1px solid ' + T.border, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+    <div style={{ padding: '10px 16px', borderBottom: '1px solid ' + T.border, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+      <span style={{ fontSize: 12, color: T.tSecond, fontWeight: 500 }}>Quarantined items</span>
+      <div style={{ display: 'flex', gap: 6 }}>
+        {['All', 'SAA-C03', 'CKA'].map((f) => (
+          <span key={f} style={{ fontSize: 11, padding: '2px 8px', background: f === 'All' ? T.primary : 'transparent', color: f === 'All' ? '#fff' : T.tMuted, border: '1px solid ' + (f === 'All' ? T.primary : T.border), borderRadius: T.rFull, cursor: 'pointer' }}>{f}</span>
+        ))}
+      </div>
+    </div>
+    {Q_ITEMS.map((item) => (
+      <div key={item.id} style={{ padding: '12px 16px', borderBottom: '1px solid ' + T.borderDef, background: item.selected ? 'rgba(29,78,216,0.08)' : 'transparent', borderLeft: '3px solid ' + (item.selected ? T.primary : 'transparent'), cursor: 'pointer' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <span style={{ fontSize: 10, fontFamily: 'var(--readion-font-mono)', color: T.tSubtle }}>{item.id}</span>
+            <span style={{ fontSize: 10, color: T.tSubtle, background: T.elevated, padding: '1px 5px', borderRadius: T.rSm, border: '1px solid ' + T.border }}>{item.cert}</span>
+          </div>
+          <FlagBadge type={item.flag} />
+        </div>
+        <p style={{ fontSize: 12, color: T.tSecond, lineHeight: 1.5, marginBottom: 6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.snippet}</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <VerdictBadge verdict={item.verdict} />
+          <span style={{ fontSize: 10, color: T.tSubtle }}>{item.date}{item.reports > 0 ? ' · ' + item.reports + ' reports' : ''}</span>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const evLabel = { fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--readion-text-muted)', marginBottom: 10 };
+
+const ContentQualityScreen = () => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AdminSidebar active="Review queue" />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ borderBottom: '1px solid ' + T.border, padding: '14px 28px', background: T.elevated, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: T.tPrimary }}>Review queue</div>
+        <span style={{ fontSize: 11, color: T.tMuted }}>4 items awaiting review</span>
+      </div>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <QueueList />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Identity */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 12, fontFamily: 'var(--readion-font-mono)', color: T.tSecond }}>Q#4798</span>
+            <span style={{ fontSize: 10, color: T.tSubtle, background: T.elevated, padding: '1px 5px', borderRadius: T.rSm, border: '1px solid ' + T.border }}>SAA-C03</span>
+            <FlagBadge type="reported" />
+            <span style={{ fontSize: 11, color: T.poor }}>5 user reports</span>
+            <span style={{ flex: 1 }} />
+            <span style={{ fontSize: 11, color: T.tSubtle }}>Item 2 of 4</span>
+          </div>
+
+          {/* Decision: verdict + reasoning + actions, co-located */}
+          <div style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.22)', borderRadius: T.rXl, padding: '16px 18px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-poor)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span style={{ fontSize: 13, fontWeight: 600, color: T.poor }}>Answer key error</span>
+            </div>
+            <p style={{ fontSize: 13, color: T.tPrimary, lineHeight: 1.65, marginBottom: 6 }}>
+              The source sets the multipart-upload limit at <strong style={{ color: T.good }}>5 TB (C)</strong>. The stored answer key marks <strong style={{ color: T.poor }}>5 GB (A)</strong> &mdash; that&rsquo;s the single-PUT limit, not multipart.
+            </p>
+            <p style={{ fontSize: 12, color: T.tSecond, lineHeight: 1.6, marginBottom: 14 }}>
+              Recommended: edit the key to mark <strong style={{ color: T.tPrimary }}>C</strong> as correct, or discard and regenerate.
+            </p>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button style={{ padding: '8px 16px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>Edit key &rarr; C</button>
+              <button style={{ padding: '8px 16px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer' }}>Discard</button>
+              <span style={{ flex: 1 }} />
+              <button style={{ padding: '8px 16px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSubtle, cursor: 'pointer' }}>Approve as-is</button>
+            </div>
+          </div>
+
+          {/* Evidence — paired horizontally */}
+          <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+            <div style={{ flex: 1, minWidth: 0, background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '16px 18px' }}>
+              <div style={evLabel}>Question as stored</div>
+              <p style={{ fontSize: 13, color: T.tPrimary, lineHeight: 1.6, marginBottom: 12 }}>Maximum size of a single S3 object uploaded via the multipart upload API?</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                {[['A', '5 GB', 'key'], ['B', '10 GB', ''], ['C', '5 TB', 'source'], ['D', '48 TB', '']].map(([l, txt, mark]) => (
+                  <div key={l} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 10px', borderRadius: T.rMd, background: mark === 'source' ? 'rgba(52,211,153,0.07)' : mark === 'key' ? 'rgba(248,113,113,0.07)' : T.base, border: '1px solid ' + (mark === 'source' ? 'rgba(52,211,153,0.25)' : mark === 'key' ? 'rgba(248,113,113,0.25)' : T.borderDef) }}>
+                    <span style={{ fontSize: 11, fontFamily: 'var(--readion-font-mono)', color: T.tSubtle, width: 12 }}>{l}</span>
+                    <span style={{ fontSize: 13, color: mark === 'source' ? T.good : mark === 'key' ? T.poor : T.tSecond, flex: 1 }}>{txt}</span>
+                    {mark === 'source' && <span style={{ fontSize: 10, color: T.good }}>Per source</span>}
+                    {mark === 'key' && <span style={{ fontSize: 10, color: T.poor }}>Marked correct</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 0, background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '16px 18px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <div style={{ ...evLabel, marginBottom: 0 }}>Source</div>
+                <span style={{ fontSize: 10, color: T.tSubtle, fontFamily: 'var(--readion-font-mono)' }}>AWS Docs: S3 · #2841</span>
+              </div>
+              <p style={{ fontSize: 13, color: T.tSecond, lineHeight: 1.7, marginBottom: 10 }}>
+                “…upload objects up to 5 GB in a single PUT operation, and objects <mark style={{ background: 'rgba(52,211,153,0.2)', color: T.tPrimary, borderRadius: 2, padding: '1px 3px' }}>up to 5 TB using the multipart upload API</mark>.”
+              </p>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}><path d="M6 1h4a1 1 0 011 1v9a1 1 0 01-1 1H2a1 1 0 01-1-1V5l4-4z" stroke="var(--readion-accent-label)" strokeWidth="1.2" strokeLinejoin="round"/><path d="M6 1v4h4" stroke="var(--readion-accent-label)" strokeWidth="1.2" strokeLinejoin="round"/></svg>
+                <span style={{ fontSize: 11, color: T.accent, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>docs.aws.amazon.com/AmazonS3/…/upload-objects.html</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Content sources screen ─────────────────────────────────────────────────────
+const SOURCES = [
+  { name: 'Official exam guide (PDF)',       type: 'PDF',      enabled: true,  lastIngested: '2h ago',   chunks: '1,247', status: 'active'      },
+  { name: 'AWS documentation (web crawl)',   type: 'Web',      enabled: true,  lastIngested: '3 days ago', chunks: '12,441', status: 'ingesting'  },
+  { name: 'AWS whitepapers (web)',           type: 'Web',      enabled: true,  lastIngested: '1 day ago', chunks: '4,823', status: 'active'      },
+  { name: 'AWS re:Invent transcripts',       type: 'Video',    enabled: false, lastIngested: '—',         chunks: '0',     status: 'disabled'    },
+  { name: 'Practice papers (community PDF)', type: 'PDF',      enabled: true,  lastIngested: '5 days ago', chunks: '890', status: 'active'      },
+];
+
+const StatusPill = ({ status }) => {
+  const cfg = {
+    active:    { label: 'Active',      color: T.good,    bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.2)'  },
+    ingesting: { label: 'Ingesting…',  color: T.accent,  bg: 'rgba(124,140,248,0.1)', border: 'rgba(124,140,248,0.2)' },
+    disabled:  { label: 'Disabled',    color: T.tSubtle, bg: T.elevated, border: T.border },
+    error:     { label: 'Error',       color: T.poor,    bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.2)' },
+  };
+  const c = cfg[status] || cfg.active;
+  return <span style={{ fontSize: 11, padding: '2px 8px', background: c.bg, border: '1px solid ' + c.border, borderRadius: T.rFull, color: c.color }}>{c.label}</span>;
+};
+
+const Toggle = ({ on }) => (
+  <div style={{ width: 32, height: 18, background: on ? T.primary : T.border, borderRadius: T.rFull, padding: 2, display: 'flex', alignItems: 'center', justifyContent: on ? 'flex-end' : 'flex-start', cursor: 'pointer' }}>
+    <div style={{ width: 14, height: 14, borderRadius: '50%', background: '#fff' }} />
+  </div>
+);
+
+const ContentSourcesScreen = () => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AdminSidebar active="Sources" />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ borderBottom: '1px solid ' + T.border, padding: '14px 28px', background: T.elevated, flexShrink: 0 }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: T.tPrimary }}>Sources</div>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px' }}>
+        {/* Cert selector */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
+          {['SAA-C03', 'CKA', 'PCA'].map((c) => (
+            <span key={c} style={{ padding: '5px 14px', background: c === 'SAA-C03' ? T.surface : 'transparent', border: '1px solid ' + (c === 'SAA-C03' ? T.border : 'transparent'), borderRadius: T.rFull, fontSize: 12, color: c === 'SAA-C03' ? T.tPrimary : T.tMuted, cursor: 'pointer', fontWeight: c === 'SAA-C03' ? 500 : 400 }}>{c}</span>
+          ))}
+        </div>
+
+        {/* Running jobs banner */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(124,140,248,0.06)', border: '1px solid rgba(124,140,248,0.18)', borderRadius: T.rLg, marginBottom: 16 }}>
+          <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid ' + T.accent, borderTopColor: 'transparent' }} />
+          <span style={{ fontSize: 12, color: T.tSecond, flex: 1 }}>
+            1 ingestion job running — <strong style={{ color: T.accent }}>AWS documentation</strong> (72% · ~4 min remaining)
+          </span>
+          <button style={{ fontSize: 12, color: T.tMuted, background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Cancel</button>
+        </div>
+
+        {/* Sources table */}
+        <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, overflow: 'hidden', marginBottom: 14 }}>
+          <THead cols={[{ label: 'Source', flex: 2.5 }, { label: 'Type' }, { label: 'Enabled' }, { label: 'Last ingested', flex: 1.2 }, { label: 'Chunks', flex: 0.8 }, { label: 'Status' }, { label: 'Actions', flex: 1.2 }]} />
+          {SOURCES.map((s) => (
+            <TRow key={s.name} cols={[
+              { flex: 2.5, content: <span style={{ fontSize: 13, color: T.tSecond }}>{s.name}</span> },
+              { content: <span style={{ fontSize: 11, color: T.tMuted, background: T.elevated, padding: '2px 6px', borderRadius: T.rSm, border: '1px solid ' + T.border }}>{s.type}</span> },
+              { content: <Toggle on={s.enabled} /> },
+              { flex: 1.2, content: <span style={{ fontSize: 12, color: T.tMuted }}>{s.lastIngested}</span>, muted: true },
+              { flex: 0.8, content: <span style={{ fontSize: 12, fontFamily: 'var(--readion-font-mono)', color: s.enabled ? T.tSecond : T.tSubtle }}>{s.chunks}</span> },
+              { content: <StatusPill status={s.status} /> },
+              { flex: 1.2, content: (
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button style={{ padding: '3px 8px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 11, color: T.tMuted, cursor: 'pointer' }}>Re-ingest</button>
+                  <button style={{ padding: '3px 8px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 11, color: T.tMuted, cursor: 'pointer' }}>Remove</button>
+                </div>
+              )},
+            ]} />
+          ))}
+        </div>
+
+        <button style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'transparent', border: '1px dashed ' + T.border, borderRadius: T.rLg, fontSize: 13, color: T.tMuted, cursor: 'pointer' }}>
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+          Add source
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Users screen ──────────────────────────────────────────────────────────────
+const USERS = [
+  { name: 'Jamie Delacroix', email: 'jamie@org.io',  role: 'admin', joined: 'Mar 1',  lastActive: 'Today',     certs: 2 },
+  { name: 'Alex Kim',        email: 'alex@org.io',   role: 'user',  joined: 'Mar 5',  lastActive: 'Yesterday', certs: 1 },
+  { name: 'Sam Chen',        email: 'sam@org.io',    role: 'user',  joined: 'Apr 2',  lastActive: '3 days ago', certs: 3 },
+  { name: 'Maya Patel',      email: 'maya@org.io',   role: 'user',  joined: 'Apr 10', lastActive: '1 week ago', certs: 1 },
+  { name: 'Chris Obi',       email: 'chris@org.io',  role: 'user',  joined: 'May 3',  lastActive: '2 weeks ago', certs: 2 },
+  { name: 'Jordan Walsh',    email: 'jordan@org.io', role: 'user',  joined: 'Jun 1',  lastActive: 'Today',     certs: 1 },
+];
+
+const RoleBadge = ({ role }) => (
+  <span style={{ fontSize: 11, padding: '2px 8px', background: role === 'admin' ? 'rgba(251,146,60,0.1)' : T.elevated, border: '1px solid ' + (role === 'admin' ? 'rgba(251,146,60,0.25)' : T.border), borderRadius: T.rFull, color: role === 'admin' ? T.warn : T.tMuted, fontWeight: role === 'admin' ? 500 : 400 }}>
+    {role === 'admin' ? 'Admin' : 'User'}
+  </span>
+);
+
+const UsersScreen = () => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AdminSidebar active="Users" />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ borderBottom: '1px solid ' + T.border, padding: '14px 28px', background: T.elevated, flexShrink: 0 }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: T.tPrimary }}>Users</div>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <span style={{ fontSize: 13, color: T.tMuted }}>12 users &middot; 2 admins</span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input readOnly placeholder="Search users..." style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rMd, padding: '6px 10px', fontSize: 12, color: T.tPrimary, fontFamily: 'inherit', outline: 'none', width: 180 }} />
+            <button style={{ padding: '6px 14px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 12, color: T.tSecond, cursor: 'pointer' }}>Invite user</button>
+          </div>
+        </div>
+        <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, overflow: 'hidden' }}>
+          <THead cols={[{ label: 'Name', flex: 1.5 }, { label: 'Email', flex: 2 }, { label: 'Role' }, { label: 'Joined' }, { label: 'Last active', flex: 1.2 }, { label: 'Certs', flex: 0.5 }, { label: 'Actions', flex: 1.2 }]} />
+          {USERS.map((u) => (
+            <TRow key={u.email} cols={[
+              { flex: 1.5, content: <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 24, height: 24, borderRadius: '50%', background: T.elevated, border: '1px solid ' + T.border, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><span style={{ fontSize: 9, fontWeight: 600, color: T.accent }}>{u.name.split(' ').map((n) => n[0]).join('')}</span></div><span style={{ fontSize: 13, color: T.tSecond }}>{u.name}</span></div> },
+              { flex: 2, content: <span style={{ fontSize: 12, color: T.tMuted, fontFamily: 'var(--readion-font-mono)' }}>{u.email}</span> },
+              { content: <RoleBadge role={u.role} /> },
+              { content: <span style={{ fontSize: 12, color: T.tMuted }}>{u.joined}</span>, muted: true },
+              { flex: 1.2, content: <span style={{ fontSize: 12, color: T.tMuted }}>{u.lastActive}</span>, muted: true },
+              { flex: 0.5, content: <span style={{ fontSize: 12, color: T.tMuted }}>{u.certs}</span>, muted: true },
+              { flex: 1.2, content: <div style={{ display: 'flex', gap: 6 }}><button style={{ padding: '3px 8px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 11, color: T.tMuted, cursor: 'pointer' }}>{u.role === 'admin' ? 'Demote' : 'Promote'}</button><button style={{ padding: '3px 8px', background: 'transparent', border: '1px solid rgba(248,113,113,0.25)', borderRadius: T.rMd, fontSize: 11, color: T.poor, cursor: 'pointer' }}>Remove</button></div> },
+            ]} />
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Audit log screen ──────────────────────────────────────────────────────────
+const AUDIT = [
+  { ts: 'Today 14:32', actor: 'jamie@org.io',  action: 'promote_role',   target: 'alex@org.io', before: 'user',        after: 'admin',       privileged: true  },
+  { ts: 'Today 11:14', actor: 'system',         action: 'quarantine_item', target: 'Q#4821',     before: 'active',      after: 'quarantined', privileged: false },
+  { ts: 'Today 09:05', actor: 'admin@org.io',   action: 'approve_item',   target: 'Q#4729',     before: 'quarantined', after: 'active',      privileged: false },
+  { ts: 'Jun 22 18:41', actor: 'admin@org.io',  action: 'discard_item',   target: 'Q#4701',     before: 'quarantined', after: 'discarded',   privileged: false },
+  { ts: 'Jun 22 15:20', actor: 'jamie@org.io',  action: 'disable_source', target: 'AWS re:Invent transcripts (SAA-C03)', before: 'enabled', after: 'disabled', privileged: true },
+  { ts: 'Jun 21 09:00', actor: 'system',         action: 'ingest_complete', target: 'SAA-C03 exam guide', before: '1,180 chunks', after: '1,247 chunks', privileged: false },
+  { ts: 'Jun 20 14:00', actor: 'admin@org.io',  action: 'add_source',     target: 'AWS whitepapers (SAA-C03)', before: '—', after: 'enabled', privileged: false },
+];
+
+const ActionBadge = ({ action, privileged }) => {
+  const labels = {
+    promote_role:    { label: 'promote_role',    color: T.warn },
+    demote_role:     { label: 'demote_role',     color: T.warn },
+    quarantine_item: { label: 'quarantine',      color: T.poor },
+    approve_item:    { label: 'approve',         color: T.good },
+    discard_item:    { label: 'discard',         color: T.poor },
+    disable_source:  { label: 'disable_source',  color: T.warn },
+    add_source:      { label: 'add_source',      color: T.accent },
+    ingest_complete: { label: 'ingest_complete', color: T.good },
+  };
+  const c = labels[action] || { label: action, color: T.tMuted };
+  return (
+    <span style={{ fontSize: 11, fontFamily: 'var(--readion-font-mono)', color: c.color }}>
+      {c.label}
+      {privileged && <span style={{ marginLeft: 4, fontSize: 9, color: T.warn, verticalAlign: 'super' }}>★</span>}
+    </span>
+  );
+};
+
+const AuditLogScreen = () => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AdminSidebar active="Audit Log" />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ borderBottom: '1px solid ' + T.border, padding: '14px 28px', background: T.elevated, flexShrink: 0 }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: T.tPrimary }}>Audit Log</div>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 13, color: T.tMuted }}>Append-only &middot; read-only</span>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: T.tSubtle }} />
+            <span style={{ fontSize: 11, color: T.tSubtle }}>&#9733; = privileged action</span>
+          </div>
+          <button style={{ padding: '5px 12px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 12, color: T.tMuted, cursor: 'pointer' }}>Export CSV</button>
+        </div>
+
+        <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, overflow: 'hidden' }}>
+          <THead cols={[{ label: 'Timestamp', flex: 1.2 }, { label: 'Actor', flex: 1.5 }, { label: 'Action', flex: 1.2 }, { label: 'Target', flex: 2 }, { label: 'Before' }, { label: 'After' }]} />
+          {AUDIT.map((row, i) => (
+            <TRow key={i} cols={[
+              { flex: 1.2, content: <span style={{ fontSize: 11, fontFamily: 'var(--readion-font-mono)', color: T.tSubtle }}>{row.ts}</span> },
+              { flex: 1.5, content: <span style={{ fontSize: 12, color: row.actor === 'system' ? T.tSubtle : T.tSecond, fontStyle: row.actor === 'system' ? 'italic' : 'normal' }}>{row.actor}</span> },
+              { flex: 1.2, content: <ActionBadge action={row.action} privileged={row.privileged} /> },
+              { flex: 2, content: <span style={{ fontSize: 12, color: T.tSecond, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{row.target}</span> },
+              { content: <span style={{ fontSize: 11, color: T.tSubtle, fontFamily: 'var(--readion-font-mono)' }}>{row.before}</span> },
+              { content: <span style={{ fontSize: 11, color: T.tMuted, fontFamily: 'var(--readion-font-mono)' }}>{row.after}</span> },
+            ]} />
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <Canvas>
+      <CanvasSection
+        title="Admin — Review queue, Sources, Users & Audit"
+        subtitle="Table-based admin area. The review queue leads with the verdict + recommended fix, then pairs the stored question against its source evidence. Audit log is append-only."
+      >
+        <Artboard label="Review queue — provenance panel for selected item" width={1240} height={820}>
+          <ContentQualityScreen />
+        </Artboard>
+        <Artboard label="Sources — source table + ingestion jobs" width={1100} height={820}>
+          <ContentSourcesScreen />
+        </Artboard>
+        <Artboard label="Users — table with promote/demote actions" width={1100} height={820}>
+          <UsersScreen />
+        </Artboard>
+        <Artboard label="Audit Log — append-only, read-only" width={1100} height={820}>
+          <AuditLogScreen />
+        </Artboard>
+      </CanvasSection>
+    </Canvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

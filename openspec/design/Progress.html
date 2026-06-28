@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion — Progress</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui; background: #bfbbb3; }
+    .canvas-wrap { padding: 48px 56px; }
+    .canvas-section { margin-bottom: 56px; }
+    .canvas-section-head { margin-bottom: 20px; }
+    .canvas-section-title { font-size: 17px; font-weight: 600; color: #2d2520; }
+    .canvas-section-sub { font-size: 12px; color: #7a6e65; margin-top: 3px; }
+    .canvas-row { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+    .artboard-wrap { flex-shrink: 0; }
+    .artboard-label { font-size: 11px; color: #7a6e65; margin-bottom: 7px; font-weight: 500; letter-spacing: 0.02em; }
+    .artboard-frame { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.js"></script>
+
+<script type="text/babel" src="app-shell.jsx"></script>
+<script type="text/babel">
+
+// ── Canvas shell ─────────────────────────────────────────────────────────────
+const Canvas = (p) => <div className="canvas-wrap">{p.children}</div>;
+const CanvasSection = (p) => (
+  <div className="canvas-section">
+    <div className="canvas-section-head">
+      <div className="canvas-section-title">{p.title}</div>
+      {p.subtitle && <div className="canvas-section-sub">{p.subtitle}</div>}
+    </div>
+    <div className="canvas-row">{p.children}</div>
+  </div>
+);
+const Artboard = (p) => (
+  <div className="artboard-wrap" style={{ width: p.width }}>
+    <div className="artboard-label">{p.label}</div>
+    <div className="artboard-frame" style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+  </div>
+);
+
+// ── Tokens ───────────────────────────────────────────────────────────────────
+const T = {
+  base:     'var(--readion-background-base)',
+  surface:  'var(--readion-background-surface)',
+  elevated: 'var(--readion-background-elevated)',
+  overlay:  'var(--readion-background-overlay)',
+  primary:  'var(--readion-primary)',
+  accent:   'var(--readion-accent-label)',
+  tPrimary: 'var(--readion-text-primary)',
+  tSecond:  'var(--readion-text-secondary)',
+  tMuted:   'var(--readion-text-muted)',
+  tSubtle:  'var(--readion-text-subtle)',
+  border:   'var(--readion-border-strong)',
+  borderDef:'var(--readion-border-default)',
+  poor:     'var(--readion-status-poor)',
+  warn:     'var(--readion-status-warning)',
+  medium:   'var(--readion-status-medium)',
+  good:     'var(--readion-status-good)',
+  rSm:      'var(--readion-rounded-sm)',
+  rMd:      'var(--readion-rounded-md)',
+  rLg:      'var(--readion-rounded-lg)',
+  rXl:      'var(--readion-rounded-xl)',
+  rFull:    'var(--readion-rounded-full)',
+};
+
+const scoreColor = window.Shell.scoreColor;
+
+// ── App sidebar ───────────────────────────────────────────────────────────────
+const Shell = window.Shell;
+const AppSidebar = () => <Shell.AppSidebar active="Progress" admin={false} />;
+
+// ── Section label ─────────────────────────────────────────────────────────────
+const SectionLabel = ({ children }) => (
+  <div style={{ fontSize: 11, letterSpacing: '0.09em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 12 }}>{children}</div>
+);
+
+// ── Readiness line chart ───────────────────────────────────────────────────────
+const ReadinessChart = ({ sessions, showProjection, weeksToReady }) => {
+  const W = 740, H = 140;
+  const pL = 36, pR = 60, pT = 12, pB = 28;
+  const cW = W - pL - pR;
+  const cH = H - pT - pB;
+
+  const xPos = (i) => pL + (i / (sessions.length - 1)) * cW;
+  const yPos = (v) => pT + (1 - v / 100) * cH;
+
+  // Build paths
+  const pts = sessions.map((s, i) => [xPos(i), yPos(s.readiness)]);
+  const linePath = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  const areaPath = 'M' + xPos(0).toFixed(1) + ',' + (pT + cH) +
+    pts.map((p) => ' L' + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('') +
+    ' L' + xPos(sessions.length - 1).toFixed(1) + ',' + (pT + cH) + ' Z';
+
+  const lastPt = pts[pts.length - 1];
+  const targetY = yPos(80);
+  // Project: 3 more sessions at same pace
+  const projX = Math.min(lastPt[0] + (3 / (sessions.length - 1)) * cW, pL + cW - 4);
+
+  const gridYs = [25, 50, 75, 100];
+
+  // X labels — show first, middle, last
+  const labelIdxs = [0, Math.floor(sessions.length / 2), sessions.length - 1];
+
+  return (
+    <svg width={W} height={H} viewBox={'0 0 ' + W + ' ' + H} style={{ display: 'block', width: '100%', height: 'auto' }}>
+      {/* Grid */}
+      {gridYs.map((v) => (
+        <g key={v}>
+          <line x1={pL} y1={yPos(v)} x2={pL + cW} y2={yPos(v)} stroke="#1e293b" strokeWidth="1"/>
+          <text x={pL - 6} y={yPos(v) + 4} textAnchor="end" fontSize="9" fill="#475569">{v}</text>
+        </g>
+      ))}
+      {/* Target line (80%) */}
+      <line x1={pL} y1={targetY} x2={pL + cW} y2={targetY} stroke="rgba(52,211,153,0.3)" strokeWidth="1" strokeDasharray="4,3"/>
+      <text x={pL + cW + 5} y={targetY + 4} fontSize="9" fill="rgba(52,211,153,0.6)" fontWeight="500">80%</text>
+      <text x={pL + cW + 5} y={targetY + 14} fontSize="8" fill="rgba(52,211,153,0.4)">target</text>
+      {/* Area fill */}
+      <path d={areaPath} fill="rgba(124,140,248,0.07)"/>
+      {/* Projection */}
+      {showProjection && (
+        <path d={'M' + lastPt[0].toFixed(1) + ',' + lastPt[1].toFixed(1) + ' L' + projX.toFixed(1) + ',' + targetY.toFixed(1)}
+          fill="none" stroke="rgba(52,211,153,0.45)" strokeWidth="1.5" strokeDasharray="5,4"/>
+      )}
+      {/* Line */}
+      <path d={linePath} fill="none" stroke="#7c8cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* Points */}
+      {pts.map((p, i) => {
+        const isLast = i === pts.length - 1;
+        return (
+          <circle key={i} cx={p[0]} cy={p[1]} r={isLast ? 5 : 3}
+            fill={isLast ? '#7c8cf8' : '#0f172a'} stroke="#7c8cf8" strokeWidth="1.5"/>
+        );
+      })}
+      {/* Current value label */}
+      <text x={lastPt[0]} y={lastPt[1] - 9} textAnchor="middle" fontSize="10" fill="#7c8cf8" fontWeight="600">
+        {sessions[sessions.length - 1].readiness}%
+      </text>
+      {/* X labels */}
+      {labelIdxs.map((idx) => (
+        <text key={idx} x={xPos(idx).toFixed(1)} y={pT + cH + 18} textAnchor="middle" fontSize="9" fill="#475569">
+          {sessions[idx].label}
+        </text>
+      ))}
+    </svg>
+  );
+};
+
+// ── Trajectory callout ────────────────────────────────────────────────────────
+const TrajectoryCallout = ({ weeks, pace }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.18)', borderRadius: T.rLg }}>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-good)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+    </svg>
+    <span style={{ fontSize: 12, color: T.tSecond }}>
+      At your recent pace ({pace}% readiness/session avg.), you'll be exam-ready in approximately{' '}
+      <strong style={{ color: T.good }}>{weeks} weeks</strong>.
+    </span>
+  </div>
+);
+
+const TrajectoryInsufficient = () => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: T.elevated, border: '1px solid ' + T.border, borderRadius: T.rLg }}>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--readion-text-subtle)" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+    <span style={{ fontSize: 12, color: T.tMuted }}>Complete at least 5 sessions to see your pace estimate.</span>
+  </div>
+);
+
+// ── Domain row ────────────────────────────────────────────────────────────────
+const DomainRow = ({ name, score, delta, mastered, last }) => {
+  const color = mastered ? T.tSubtle : scoreColor(score);
+  const deltaPos = delta >= 0;
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0' }}>
+        {/* Name */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 13, color: mastered ? T.tSubtle : T.tSecond, textDecoration: mastered ? 'line-through' : 'none' }}>{name}</span>
+            {mastered && (
+              <span style={{ fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.good, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.2)', padding: '1px 6px', borderRadius: T.rFull }}>Mastered</span>
+            )}
+          </div>
+          <div style={{ height: 4, background: T.border, borderRadius: 4 }}>
+            <div style={{ height: '100%', width: score + '%', background: mastered ? T.tSubtle : color, borderRadius: 4, opacity: mastered ? 0.4 : 1 }}/>
+          </div>
+        </div>
+        {/* Score */}
+        <div style={{ flexShrink: 0, width: 36, textAlign: 'right' }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: mastered ? T.tSubtle : color }}>{score}%</span>
+        </div>
+        {/* Delta */}
+        <div style={{ flexShrink: 0, width: 44, textAlign: 'right' }}>
+          {delta !== null && (
+            <span style={{ fontSize: 11, color: deltaPos ? T.good : T.poor, fontWeight: 500 }}>
+              {deltaPos ? '↑' : '↓'}{Math.abs(delta)}%
+            </span>
+          )}
+        </div>
+        {/* Mastery button */}
+        <div style={{ flexShrink: 0, width: 100 }}>
+          {mastered ? (
+            <button style={{ padding: '3px 8px', background: 'transparent', border: '1px solid ' + T.borderDef, borderRadius: T.rFull, fontSize: 11, color: T.tSubtle, cursor: 'pointer' }}>
+              Unretire
+            </button>
+          ) : (
+            <button style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', background: 'transparent', border: '1px solid ' + T.borderDef, borderRadius: T.rFull, fontSize: 11, color: T.tMuted, cursor: 'pointer' }}>
+              <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+                <path d="M10 3L5 8.5 2 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Mark mastered
+            </button>
+          )}
+        </div>
+      </div>
+      {!last && <div style={{ height: 1, background: T.borderDef }}/>}
+    </div>
+  );
+};
+
+// ── Accuracy bar chart ────────────────────────────────────────────────────────
+const AccuracyBars = ({ sessions }) => {
+  const maxH = 56;
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: maxH + 20 }}>
+      {sessions.map((s, i) => {
+        const barH = (s.accuracy / 100) * maxH;
+        const isLast = i === sessions.length - 1;
+        return (
+          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            {isLast && <span style={{ fontSize: 9, color: T.accent, fontWeight: 600 }}>{s.accuracy}%</span>}
+            <div style={{ width: '100%', height: barH, background: isLast ? T.accent : T.border, borderRadius: '2px 2px 0 0', minHeight: 2 }}/>
+            <span style={{ fontSize: 8, color: T.tSubtle }}>{s.shortLabel}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// ── Session history ───────────────────────────────────────────────────────────
+const SessionHistoryTable = ({ sessions }) => (
+  <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, overflow: 'hidden' }}>
+    {/* Header */}
+    <div style={{ display: 'flex', padding: '10px 16px', borderBottom: '1px solid ' + T.border, background: T.elevated }}>
+      {['Date', 'Type', 'Duration', 'Questions', 'Accuracy', 'Readiness'].map((h, i) => (
+        <div key={h} style={{ flex: i === 0 ? 1.6 : 1, fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tMuted }}>{h}</div>
+      ))}
+    </div>
+    {sessions.map((s, i) => (
+      <div key={i}>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '10px 16px' }}>
+          <div style={{ flex: 1.6 }}>
+            <div style={{ fontSize: 12, color: T.tSecond }}>{s.date}</div>
+            <div style={{ fontSize: 10, color: T.tSubtle, marginTop: 1 }}>{s.time}</div>
+          </div>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: T.rFull, background: s.type === 'Mock' ? 'rgba(124,140,248,0.1)' : T.elevated, border: '1px solid ' + (s.type === 'Mock' ? 'rgba(124,140,248,0.2)' : T.border), color: s.type === 'Mock' ? T.accent : T.tMuted }}>{s.type}</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: 12, color: T.tSecond, fontFamily: 'var(--readion-font-mono)' }}>{s.duration}</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: 12, color: T.tSecond, fontFamily: 'var(--readion-font-mono)' }}>{s.questions}</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: 12, fontWeight: 500, color: scoreColor(s.accuracy) }}>{s.accuracy}%</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: 12, color: s.delta > 0 ? T.good : T.poor, fontWeight: 500 }}>
+              {s.delta > 0 ? '+' : ''}{s.delta}%
+            </span>
+          </div>
+        </div>
+        {i < sessions.length - 1 && <div style={{ height: 1, background: T.borderDef, margin: '0 16px' }}/>}
+      </div>
+    ))}
+  </div>
+);
+
+// ── Cert selector tab ─────────────────────────────────────────────────────────
+const CertTabs = ({ certs, active }) => (
+  <div style={{ display: 'flex', gap: 2, marginBottom: 24 }}>
+    {certs.map((c) => (
+      <div key={c} style={{ padding: '5px 14px', borderRadius: T.rFull, fontSize: 12, background: c === active ? T.surface : 'transparent', border: '1px solid ' + (c === active ? T.border : 'transparent'), color: c === active ? T.tPrimary : T.tMuted, cursor: 'pointer', fontWeight: c === active ? 500 : 400 }}>
+        {c}
+      </div>
+    ))}
+  </div>
+);
+
+// ── Usage stats (this month, cap-free) ────────────────────────────────────────
+const UsageStats = ({ stats }) => (
+  <div>
+    <SectionLabel>This month</SectionLabel>
+    <div style={{ display: 'flex', gap: 12 }}>
+      {stats.map((s) => (
+        <div key={s.label} style={{ flex: 1, background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '16px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+            <span style={{ fontSize: 24, fontWeight: 700, color: T.tPrimary, lineHeight: 1 }}>{s.value}</span>
+            {s.unit && <span style={{ fontSize: 12, color: T.tMuted }}>{s.unit}</span>}
+          </div>
+          <div style={{ fontSize: 11, color: T.tMuted, marginTop: 7 }}>{s.label}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// ── Progress page ─────────────────────────────────────────────────────────────
+const ProgressPage = ({ readinessSessions, showTrajectory, trajectoryWeeks, trajectoryPace, domains, masteredDomains, accuracySessions, historySessions, usage }) => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AppSidebar />
+    <div style={{ flex: 1, overflowY: 'auto', padding: '28px 36px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+      {/* Page header */}
+      <div style={{ paddingBottom: 16, borderBottom: '1px solid ' + T.border }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 4 }}>Progress</div>
+        <div style={{ fontSize: 20, fontWeight: 600, color: T.tPrimary }}>SAA-C03</div>
+      </div>
+
+      {/* Cert tabs */}
+      <CertTabs certs={['SAA-C03', 'PCA', '+ Add']} active="SAA-C03" />
+
+      {/* This month's activity */}
+      <UsageStats stats={usage} />
+
+      {/* Readiness over time */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <SectionLabel>Readiness over time</SectionLabel>
+          <span style={{ fontSize: 11, color: T.tSubtle }}>{readinessSessions.length} sessions</span>
+        </div>
+        <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '16px 20px', marginBottom: 10 }}>
+          <ReadinessChart sessions={readinessSessions} showProjection={showTrajectory} />
+          <div style={{ height: 1, background: T.border, margin: '14px 0 14px' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <span style={{ fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted }}>Quiz accuracy</span>
+            <span style={{ fontSize: 11, color: T.tSubtle }}>Last {accuracySessions.length} sessions</span>
+          </div>
+          <AccuracyBars sessions={accuracySessions} />
+        </div>
+        {showTrajectory
+          ? <TrajectoryCallout weeks={trajectoryWeeks} pace={trajectoryPace} />
+          : <TrajectoryInsufficient />
+        }
+      </div>
+
+      {/* Domain scores — full width */}
+      <div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <SectionLabel>Domain scores</SectionLabel>
+          <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '8px 20px' }}>
+            {domains.map((d, i) => (
+              <DomainRow key={d.name} name={d.name} score={d.score} delta={d.delta} mastered={false} last={i === domains.length - 1 && masteredDomains.length === 0} />
+            ))}
+            {masteredDomains.length > 0 && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0' }}>
+                  <div style={{ flex: 1, height: 1, background: T.borderDef }} />
+                  <span style={{ fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tSubtle }}>Mastered</span>
+                  <div style={{ flex: 1, height: 1, background: T.borderDef }} />
+                </div>
+                {masteredDomains.map((d, i) => (
+                  <DomainRow key={d.name} name={d.name} score={d.score} delta={null} mastered={true} last={i === masteredDomains.length - 1} />
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Session history */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <SectionLabel>Session history</SectionLabel>
+          <span style={{ fontSize: 11, color: T.tSubtle }}>{historySessions.length} sessions total</span>
+        </div>
+        <SessionHistoryTable sessions={historySessions} />
+      </div>
+    </div>
+  </div>
+);
+
+// ── Scene data ────────────────────────────────────────────────────────────────
+
+const READINESS_FULL = [
+  { label: 'Jun 2',  readiness: 48 }, { label: 'Jun 5',  readiness: 51 },
+  { label: 'Jun 9',  readiness: 53 }, { label: 'Jun 12', readiness: 57 },
+  { label: 'Jun 14', readiness: 62 }, { label: 'Jun 16', readiness: 65 },
+  { label: 'Jun 17', readiness: 67 }, { label: 'Jun 19', readiness: 70 },
+  { label: 'Jun 21', readiness: 72 }, { label: 'Today',  readiness: 75 },
+];
+
+const READINESS_EARLY = [
+  { label: 'Jun 19', readiness: 48 },
+  { label: 'Jun 21', readiness: 53 },
+  { label: 'Today',  readiness: 57 },
+];
+
+const DOMAINS_ACTIVE = [
+  { name: 'IAM & Security',           score: 45, delta:  7 },
+  { name: 'Networking & CDN',          score: 43, delta:  2 },
+  { name: 'Cost Optimization',         score: 52, delta:  4 },
+  { name: 'High Availability',         score: 68, delta:  3 },
+  { name: 'Storage Solutions',         score: 71, delta:  1 },
+  { name: 'Compute & Lambda',          score: 79, delta:  5 },
+  { name: 'Database Services',         score: 76, delta:  2 },
+];
+
+const DOMAINS_MASTERED = [
+  { name: 'Monitoring & Logging', score: 88, delta: null },
+];
+
+const ACCURACY_SESSIONS = [
+  { shortLabel: 'J16', accuracy: 60 }, { shortLabel: 'J17', accuracy: 58 },
+  { shortLabel: 'J19', accuracy: 70 }, { shortLabel: 'J21', accuracy: 71 },
+  { shortLabel: 'J23', accuracy: 73 }, { shortLabel: 'J23', accuracy: 67 },
+];
+
+const ACCURACY_EARLY = [
+  { shortLabel: 'J19', accuracy: 55 },
+  { shortLabel: 'J21', accuracy: 58 },
+  { shortLabel: 'Today', accuracy: 62 },
+];
+
+const HISTORY_FULL = [
+  { date: 'Today, Jun 23',   time: '3:42 PM', type: 'Study', duration: '20:34', questions: 12, accuracy: 67, delta: 3 },
+  { date: 'Jun 23',          time: '9:15 AM', type: 'Study', duration: '22:18', questions: 14, accuracy: 71, delta: 2 },
+  { date: 'Jun 21',          time: '7:30 PM', type: 'Mock',  duration: '1h 47m', questions: 65, accuracy: 71, delta: 8 },
+  { date: 'Jun 19',          time: '8:00 PM', type: 'Study', duration: '18:45', questions: 12, accuracy: 70, delta: 2 },
+  { date: 'Jun 17',          time: '7:15 PM', type: 'Study', duration: '20:10', questions: 12, accuracy: 58, delta: 2 },
+  { date: 'Jun 16',          time: '8:30 PM', type: 'Study', duration: '23:41', questions: 15, accuracy: 60, delta: 3 },
+  { date: 'Jun 14',          time: '4:00 PM', type: 'Mock',  duration: '1h 52m', questions: 65, accuracy: 62, delta: 5 },
+];
+
+const HISTORY_EARLY = [
+  { date: 'Today, Jun 23', time: '8:00 PM', type: 'Study', duration: '18:45', questions: 12, accuracy: 62, delta: 4 },
+  { date: 'Jun 21',        time: '7:00 PM', type: 'Study', duration: '22:00', questions: 13, accuracy: 58, delta: 5 },
+  { date: 'Jun 19',        time: '9:00 PM', type: 'Study', duration: '19:10', questions: 12, accuracy: 55, delta: 0 },
+];
+
+const USAGE_FULL = [
+  { value: '14',     label: 'Sessions' },
+  { value: '312',    label: 'Questions answered' },
+  { value: '6h 12m', label: 'Study time' },
+  { value: '5',      unit: 'days', label: 'Current streak' },
+];
+
+const USAGE_EARLY = [
+  { value: '3',   label: 'Sessions' },
+  { value: '37',  label: 'Questions answered' },
+  { value: '58m', label: 'Study time' },
+  { value: '3',   unit: 'days', label: 'Current streak' },
+];
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <Canvas>
+      <CanvasSection
+        title="Progress view"
+        subtitle="Historical performance. A cap-free activity summary up top, then readiness trend, domain bars (status colour scale), and full session history."
+      >
+        <Artboard label="With history — 10 sessions, trajectory visible" width={1100} height={980}>
+          <ProgressPage
+            readinessSessions={READINESS_FULL}
+            showTrajectory={true}
+            trajectoryWeeks={3}
+            trajectoryPace={2.4}
+            domains={DOMAINS_ACTIVE}
+            masteredDomains={DOMAINS_MASTERED}
+            accuracySessions={ACCURACY_SESSIONS}
+            historySessions={HISTORY_FULL}
+            usage={USAGE_FULL}
+          />
+        </Artboard>
+        <Artboard label="Early state — 3 sessions, no trajectory yet" width={1100} height={980}>
+          <ProgressPage
+            readinessSessions={READINESS_EARLY}
+            showTrajectory={false}
+            trajectoryWeeks={null}
+            trajectoryPace={null}
+            domains={DOMAINS_ACTIVE.map((d) => ({ ...d, delta: null }))}
+            masteredDomains={[]}
+            accuracySessions={ACCURACY_EARLY}
+            historySessions={HISTORY_EARLY}
+            usage={USAGE_EARLY}
+          />
+        </Artboard>
+      </CanvasSection>
+    </Canvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
