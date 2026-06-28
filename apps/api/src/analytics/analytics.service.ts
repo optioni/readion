@@ -96,11 +96,11 @@ export class AnalyticsService {
       retention,
       passRateBreakdown,
     ] = await Promise.all([
-      this.getReadinessGain(now),
-      this.getSessionsPerWeek(now),
+      this.getReadinessGain(now, population),
+      this.getSessionsPerWeek(now, population),
       this.getCompletionRate(now),
       this.getAgentEngagementRate(now),
-      this.getLlmCostPerActiveUser(now),
+      this.getLlmCostPerActiveUser(now, population),
       this.getRetentionCohorts(now),
       this.getPassRateBreakdown(),
     ])
@@ -167,9 +167,12 @@ export class AnalyticsService {
   // window start) across the active population. Readiness-now reuses ReadinessService; the
   // window-start value is recomputed as-of T from immutable rows (AsOfReadiness). An enrollment
   // uncalibrated at either boundary is excluded from the median, never folded in as a zero.
-  async getReadinessGain(now = this.window.now()): Promise<number> {
+  async getReadinessGain(
+    now = this.window.now(),
+    population?: ActiveUserPopulation,
+  ): Promise<number> {
     const windowStart = this.window.start(this.northstarWindowDays(), now)
-    const { userIds } = await this.getActiveUserPopulation(now)
+    const { userIds } = population ?? (await this.getActiveUserPopulation(now))
     const threshold = this.calibrationThreshold()
     const em = this.em.fork()
 
@@ -203,8 +206,11 @@ export class AnalyticsService {
     }
   }
 
-  async getSessionsPerWeek(now = this.window.now()): Promise<number> {
-    const { userIds, completedByUser } = await this.getActiveUserPopulation(now)
+  async getSessionsPerWeek(
+    now = this.window.now(),
+    population?: ActiveUserPopulation,
+  ): Promise<number> {
+    const { userIds, completedByUser } = population ?? (await this.getActiveUserPopulation(now))
     return medianSessionsPerWeek(completedByUser, userIds, this.windowDays())
   }
 
@@ -295,8 +301,11 @@ export class AnalyticsService {
   // assistant/tool agent messages — each weighted by its configured cost coefficient, divided by
   // the active-user count. The agent/SSE-error-rate and ingestion-success ops guardrails are NOT
   // re-derived here (those stay in Prometheus).
-  async getLlmCostPerActiveUser(now = this.window.now()): Promise<number> {
-    const { userIds, count } = await this.getActiveUserPopulation(now)
+  async getLlmCostPerActiveUser(
+    now = this.window.now(),
+    population?: ActiveUserPopulation,
+  ): Promise<number> {
+    const { userIds, count } = population ?? (await this.getActiveUserPopulation(now))
     const counts =
       count === 0
         ? { quizResponses: 0, mockQuestions: 0, sessionItems: 0, agentMessages: 0 }
