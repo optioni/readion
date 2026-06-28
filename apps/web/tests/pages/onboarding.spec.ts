@@ -1,7 +1,7 @@
 import type { SessionDefaults } from '@readion/shared'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { computed, type ComputedRef } from 'vue'
+import { type ComputedRef, computed } from 'vue'
 import { ADMIN_CERT_SETUP_ROUTE } from '~/composables/onboardingRoutes'
 import type { OnboardingDecision } from '~/composables/resolveOnboardingRoute'
 import { useOnboardingActions } from '~/composables/useOnboardingActions'
@@ -115,7 +115,9 @@ describe('Onboarding page step flow', () => {
     const wrapper = mountPage()
 
     await wrapper.findComponent({ name: 'OnboardingCertSelect' }).vm.$emit('continue', 'cert-1')
-    await wrapper.findComponent({ name: 'OnboardingSessionPrefs' }).vm.$emit('confirm', sessionDefaults)
+    await wrapper
+      .findComponent({ name: 'OnboardingSessionPrefs' })
+      .vm.$emit('confirm', sessionDefaults)
     await flushPromises()
 
     expect(saveDefaultsAndEnroll).toHaveBeenCalledWith({
@@ -133,7 +135,9 @@ describe('Onboarding page step flow', () => {
     const wrapper = mountPage()
 
     await wrapper.findComponent({ name: 'OnboardingCertSelect' }).vm.$emit('continue', 'cert-1')
-    await wrapper.findComponent({ name: 'OnboardingSessionPrefs' }).vm.$emit('confirm', sessionDefaults)
+    await wrapper
+      .findComponent({ name: 'OnboardingSessionPrefs' })
+      .vm.$emit('confirm', sessionDefaults)
     await flushPromises()
 
     expect(wrapper.find('[data-testid="session-prefs-stub"]').exists()).toBe(true)
