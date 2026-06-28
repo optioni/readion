@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { selectHeroAndOrder } from '~/composables/dashboardOrdering'
 import type { EnrollmentCard } from '~/composables/useEnrollments'
 
-const makeCard = (overrides: Partial<EnrollmentCard> & { enrollmentId: string }): EnrollmentCard => ({
+const makeCard = (
+  overrides: Partial<EnrollmentCard> & { enrollmentId: string },
+): EnrollmentCard => ({
   certificationId: `cert-${overrides.enrollmentId}`,
   name: 'Cert',
   provider: 'AWS',
