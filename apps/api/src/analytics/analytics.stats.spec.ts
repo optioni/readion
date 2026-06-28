@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   agentEngagementFraction,
+  type CohortUser,
+  cohortRetention,
   completionRate,
   enrollmentGain,
   isActiveUser,
@@ -8,6 +10,7 @@ import {
   median,
   medianReadinessGain,
   medianSessionsPerWeek,
+  registrationWeekStart,
   selectActiveUsers,
   sessionsPerWeek,
 } from './analytics.stats'
@@ -278,6 +281,146 @@ describe('medianSessionsPerWeek', () => {
 
   it('returns 0 when there are no active users', () => {
     expect(medianSessionsPerWeek(new Map(), [], 14)).toBe(0)
+  })
+})
+
+describe('registrationWeekStart', () => {
+  it('floors a Monday timestamp to that same Monday 00:00 UTC', () => {
+    expect(registrationWeekStart(new Date('2026-06-01T00:00:00.000Z')).toISOString()).toBe(
+      '2026-06-01T00:00:00.000Z',
+    )
+  })
+
+  it('floors a midweek timestamp back to the week-opening Monday', () => {
+    expect(registrationWeekStart(new Date('2026-06-04T13:45:00.000Z')).toISOString()).toBe(
+      '2026-06-01T00:00:00.000Z',
+    )
+  })
+
+  it('keeps the last instant before the next Monday in the opening week', () => {
+    expect(registrationWeekStart(new Date('2026-06-07T23:59:59.999Z')).toISOString()).toBe(
+      '2026-06-01T00:00:00.000Z',
+    )
+  })
+
+  it('rolls a Sunday into the previous Monday, not the next', () => {
+    expect(registrationWeekStart(new Date('2026-05-31T12:00:00.000Z')).toISOString()).toBe(
+      '2026-05-25T00:00:00.000Z',
+    )
+  })
+
+  it('opens a new bucket exactly at the next Monday 00:00 UTC', () => {
+    expect(registrationWeekStart(new Date('2026-06-08T00:00:00.000Z')).toISOString()).toBe(
+      '2026-06-08T00:00:00.000Z',
+    )
+  })
+})
+
+describe('cohortRetention', () => {
+  const options = { now: new Date('2026-06-29T00:00:00.000Z'), windowDays: 14, minSessions: 2 }
+
+  // Registration-week cohorts (Monday-anchored UTC weeks) with a known active subset in week 2
+  // (boundary = registration + 14d) and week 4 (boundary = registration + 28d). Active means
+  // >= minSessions completed sessions ended in the trailing window ending at that boundary.
+  const completedAt = (iso: string) => ({ status: 'completed' as const, endedAt: new Date(iso) })
+
+  const cohortA: CohortUser[] = [
+    {
+      userId: 'a1',
+      createdAt: new Date('2026-06-01T00:00:00.000Z'),
+      sessions: ['2026-06-10', '2026-06-14', '2026-06-20', '2026-06-28'].map((d) =>
+        completedAt(`${d}T00:00:00.000Z`),
+      ),
+    },
+    {
+      userId: 'a2',
+      createdAt: new Date('2026-06-01T00:00:00.000Z'),
+      sessions: ['2026-06-10', '2026-06-14', '2026-06-20', '2026-06-28'].map((d) =>
+        completedAt(`${d}T00:00:00.000Z`),
+      ),
+    },
+    {
+      userId: 'a3',
+      createdAt: new Date('2026-06-01T00:00:00.000Z'),
+      sessions: ['2026-06-10', '2026-06-14'].map((d) => completedAt(`${d}T00:00:00.000Z`)),
+    },
+    {
+      userId: 'a4',
+      createdAt: new Date('2026-06-01T00:00:00.000Z'),
+      sessions: [completedAt('2026-06-10T00:00:00.000Z')],
+    },
+  ]
+
+  const cohortB: CohortUser[] = [
+    {
+      userId: 'b1',
+      createdAt: new Date('2026-05-04T00:00:00.000Z'),
+      sessions: ['2026-05-10', '2026-05-16', '2026-05-25', '2026-05-30'].map((d) =>
+        completedAt(`${d}T00:00:00.000Z`),
+      ),
+    },
+    {
+      userId: 'b2',
+      createdAt: new Date('2026-05-04T00:00:00.000Z'),
+      sessions: [completedAt('2026-05-10T00:00:00.000Z')],
+    },
+  ]
+
+  // W2 boundary (06-22) has elapsed, W4 boundary (07-06) has not — so this cohort reports W2 only.
+  const cohortC: CohortUser[] = [
+    {
+      userId: 'c1',
+      createdAt: new Date('2026-06-08T00:00:00.000Z'),
+      sessions: ['2026-06-15', '2026-06-20'].map((d) => completedAt(`${d}T00:00:00.000Z`)),
+    },
+  ]
+
+  // Registered too recently: even the W2 boundary (07-06) has not elapsed, so it is omitted.
+  const cohortD: CohortUser[] = [
+    {
+      userId: 'd1',
+      createdAt: new Date('2026-06-22T00:00:00.000Z'),
+      sessions: ['2026-06-25', '2026-06-27'].map((d) => completedAt(`${d}T00:00:00.000Z`)),
+    },
+  ]
+
+  const allUsers = [...cohortA, ...cohortB, ...cohortC, ...cohortD]
+
+  it('reports per-cohort W2 retention with cohort size, ascending by week', () => {
+    const { w2 } = cohortRetention(allUsers, options)
+    expect(w2.cohorts).toEqual([
+      { cohortWeek: '2026-05-04', size: 2, retained: 1, fraction: 0.5 },
+      { cohortWeek: '2026-06-01', size: 4, retained: 3, fraction: 0.75 },
+      { cohortWeek: '2026-06-08', size: 1, retained: 1, fraction: 1 },
+    ])
+  })
+
+  it('reports per-cohort W4 retention only for cohorts whose W4 boundary has elapsed', () => {
+    const { w4 } = cohortRetention(allUsers, options)
+    expect(w4.cohorts).toEqual([
+      { cohortWeek: '2026-05-04', size: 2, retained: 1, fraction: 0.5 },
+      { cohortWeek: '2026-06-01', size: 4, retained: 2, fraction: 0.5 },
+    ])
+  })
+
+  it('pools the overall W2 fraction and population across mature cohorts', () => {
+    const { w2 } = cohortRetention(allUsers, options)
+    expect(w2.population).toBe(7)
+    expect(w2.value).toBeCloseTo(5 / 7)
+  })
+
+  it('pools the overall W4 fraction and population across W4-mature cohorts only', () => {
+    const { w4 } = cohortRetention(allUsers, options)
+    expect(w4.population).toBe(6)
+    expect(w4.value).toBeCloseTo(0.5)
+  })
+
+  it('omits an entirely immature cohort and reports zeroed overalls when nothing is mature', () => {
+    const result = cohortRetention(cohortD, options)
+    expect(result.w2.cohorts).toEqual([])
+    expect(result.w4.cohorts).toEqual([])
+    expect(result.w2).toEqual({ value: 0, population: 0, cohorts: [] })
+    expect(result.w4).toEqual({ value: 0, population: 0, cohorts: [] })
   })
 })
 
