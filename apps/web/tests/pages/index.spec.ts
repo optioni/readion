@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import type { EnrollmentCard } from '~/composables/useEnrollments'
 import { useEnrollments } from '~/composables/useEnrollments'
 import IndexPage from '~/pages/index.vue'
@@ -11,8 +11,7 @@ vi.mock('~/components/CertCard.vue', () => ({
   default: {
     name: 'CertCard',
     props: ['card', 'variant'],
-    template:
-      '<div data-testid="cert-card" :data-variant="variant" :data-name="card.name" />',
+    template: '<div data-testid="cert-card" :data-variant="variant" :data-name="card.name" />',
   },
 }))
 
@@ -36,8 +35,8 @@ function stubEnrollments(options: {
   const cards = options.cards ?? []
   vi.mocked(useEnrollments).mockReturnValue({
     cards: computed(() => cards),
-    isLoading: ref(options.isLoading ?? false),
-    isError: ref(options.isError ?? false),
+    isLoading: computed(() => options.isLoading ?? false),
+    isError: computed(() => options.isError ?? false),
   })
 }
 
@@ -62,10 +61,7 @@ describe('Dashboard list', () => {
 
   it('renders one card per active enrollment plus the add-certification entry', () => {
     stubEnrollments({
-      cards: [
-        card({ name: 'A', readinessScore: 75 }),
-        card({ name: 'B', readinessScore: 42 }),
-      ],
+      cards: [card({ name: 'A', readinessScore: 75 }), card({ name: 'B', readinessScore: 42 })],
     })
     const wrapper = mountPage()
     expect(renderedCards(wrapper)).toHaveLength(2)
