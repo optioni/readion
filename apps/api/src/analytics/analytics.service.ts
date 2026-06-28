@@ -1,7 +1,16 @@
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { AgentConversation, AgentMessage, StudySession, User, UserCertification } from '@readion/db'
+import {
+  AgentConversation,
+  AgentMessage,
+  MockExam,
+  QuizResponse,
+  SessionItem,
+  StudySession,
+  User,
+  UserCertification,
+} from '@readion/db'
 import {
   ANALYTICS_ACTIVE_MIN_SESSIONS_DEFAULT,
   ANALYTICS_ACTIVE_WINDOW_DAYS_DEFAULT,
@@ -211,10 +220,46 @@ export class AnalyticsService {
     })
   }
 
-  // Repository wiring of the per-artifact counts lands in the next step; until then the proxy
-  // reports zeroed counts so its shape and coefficient math are exercised in isolation.
-  private async countLlmArtifacts(_userIds: string[], _now: Date): Promise<LlmArtifactCounts> {
-    return { quizResponses: 0, mockQuestions: 0, sessionItems: 0, agentMessages: 0 }
+  // Each artifact is windowed by its OWN createdAt — the instant the LLM cost was incurred at
+  // generation time — within the trailing active window, and attributed to the active population:
+  // quiz responses via userCertification.user, mock exams via the direct user FK (summing
+  // questions.length), session items via session.user, and agent messages via their conversation's
+  // userId. The artifact's createdAt is the most defensible cost-incurrence timestamp; this is
+  // independent of how the active population itself is windowed (by session endedAt).
+  private async countLlmArtifacts(userIds: string[], now: Date): Promise<LlmArtifactCounts> {
+    const start = this.window.start(this.windowDays(), now)
+    const window = { $gte: start, $lte: now }
+    const em = this.em.fork()
+
+    const quizResponses = await em.count(QuizResponse, {
+      userCertification: { user: { $in: userIds } },
+      createdAt: window,
+    })
+
+    const sessionItems = await em.count(SessionItem, {
+      session: { user: { $in: userIds } },
+      createdAt: window,
+    })
+
+    const mockExams = await em.find(MockExam, {
+      user: { $in: userIds },
+      createdAt: window,
+    })
+    const mockQuestions = mockExams.reduce((sum, exam) => sum + exam.questions.length, 0)
+
+    const conversationIds = (await em.find(AgentConversation, { userId: { $in: userIds } })).map(
+      (c) => c.id,
+    )
+    const agentMessages =
+      conversationIds.length === 0
+        ? 0
+        : await em.count(AgentMessage, {
+            conversationId: { $in: conversationIds },
+            role: { $in: ['assistant', 'tool'] },
+            createdAt: window,
+          })
+
+    return { quizResponses, mockQuestions, sessionItems, agentMessages }
   }
 
   private costCoefficients(): LlmCostCoefficients {
