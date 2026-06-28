@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import AddCertificationModal from '~/components/AddCertificationModal.vue'
 import CertCard from '~/components/CertCard.vue'
 import { selectHeroAndOrder } from '~/composables/dashboardOrdering'
 import { useEnrollments } from '~/composables/useEnrollments'
@@ -90,5 +91,7 @@ function openAddCert() {
         </button>
       </div>
     </template>
+
+    <AddCertificationModal v-model:open="isAddCertOpen" />
   </section>
 </template>

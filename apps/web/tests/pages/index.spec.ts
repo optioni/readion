@@ -15,6 +15,15 @@ vi.mock('~/components/CertCard.vue', () => ({
   },
 }))
 
+vi.mock('~/components/AddCertificationModal.vue', () => ({
+  default: {
+    name: 'AddCertificationModal',
+    props: ['open'],
+    emits: ['update:open'],
+    template: '<div data-testid="add-cert-modal-stub" :data-open="open" />',
+  },
+}))
+
 function card(overrides: Partial<EnrollmentCard> & { name: string }): EnrollmentCard {
   return {
     enrollmentId: overrides.enrollmentId ?? overrides.name,
@@ -152,5 +161,13 @@ describe('Dashboard add-certification entry', () => {
     const wrapper = mountPage()
     await wrapper.find('[data-testid="add-cert"]').trigger('click')
     expect(wrapper.find('[data-testid="add-cert"]').attributes('aria-expanded')).toBe('true')
+  })
+
+  it('opens the add-certification modal when the entry is activated', async () => {
+    stubEnrollments({ cards: [card({ name: 'A', readinessScore: 50 })] })
+    const wrapper = mountPage()
+    expect(wrapper.find('[data-testid="add-cert-modal-stub"]').attributes('data-open')).toBe('false')
+    await wrapper.find('[data-testid="add-cert"]').trigger('click')
+    expect(wrapper.find('[data-testid="add-cert-modal-stub"]').attributes('data-open')).toBe('true')
   })
 })
