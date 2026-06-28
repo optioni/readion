@@ -65,4 +65,18 @@ describe('productAnalyticsEnvFragment', () => {
       /ANALYTICS_TARGET_W4_RETENTION/,
     )
   })
+
+  it('accepts a zero cost coefficient but rejects a negative one naming the var', () => {
+    expect(parse({ ANALYTICS_COST_QUIZ: '0' }).ANALYTICS_COST_QUIZ).toBe(0)
+    expect(() => parse({ ANALYTICS_COST_AGENT_MESSAGE: '-0.01' })).toThrow(
+      /ANALYTICS_COST_AGENT_MESSAGE/,
+    )
+  })
+
+  it('accepts a positive budget/target but rejects a non-positive one naming the var', () => {
+    expect(parse({ ANALYTICS_LLM_COST_BUDGET: '7.5' }).ANALYTICS_LLM_COST_BUDGET).toBe(7.5)
+    expect(() => parse({ ANALYTICS_TARGET_NORTHSTAR_GAIN: '0' })).toThrow(
+      /ANALYTICS_TARGET_NORTHSTAR_GAIN/,
+    )
+  })
 })
