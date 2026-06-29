@@ -86,18 +86,18 @@ async function changePassword() {
     confirmPassword.value = ''
     passwordChanged.value = true
   } catch (error) {
+    const message =
+      error instanceof ReadionProblemDetailsError
+        ? (error.detail ?? error.title)
+        : 'Could not change your password. Please try again.'
+
     if (
       error instanceof ReadionProblemDetailsError &&
       (error.status === 401 || error.status === 403)
     ) {
-      currentPasswordError.value = error.detail ?? error.title
-    } else if (error instanceof ReadionProblemDetailsError && error.status === 422) {
-      newPasswordError.value = error.detail ?? error.title
+      currentPasswordError.value = message
     } else {
-      newPasswordError.value =
-        error instanceof ReadionProblemDetailsError
-          ? (error.detail ?? error.title)
-          : 'Could not change your password. Please try again.'
+      newPasswordError.value = message
     }
   } finally {
     changingPassword.value = false
