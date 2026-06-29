@@ -3,7 +3,9 @@ import { selectMockExamScene } from '~/composables/mockExamScene'
 
 describe('selectMockExamScene', () => {
   it('returns "preparing" whenever generation is preparing, regardless of status', () => {
-    expect(selectMockExamScene({ generation: 'preparing', status: 'in_progress' })).toBe('preparing')
+    expect(selectMockExamScene({ generation: 'preparing', status: 'in_progress' })).toBe(
+      'preparing',
+    )
     expect(selectMockExamScene({ generation: 'preparing', status: 'submitted' })).toBe('preparing')
     expect(selectMockExamScene({ generation: 'preparing', status: 'expired' })).toBe('preparing')
   })
