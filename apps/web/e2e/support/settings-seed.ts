@@ -61,8 +61,6 @@ export interface SettingsMockHandles {
   profilePatches: Array<Record<string, unknown>>
   forgotPasswordBodies: Array<Record<string, unknown>>
   deletePayloads: Array<Record<string, unknown>>
-  // Total PATCH /users/me hits — used to assert the Notifications tab issues no profile mutation.
-  profilePatchCount: () => number
 }
 
 async function fulfilJson(route: Route, status: number, body: unknown): Promise<void> {
@@ -119,7 +117,6 @@ export function mockSettings(page: Page, deleteStatus = 204): SettingsMockHandle
     profilePatches: [],
     forgotPasswordBodies: [],
     deletePayloads: [],
-    profilePatchCount: () => handles.profilePatches.length,
   }
 
   // Context-level safety net (page routes take precedence over context routes in Playwright).

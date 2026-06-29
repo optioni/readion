@@ -125,9 +125,11 @@ test.describe('web-settings — settings page', () => {
     await expect(page.getByTestId('delete-account-modal')).toBeVisible()
 
     // Confirm without entering a password — the action is disabled or rejected; no request fires.
+    // A bounded timeout keeps this a best-effort click: the disabled button never becomes actionable,
+    // so the attempt rejects fast and the catch swallows it instead of stalling the whole test.
     await page
       .getByTestId('confirm-delete-btn')
-      .click({ trial: false })
+      .click({ trial: false, timeout: 2000 })
       .catch(() => undefined)
 
     await expect(page.getByTestId('delete-account-modal')).toBeVisible()
