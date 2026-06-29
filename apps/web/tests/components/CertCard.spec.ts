@@ -10,7 +10,6 @@ import { useCardRecentSessions } from '~/composables/useCardRecentSessions'
 import { useCardWeakAreas } from '~/composables/useCardWeakAreas'
 import type { EnrollmentCard } from '~/composables/useEnrollments'
 import { useQuickStartActions } from '~/composables/useQuickStartActions'
-import { enrollmentReviewControllerStart } from '~~/src/api/enrollment-review/enrollment-review'
 import type { WeakAreaResponseDto } from '~~/src/api/model'
 
 vi.mock('~/composables/useCardReadiness', () => ({ useCardReadiness: vi.fn() }))
@@ -18,9 +17,6 @@ vi.mock('~/composables/useCardWeakAreas', () => ({ useCardWeakAreas: vi.fn() }))
 vi.mock('~/composables/useCardRecentSessions', () => ({ useCardRecentSessions: vi.fn() }))
 vi.mock('~/composables/useCardDueReviews', () => ({ useCardDueReviews: vi.fn() }))
 vi.mock('~/composables/useQuickStartActions', () => ({ useQuickStartActions: vi.fn() }))
-vi.mock('~~/src/api/enrollment-review/enrollment-review', () => ({
-  enrollmentReviewControllerStart: vi.fn(),
-}))
 
 const mockPush = vi.fn()
 vi.stubGlobal('useRouter', () => ({ push: mockPush }))
@@ -112,11 +108,6 @@ beforeEach(() => {
   )
   stubDueReviews(0)
   stubQuickStartActions()
-  vi.mocked(enrollmentReviewControllerStart).mockResolvedValue({
-    data: undefined,
-    status: 200,
-    headers: new Headers(),
-  })
 })
 
 describe('CertCard title + readiness', () => {
@@ -270,12 +261,11 @@ describe('CertCard due-review quick-start', () => {
     expect(banner.text()).toContain('12')
   })
 
-  it('navigates into the review queue entry without pre-calling start on activation', async () => {
+  it('navigates into the review queue entry on activation', async () => {
     stubDueReviews(12)
     const wrapper = mountCard()
     await wrapper.find('[data-testid="review-start-btn"]').trigger('click')
     await flushPromises()
-    expect(enrollmentReviewControllerStart).not.toHaveBeenCalled()
     expect(mockPush).toHaveBeenCalledWith('/user-certifications/enr-1/review')
   })
 })
