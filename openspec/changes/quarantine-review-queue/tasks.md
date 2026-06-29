@@ -1,9 +1,9 @@
 ## 0. Pre-flight + Acceptance Test — Outer Loop RED
 
-- [ ] 0.0 Inspect `apps/api/src/grounding/quarantine.service.ts` + `grounding.metrics.ts`: confirm whether quarantine is persisted or metric-only. Record the answer; if a durable store already exists, adjust the entity task to a read-model.
-- [ ] 0.1 Add a NestJS integration test (Supertest + Testcontainers) for the admin quarantine endpoints as the outer loop (real Postgres + Redis; admin + non-admin actors).
-- [ ] 0.2 Write failing scenarios: quarantining writes a `pending` row; admin list paginates/filters; non-admin → `403`; approve re-instates + audits + `approved`; reject discards + audits + `rejected`.
-- [ ] 0.3 Confirm failure is "no entity / no routes", not a harness error.
+- [x] 0.0 Inspect `apps/api/src/grounding/quarantine.service.ts` + `grounding.metrics.ts`: confirm whether quarantine is persisted or metric-only. Record the answer; if a durable store already exists, adjust the entity task to a read-model.
+- [x] 0.1 Add a NestJS integration test (Supertest + Testcontainers) for the admin quarantine endpoints as the outer loop (real Postgres + Redis; admin + non-admin actors).
+- [x] 0.2 Write failing scenarios: quarantining writes a `pending` row; admin list paginates/filters; non-admin → `403`; approve re-instates + audits + `approved`; reject discards + audits + `rejected`.
+- [x] 0.3 Confirm failure is "no entity / no routes", not a harness error.
 
 ## 1. QuarantinedItem entity + migration
 
