@@ -108,6 +108,28 @@ describe('buildCertDiff', () => {
     expect(diff.hasChanges).toBe(false)
   })
 
+  it('uses a grounded numeric value while keeping current values for unverified numerics', () => {
+    const fields: CertExtractionFields = {
+      domains: { unverified: true },
+      questionCount: { value: 70, citation: CITATION },
+      passingScore: { unverified: true },
+      timeLimitMinutes: { unverified: true },
+    }
+    const diff = buildCertDiff(CURRENT, fields)
+
+    const questionCount = diff.rows.find((row) => row.key === 'questionCount')
+    expect(questionCount).toMatchObject({ proposed: '70', changed: true, unverified: false })
+    expect(diff.proposed.questionCount).toBe(70)
+
+    const passingScore = diff.rows.find((row) => row.key === 'passingScore')
+    expect(passingScore).toMatchObject({ proposed: '72', changed: false, unverified: true })
+    expect(diff.proposed.passingScore).toBe(72)
+
+    const timeLimit = diff.rows.find((row) => row.key === 'timeLimitMinutes')
+    expect(timeLimit?.unverified).toBe(true)
+    expect(diff.proposed.timeLimitMinutes).toBe(130)
+  })
+
   it('keeps the current value when domains are unverified', () => {
     const fields: CertExtractionFields = {
       ...EXTRACTION_FIELDS,

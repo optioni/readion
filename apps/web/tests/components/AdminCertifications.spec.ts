@@ -3,14 +3,15 @@ import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick, ref } from 'vue'
+import { ReadionProblemDetailsError } from '~/api/mutator'
 import AdminCertifications from '~/components/admin/AdminCertifications.vue'
-import { certificationsControllerDetail } from '~~/src/api/certifications/certifications'
 import {
   certSetupControllerDiscoverSources,
   certSetupControllerExtract,
   certSetupControllerReadExtraction,
   certSetupControllerReverify,
 } from '~~/src/api/cert-setup/cert-setup'
+import { certificationsControllerDetail } from '~~/src/api/certifications/certifications'
 
 vi.mock('~~/src/api/certifications/certifications')
 vi.mock('~~/src/api/cert-setup/cert-setup')
@@ -29,8 +30,7 @@ vi.mock('~/composables/useDueForReverification', () => ({
 
 const CERT_ID = 'c0000000-0000-0000-0000-000000000001'
 
-const SOURCE_URL =
-  'https://aws.amazon.com/certification/certified-solutions-architect-associate/'
+const SOURCE_URL = 'https://aws.amazon.com/certification/certified-solutions-architect-associate/'
 
 const CITATION = { url: SOURCE_URL, passage: 'minimum passing score of 720 (~67%)' }
 
@@ -154,7 +154,7 @@ describe('AdminCertifications reverify flow', () => {
     await wrapper.find('[data-testid="reverify-btn"]').trigger('click')
     await flush()
 
-    expect(certificationsControllerDetail).toHaveBeenCalledWith(CERT_ID, expect.anything())
+    expect(certificationsControllerDetail).toHaveBeenCalledWith(CERT_ID)
     expect(certSetupControllerDiscoverSources).toHaveBeenCalled()
     expect(certSetupControllerExtract).toHaveBeenCalled()
 
@@ -181,9 +181,9 @@ describe('AdminCertifications reverify flow', () => {
     await flush()
 
     expect(certSetupControllerReverify).toHaveBeenCalledTimes(1)
-    const [id, options] = vi.mocked(certSetupControllerReverify).mock.calls[0]
-    expect(id).toBe(CERT_ID)
-    const body = JSON.parse((options as { body: string }).body)
+    const call = vi.mocked(certSetupControllerReverify).mock.calls.at(0)
+    expect(call?.[0]).toBe(CERT_ID)
+    const body = JSON.parse((call?.[1] as { body: string }).body)
     expect(body).toMatchObject({
       confirmedSourceUrl: SOURCE_URL,
       questionCount: 65,
@@ -228,6 +228,85 @@ describe('AdminCertifications reverify flow', () => {
     await flush()
 
     expect(wrapper.find('[data-testid="reverify-error"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="reverify-diff"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('surfaces a problem-details error raised while starting re-verification', async () => {
+    vi.mocked(certificationsControllerDetail).mockRejectedValue(
+      new ReadionProblemDetailsError({ title: 'Not found', status: 404, detail: 'Cert missing' }),
+    )
+    const wrapper = mountComponent()
+
+    await wrapper.find('[data-testid="reverify-btn"]').trigger('click')
+    await flush()
+
+    expect(wrapper.find('[data-testid="reverify-error"]').text()).toContain('Cert missing')
+    wrapper.unmount()
+  })
+
+  it('surfaces a generic error when discovery returns no candidate source', async () => {
+    vi.mocked(certSetupControllerDiscoverSources).mockResolvedValue(
+      envelope({ candidates: [], suggestedContentSources: [] }),
+    )
+    const wrapper = mountComponent()
+
+    await wrapper.find('[data-testid="reverify-btn"]').trigger('click')
+    await flush()
+
+    expect(wrapper.find('[data-testid="reverify-error"]').exists()).toBe(true)
+    expect(certSetupControllerExtract).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('runs the chain for a due cert without a code', async () => {
+    dueData.value = [{ ...DUE_ITEM, code: '' }]
+    vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
+      envelope({ state: 'completed', fields: EXTRACTION_FIELDS }),
+    )
+    const wrapper = mountComponent()
+
+    await wrapper.find('[data-testid="reverify-btn"]').trigger('click')
+    await flush()
+
+    expect(wrapper.find('[data-testid="reverify-diff"]').exists()).toBe(true)
+    const discoverBody = JSON.parse(
+      vi.mocked(certSetupControllerDiscoverSources).mock.calls[0]?.[0]?.body as string,
+    )
+    expect(discoverBody.code).toBeUndefined()
+    wrapper.unmount()
+  })
+
+  it('surfaces a problem-details error raised while submitting', async () => {
+    vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
+      envelope({ state: 'completed', fields: EXTRACTION_FIELDS }),
+    )
+    vi.mocked(certSetupControllerReverify).mockRejectedValue(
+      new ReadionProblemDetailsError({ title: 'Conflict', status: 409, detail: 'Already running' }),
+    )
+    const wrapper = mountComponent()
+
+    await wrapper.find('[data-testid="reverify-btn"]').trigger('click')
+    await flush()
+    await wrapper.find('[data-testid="reverify-submit-btn"]').trigger('click')
+    await flush()
+
+    expect(wrapper.find('[data-testid="reverify-error"]').text()).toContain('Already running')
+    wrapper.unmount()
+  })
+
+  it('cancels the re-verification and dismisses the diff', async () => {
+    vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
+      envelope({ state: 'completed', fields: EXTRACTION_FIELDS }),
+    )
+    const wrapper = mountComponent()
+
+    await wrapper.find('[data-testid="reverify-btn"]').trigger('click')
+    await flush()
+    expect(wrapper.find('[data-testid="reverify-diff"]').exists()).toBe(true)
+
+    await wrapper.find('[data-testid="reverify-cancel-btn"]').trigger('click')
+    await nextTick()
     expect(wrapper.find('[data-testid="reverify-diff"]').exists()).toBe(false)
     wrapper.unmount()
   })
