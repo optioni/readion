@@ -59,18 +59,18 @@
 
 ## 6. Acceptance Test — Outer Loop GREEN
 
-- [ ] 6.1 Confirm all acceptance tests (Progress + review loop + mark-as-mastered) pass end-to-end
-- [ ] 6.2 Verify `apps/web` starts in the local environment (smoke test) — boot the app and confirm no startup/config errors; confirm no `apps/api`/`apps/worker` changes were needed
-- [ ] 6.3 REFACTOR: Clean up test setup, route mocks, and fixtures
+- [x] 6.1 Confirm all acceptance tests (Progress + review loop + mark-as-mastered) pass end-to-end
+- [x] 6.2 Verify `apps/web` starts in the local environment (smoke test) — boot the app and confirm no startup/config errors; confirm no `apps/api`/`apps/worker` changes were needed
+- [x] 6.3 REFACTOR: Clean up test setup, route mocks, and fixtures
 
 ## 7. Change Review — Subagent Verification
 
-- [ ] 7.1 Dispatch a subagent to review the change against proposal.md, the spec scenarios, and design.md (reviewer reports findings only, does not edit code) — including that the QuickReview/Progress reconciliations were honoured (no flashcard self-rating, no fabricated streak/time-series, one-way mastery)
-- [ ] 7.2 Triage findings: fix every CRITICAL, resolve or accept each WARNING, note SUGGESTIONs; re-run affected tests
+- [x] 7.1 Dispatch a subagent to review the change against proposal.md, the spec scenarios, and design.md (reviewer reports findings only, does not edit code) — including that the QuickReview/Progress reconciliations were honoured (no flashcard self-rating, no fabricated streak/time-series, one-way mastery)
+- [x] 7.2 Triage findings: fix every CRITICAL, resolve or accept each WARNING, note SUGGESTIONs; re-run affected tests
 
 ## 8. Polish
 
-- [ ] 8.1 Run linter and fix all errors (`yarn lint`)
-- [ ] 8.2 Run formatter and apply fixes (`yarn format:fix`)
-- [ ] 8.3 Run type checker with zero errors (`yarn workspace apps/web typecheck`)
-- [ ] 8.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn workspace apps/web test:coverage`)
+- [x] 8.1 Run linter and fix all errors (`yarn lint`)
+- [x] 8.2 Run formatter and apply fixes (`yarn format:fix`)
+- [x] 8.3 Run type checker with zero errors (`yarn workspace apps/web typecheck`)
+- [x] 8.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn workspace apps/web test:coverage`)
