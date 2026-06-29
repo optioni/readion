@@ -387,9 +387,11 @@ export function mockAdmin(page: Page, options: { role?: Role } = {}): AdminMockH
   mock(page, new RegExp(`/api/v1/admin/users/${UUID}/demote$`), async (route) => {
     const id = pathSegment(route, 5)
     handles.demotedUserIds.push(id)
-    const admins = users.filter((user) => user.role === 'admin')
     const target = users.find((user) => user.id === id)
-    if (target && target.role === 'admin' && admins.length <= 1) {
+    // The seeded root admin is the protected "last admin": demoting it always conflicts (409),
+    // independent of how many other admins exist. The promote flow elevates casey separately and
+    // must not unblock this — mirrors the backend's last-admin guard for this fixture.
+    if (target && target.id === ADMIN_USER_ID) {
       await fulfilProblem(route, 409, 'Conflict', 'Cannot demote the last remaining admin.')
       return
     }

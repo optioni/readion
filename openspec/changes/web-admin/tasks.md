@@ -66,9 +66,9 @@
 
 ## 11. Acceptance Test — Outer Loop GREEN
 
-- [ ] 11.1 Confirm the acceptance test passes end-to-end
-- [ ] 11.2 Verify `apps/web` starts in the local environment (smoke test) — boot the app, sign in as admin, confirm `/admin/**` renders and a non-admin is blocked (no backend/codegen changes were made)
-- [ ] 11.3 REFACTOR: Clean up e2e mocks/fixtures and shared test setup if needed
+- [x] 11.1 Confirm the acceptance test passes end-to-end
+- [x] 11.2 Verify `apps/web` starts in the local environment (smoke test) — boot the app, sign in as admin, confirm `/admin/**` renders and a non-admin is blocked (no backend/codegen changes were made)
+- [x] 11.3 REFACTOR: Clean up e2e mocks/fixtures and shared test setup if needed
 
 ## 12. Change Review — Subagent Verification
 
