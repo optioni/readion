@@ -60,9 +60,9 @@
 
 ## 10. Review queue placeholder
 
-- [ ] 10.1 RED: Write unit test — the Review queue section renders a clear "not yet available" placeholder, issues NO request to any quarantine endpoint, and shows no fabricated items/verdicts/badge count (per reconciliation: no backend exists). Build to `AdminContentUsers.html` → `ContentQualityScreen` (descoped)
-- [ ] 10.2 GREEN: Implement the placeholder section
-- [ ] 10.3 REFACTOR: Ensure the AdminSidebar `Review queue` item carries no fabricated badge count
+- [x] 10.1 RED: Write unit test — the Review queue section renders a clear "not yet available" placeholder, issues NO request to any quarantine endpoint, and shows no fabricated items/verdicts/badge count (per reconciliation: no backend exists). Build to `AdminContentUsers.html` → `ContentQualityScreen` (descoped)
+- [x] 10.2 GREEN: Implement the placeholder section
+- [x] 10.3 REFACTOR: Ensure the AdminSidebar `Review queue` item carries no fabricated badge count
 
 ## 11. Acceptance Test — Outer Loop GREEN
 
