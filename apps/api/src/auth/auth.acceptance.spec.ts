@@ -276,6 +276,77 @@ describe('auth acceptance', () => {
     expect(reusedReset.status).toBe(400)
   })
 
+  it('changes the password, rotates the caller session, and revokes other refresh tokens', async () => {
+    const register = await registerUser(app, 'change@example.com', 'correcthorse')
+    expect(register.status).toBe(201)
+    const sessionCookies = register.headers['set-cookie']
+    const originalRefreshCookies = register.headers['set-cookie']
+
+    const change = await supertest(app.getHttpServer())
+      .post('/api/v1/auth/change-password')
+      .set('Authorization', `Bearer ${register.body.data.accessToken}`)
+      .set('Cookie', cookieState(sessionCookies))
+      .set('X-CSRF-Token', csrfToken(sessionCookies))
+      .send({ currentPassword: 'correcthorse', newPassword: 'batterystaple9' })
+
+    expect(change.status).toBe(200)
+    expect(change.body.data.accessToken).toEqual(expect.any(String))
+    expectRefreshCookie(change.headers['set-cookie'])
+
+    expect((await loginUser(app, 'change@example.com', 'correcthorse')).status).toBe(401)
+    expect((await loginUser(app, 'change@example.com', 'batterystaple9')).status).toBe(200)
+
+    const staleRefresh = await supertest(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .set('Cookie', cookieState(originalRefreshCookies))
+      .set('X-CSRF-Token', csrfToken(originalRefreshCookies))
+    expect(staleRefresh.status).toBe(401)
+  })
+
+  it('rejects a change with the wrong current password and leaves the hash unchanged', async () => {
+    const register = await registerUser(app, 'change-wrong@example.com', 'correcthorse')
+    expect(register.status).toBe(201)
+    const sessionCookies = register.headers['set-cookie']
+
+    const change = await supertest(app.getHttpServer())
+      .post('/api/v1/auth/change-password')
+      .set('Authorization', `Bearer ${register.body.data.accessToken}`)
+      .set('Cookie', cookieState(sessionCookies))
+      .set('X-CSRF-Token', csrfToken(sessionCookies))
+      .send({ currentPassword: 'wrongpassword', newPassword: 'batterystaple9' })
+
+    expect([401, 403]).toContain(change.status)
+    expect(change.body.type).toEqual(expect.any(String))
+    expect((await loginUser(app, 'change-wrong@example.com', 'correcthorse')).status).toBe(200)
+  })
+
+  it('rejects a weak new password with 422 and leaves the hash unchanged', async () => {
+    const register = await registerUser(app, 'change-weak@example.com', 'correcthorse')
+    expect(register.status).toBe(201)
+    const sessionCookies = register.headers['set-cookie']
+
+    const change = await supertest(app.getHttpServer())
+      .post('/api/v1/auth/change-password')
+      .set('Authorization', `Bearer ${register.body.data.accessToken}`)
+      .set('Cookie', cookieState(sessionCookies))
+      .set('X-CSRF-Token', csrfToken(sessionCookies))
+      .send({ currentPassword: 'correcthorse', newPassword: 'short' })
+
+    expect(change.status).toBe(422)
+    expect(change.body.errors).toEqual(
+      expect.arrayContaining([expect.objectContaining({ field: 'newPassword' })]),
+    )
+    expect((await loginUser(app, 'change-weak@example.com', 'correcthorse')).status).toBe(200)
+  })
+
+  it('rejects an unauthenticated change-password request', async () => {
+    const change = await supertest(app.getHttpServer())
+      .post('/api/v1/auth/change-password')
+      .send({ currentPassword: 'correcthorse', newPassword: 'batterystaple9' })
+
+    expect(change.status).toBe(401)
+  })
+
   it('sets secure refresh cookie attributes and never exposes refresh tokens in response bodies', async () => {
     const register = await registerUser(app, 'cookies@example.com', 'correcthorse')
     expect(register.status).toBe(201)
