@@ -41,7 +41,10 @@ describe('AuthService.changePassword', () => {
     passwords.verify.mockResolvedValue(false)
 
     await expect(
-      service.changePassword('user-1', { currentPassword: 'wrong', newPassword: 'new-strong-pass' }),
+      service.changePassword('user-1', {
+        currentPassword: 'wrong',
+        newPassword: 'new-strong-pass',
+      }),
     ).rejects.toBeInstanceOf(UnauthorizedException)
 
     expect(passwords.verify).toHaveBeenCalledWith('wrong', 'old-hash')
