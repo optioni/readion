@@ -65,6 +65,7 @@ describe('auth bootstrap', () => {
               emailVerified: true,
               displayTimezone: 'UTC',
               createdAt: '',
+              role: 'admin',
             },
           }),
           { status: 200 },
@@ -75,6 +76,7 @@ describe('auth bootstrap', () => {
 
     expect(auth.accessToken).toBe('new-tok')
     expect(auth.user?.email).toBe('a@b.com')
+    expect(auth.user?.role).toBe('admin')
     expect(auth.isAuthenticated).toBe(true)
   })
 

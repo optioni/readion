@@ -44,6 +44,7 @@ describe('AppNavBar logout', () => {
       emailVerified: true,
       displayTimezone: 'UTC',
       createdAt: '',
+      role: 'user',
     })
 
     const wrapper = mountComponent()
@@ -69,6 +70,7 @@ describe('AppNavBar logout', () => {
       emailVerified: true,
       displayTimezone: 'UTC',
       createdAt: '',
+      role: 'user',
     })
 
     const wrapper = mountComponent()
@@ -95,6 +97,7 @@ describe('AppNavBar settings nav', () => {
       emailVerified: true,
       displayTimezone: 'UTC',
       createdAt: '',
+      role: 'user',
     })
     return auth
   }

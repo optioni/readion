@@ -231,6 +231,7 @@ function seedAuth() {
     emailVerified: true,
     displayTimezone: 'Europe/Helsinki',
     createdAt: '',
+    role: 'user',
   })
   return auth
 }

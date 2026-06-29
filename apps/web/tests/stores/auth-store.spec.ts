@@ -43,10 +43,28 @@ describe('auth Pinia store', () => {
       emailVerified: true,
       displayTimezone: 'UTC',
       createdAt: new Date().toISOString(),
+      role: 'user',
     }
     auth.setSession('tok', user)
     expect(auth.accessToken).toBe('tok')
     expect(auth.user).toEqual(user)
+  })
+
+  it('round-trips the user role through setSession and setUser', () => {
+    const auth = useAuthStore()
+    const admin: AuthUser = {
+      id: '9',
+      email: 'admin@b.com',
+      emailVerified: true,
+      displayTimezone: 'UTC',
+      createdAt: '',
+      role: 'admin',
+    }
+    auth.setSession('tok', admin)
+    expect(auth.user?.role).toBe('admin')
+
+    auth.setUser({ ...admin, role: 'user' })
+    expect(auth.user?.role).toBe('user')
   })
 
   it('clear removes token and user', () => {
@@ -57,6 +75,7 @@ describe('auth Pinia store', () => {
       emailVerified: false,
       displayTimezone: 'UTC',
       createdAt: '',
+      role: 'user',
     })
     auth.clear()
     expect(auth.accessToken).toBeNull()
@@ -73,6 +92,7 @@ describe('auth Pinia store', () => {
       emailVerified: true,
       displayTimezone: 'UTC',
       createdAt: '',
+      role: 'user',
     }
     auth.setUser(user)
     expect(auth.user).toEqual(user)
