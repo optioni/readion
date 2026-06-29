@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import AgentBubble from '~/components/AgentBubble.vue'
+import { AGENT_COPY, AGENT_SUGGESTIONS } from '~/composables/agentChatCopy'
 import { useStandaloneAgentChat } from '~/composables/useStandaloneAgentChat'
 
 const { messages, isStreaming, send, newChat } = useStandaloneAgentChat()
 const input = ref('')
 
-const QUICK_SUGGESTIONS = ['Explain this topic', 'What should I study next?', 'Quiz me on this']
-
 async function handleSend(): Promise<void> {
   const content = input.value
   await send(content)
   input.value = ''
+}
+
+async function handleSuggestion(text: string): Promise<void> {
+  await send(text)
 }
 
 async function handleNewChat(): Promise<void> {
@@ -26,7 +29,10 @@ async function handleNewChat(): Promise<void> {
     class="flex min-h-0 flex-1 flex-col"
   >
     <div class="flex items-center justify-between border-b border-readion-border-strong px-5 py-3">
-      <h1 class="font-medium text-readion-text-primary text-sm">Ask AI</h1>
+      <div>
+        <h1 class="font-medium text-readion-text-primary text-sm">Ask AI</h1>
+        <p class="text-[10px] text-readion-text-muted">{{ AGENT_COPY.headerSubtitle }}</p>
+      </div>
       <div class="flex items-center gap-2">
         <span
           data-testid="agent-ttl-chip"
@@ -49,17 +55,24 @@ async function handleNewChat(): Promise<void> {
         data-testid="agent-empty-state"
         class="flex flex-col items-center gap-4 py-10 text-center"
       >
-        <p class="font-medium text-readion-text-primary text-sm">What would you like to learn today?</p>
-        <div class="flex flex-wrap justify-center gap-2">
-          <button
-            v-for="suggestion in QUICK_SUGGESTIONS"
-            :key="suggestion"
-            type="button"
-            data-testid="agent-suggestion"
-            class="rounded-full border border-readion-border-strong bg-readion-background-surface px-3 py-1 text-[11px] text-readion-text-muted transition-colors hover:text-readion-text-secondary"
-          >
-            {{ suggestion }}
-          </button>
+        <p class="font-medium text-readion-text-primary text-sm">{{ AGENT_COPY.emptyHeading }}</p>
+        <p class="max-w-xs text-[12px] text-readion-text-muted">{{ AGENT_COPY.emptyIntro }}</p>
+        <div class="flex flex-col items-center gap-2">
+          <p class="text-[10px] uppercase tracking-wider text-readion-text-muted">
+            {{ AGENT_COPY.suggestionsLabel }}
+          </p>
+          <div class="flex flex-wrap justify-center gap-2">
+            <button
+              v-for="suggestion in AGENT_SUGGESTIONS"
+              :key="suggestion"
+              type="button"
+              data-testid="agent-suggestion"
+              class="rounded-full border border-readion-border-strong bg-readion-background-surface px-3 py-1 text-[11px] text-readion-text-muted transition-colors hover:text-readion-text-secondary"
+              @click="handleSuggestion(suggestion)"
+            >
+              {{ suggestion }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -103,6 +116,9 @@ async function handleNewChat(): Promise<void> {
           </svg>
         </button>
       </div>
+      <p class="mt-1.5 text-center text-[10px] text-readion-text-muted">
+        {{ AGENT_COPY.inputFooter }}
+      </p>
     </div>
   </div>
 </template>
