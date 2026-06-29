@@ -93,7 +93,9 @@ describe('MockExamActiveScene', () => {
 
   it('renders the current question domain, stem, and options', () => {
     const wrapper = mountScene(examWith65())
-    expect(wrapper.find('[data-testid="exam-domain-tag"]').text()).toContain('Resilient Architectures')
+    expect(wrapper.find('[data-testid="exam-domain-tag"]').text()).toContain(
+      'Resilient Architectures',
+    )
     expect(wrapper.find('[data-testid="exam-question-stem"]').text()).toContain(
       'Availability Zone redundancy',
     )
@@ -102,7 +104,9 @@ describe('MockExamActiveScene', () => {
 
   it('shows the 1-based question counter for a zero-based position', () => {
     const wrapper = mountScene(examWith65())
-    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(/Question\s+1\s+of\s+65/)
+    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
+      /Question\s+1\s+of\s+65/,
+    )
   })
 
   it('persists the chosen answer at the zero-based index and marks it answered', async () => {
@@ -152,25 +156,35 @@ describe('MockExamActiveScene', () => {
     const wrapper = mountScene(examWith65())
 
     await wrapper.find('[data-testid="exam-next-button"]').trigger('click')
-    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(/Question\s+2\s+of/)
+    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
+      /Question\s+2\s+of/,
+    )
 
     await wrapper.find('[data-testid="exam-skip-button"]').trigger('click')
-    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(/Question\s+3\s+of/)
+    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
+      /Question\s+3\s+of/,
+    )
 
     await wrapper.find('[data-testid="exam-prev-button"]').trigger('click')
-    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(/Question\s+2\s+of/)
+    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
+      /Question\s+2\s+of/,
+    )
   })
 
   it('clamps Previous at the first question', async () => {
     const wrapper = mountScene(examWith65())
     await wrapper.find('[data-testid="exam-prev-button"]').trigger('click')
-    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(/Question\s+1\s+of/)
+    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
+      /Question\s+1\s+of/,
+    )
   })
 
   it('navigates to a question when its nav square is clicked', async () => {
     const wrapper = mountScene(examWith65())
     await wrapper.findAll('[data-testid="exam-nav-square"]')[3]!.trigger('click')
-    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(/Question\s+4\s+of/)
+    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
+      /Question\s+4\s+of/,
+    )
   })
 
   it('emits submit when the nav submit button is clicked', async () => {
@@ -192,7 +206,9 @@ describe('MockExamActiveScene', () => {
       ]
       const wrapper = mountScene(buildExam(questions))
 
-      expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(/Question\s+6\s+of\s+7/)
+      expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
+        /Question\s+6\s+of\s+7/,
+      )
       const squares = wrapper.findAll('[data-testid="exam-nav-square"]')
       for (let index = 0; index < 5; index += 1) {
         expect(squares[index]!.attributes('data-state')).toBe('answered')
@@ -202,7 +218,9 @@ describe('MockExamActiveScene', () => {
     it('opens at the first question when every question is answered', () => {
       const questions = [question(0, Q0_OPTIONS[1]), question(1, 'Option B for Q2')]
       const wrapper = mountScene(buildExam(questions))
-      expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(/Question\s+1\s+of\s+2/)
+      expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
+        /Question\s+1\s+of\s+2/,
+      )
     })
   })
 

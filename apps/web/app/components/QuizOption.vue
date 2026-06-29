@@ -8,6 +8,7 @@ const props = defineProps<{
   letter: string
   text: string
   state: QuizOptionState
+  testId?: string
 }>()
 
 defineEmits<{ select: [] }>()
@@ -31,7 +32,7 @@ const containerClass = computed<string>(() => {
 <template>
   <button
     type="button"
-    data-testid="quiz-option"
+    :data-testid="props.testId ?? 'quiz-option'"
     :data-state="state"
     class="flex w-full items-start gap-3 rounded-md border bg-readion-background-base px-3.5 py-2.5 text-left text-sm leading-snug"
     :class="containerClass"

@@ -35,10 +35,12 @@ export function buildExamNavSquares(input: ExamNavSquaresInput): NavSquare[] {
   const answered = new Set(input.answeredIndices ?? [])
   return Array.from({ length: input.total }, (_, index) => {
     let state: NavSquareState = 'unanswered'
-    if (index === input.currentIndex) {
-      state = 'current'
-    } else if (answered.has(index)) {
+    // Answered wins over current: a question keeps its answered marker even while it is the one on
+    // screen, so persisting an answer to the current question flips its square immediately.
+    if (answered.has(index)) {
       state = 'answered'
+    } else if (index === input.currentIndex) {
+      state = 'current'
     }
     return { index, label: index + 1, state }
   })
