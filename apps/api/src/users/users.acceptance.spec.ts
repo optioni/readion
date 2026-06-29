@@ -116,6 +116,98 @@ describe('users acceptance', () => {
     expect(persisted.emailVerified).toBe(false)
   })
 
+  it('GET /api/v1/users/me exposes digestOptOut and PATCH round-trips true then false', async () => {
+    const register = await registerUser(app, 'digest-profile@example.com', 'correcthorse')
+    expect(register.status).toBe(201)
+    const authorization = `Bearer ${register.body.data.accessToken}`
+    const userId = register.body.data.user.id
+
+    const initial = await supertest(app.getHttpServer())
+      .get('/api/v1/users/me')
+      .set('Authorization', authorization)
+    expect(initial.status).toBe(200)
+    expect(initial.body.data).toMatchObject({ digestOptOut: false })
+
+    const optOut = await supertest(app.getHttpServer())
+      .patch('/api/v1/users/me')
+      .set('Authorization', authorization)
+      .send({ digestOptOut: true })
+    expect(optOut.status).toBe(200)
+    expect(optOut.body.data).toMatchObject({ digestOptOut: true })
+
+    em.clear()
+    const afterOptOut = await em.findOneOrFail(User, { id: userId })
+    expect(afterOptOut.digestOptOut).toBe(true)
+
+    const optBackIn = await supertest(app.getHttpServer())
+      .patch('/api/v1/users/me')
+      .set('Authorization', authorization)
+      .send({ digestOptOut: false })
+    expect(optBackIn.status).toBe(200)
+    expect(optBackIn.body.data).toMatchObject({ digestOptOut: false })
+
+    em.clear()
+    const afterOptIn = await em.findOneOrFail(User, { id: userId })
+    expect(afterOptIn.digestOptOut).toBe(false)
+  })
+
+  it('PATCH /api/v1/users/me rejects a non-boolean digestOptOut with 422 and leaves the stored value unchanged', async () => {
+    const register = await registerUser(app, 'digest-invalid@example.com', 'correcthorse')
+    expect(register.status).toBe(201)
+    const authorization = `Bearer ${register.body.data.accessToken}`
+    const userId = register.body.data.user.id
+
+    const invalid = await supertest(app.getHttpServer())
+      .patch('/api/v1/users/me')
+      .set('Authorization', authorization)
+      .send({ digestOptOut: 'yes' })
+    expect(invalid.status).toBe(422)
+    expect(invalid.body.errors).toEqual(
+      expect.arrayContaining([expect.objectContaining({ field: 'digestOptOut' })]),
+    )
+
+    em.clear()
+    const persisted = await em.findOneOrFail(User, { id: userId })
+    expect(persisted.digestOptOut).toBe(false)
+  })
+
+  it('opt-out via the tokenized email link and opt back in via PATCH converge on the same field', async () => {
+    const register = await registerUser(app, 'digest-converge@example.com', 'correcthorse')
+    expect(register.status).toBe(201)
+    const authorization = `Bearer ${register.body.data.accessToken}`
+    const userId = register.body.data.user.id
+
+    const seeded = await em.findOneOrFail(User, { id: userId })
+    seeded.unsubscribeToken = 'converge-token-123'
+    await em.flush()
+
+    const unsubscribe = await supertest(app.getHttpServer()).get(
+      '/api/v1/email/unsubscribe?token=converge-token-123',
+    )
+    expect(unsubscribe.status).toBe(200)
+
+    em.clear()
+    const afterLink = await em.findOneOrFail(User, { id: userId })
+    expect(afterLink.digestOptOut).toBe(true)
+
+    const profileAfterLink = await supertest(app.getHttpServer())
+      .get('/api/v1/users/me')
+      .set('Authorization', authorization)
+    expect(profileAfterLink.status).toBe(200)
+    expect(profileAfterLink.body.data).toMatchObject({ digestOptOut: true })
+
+    const optBackIn = await supertest(app.getHttpServer())
+      .patch('/api/v1/users/me')
+      .set('Authorization', authorization)
+      .send({ digestOptOut: false })
+    expect(optBackIn.status).toBe(200)
+    expect(optBackIn.body.data).toMatchObject({ digestOptOut: false })
+
+    em.clear()
+    const converged = await em.findOneOrFail(User, { id: userId })
+    expect(converged.digestOptOut).toBe(false)
+  })
+
   it('DELETE /api/v1/users/me soft-deletes an account, revokes tokens, and releases email', async () => {
     const admin = await registerUser(app, 'admin@example.com', 'correcthorse')
     expect(admin.status).toBe(201)
