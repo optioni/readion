@@ -125,7 +125,9 @@ export function useProgressData(enrollmentId: string) {
   // ─── Raw values ─────────────────────────────────────────────────────────────
 
   const sessions = computed(() => sessionsQuery.data.value?.sessions ?? [])
-  const summariesMap = computed(() => sessionsQuery.data.value?.summariesMap ?? new Map())
+  const summariesMap = computed(
+    () => sessionsQuery.data.value?.summariesMap ?? new Map<string, SessionSummaryResponseDto>(),
+  )
   const mockExams = computed(() => mockExamsQuery.data.value?.data ?? [])
   const weakAreasRaw = computed(() => weakAreasQuery.data.value?.data ?? [])
   const domains = computed(() => certQuery.data.value?.data.domains ?? [])
