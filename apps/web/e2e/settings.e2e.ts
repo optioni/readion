@@ -16,7 +16,7 @@ import { mockSettings, SETTINGS_PROFILE } from './support/settings-seed'
 //
 // Consumed endpoints (all already committed in apps/web/src/api/)
 //   GET    /api/v1/users/me              (profile read — narrowed via userProfileResponseSchema)
-//   PATCH  /api/v1/users/me              ({ displayTimezone } and/or { sessionDefaults } only)
+//   PATCH  /api/v1/users/me              ({ displayTimezone }, { sessionDefaults }, and/or { digestOptOut })
 //   DELETE /api/v1/users/me              ({ password } → 204 logout+redirect / 401 invalid)
 //   POST   /api/v1/auth/change-password  ({ currentPassword, newPassword } → 200 / 401 wrong current)
 //
@@ -35,8 +35,10 @@ import { mockSettings, SETTINGS_PROFILE } from './support/settings-seed'
 //                    confirm-delete-btn, delete-account-error
 //   Study defaults : reuses OnboardingSessionPrefs option buttons (duration-option-60,
 //                    learning-style-spaced-repetition, …) + save-defaults-btn
-//   Notifications  : digest-opt-out-info (informational); NO toggles for review reminders /
-//                    streak alerts / exam countdown / in-app (those testids MUST be absent)
+//   Notifications  : digest-toggle (role="switch" weekly-digest opt-out, two-way; ON = subscribed =
+//                    !digestOptOut, OFF sends digestOptOut: true; digest-error on failure); NO toggles
+//                    for review reminders / streak alerts / exam countdown / in-app (those testids MUST
+//                    be absent)
 // ============================================================================
 
 test.describe('web-settings — settings page', () => {
@@ -61,7 +63,7 @@ test.describe('web-settings — settings page', () => {
     await expect(page.getByTestId('account-avatar')).toBeVisible()
     await expect(page.getByTestId('account-full-name')).toHaveCount(0)
 
-    // --- Notifications tab: digest opt-out only, no unbacked toggles, no profile mutation ---
+    // --- Notifications tab: weekly-digest toggle (two-way), no unbacked toggles ---
     await page.getByTestId('settings-tab-notifications').click()
     await expect(page.getByTestId('settings-tab-notifications')).toHaveAttribute(
       'aria-selected',
@@ -69,11 +71,26 @@ test.describe('web-settings — settings page', () => {
     )
     await expect(page.getByTestId('settings-tab-account')).toHaveAttribute('aria-selected', 'false')
     await expect(page.getByTestId('notifications-panel')).toBeVisible()
-    await expect(page.getByTestId('digest-opt-out-info')).toBeVisible()
+
+    // Seeded from the profile: digestOptOut: false → subscribed → switch ON.
+    const digestToggle = page.getByTestId('digest-toggle')
+    await expect(digestToggle).toBeVisible()
+    await expect(digestToggle).toHaveAttribute('aria-checked', 'true')
+
     await expect(page.getByTestId('notif-toggle-review-reminders')).toHaveCount(0)
     await expect(page.getByTestId('notif-toggle-streak-alerts')).toHaveCount(0)
     await expect(page.getByTestId('notif-toggle-exam-countdown')).toHaveCount(0)
     await expect(page.getByTestId('notif-toggle-in-app')).toHaveCount(0)
+
+    // Toggle OFF → unsubscribe: PATCH { digestOptOut: true }, switch reflects persisted state.
+    await digestToggle.click()
+    await expect.poll(() => handles.profilePatches.at(-1)).toMatchObject({ digestOptOut: true })
+    await expect(digestToggle).toHaveAttribute('aria-checked', 'false')
+
+    // Toggle back ON → resubscribe: PATCH { digestOptOut: false }.
+    await digestToggle.click()
+    await expect.poll(() => handles.profilePatches.at(-1)).toMatchObject({ digestOptOut: false })
+    await expect(digestToggle).toHaveAttribute('aria-checked', 'true')
 
     // --- Study defaults tab: edit two of the five defaults and save ---
     await page.getByTestId('settings-tab-study-defaults').click()

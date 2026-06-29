@@ -35,6 +35,7 @@ type Profile = {
   emailVerified: boolean
   displayTimezone: string
   sessionDefaults: SessionDefaults
+  digestOptOut: boolean
 }
 
 // The /users/me body satisfies both the auth bootstrap (id/email/emailVerified/displayTimezone) and
@@ -52,6 +53,7 @@ export const SETTINGS_PROFILE: Profile = {
     focusArea: 'auto',
     learningStyle: 'weak-area-focus',
   },
+  digestOptOut: false,
 }
 
 // Captured request payloads + counts the acceptance test asserts against. Populated by the route
@@ -186,6 +188,9 @@ export function mockSettings(
       }
       if (body.sessionDefaults && typeof body.sessionDefaults === 'object') {
         Object.assign(profile.sessionDefaults, body.sessionDefaults as Partial<SessionDefaults>)
+      }
+      if (typeof body.digestOptOut === 'boolean') {
+        profile.digestOptOut = body.digestOptOut
       }
       await fulfilJson(route, 200, { data: profile })
       return
