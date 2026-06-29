@@ -9,8 +9,8 @@
       >
         <h3 class="font-medium text-slate-100 text-sm">Weekly progress digest</h3>
         <p class="text-slate-400 text-sm">
-          We send a weekly digest summarising your study progress. To stop receiving it, use the
-          one-click unsubscribe link at the bottom of any digest email — there's no toggle to manage
+          We email you a weekly digest summarising your study progress. To opt out, use the
+          one-click unsubscribe link at the foot of any digest email — there's nothing to toggle
           here.
         </p>
       </div>
