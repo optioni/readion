@@ -48,9 +48,9 @@
 
 ## 8. Cert setup — Step 3 sources + read-only coverage, Step 4 draft submit
 
-- [ ] 8.1 RED: Write unit test — Step 3 registers suggested/manual sources via `contentControllerRegister` ("Approve"=register, "Reject"=discard; no pending-review status, no upload); coverage bars render read-only from `certificationCoverageControllerCoverage`; NO "Admin review sign-off". Step 4 submits `certSetupControllerCreate` with the four fields + `provenance` map (built via `@readion/shared` `buildProvenanceMap`) + `sourceUrl`, creating a `draft`; NO "Publish" button (go-live is automatic); a `409` (duplicate code) or `422` (domain weights ≠ 100) response surfaces the error and keeps fields editable, and submit is gated on a client-side weight-sum check. Build to `AdminCertSetup.html` → `ContentSourcesScreen` + `ReviewPublishScreen`. SPEC.md → Certification Setup & Grounding ("Draft → live is automatic")
-- [ ] 8.2 GREEN: Implement Step 3 (sources + coverage) and Step 4 (review + draft create)
-- [ ] 8.3 REFACTOR: Reuse the coverage-bar component across step 3/4
+- [x] 8.1 RED: Write unit test — Step 3 registers suggested/manual sources via `contentControllerRegister` ("Approve"=register, "Reject"=discard; no pending-review status, no upload); coverage bars render read-only from `certificationCoverageControllerCoverage`; NO "Admin review sign-off". Step 4 submits `certSetupControllerCreate` with the four fields + `provenance` map (built via `@readion/shared` `buildProvenanceMap`) + `sourceUrl`, creating a `draft`; NO "Publish" button (go-live is automatic); a `409` (duplicate code) or `422` (domain weights ≠ 100) response surfaces the error and keeps fields editable, and submit is gated on a client-side weight-sum check. Build to `AdminCertSetup.html` → `ContentSourcesScreen` + `ReviewPublishScreen`. SPEC.md → Certification Setup & Grounding ("Draft → live is automatic")
+- [x] 8.2 GREEN: Implement Step 3 (sources + coverage) and Step 4 (review + draft create)
+- [x] 8.3 REFACTOR: Reuse the coverage-bar component across step 3/4
 
 ## 9. Cert re-verification (due list + client diff)
 
