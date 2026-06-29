@@ -42,9 +42,9 @@
 
 ## 7. Cert setup — Step 2 grounded extraction + citations
 
-- [ ] 7.1 RED: Write unit test — confirming a source calls `certSetupControllerExtract` (202 + `jobId`); poll `certSetupControllerReadExtraction` until `fields` present; render the four grounded fields (`domains`, `questionCount`, `passingScore`, `timeLimitMinutes`) — `{ value, citation }` shows the value next to its cited passage/url, `{ unverified: true }` shows the "unverified — confirm manually" state; admin enters `name`/`provider`/`code`; per-field Confirm/Flag is client state; NO invented fields (cost/prereq/validity/etc.). Build to `AdminCertSetup.html` → `FieldExtractionScreen`. SPEC.md → Certification Setup & Grounding; Grounding & Verification
-- [ ] 7.2 GREEN: Implement the extraction poll + per-field citation/review panel
-- [ ] 7.3 REFACTOR: Extract the citation panel / field-row components
+- [x] 7.1 RED: Write unit test — confirming a source calls `certSetupControllerExtract` (202 + `jobId`); poll `certSetupControllerReadExtraction` until `fields` present; render the four grounded fields (`domains`, `questionCount`, `passingScore`, `timeLimitMinutes`) — `{ value, citation }` shows the value next to its cited passage/url, `{ unverified: true }` shows the "unverified — confirm manually" state; admin enters `name`/`provider`/`code`; per-field Confirm/Flag is client state; NO invented fields (cost/prereq/validity/etc.). Build to `AdminCertSetup.html` → `FieldExtractionScreen`. SPEC.md → Certification Setup & Grounding; Grounding & Verification
+- [x] 7.2 GREEN: Implement the extraction poll + per-field citation/review panel
+- [x] 7.3 REFACTOR: Extract the citation panel / field-row components
 
 ## 8. Cert setup — Step 3 sources + read-only coverage, Step 4 draft submit
 
