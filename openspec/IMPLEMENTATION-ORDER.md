@@ -87,7 +87,13 @@ graph TD
   settings[web-settings]
   webadmin[web-admin]
 
-  %% Phase 11 — Deployment
+  %% Phase 11 — Backend follow-ups (post-Phase-10)
+  authpw[auth-change-password]
+  digesttoggle[profile-digest-toggle]
+  quarantine[quarantine-review-queue]
+  selfgrade[review-self-grade]
+
+  %% Phase 12 — Deployment
   k8s[k8s-deployment]
 
   %% --- edges ---
@@ -216,6 +222,17 @@ graph TD
   certsetup --> webadmin
   admin --> webadmin
 
+  auth --> authpw
+  settings --> authpw
+  users --> digesttoggle
+  emaillc --> digesttoggle
+  settings --> digesttoggle
+  ground --> quarantine
+  admin --> quarantine
+  webadmin --> quarantine
+  review --> selfgrade
+  webprogress --> selfgrade
+
   scaffold --> k8s
   obs --> k8s
 ```
@@ -310,7 +327,18 @@ graph TD
 | `web-settings` | Account tab (profile read/update, password change, delete-account/danger zone), Study-defaults tab (session preference defaults), Notifications tab (email + in-app opt-out toggles, digest unsubscribe). | Frontend → Settings; UsersModule; Account Deletion; Session Personalization (defaults); Email (digest opt-out) | `web-settings` | `Settings.html` | `web-foundation`, `web-auth`, `users`, `email-lifecycle` |
 | `web-admin` | Cert setup UI, quarantine review, source mgmt, job status, user mgmt, re-verification, audit log. | Frontend → Admin | `web-admin` | `AdminCertSetup.html`, `AdminContentUsers.html` | `web-foundation`, `content-admin`, `cert-setup-grounding`, `admin` |
 
-### Phase 11 — Deployment
+### Phase 11 — Backend follow-ups (post-Phase-10)
+
+Gaps surfaced while reconciling the Phase-10 frontend against the implemented backend contracts (each was flagged in the relevant `web-*` change's `design.md`). They are backend-first additions that complete a frontend stopgap or placeholder. `Capabilities` lists new specs introduced; capabilities marked _(modified)_ are existing specs this change adds a delta to, not new ones.
+
+| Change | Scope | Spec refs | Capabilities | Depends on |
+|---|---|---|---|---|
+| `auth-change-password` | Authenticated `POST /api/v1/auth/change-password` (verify current password, ≥8-char strength rule, revoke other refresh tokens); `web-settings` Account tab replaces the forgot-password email stopgap with a real form. | Authentication & Authorisation; Password Reset Flow (extends); Frontend → Settings | `authentication` _(modified)_, `web-settings` _(modified)_ | `auth`, `web-settings` |
+| `profile-digest-toggle` | Expose `digestOptOut` on `GET`/`PATCH /api/v1/users/me` as a two-way toggle (keeps the tokenized email unsubscribe); `web-settings` Notifications tab becomes a real switch. | UsersModule; Email (digest opt-out); Frontend → Settings | `user-profile` _(modified)_, `lifecycle-email` _(modified)_, `web-settings` _(modified)_ | `users`, `email-lifecycle`, `web-settings` |
+| `quarantine-review-queue` | Persist grounding-quarantined items + admin list/approve/reject (audit-logged); `web-admin` review-queue placeholder becomes real. | AI / LLM Integration → Grounding & Verification (quarantine); AdminModule; Frontend → Admin | `content-quarantine-review`, `grounding-verification` _(modified)_, `web-admin` _(modified)_ | `grounding-verification`, `admin`, `web-admin` |
+| `review-self-grade` | Explicit Again/Hard/Good/Easy self-grade mapped onto the existing Leitner boxes (alongside the quiz+confidence path); `web-progress` review loop. | ReviewModule; Spaced Repetition & Review Queue; Frontend → Progress | `spaced-repetition` _(modified)_, `web-progress` _(modified)_ | `review-srs`, `web-progress` |
+
+### Phase 12 — Deployment
 | Change | Scope | Spec refs | Capabilities | Depends on |
 |---|---|---|---|---|
 | `k8s-deployment` | Per-app Deployments/Services/Ingress, ConfigMap/Secret, migration `Job` (pre-sync hook), ArgoCD + Image Updater, scrapper sidecar. | Infrastructure (Kubernetes, Database Migrations, CI/CD) | `kubernetes-deployment`, `db-migration-job` | `scaffold-monorepo`, `observability` (logically after all feature work) |
@@ -335,6 +363,7 @@ Each entity (from SPEC → Core Entities) is created — table + migration — b
 | `AgentConversation` | `agent` | |
 | `AgentMessage` | `agent` | JSONB `CoreMessage` rows |
 | `AuditLog` | `admin` | Append-only; written to by every privileged-action change |
+| `QuarantinedItem` | `quarantine-review-queue` | Persisted grounding-quarantine record (verifier verdict/reason + provenance); admin-listable, approve/reject. Currently quarantine is ephemeral/metric-only — confirm before sizing |
 
 ## Cross-cutting deliverables
 
