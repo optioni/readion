@@ -15,7 +15,12 @@ import { onboardingQueryKeys } from '~/composables/onboardingQueryKeys'
 import { readProfileEnvelope } from '~/composables/useOnboardingGate'
 import { usersControllerGetMe } from '~~/src/api/users/users'
 
-const emit = defineEmits<{ confirm: [defaults: SessionDefaults] }>()
+withDefaults(defineProps<{ showConfirm?: boolean }>(), { showConfirm: true })
+
+const emit = defineEmits<{
+  confirm: [defaults: SessionDefaults]
+  update: [defaults: SessionDefaults]
+}>()
 
 const profileQuery = useQuery({
   queryKey: onboardingQueryKeys.profile(),
@@ -32,6 +37,14 @@ watch(
     }
   },
   { immediate: true },
+)
+
+watch(
+  selected,
+  () => {
+    emit('update', sessionDefaultsSchema.parse({ ...selected }))
+  },
+  { deep: true, immediate: true },
 )
 
 const fields = [
@@ -107,6 +120,7 @@ function confirm() {
     </div>
 
     <button
+      v-if="showConfirm"
       type="button"
       class="self-end rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90"
       @click="confirm"

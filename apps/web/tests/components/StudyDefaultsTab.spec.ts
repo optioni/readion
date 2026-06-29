@@ -102,7 +102,9 @@ describe('StudyDefaultsTab renders all five session defaults', () => {
     const { wrapper } = mountTab()
     await flushPromises()
 
-    const confirm = wrapper.findAll('button').find((button) => /confirm|enroll/i.test(button.text()))
+    const confirm = wrapper
+      .findAll('button')
+      .find((button) => /confirm|enroll/i.test(button.text()))
     expect(confirm).toBeUndefined()
   })
 })
