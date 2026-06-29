@@ -75,7 +75,8 @@ describe('useSessionHistoryMerge', () => {
 
   it('populates questionsAnswered, accuracy, and readinessDelta from the summary for a completed session', () => {
     const sessions = [makeSession('s-1', '2026-01-01T10:00:00Z')]
-    const summaries = new Map([['s-1', makeSummary(12, 83, 5)]])
+    // Summary accuracy is a 0-1 fraction from the API; the merge composable scales it to 0-100.
+    const summaries = new Map([['s-1', makeSummary(12, 0.83, 5)]])
 
     const [row] = useSessionHistoryMerge(sessions, [], summaries)
 
@@ -139,7 +140,8 @@ describe('useSessionHistoryMerge', () => {
 
   it('sets readinessDelta to null when summary readiness.delta is null', () => {
     const sessions = [makeSession('s-1', '2026-01-01T10:00:00Z')]
-    const summaries = new Map([['s-1', makeSummary(10, 80, null)]])
+    // Accuracy is a 0-1 fraction from the API.
+    const summaries = new Map([['s-1', makeSummary(10, 0.80, null)]])
 
     const [row] = useSessionHistoryMerge(sessions, [], summaries)
 

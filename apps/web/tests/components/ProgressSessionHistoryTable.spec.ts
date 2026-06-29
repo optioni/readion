@@ -73,3 +73,57 @@ describe('ProgressSessionHistoryTable', () => {
     expect(wrapper.text().toLowerCase()).toContain('no sessions')
   })
 })
+
+describe('ProgressSessionHistoryTable — full column set (W1)', () => {
+  it('renders the questions-answered count when present', () => {
+    const wrapper = mount(ProgressSessionHistoryTable, {
+      props: { rows: [makeRow({ questionsAnswered: 8 })] },
+    })
+    expect(wrapper.find('[data-testid="progress-session-row"]').text()).toContain('8')
+  })
+
+  it('renders "—" for questions-answered when null', () => {
+    const wrapper = mount(ProgressSessionHistoryTable, {
+      props: { rows: [makeRow({ questionsAnswered: null })] },
+    })
+    const row = wrapper.find('[data-testid="session-questions"]')
+    expect(row.exists()).toBe(true)
+    expect(row.text()).toBe('—')
+  })
+
+  it('renders the duration in minutes when present', () => {
+    const wrapper = mount(ProgressSessionHistoryTable, {
+      props: { rows: [makeRow({ durationMinutes: 60 })] },
+    })
+    const cell = wrapper.find('[data-testid="session-duration"]')
+    expect(cell.exists()).toBe(true)
+    expect(cell.text()).toContain('60')
+  })
+
+  it('renders "—" for duration when null', () => {
+    const wrapper = mount(ProgressSessionHistoryTable, {
+      props: { rows: [makeRow({ durationMinutes: null })] },
+    })
+    const cell = wrapper.find('[data-testid="session-duration"]')
+    expect(cell.exists()).toBe(true)
+    expect(cell.text()).toBe('—')
+  })
+
+  it('renders a delta-badge for readinessDelta when present', () => {
+    const wrapper = mount(ProgressSessionHistoryTable, {
+      props: { rows: [makeRow({ readinessDelta: 7 })] },
+    })
+    const cell = wrapper.find('[data-testid="session-readiness-delta"]')
+    expect(cell.exists()).toBe(true)
+    expect(cell.find('[data-testid="delta-badge"]').exists()).toBe(true)
+  })
+
+  it('renders "—" for readiness-delta when null', () => {
+    const wrapper = mount(ProgressSessionHistoryTable, {
+      props: { rows: [makeRow({ readinessDelta: null })] },
+    })
+    const cell = wrapper.find('[data-testid="session-readiness-delta"]')
+    expect(cell.exists()).toBe(true)
+    expect(cell.text()).toBe('—')
+  })
+})

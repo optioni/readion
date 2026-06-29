@@ -2,14 +2,16 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ProgressDomainRow from '~/components/ProgressDomainRow.vue'
 import { suppressDomain } from '~/composables/progressApi'
+import { progressQueryKeys } from '~/composables/progressQueryKeys'
 
 vi.mock('~/composables/progressApi', () => ({
   suppressDomain: vi.fn(),
 }))
 
-// biome-ignore lint/suspicious/noExplicitAny: test invalidation stub
+const mockInvalidateQueries = vi.fn()
+
 vi.mock('@tanstack/vue-query', () => ({
-  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+  useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
 }))
 
 function mountRow(
@@ -37,6 +39,7 @@ function mountRow(
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(suppressDomain).mockResolvedValue({ suppressedCount: 1 })
+  mockInvalidateQueries.mockResolvedValue(undefined)
 })
 
 describe('ProgressDomainRow — structure', () => {
@@ -124,5 +127,18 @@ describe('ProgressDomainRow — mark mastered', () => {
   it('does not render unretire-button', () => {
     const wrapper = mountRow()
     expect(wrapper.find('[data-testid="unretire-button"]').exists()).toBe(false)
+  })
+
+  it('invalidates both weak-areas and review-queue queries after suppress-domain (W3)', async () => {
+    const wrapper = mountRow({ domain: 'Secure Architectures', enrollmentId: 'enr-1' })
+    await wrapper.find('[data-testid="mark-mastered-button"]').trigger('click')
+    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick()
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: progressQueryKeys.weakAreas('enr-1'),
+    })
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: progressQueryKeys.reviewQueue('enr-1'),
+    })
   })
 })
