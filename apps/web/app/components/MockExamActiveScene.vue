@@ -7,6 +7,7 @@ import QuizOption, { type QuizOptionState } from '~/components/QuizOption.vue'
 import { firstUnansweredIndex, optionLetter } from '~/composables/examQuestionPosition'
 import { useDeadlineCountdown } from '~/composables/useDeadlineCountdown'
 import { useMockExamAnswers } from '~/composables/useMockExamAnswers'
+import { useMockExamSubmit } from '~/composables/useMockExamSubmit'
 
 const props = defineProps<{
   exam: MockExamResponse
@@ -14,8 +15,6 @@ const props = defineProps<{
   certCode: string
   certName?: string
 }>()
-
-const emit = defineEmits<{ submit: []; 'time-up': [] }>()
 
 const URGENT_THRESHOLD_SECONDS = 300
 
@@ -26,11 +25,19 @@ const { answeredIndices, answerFor, recordAnswer } = useMockExamAnswers(
   props.exam.questions,
 )
 
+const { confirmOpen, requestSubmit, cancelSubmit, confirmSubmit, autoSubmit } = useMockExamSubmit(
+  props.examId,
+)
+
+const unansweredCount = computed<number>(
+  () => props.exam.questions.length - answeredIndices.value.length,
+)
+
 const deadline = toRef(props.exam, 'deadline')
 const remainingSeconds = toRef(props.exam, 'remainingSeconds')
-const { remaining, paused } = useDeadlineCountdown(deadline, remainingSeconds, () =>
-  emit('time-up'),
-)
+const { remaining, paused } = useDeadlineCountdown(deadline, remainingSeconds, () => {
+  void autoSubmit()
+})
 
 // `remaining` is `HH:MM:SS`; flag the timer urgent only inside the final five minutes (paused renders
 // the `--:--:--` placeholder, which parses to NaN and is treated as not-urgent).
@@ -69,7 +76,7 @@ function goNext(): void {
 <template>
   <div
     data-testid="exam-active-scene"
-    class="flex min-h-0 flex-1 flex-col bg-readion-background-base"
+    class="relative flex min-h-0 flex-1 flex-col bg-readion-background-base"
   >
     <ExamHeader
       :cert-code="certCode"
@@ -148,8 +155,44 @@ function goNext(): void {
         :current-index="currentIndex"
         :answered-indices="answeredIndices"
         @navigate="(index) => (currentIndex = index)"
-        @submit="emit('submit')"
+        @submit="requestSubmit"
       />
+    </div>
+
+    <div
+      v-if="confirmOpen"
+      class="absolute inset-0 z-10 flex items-center justify-center bg-readion-background-base/70 p-6"
+    >
+      <div
+        data-testid="exam-submit-confirm"
+        class="w-full max-w-[420px] rounded-xl border border-readion-border-strong bg-readion-surface p-6"
+      >
+        <h2 class="mb-2 font-medium text-base text-readion-text-primary">Submit exam?</h2>
+        <p class="mb-5 text-[13px] text-readion-text-secondary leading-relaxed">
+          You have
+          <span class="font-medium text-readion-text-primary">{{ unansweredCount }}</span>
+          unanswered {{ unansweredCount === 1 ? 'question' : 'questions' }}. Unanswered questions
+          are scored as incorrect and cannot be changed after you submit.
+        </p>
+        <div class="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            data-testid="exam-submit-cancel-button"
+            class="rounded-md border border-readion-border-strong px-4 py-2 text-[13px] text-readion-text-secondary"
+            @click="cancelSubmit"
+          >
+            Keep going
+          </button>
+          <button
+            type="button"
+            data-testid="exam-submit-confirm-button"
+            class="rounded-md bg-readion-primary px-5 py-2 font-medium text-[13px] text-white"
+            @click="confirmSubmit"
+          >
+            Submit exam
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
