@@ -72,12 +72,12 @@
 
 ## 12. Change Review — Subagent Verification
 
-- [ ] 12.1 Dispatch a subagent to review the change against proposal.md, the spec scenarios, and design.md (reviewer reports findings only, does not edit code)
-- [ ] 12.2 Triage findings: fix every CRITICAL, resolve or accept each WARNING, note SUGGESTIONs; re-run affected tests
+- [x] 12.1 Dispatch a subagent to review the change against proposal.md, the spec scenarios, and design.md (reviewer reports findings only, does not edit code)
+- [x] 12.2 Triage findings: fix every CRITICAL, resolve or accept each WARNING, note SUGGESTIONs; re-run affected tests
 
 ## 13. Polish
 
-- [ ] 13.1 Run linter and fix all errors (`yarn lint`)
-- [ ] 13.2 Run formatter and apply fixes (`yarn format`)
-- [ ] 13.3 Run type checker with zero errors (`yarn workspace apps/web typecheck` / `yarn typecheck`)
-- [ ] 13.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn workspace apps/web test:coverage`)
+- [x] 13.1 Run linter and fix all errors (`yarn lint`)
+- [x] 13.2 Run formatter and apply fixes (`yarn format`)
+- [x] 13.3 Run type checker with zero errors (`yarn workspace apps/web typecheck` / `yarn typecheck`)
+- [x] 13.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn workspace apps/web test:coverage`)
