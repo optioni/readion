@@ -120,9 +120,9 @@ function buildQuestion({ index, terminal, answers }: QuestionState): MockExamQue
   const correctAnswer = options[1]
   let userAnswer: string | null = null
   if (index === 0) {
-    userAnswer = options[2]
+    userAnswer = options[2] ?? null
   } else if (index === 1) {
-    userAnswer = options[1]
+    userAnswer = options[1] ?? null
   }
 
   return {
@@ -409,7 +409,7 @@ export function mockMockExamLoop(page: Page): {
       return
     }
     if (prepareStage < PREPARE_COUNTS.length) {
-      const count = PREPARE_COUNTS[prepareStage]
+      const count = PREPARE_COUNTS[prepareStage] ?? TOTAL_QUESTIONS
       prepareStage += 1
       await fulfilJson(route, 200, buildPreparing(count))
       return

@@ -62,7 +62,7 @@ function buildExam(questions: MockExamQuestionResponse[]): MockExamResponse {
 // Q0 answered incorrectly, Q1 answered correctly, Q2 skipped.
 function terminalExam(): MockExamResponse {
   return buildExam([
-    terminalQuestion(0, Q0_OPTIONS[2]),
+    terminalQuestion(0, Q0_OPTIONS[2] ?? null),
     terminalQuestion(1, 'Option B for Q2'),
     terminalQuestion(2, null),
   ])
