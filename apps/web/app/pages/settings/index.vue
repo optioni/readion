@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AccountTab from '~/components/AccountTab.vue'
+import NotificationsTab from '~/components/NotificationsTab.vue'
 import SettingsLayout from '~/components/SettingsLayout.vue'
 import StudyDefaultsTab from '~/components/StudyDefaultsTab.vue'
 </script>
@@ -13,7 +14,7 @@ import StudyDefaultsTab from '~/components/StudyDefaultsTab.vue'
       <StudyDefaultsTab />
     </template>
     <template #notifications>
-      <p class="text-slate-400 text-sm">Notification settings</p>
+      <NotificationsTab />
     </template>
   </SettingsLayout>
 </template>
