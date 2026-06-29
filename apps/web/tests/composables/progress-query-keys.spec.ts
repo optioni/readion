@@ -19,21 +19,11 @@ describe('progressQueryKeys', () => {
   })
 
   it('builds the sessions key from certificationId, page, and limit', () => {
-    expect(progressQueryKeys.sessions('c-1', 1, 20)).toEqual([
-      'progress',
-      'sessions',
-      'c-1',
-      1,
-      20,
-    ])
+    expect(progressQueryKeys.sessions('c-1', 1, 20)).toEqual(['progress', 'sessions', 'c-1', 1, 20])
   })
 
   it('builds the sessionSummary key from a session id', () => {
-    expect(progressQueryKeys.sessionSummary('s-1')).toEqual([
-      'progress',
-      'session-summary',
-      's-1',
-    ])
+    expect(progressQueryKeys.sessionSummary('s-1')).toEqual(['progress', 'session-summary', 's-1'])
   })
 
   it('builds the mockExams key from an enrollment id', () => {

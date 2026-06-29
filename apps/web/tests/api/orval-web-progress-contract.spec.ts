@@ -80,9 +80,7 @@ describe('web-progress Orval contract', () => {
   })
 
   it('reviewItemsControllerMaster is a function', async () => {
-    const { reviewItemsControllerMaster } = await import(
-      '~~/src/api/review-items/review-items'
-    )
+    const { reviewItemsControllerMaster } = await import('~~/src/api/review-items/review-items')
     expect(typeof reviewItemsControllerMaster).toBe('function')
   })
 
