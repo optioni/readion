@@ -1,0 +1,290 @@
+import { flushPromises, mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { drillSession, fetchSessionSummary } from '~/composables/sessionViewApi'
+import { fetchReviewQueue, startReview } from '~/composables/progressApi'
+import { completeSessionItem, endSession, fetchSessionDetail } from '~/composables/sessionViewApi'
+import ReviewPage from '~/pages/user-certifications/[id]/review.vue'
+
+vi.mock('~/composables/progressApi', () => ({
+  fetchReviewQueue: vi.fn(),
+  startReview: vi.fn(),
+}))
+
+vi.mock('~/composables/sessionViewApi', () => ({
+  fetchSessionDetail: vi.fn(),
+  completeSessionItem: vi.fn(),
+  endSession: vi.fn(),
+  fetchSessionSummary: vi.fn(),
+  drillSession: vi.fn(),
+}))
+
+vi.mock('~/composables/sessionSummaryMapper', () => ({
+  toSummary: vi.fn((dto) => ({
+    ...dto,
+    readiness: {
+      before: dto.readiness?.before ?? null,
+      after: dto.readiness?.after ?? null,
+      delta: dto.readiness?.delta ?? null,
+    },
+    weakAreaDeltas: dto.weakAreaDeltas ?? [],
+    domains: dto.domains ?? [],
+  })),
+}))
+
+vi.stubGlobal('useRoute', () => ({ params: { id: 'enr-1' } }))
+vi.stubGlobal('definePageMeta', vi.fn())
+const mockNavigate = vi.fn()
+vi.stubGlobal('navigateTo', mockNavigate)
+
+function quizContent(questionId: string, question: string, options: string[]) {
+  return JSON.stringify({ questionId, question, options, format: 'multiple_choice' })
+}
+
+function quizItem(index: number, completed = false) {
+  return {
+    index,
+    type: 'quiz',
+    content: quizContent(`q-${index}`, `Question ${index}?`, ['Option A', 'Option B']),
+    completed,
+    sourceChunkIds: [],
+    supportingSpans: [],
+  }
+}
+
+function sessionDetail(items: ReturnType<typeof quizItem>[], sessionId = 'sess-review') {
+  return {
+    data: {
+      id: sessionId,
+      userCertificationId: 'enr-1',
+      kind: 'review',
+      status: 'active',
+      durationMinutes: 5,
+      lastItemIndex: 0,
+      startedAt: '2026-06-29T09:00:00.000Z',
+      endedAt: null,
+      items,
+    },
+    relationships: { items: { data: items.map((i) => ({ index: i.index })) } },
+  }
+}
+
+function stubQueue(dueCount = 3, count = 3) {
+  const items = Array.from({ length: count }, (_, i) =>
+    ({
+      id: `ri-${i}`,
+      userCertificationId: 'enr-1',
+      anchorChunkId: `chunk-${i}`,
+      domain: 'Secure Architectures',
+      box: 1,
+      state: 'due',
+      dueAt: '2026-06-29T00:00:00.000Z',
+      lastReviewedAt: null,
+    }),
+  )
+  // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
+  vi.mocked(fetchReviewQueue).mockResolvedValue({ items, meta: { dueCount, total: count } } as any)
+}
+
+function stubQueueEmpty() {
+  // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
+  vi.mocked(fetchReviewQueue).mockResolvedValue({ items: [], meta: { dueCount: 0, total: 2 } } as any)
+}
+
+function stubStartReview(sessionId = 'sess-review') {
+  vi.mocked(startReview).mockResolvedValue({
+    status: 'started',
+    session: {
+      id: sessionId,
+      userCertificationId: 'enr-1',
+      kind: 'review',
+      status: 'active',
+      startedAt: '2026-06-29T09:00:00.000Z',
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
+    } as any,
+  })
+}
+
+function stubSessionDetail(items: ReturnType<typeof quizItem>[], sessionId = 'sess-review') {
+  // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
+  vi.mocked(fetchSessionDetail).mockResolvedValue(sessionDetail(items, sessionId) as any)
+}
+
+function stubSummary() {
+  vi.mocked(fetchSessionSummary).mockResolvedValue({
+    questionsAnswered: 3,
+    accuracy: 0.8,
+    domains: [{ domain: 'Secure Architectures', accuracy: 0.8 }],
+    weakAreaDeltas: [{ domain: 'Secure Architectures', delta: 5 }],
+    readiness: { before: 60, after: 64, delta: 4 },
+    strongestQuestion: null,
+    weakestQuestion: null,
+    nextFocus: null,
+    // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
+  } as any)
+}
+
+function mountPage() {
+  return mount(ReviewPage, {
+    global: {
+      stubs: {
+        QuizCard: {
+          props: ['item', 'sessionId', 'userCertificationId'],
+          template:
+            '<div data-testid="quiz-card" @click="$emit(\'advance\', item.index)">quiz {{ item.index }}</div>',
+          emits: ['advance'],
+        },
+        ReviewQueueEntry: {
+          props: ['enrollmentId', 'items', 'dueCount'],
+          template:
+            '<div data-testid="review-queue-entry-stub"><button data-testid="start-review-button" @click="$emit(\'start\')">Start</button></div>',
+          emits: ['start'],
+        },
+        ReviewCompletion: {
+          props: ['summary', 'drillNoMisses'],
+          template: `<div data-testid="session-summary-page">
+            <div data-testid="summary-accuracy">80%</div>
+            <button data-testid="drill-button" @click="$emit('drill')">Drill</button>
+            <button data-testid="summary-back-button" @click="$emit('back')">Back</button>
+          </div>`,
+          emits: ['drill', 'back'],
+        },
+      },
+    },
+  })
+}
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  stubQueue()
+  stubStartReview()
+  stubSessionDetail([quizItem(0)])
+  stubSummary()
+  // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
+  vi.mocked(completeSessionItem).mockResolvedValue({} as any)
+  // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
+  vi.mocked(endSession).mockResolvedValue({} as any)
+})
+
+afterEach(() => {
+  vi.clearAllMocks()
+})
+
+describe('Review page — queue scene', () => {
+  it('loads the review queue on mount and shows the queue entry', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    expect(fetchReviewQueue).toHaveBeenCalledWith('enr-1')
+    expect(wrapper.find('[data-testid="review-queue-entry-stub"]').exists()).toBe(true)
+  })
+
+  it('shows the queue entry with all-caught-up when dueCount is 0', async () => {
+    stubQueueEmpty()
+    const wrapper = mountPage()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="review-queue-entry-stub"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="quiz-card"]').exists()).toBe(false)
+  })
+})
+
+describe('Review page — queue → loop transition', () => {
+  it('calls startReview and loads session items when start is emitted', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="start-review-button"]').trigger('click')
+    await flushPromises()
+
+    expect(startReview).toHaveBeenCalledWith('enr-1')
+    expect(fetchSessionDetail).toHaveBeenCalledWith('sess-review')
+    expect(wrapper.find('[data-testid="quiz-card"]').exists()).toBe(true)
+  })
+
+  it('hides the queue entry once the loop starts', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="start-review-button"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="review-queue-entry-stub"]').exists()).toBe(false)
+  })
+})
+
+describe('Review page — loop: advancing items', () => {
+  it('completes the item and advances when advance is emitted', async () => {
+    stubSessionDetail([quizItem(0), quizItem(1)])
+    const wrapper = mountPage()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="start-review-button"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="quiz-card"]').text()).toContain('quiz 0')
+
+    await wrapper.find('[data-testid="quiz-card"]').trigger('click')
+    await flushPromises()
+
+    expect(completeSessionItem).toHaveBeenCalledWith('sess-review', 0)
+    expect(wrapper.find('[data-testid="quiz-card"]').text()).toContain('quiz 1')
+  })
+
+  it('ends the session and shows completion when the last item is advanced', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="start-review-button"]').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-testid="quiz-card"]').trigger('click')
+    await flushPromises()
+
+    expect(endSession).toHaveBeenCalledWith('sess-review')
+    expect(fetchSessionSummary).toHaveBeenCalledWith('sess-review')
+    expect(wrapper.find('[data-testid="session-summary-page"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="quiz-card"]').exists()).toBe(false)
+  })
+})
+
+describe('Review page — completion: drill action', () => {
+  it('re-enters the loop with existing items when drill starts a new session', async () => {
+    vi.mocked(drillSession).mockResolvedValue({
+      status: 'started',
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
+      session: { id: 'sess-drill' } as any,
+    })
+    const wrapper = mountPage()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="start-review-button"]').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-testid="quiz-card"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="session-summary-page"]').exists()).toBe(true)
+
+    await wrapper.find('[data-testid="drill-button"]').trigger('click')
+    await flushPromises()
+
+    expect(drillSession).toHaveBeenCalledWith('sess-review')
+    expect(wrapper.find('[data-testid="quiz-card"]').exists()).toBe(true)
+  })
+
+  it('navigates to / when back is clicked', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="start-review-button"]').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-testid="quiz-card"]').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-testid="summary-back-button"]').trigger('click')
+    await flushPromises()
+
+    expect(mockNavigate).toHaveBeenCalledWith('/')
+  })
+})
