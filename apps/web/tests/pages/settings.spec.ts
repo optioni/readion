@@ -1,12 +1,18 @@
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { type DOMWrapper, mount, type VueWrapper } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import SettingsPage from '~/pages/settings/index.vue'
 import { usersControllerGetMe } from '~~/src/api/users/users'
 
 vi.mock('~~/src/api/users/users')
 
+let pinia: ReturnType<typeof createPinia>
+
 beforeEach(() => {
+  pinia = createPinia()
+  setActivePinia(pinia)
+
   vi.mocked(usersControllerGetMe).mockResolvedValue(
     // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
     {
@@ -38,7 +44,7 @@ function mountPage() {
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   })
   return mount(SettingsPage, {
-    global: { plugins: [[VueQueryPlugin, { queryClient }]] },
+    global: { plugins: [pinia, [VueQueryPlugin, { queryClient }]] },
   })
 }
 
