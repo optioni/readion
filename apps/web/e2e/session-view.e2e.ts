@@ -64,11 +64,15 @@ test.describe('web-session-view — full study-session loop', () => {
     // Quiz card: choose an option + confidence, submit, see the chosen-option result, continue.
     const quiz = page.getByTestId('quiz-card')
     await expect(quiz).toBeVisible()
-    await quiz.getByTestId('quiz-option').filter({ hasText: /service control policies/i }).click()
+    await quiz
+      .getByTestId('quiz-option')
+      .filter({ hasText: /service control policies/i })
+      .click()
     await page.getByTestId('confidence-option-4').click()
     await page.getByTestId('quiz-submit-button').click()
-    await expect(quiz.getByTestId('quiz-option').filter({ hasText: /service control policies/i }))
-      .toHaveAttribute('data-state', 'correct')
+    await expect(
+      quiz.getByTestId('quiz-option').filter({ hasText: /service control policies/i }),
+    ).toHaveAttribute('data-state', 'correct')
     await page.getByTestId('quiz-continue-button').click()
 
     // --- Ask the agent → streamed reply with a tool-result card ---

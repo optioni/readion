@@ -141,6 +141,7 @@ describe('QuizCard submit', () => {
     expect(optionByText(wrapper, 'IAM permissions boundaries')?.attributes('data-state')).toBe(
       'incorrect',
     )
+    expect(optionByText(wrapper, 'Service Control Policies')?.attributes('data-state')).toBe('dim')
   })
 })
 
@@ -174,7 +175,7 @@ describe('QuizCard report', () => {
     expect(questionId).toBe('q-1')
     expect(body.userCertificationId).toBe('uc-1')
     expect(body.reason.length).toBeGreaterThan(0)
-    expect(wrapper.text()).toMatch(/report/i)
+    expect(wrapper.text()).toContain('Report received')
   })
 })
 

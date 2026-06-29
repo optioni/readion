@@ -221,7 +221,7 @@ const SUMMARY: SessionSummaryEnvelopeDto = {
       { domain: 'Secure Architectures', delta: 0.12 },
       { domain: 'Resilient Architectures', delta: -0.04 },
     ],
-    readiness: { before: 0.62, after: 0.66, delta: 0.04 } as unknown as SessionReadinessChangeDto,
+    readiness: { before: 62, after: 66, delta: 4 } as unknown as SessionReadinessChangeDto,
     strongestQuestion: {
       responseId: SESSION_IDS.strongestResponseId,
       question: 'Which feature enforces permission guardrails across an OU?',
@@ -366,7 +366,7 @@ export function mockSessionLoop(page: Page): {
     )
   })
   mock(page, /\/api\/v1\/sessions\/[0-9a-f-]{36}\/items\/\d+\/go-deeper$/, async (route) => {
-    await fulfilJson(route, 200, { data: GO_DEEPER })
+    await fulfilJson(route, 200, GO_DEEPER)
   })
 
   // --- End session ---
