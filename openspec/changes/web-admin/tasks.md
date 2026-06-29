@@ -18,9 +18,9 @@
 
 ## 3. Users section
 
-- [ ] 3.1 RED: Write unit test for the Users table — renders email, role badge, join date (`createdAt`), enrollment count from `adminControllerListUsers`; promote (`adminControllerPromote`) flips the badge; demote (`adminControllerDemote`) with `409` surfaces an error and leaves the role; NO name/last-active/search/invite/delete controls (per reconciliation); avatar = derived initials. Build to `AdminContentUsers.html` → `UsersScreen`. SPEC.md → AdminModule
-- [ ] 3.2 GREEN: Implement the Users section + promote/demote mutations with list invalidation
-- [ ] 3.3 REFACTOR: Clean up table/badge reuse
+- [x] 3.1 RED: Write unit test for the Users table — renders email, role badge, join date (`createdAt`), enrollment count from `adminControllerListUsers`; promote (`adminControllerPromote`) flips the badge; demote (`adminControllerDemote`) with `409` surfaces an error and leaves the role; NO name/last-active/search/invite/delete controls (per reconciliation); avatar = derived initials. Build to `AdminContentUsers.html` → `UsersScreen`. SPEC.md → AdminModule
+- [x] 3.2 GREEN: Implement the Users section + promote/demote mutations with list invalidation
+- [x] 3.3 REFACTOR: Clean up table/badge reuse
 
 ## 4. Audit Log section
 
