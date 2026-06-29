@@ -36,7 +36,10 @@ describe('admin envelope narrowing helpers', () => {
   it('readDataEnvelope extracts the single payload', () => {
     const response = { data: { data: { id: 'a', value: 42 } } }
 
-    expect(readDataEnvelope<{ id: string; value: number }>(response)).toEqual({ id: 'a', value: 42 })
+    expect(readDataEnvelope<{ id: string; value: number }>(response)).toEqual({
+      id: 'a',
+      value: 42,
+    })
   })
 
   it('readUsersEnvelope narrows to the admin user list', () => {
