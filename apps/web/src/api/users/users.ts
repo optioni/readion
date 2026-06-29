@@ -17,13 +17,17 @@ import type {
 import { useMutation, useQuery } from '@tanstack/vue-query'
 
 import { unref } from 'vue'
-
 import { readionFetch } from '../../../app/api/mutator'
+import type {
+  DeleteAccountRequestDto,
+  UpdateUserProfileRequestDto,
+  UserProfileResponseDto,
+} from '.././model'
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 
 export type usersControllerGetMeResponse200 = {
-  data: void
+  data: UserProfileResponseDto
   status: 200
 }
 
@@ -93,7 +97,7 @@ export function useUsersControllerGetMe<
 }
 
 export type usersControllerUpdateMeResponse200 = {
-  data: void
+  data: UserProfileResponseDto
   status: 200
 }
 
@@ -108,11 +112,14 @@ export const getUsersControllerUpdateMeUrl = () => {
 }
 
 export const usersControllerUpdateMe = async (
+  updateUserProfileRequestDto: UpdateUserProfileRequestDto,
   options?: RequestInit,
 ): Promise<usersControllerUpdateMeResponse> => {
   return readionFetch<usersControllerUpdateMeResponse>(getUsersControllerUpdateMeUrl(), {
     ...options,
     method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateUserProfileRequestDto),
   })
 }
 
@@ -123,14 +130,14 @@ export const getUsersControllerUpdateMeMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof usersControllerUpdateMe>>,
     TError,
-    void,
+    { data: UpdateUserProfileRequestDto },
     TContext
   >
   request?: SecondParameter<typeof readionFetch>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof usersControllerUpdateMe>>,
   TError,
-  void,
+  { data: UpdateUserProfileRequestDto },
   TContext
 > => {
   const mutationKey = ['usersControllerUpdateMe']
@@ -142,9 +149,11 @@ export const getUsersControllerUpdateMeMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof usersControllerUpdateMe>>,
-    void
-  > = () => {
-    return usersControllerUpdateMe(requestOptions)
+    { data: UpdateUserProfileRequestDto }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return usersControllerUpdateMe(data, requestOptions)
   }
 
   return { mutationFn, ...mutationOptions }
@@ -153,21 +162,21 @@ export const getUsersControllerUpdateMeMutationOptions = <
 export type UsersControllerUpdateMeMutationResult = NonNullable<
   Awaited<ReturnType<typeof usersControllerUpdateMe>>
 >
-
+export type UsersControllerUpdateMeMutationBody = UpdateUserProfileRequestDto
 export type UsersControllerUpdateMeMutationError = unknown
 
 export const useUsersControllerUpdateMe = <TError = unknown, TContext = unknown>(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof usersControllerUpdateMe>>,
     TError,
-    void,
+    { data: UpdateUserProfileRequestDto },
     TContext
   >
   request?: SecondParameter<typeof readionFetch>
 }): UseMutationReturnType<
   Awaited<ReturnType<typeof usersControllerUpdateMe>>,
   TError,
-  void,
+  { data: UpdateUserProfileRequestDto },
   TContext
 > => {
   const mutationOptions = getUsersControllerUpdateMeMutationOptions(options)
@@ -190,11 +199,14 @@ export const getUsersControllerDeleteMeUrl = () => {
 }
 
 export const usersControllerDeleteMe = async (
+  deleteAccountRequestDto: DeleteAccountRequestDto,
   options?: RequestInit,
 ): Promise<usersControllerDeleteMeResponse> => {
   return readionFetch<usersControllerDeleteMeResponse>(getUsersControllerDeleteMeUrl(), {
     ...options,
     method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(deleteAccountRequestDto),
   })
 }
 
@@ -205,14 +217,14 @@ export const getUsersControllerDeleteMeMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof usersControllerDeleteMe>>,
     TError,
-    void,
+    { data: DeleteAccountRequestDto },
     TContext
   >
   request?: SecondParameter<typeof readionFetch>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof usersControllerDeleteMe>>,
   TError,
-  void,
+  { data: DeleteAccountRequestDto },
   TContext
 > => {
   const mutationKey = ['usersControllerDeleteMe']
@@ -224,9 +236,11 @@ export const getUsersControllerDeleteMeMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof usersControllerDeleteMe>>,
-    void
-  > = () => {
-    return usersControllerDeleteMe(requestOptions)
+    { data: DeleteAccountRequestDto }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return usersControllerDeleteMe(data, requestOptions)
   }
 
   return { mutationFn, ...mutationOptions }
@@ -235,21 +249,21 @@ export const getUsersControllerDeleteMeMutationOptions = <
 export type UsersControllerDeleteMeMutationResult = NonNullable<
   Awaited<ReturnType<typeof usersControllerDeleteMe>>
 >
-
+export type UsersControllerDeleteMeMutationBody = DeleteAccountRequestDto
 export type UsersControllerDeleteMeMutationError = unknown
 
 export const useUsersControllerDeleteMe = <TError = unknown, TContext = unknown>(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof usersControllerDeleteMe>>,
     TError,
-    void,
+    { data: DeleteAccountRequestDto },
     TContext
   >
   request?: SecondParameter<typeof readionFetch>
 }): UseMutationReturnType<
   Awaited<ReturnType<typeof usersControllerDeleteMe>>,
   TError,
-  void,
+  { data: DeleteAccountRequestDto },
   TContext
 > => {
   const mutationOptions = getUsersControllerDeleteMeMutationOptions(options)
