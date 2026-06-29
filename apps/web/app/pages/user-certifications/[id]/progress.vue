@@ -65,7 +65,7 @@ const questionsAnswered = computed(() =>
         <CertTabs :enrollments="switcher" :active-enrollment-id="enrollmentId" />
       </div>
 
-      <TrajectoryCallout v-if="weeksToReady !== null" :weeks-to-ready="weeksToReady" class="mb-6" />
+      <TrajectoryCallout :weeks-to-ready="weeksToReady" class="mb-6" />
 
       <div class="mb-4 grid grid-cols-2 gap-3 rounded-md bg-black/25 p-4">
         <div>
