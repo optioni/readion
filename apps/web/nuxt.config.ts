@@ -67,6 +67,12 @@ export default defineNuxtConfig({
     optimizeDeps: {
       include: ['@readion/shared'],
     },
+    build: {
+      commonjsOptions: {
+        include: [/packages\/shared/, /node_modules/],
+        transformMixedEsModules: true,
+      },
+    },
   },
   typescript: {
     tsConfig: {
