@@ -1,10 +1,8 @@
-import type { MockExamQuestionResponse } from '@readion/shared'
 import { computed, ref } from 'vue'
+import type { AnswerableQuestion } from '~/composables/examQuestionPosition'
 import { saveMockExamAnswer } from '~/composables/mockExamApi'
 
-export function seedAnswers(
-  questions: Pick<MockExamQuestionResponse, 'userAnswer'>[],
-): Map<number, string> {
+export function seedAnswers(questions: AnswerableQuestion[]): Map<number, string> {
   const answers = new Map<number, string>()
   questions.forEach((question, index) => {
     if (question.userAnswer !== null && question.userAnswer !== undefined) {
@@ -14,10 +12,7 @@ export function seedAnswers(
   return answers
 }
 
-export function useMockExamAnswers(
-  examId: string,
-  questions: Pick<MockExamQuestionResponse, 'userAnswer'>[],
-) {
+export function useMockExamAnswers(examId: string, questions: AnswerableQuestion[]) {
   const answers = ref<Map<number, string>>(seedAnswers(questions))
 
   const answeredIndices = computed<number[]>(() => [...answers.value.keys()])
