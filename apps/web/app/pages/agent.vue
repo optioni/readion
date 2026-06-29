@@ -69,6 +69,12 @@ async function handleNewChat(): Promise<void> {
           :key="index"
           :message="message"
         />
+        <div
+          v-if="isStreaming"
+          data-testid="agent-streaming-cursor"
+          class="mb-3.5 h-3.5 w-0.5 animate-[blink_1s_step-end_infinite] bg-readion-text-muted"
+          aria-hidden="true"
+        />
       </template>
     </div>
 

@@ -169,13 +169,17 @@ describe('Agent chat page SSE turn streaming', () => {
 
     expect(wrapper.text()).toContain('Hello')
     expect(wrapper.find('[data-testid="agent-streaming-cursor"]').exists()).toBe(true)
-    expect((wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled).toBe(true)
+    expect(
+      (wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled,
+    ).toBe(true)
 
     resolveStream()
     await flushPromises()
 
     expect(wrapper.find('[data-testid="agent-streaming-cursor"]').exists()).toBe(false)
-    expect((wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled).toBe(false)
+    expect(
+      (wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled,
+    ).toBe(false)
   })
 
   it('does not call streamTurn when input is whitespace-only', async () => {
@@ -212,7 +216,9 @@ describe('Agent chat page error handling', () => {
 
     expect(wrapper.find('[data-testid="agent-error"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('upstream model timeout')
-    expect((wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled).toBe(false)
+    expect(
+      (wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled,
+    ).toBe(false)
   })
 
   it('renders error for non-OK response (streamTurn emits synthetic error event)', async () => {
@@ -225,7 +231,9 @@ describe('Agent chat page error handling', () => {
 
     expect(wrapper.find('[data-testid="agent-error"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('Agent request failed (503)')
-    expect((wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled).toBe(false)
+    expect(
+      (wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled,
+    ).toBe(false)
   })
 
   it('panel stays usable after error — next successful send works', async () => {
