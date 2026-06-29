@@ -42,6 +42,7 @@ describe('users shared contracts', () => {
       emailVerified: true,
       displayTimezone: 'Europe/Helsinki',
       sessionDefaults: DEFAULT_SESSION_DEFAULTS,
+      digestOptOut: false,
     })
 
     expect(profile.email).toBe('ada@example.com')
@@ -71,6 +72,42 @@ describe('users shared contracts', () => {
       },
     })
     expectTypeOf<UpdateUserProfileRequest>().not.toHaveProperty('email')
+  })
+
+  it('includes digestOptOut in profile responses', () => {
+    const profile = userProfileResponseSchema.parse({
+      id: 'user-1',
+      email: 'ada@example.com',
+      role: 'admin',
+      emailVerified: true,
+      displayTimezone: 'Europe/Helsinki',
+      sessionDefaults: DEFAULT_SESSION_DEFAULTS,
+      digestOptOut: true,
+    })
+
+    expect(profile.digestOptOut).toBe(true)
+    expectTypeOf<UserProfileResponse>().toHaveProperty('digestOptOut').toEqualTypeOf<boolean>()
+  })
+
+  it('requires digestOptOut to be present in profile responses', () => {
+    expect(
+      userProfileResponseSchema.safeParse({
+        id: 'user-1',
+        email: 'ada@example.com',
+        role: 'admin',
+        emailVerified: true,
+        displayTimezone: 'Europe/Helsinki',
+        sessionDefaults: DEFAULT_SESSION_DEFAULTS,
+      }).success,
+    ).toBe(false)
+  })
+
+  it('accepts optional digestOptOut in profile updates', () => {
+    expect(updateUserProfileRequestSchema.parse({ digestOptOut: true })).toEqual({
+      digestOptOut: true,
+    })
+    expect(updateUserProfileRequestSchema.parse({}).digestOptOut).toBeUndefined()
+    expect(updateUserProfileRequestSchema.safeParse({ digestOptOut: 'yes' }).success).toBe(false)
   })
 
   it('rejects invalid IANA timezones and out-of-set preference values', () => {

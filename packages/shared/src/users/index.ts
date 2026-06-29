@@ -47,11 +47,13 @@ export const sessionDefaultsSchema = z.object({
 export const userProfileResponseSchema = authUserSchema.extend({
   displayTimezone: displayTimezoneSchema,
   sessionDefaults: sessionDefaultsSchema,
+  digestOptOut: z.boolean(),
 })
 
 export const updateUserProfileRequestSchema = z.object({
   displayTimezone: displayTimezoneSchema.optional(),
   sessionDefaults: sessionDefaultsSchema.partial().optional(),
+  digestOptOut: z.boolean().optional(),
 })
 
 export type SessionDefaults = z.infer<typeof sessionDefaultsSchema>
