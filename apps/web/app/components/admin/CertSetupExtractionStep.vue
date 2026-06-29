@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import type {
-  CertExtractionFields,
-  CertificationFieldCitation,
-  ExtractedField,
-} from '@readion/shared'
+import type { CertExtractionFields, ExtractedField } from '@readion/shared'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, reactive, watch } from 'vue'
+import CertFieldRow from '~/components/admin/CertFieldRow.vue'
 import { readExtractionStatusEnvelope } from '~/composables/adminEnvelope'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import { isTerminalWithoutFields, nextRefetchInterval } from '~/composables/certExtractionPoll'
@@ -62,26 +59,17 @@ const ready = computed(() => Boolean(props.state.fields))
 const errored = computed(() => isTerminalWithoutFields(extractionQuery.data.value ?? undefined))
 const loading = computed(() => !ready.value && !errored.value)
 
-function fieldOf(key: CertExtractionFieldKey): ExtractedField<unknown> | null {
-  return props.state.fields ? props.state.fields[key] : null
+function fieldOf(key: CertExtractionFieldKey): ExtractedField<unknown> {
+  return (props.state.fields as CertExtractionFields)[key]
 }
 
-function isGrounded(field: ExtractedField<unknown> | null): boolean {
-  return Boolean(field) && 'citation' in (field as object)
+function numericValueOf(key: CertExtractionFieldKey): number | null {
+  return key === 'domains' ? null : props.state.fieldValues[key as NumericKey]
 }
 
-function citationOf(key: CertExtractionFieldKey): CertificationFieldCitation | null {
-  const field = fieldOf(key)
-  return field && 'citation' in field ? field.citation : null
-}
-
-function numericValue(key: NumericKey): number | null {
-  return props.state.fieldValues[key]
-}
-
-function onNumericInput(key: NumericKey, event: Event): void {
-  const raw = (event.target as HTMLInputElement).value
-  props.editFieldValue(key, raw === '' ? null : Number(raw))
+function onEdit(key: CertExtractionFieldKey, value: number | null): void {
+  if (key === 'domains') return
+  props.editFieldValue(key as NumericKey, value)
 }
 
 function confirmField(key: CertExtractionFieldKey): void {
@@ -128,88 +116,19 @@ function retry(): void {
 
     <template v-else>
       <div class="flex flex-col gap-4">
-        <div
+        <CertFieldRow
           v-for="key in FIELD_KEYS"
           :key="key"
-          :data-testid="`extraction-field-${key}`"
-          :data-review="reviewState[key] ?? 'pending'"
-          class="flex flex-col gap-2 rounded-lg border border-readion-background-surface bg-readion-background-elevated px-4 py-3"
-        >
-          <span class="font-mono text-slate-400 text-xs uppercase tracking-wide">
-            {{ FIELD_LABELS[key] }}
-          </span>
-
-          <template v-if="isGrounded(fieldOf(key))">
-            <div v-if="key === 'domains'" class="flex flex-col gap-1">
-              <span
-                v-for="domain in state.fieldValues.domains ?? []"
-                :key="domain.name"
-                class="text-slate-100 text-sm"
-              >
-                {{ domain.name }} — {{ domain.weight }}%
-              </span>
-            </div>
-            <div v-else class="flex items-center gap-3">
-              <span data-testid="field-value" class="font-medium text-slate-100 text-sm">
-                {{ numericValue(key as NumericKey) }}
-              </span>
-              <input
-                data-testid="field-value-input"
-                type="number"
-                :value="numericValue(key as NumericKey)"
-                class="w-24 rounded-lg border border-readion-background-surface bg-readion-background-base px-2 py-1 text-slate-100 text-sm"
-                @input="onNumericInput(key as NumericKey, $event)"
-              />
-            </div>
-
-            <div
-              data-testid="field-citation"
-              class="flex flex-col gap-1 rounded-lg bg-readion-background-base px-3 py-2"
-            >
-              <span class="text-slate-300 text-xs italic">“{{ citationOf(key)?.passage }}”</span>
-              <a
-                :href="citationOf(key)?.url"
-                class="break-all text-readion-primary text-xs"
-                target="_blank"
-                rel="noreferrer"
-              >
-                {{ citationOf(key)?.url }}
-              </a>
-            </div>
-          </template>
-
-          <template v-else>
-            <p class="text-amber-300 text-sm">unverified — confirm manually</p>
-            <input
-              v-if="key !== 'domains'"
-              data-testid="field-value-input"
-              type="number"
-              :value="numericValue(key as NumericKey)"
-              placeholder="Enter value"
-              class="w-24 rounded-lg border border-readion-background-surface bg-readion-background-base px-2 py-1 text-slate-100 text-sm"
-              @input="onNumericInput(key as NumericKey, $event)"
-            />
-          </template>
-
-          <div class="flex gap-2">
-            <button
-              type="button"
-              data-testid="field-confirm-btn"
-              class="rounded-lg border border-readion-background-surface px-3 py-1 text-slate-300 text-xs transition-colors hover:bg-readion-background-surface"
-              @click="confirmField(key)"
-            >
-              Confirm
-            </button>
-            <button
-              type="button"
-              data-testid="field-flag-btn"
-              class="rounded-lg border border-amber-500/40 px-3 py-1 text-amber-300 text-xs transition-colors hover:bg-amber-500/10"
-              @click="flag(key)"
-            >
-              Flag as uncertain
-            </button>
-          </div>
-        </div>
+          :field-key="key"
+          :label="FIELD_LABELS[key]"
+          :field="fieldOf(key)"
+          :domains="state.fieldValues.domains"
+          :numeric-value="numericValueOf(key)"
+          :review="reviewState[key]"
+          @edit="(value) => onEdit(key, value)"
+          @flag="flag(key)"
+          @confirm="confirmField(key)"
+        />
       </div>
 
       <div class="flex flex-col gap-3">
