@@ -201,8 +201,8 @@ const REVIEW_SUMMARY: SessionSummaryEnvelopeDto = {
       { domain: 'Resilient Architectures', accuracy: 0.75 },
     ],
     weakAreaDeltas: [
-      { domain: 'Secure Architectures', delta: 0.09 },
-      { domain: 'Resilient Architectures', delta: 0.05 },
+      { domain: 'Secure Architectures', delta: 9 },
+      { domain: 'Resilient Architectures', delta: 5 },
     ],
     readiness: {
       before: 62,

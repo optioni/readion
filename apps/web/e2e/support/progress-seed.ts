@@ -161,21 +161,22 @@ const READINESS_NOT_CALIBRATED: ReadinessDetailResponseDto = {
 
 // Two weak areas with data: Secure + Resilient. High-Performing and Cost-Optimized are absent
 // (shown as "no data yet" in the domain rows).
+// scores and accuracy are already 0-100 integers from the API (SCORE_MAX = 100).
 const WEAK_AREAS: WeakAreaListResponseDto = {
   data: [
     {
       id: 'wa-secure',
       domain: 'Secure Architectures',
-      score: 0.41,
-      accuracy: 0.44,
+      score: 41,
+      accuracy: 44,
       meanConfidence: 0.6,
       responseCount: 18,
     },
     {
       id: 'wa-resilient',
       domain: 'Resilient Architectures',
-      score: 0.68,
-      accuracy: 0.7,
+      score: 68,
+      accuracy: 70,
       meanConfidence: 0.65,
       responseCount: 12,
     },
@@ -245,8 +246,8 @@ function buildSummary(
       ],
       weakAreaDeltas: withDeltas
         ? [
-            { domain: 'Secure Architectures', delta: 0.12 },
-            { domain: 'Resilient Architectures', delta: -0.04 },
+            { domain: 'Secure Architectures', delta: 12 },
+            { domain: 'Resilient Architectures', delta: -4 },
           ]
         : [],
       readiness: {

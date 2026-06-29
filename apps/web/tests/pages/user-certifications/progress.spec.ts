@@ -63,7 +63,8 @@ function mountPage() {
         ReadinessTrend: { template: '<div data-testid="readiness-trend" />' },
         AccuracyBars: { template: '<div data-testid="accuracy-bars" />' },
         TrajectoryCallout: {
-          template: '<div data-testid="trajectory-callout"><slot /></div>',
+          template:
+            '<div v-if="weeksToReady !== null" data-testid="trajectory-callout"><slot /></div>',
           props: ['weeksToReady'],
         },
         ProgressDomainRow: {

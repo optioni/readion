@@ -140,18 +140,12 @@ export function useProgressData(enrollmentId: string) {
       },
   )
 
-  // ─── Scale weak-area scores from 0-1 API fractions to 0-100 integers ────────
-  // statusColorForScore and the UI both expect 0-100; the API returns 0-1.
+  // ─── Weak areas — API already returns 0-100 integers (SCORE_MAX = 100) ────────
 
-  const scaledWeakAreas = computed(() =>
-    weakAreasRaw.value.map((wa) => ({
-      ...wa,
-      score: Math.round(wa.score * 100),
-      accuracy: Math.round(wa.accuracy * 100),
-    })),
-  )
+  const scaledWeakAreas = computed(() => weakAreasRaw.value)
 
   // ─── Latest summary (for domain deltas) — most-recent completed session ─────
+  // weakAreaDeltas.delta is already a 0-100 point difference (afterScore - beforeScore).
 
   const latestSummaryRaw = computed(() => {
     const completed = [...sessions.value]
@@ -165,19 +159,7 @@ export function useProgressData(enrollmentId: string) {
     return summariesMap.value.get(latest.id) ?? null
   })
 
-  // Scale delta values from 0-1 to 0-100 integers
-  const scaledLatestSummary = computed(() => {
-    if (!latestSummaryRaw.value) {
-      return null
-    }
-    return {
-      ...latestSummaryRaw.value,
-      weakAreaDeltas: latestSummaryRaw.value.weakAreaDeltas.map((d) => ({
-        domain: d.domain,
-        delta: Math.round(d.delta * 100),
-      })),
-    }
-  })
+  const scaledLatestSummary = computed(() => latestSummaryRaw.value)
 
   // ─── Pure derivations ────────────────────────────────────────────────────────
 

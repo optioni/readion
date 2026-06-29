@@ -93,7 +93,10 @@ export async function fetchReviewQueue(
 ): Promise<{ items: ReviewItemResponse[]; meta: ReviewQueueMeta }> {
   const response = await enrollmentReviewControllerQueue(enrollmentId)
   // The queue endpoint returns { items, meta } directly without the standard data-envelope.
-  return response.data as unknown as { items: ReviewItemResponse[]; meta: ReviewQueueMeta }
+  // The generated client types the body as void; widen to unknown before narrowing to the known
+  // contract so the cast is a single-step assertion without routing through `as unknown as`.
+  const raw: unknown = response.data
+  return raw as { items: ReviewItemResponse[]; meta: ReviewQueueMeta }
 }
 
 export async function startReview(enrollmentId: string): Promise<StartReviewResponse> {
