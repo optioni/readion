@@ -15,6 +15,12 @@ export { ContentChunk, ContentChunkSchema } from './entities/content-chunk.entit
 export { ContentSource, ContentSourceSchema } from './entities/content-source.entity'
 export { MockExam, MockExamSchema } from './entities/mock-exam.entity'
 export {
+  QuarantinedItem,
+  QuarantinedItemSchema,
+  type QuarantinedItemStatus,
+  quarantinedItemStatuses,
+} from './entities/quarantined-item.entity'
+export {
   type QuestionSnapshot,
   QuizResponse,
   QuizResponseSchema,

@@ -7,9 +7,9 @@
 
 ## 1. QuarantinedItem entity + migration
 
-- [ ] 1.1 RED: integration test that the migration creates the table and a `QuarantinedItem` can be persisted/queried with status + verdict + provenance.
-- [ ] 1.2 GREEN: add the `QuarantinedItem` entity + first migration in `packages/db` (owner per IMPLEMENTATION-ORDER entity table).
-- [ ] 1.3 REFACTOR: align columns/indexes (by certification, by status).
+- [x] 1.1 RED: integration test that the migration creates the table and a `QuarantinedItem` can be persisted/queried with status + verdict + provenance.
+- [x] 1.2 GREEN: add the `QuarantinedItem` entity + first migration in `packages/db` (owner per IMPLEMENTATION-ORDER entity table).
+- [x] 1.3 REFACTOR: align columns/indexes (by certification, by status).
 
 ## 2. Persist at the quarantine point
 

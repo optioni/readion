@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { defineConfig } from '@mikro-orm/postgresql'
+import { defineConfig, type Options } from '@mikro-orm/postgresql'
 import { AgentConversationSchema } from './entities/agent-conversation.entity'
 import { AgentMessageSchema } from './entities/agent-message.entity'
 import { AuditLogSchema } from './entities/audit-log.entity'
@@ -7,6 +7,7 @@ import { CertificationSchema } from './entities/certification.entity'
 import { ContentChunkSchema } from './entities/content-chunk.entity'
 import { ContentSourceSchema } from './entities/content-source.entity'
 import { MockExamSchema } from './entities/mock-exam.entity'
+import { QuarantinedItemSchema } from './entities/quarantined-item.entity'
 import { QuizResponseSchema } from './entities/quiz-response.entity'
 import { ReviewItemSchema } from './entities/review-item.entity'
 import { SessionItemSchema } from './entities/session-item.entity'
@@ -16,7 +17,7 @@ import { UserCertificationSchema } from './entities/user-certification.entity'
 import { WeakAreaSchema } from './entities/weak-area.entity'
 import { PluralUnderscoreNamingStrategy } from './naming-strategy'
 
-export default defineConfig({
+const config: Options = defineConfig({
   entities: [
     AgentConversationSchema,
     AgentMessageSchema,
@@ -32,6 +33,7 @@ export default defineConfig({
     SessionItemSchema,
     ReviewItemSchema,
     MockExamSchema,
+    QuarantinedItemSchema,
   ],
   discovery: { warnWhenNoEntities: false },
   dbName: process.env.DB_NAME ?? 'readion',
@@ -48,3 +50,5 @@ export default defineConfig({
     transactional: true,
   },
 })
+
+export default config
