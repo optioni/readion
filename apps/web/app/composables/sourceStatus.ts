@@ -1,4 +1,5 @@
 import type { IngestionJobStatus } from '@readion/shared'
+import { type StatusColorKey, statusTextColorClass } from '~/composables/statusColor'
 
 export type SourceStatus = 'disabled' | 'ingesting' | 'error' | 'active'
 
@@ -42,13 +43,17 @@ export function sourceStatusLabel(status: SourceStatus): string {
   return STATUS_LABELS[status]
 }
 
-const STATUS_TEXT_CLASSES: Record<SourceStatus, string> = {
-  disabled: 'text-slate-400',
-  ingesting: 'text-readion-status-warning',
-  error: 'text-readion-status-poor',
-  active: 'text-readion-status-good',
+// The three live states colour from the shared status palette; a disabled source is neutral and
+// has no palette equivalent, so it falls back to a muted slate.
+const STATUS_COLOR_KEYS: Record<Exclude<SourceStatus, 'disabled'>, StatusColorKey> = {
+  ingesting: 'warning',
+  error: 'poor',
+  active: 'good',
 }
 
 export function sourceStatusTextClass(status: SourceStatus): string {
-  return STATUS_TEXT_CLASSES[status]
+  if (status === 'disabled') {
+    return 'text-slate-400'
+  }
+  return statusTextColorClass(STATUS_COLOR_KEYS[status])
 }

@@ -45,7 +45,8 @@ const SOURCES: ContentSourceResponse[] = [
     lastFetchedAt: null,
     recheckIntervalMinutes: 1440,
     createdAt: '2026-01-02T00:00:00.000Z',
-  } as ContentSourceResponse,
+    // biome-ignore lint/suspicious/noExplicitAny: the API may return a source type outside the shared enum
+  } as any as ContentSourceResponse,
 ]
 
 function job(overrides: Partial<IngestionJobStatus> = {}): IngestionJobStatus {
@@ -214,7 +215,7 @@ describe('AdminSources register', () => {
     stubJobs()
     vi.mocked(contentControllerRegister).mockResolvedValue(
       // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
-      created(SOURCES[0]) as any,
+      created(SOURCES[0] as ContentSourceResponse) as any,
     )
     const { wrapper, invalidateSpy } = mountSources()
 
@@ -226,7 +227,7 @@ describe('AdminSources register', () => {
     await flushPromises()
 
     expect(contentControllerRegister).toHaveBeenCalledTimes(1)
-    const body = JSON.parse(vi.mocked(contentControllerRegister).mock.calls[0][0]?.body as string)
+    const body = JSON.parse(vi.mocked(contentControllerRegister).mock.calls[0]?.[0]?.body as string)
     expect(body).toEqual({
       certificationId: CERT_ID,
       type: 'web',
@@ -301,7 +302,7 @@ describe('AdminSources row actions', () => {
     stubJobs()
     vi.mocked(contentControllerDisable).mockResolvedValue(
       // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
-      created(SOURCES[0]) as any,
+      created(SOURCES[0] as ContentSourceResponse) as any,
     )
     const { wrapper, invalidateSpy } = mountSources()
 
