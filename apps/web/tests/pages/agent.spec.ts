@@ -202,6 +202,69 @@ describe('Agent chat page SSE turn streaming', () => {
   })
 })
 
+describe('Agent chat empty state and suggestions', () => {
+  it('renders the Study assistant heading, intro text, suggestions label, and 4 chips with exact artboard copy', async () => {
+    const wrapper = await mountPage()
+
+    const emptyState = wrapper.find('[data-testid="agent-empty-state"]')
+    expect(emptyState.exists()).toBe(true)
+    expect(wrapper.text()).toContain('Study assistant')
+    expect(wrapper.text()).toContain(
+      'Ask me anything — concepts, explanations, analogies. No exam corpus attached here; answers from general knowledge only.',
+    )
+    expect(wrapper.text()).toContain('Suggestions')
+
+    const chips = wrapper.findAll('[data-testid="agent-suggestion"]')
+    expect(chips).toHaveLength(4)
+    expect(chips[0].text()).toBe("What's the difference between TCP and UDP?")
+    expect(chips[1].text()).toBe('Explain eventual consistency in plain language')
+    expect(chips[2].text()).toBe('How does TLS handshake work?')
+    expect(chips[3].text()).toBe('When would I use a queue vs a topic?')
+  })
+
+  it('clicking a suggestion chip submits its text as the first turn and removes the empty state', async () => {
+    emitEvents([{ type: 'text-delta', textDelta: 'TCP vs UDP answer' }])
+
+    const wrapper = await mountPage()
+    const chips = wrapper.findAll('[data-testid="agent-suggestion"]')
+    await chips[0].trigger('click')
+    await flushPromises()
+
+    expect(streamTurnMock).toHaveBeenCalledWith(
+      'conv-standalone-1',
+      "What's the difference between TCP and UDP?",
+      expect.any(Function),
+    )
+    expect(wrapper.find('[data-testid="agent-empty-state"]').exists()).toBe(false)
+    const bubbles = wrapper.findAll('[data-testid="agent-message"]')
+    expect(bubbles.length).toBeGreaterThanOrEqual(1)
+    expect(wrapper.text()).toContain("What's the difference between TCP and UDP?")
+  })
+})
+
+describe('Agent chat new-chat reset', () => {
+  it('clicking new-chat-button clears messages, fires a second create call, and returns to empty state', async () => {
+    emitEvents([{ type: 'text-delta', textDelta: 'Answer' }])
+
+    const wrapper = await mountPage()
+    await wrapper.find('[data-testid="agent-input"]').setValue('Hello')
+    await wrapper.find('[data-testid="agent-send-button"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.findAll('[data-testid="agent-message"]').length).toBeGreaterThan(0)
+    expect(wrapper.find('[data-testid="agent-empty-state"]').exists()).toBe(false)
+
+    streamTurnMock.mockResolvedValue(undefined)
+
+    await wrapper.find('[data-testid="agent-new-chat-button"]').trigger('click')
+    await flushPromises()
+
+    expect(createStandaloneAgentConversation).toHaveBeenCalledTimes(2)
+    expect(wrapper.findAll('[data-testid="agent-message"]')).toHaveLength(0)
+    expect(wrapper.find('[data-testid="agent-empty-state"]').exists()).toBe(true)
+  })
+})
+
 describe('Agent chat page error handling', () => {
   it('renders error from error SSE event on assistant message and re-enables send', async () => {
     emitEvents([
