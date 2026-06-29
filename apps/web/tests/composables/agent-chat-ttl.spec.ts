@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
-  TTL_WARNING_THRESHOLD_MS,
-  TTL_WINDOW_MS,
   formatTtlRemaining,
   isTtlWarning,
+  TTL_WARNING_THRESHOLD_MS,
+  TTL_WINDOW_MS,
   ttlRemainingMs,
 } from '~/composables/agentChatTtl'
 

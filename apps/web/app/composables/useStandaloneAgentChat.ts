@@ -59,6 +59,7 @@ export function useStandaloneAgentChat() {
     messages.value.push(assistant)
 
     isStreaming.value = true
+    lastActivityAt.value = new Date().toISOString()
 
     try {
       await streamTurn(id, trimmed, (event) => handleEvent(assistant, event))

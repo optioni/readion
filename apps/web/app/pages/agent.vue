@@ -1,11 +1,38 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import AgentBubble from '~/components/AgentBubble.vue'
 import { AGENT_COPY, AGENT_SUGGESTIONS } from '~/composables/agentChatCopy'
+import {
+  formatTtlRemaining,
+  isTtlWarning,
+  ttlRemainingMs,
+} from '~/composables/agentChatTtl'
 import { useStandaloneAgentChat } from '~/composables/useStandaloneAgentChat'
 
-const { messages, isStreaming, send, newChat } = useStandaloneAgentChat()
+const { messages, isStreaming, lastActivityAt, send, newChat } = useStandaloneAgentChat()
 const input = ref('')
+
+const now = ref(Date.now())
+const nowInterval = setInterval(() => {
+  now.value = Date.now()
+}, 60_000)
+onUnmounted(() => clearInterval(nowInterval))
+
+const ttlRemaining = computed(() => ttlRemainingMs(lastActivityAt.value, now.value))
+const ttlWarning = computed(() => isTtlWarning(ttlRemaining.value))
+
+const ttlChipText = computed(() => {
+  const remaining = ttlRemaining.value
+  const formatted = formatTtlRemaining(remaining)
+  if (ttlWarning.value || remaining === 0) {
+    return `Expires in ${formatted}`
+  }
+  return `Resets after 4h idle · ${formatted} remaining`
+})
+
+const ttlBannerMinutes = computed(() =>
+  Math.floor(ttlRemaining.value / (60 * 1000)),
+)
 
 async function handleSend(): Promise<void> {
   const content = input.value
@@ -37,7 +64,7 @@ async function handleNewChat(): Promise<void> {
         <span
           data-testid="agent-ttl-chip"
           class="rounded-full border border-readion-border-strong px-2 py-0.5 text-[10px] text-readion-text-muted"
-        />
+        >{{ ttlChipText }}</span>
         <button
           type="button"
           data-testid="agent-new-chat-button"
@@ -47,6 +74,14 @@ async function handleNewChat(): Promise<void> {
           New chat
         </button>
       </div>
+    </div>
+
+    <div
+      v-if="ttlWarning"
+      data-testid="agent-expiry-banner"
+      class="border-b border-readion-warning/30 bg-readion-warning/10 px-5 py-2 text-[11px] text-readion-text-secondary"
+    >
+      This conversation resets in {{ ttlBannerMinutes }} minutes due to inactivity. Send a message to reset the timer.
     </div>
 
     <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
