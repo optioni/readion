@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
+import CertSetupCoverageBar from '~/components/admin/CertSetupCoverageBar.vue'
 import { readCoverageEnvelope } from '~/composables/adminEnvelope'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
-import { statusColorForScore } from '~/composables/statusColor'
 import { certificationCoverageControllerCoverage } from '~~/src/api/certification-coverage/certification-coverage'
 
 const props = defineProps<{ certId: string }>()
@@ -16,19 +16,6 @@ const coverageQuery = useQuery({
 })
 
 const report = computed(() => coverageQuery.data.value ?? null)
-
-function percent(count: number, threshold: number): number {
-  if (threshold <= 0) return 100
-  return Math.min(100, (count / threshold) * 100)
-}
-
-function barWidth(count: number, threshold: number): string {
-  return `${percent(count, threshold)}%`
-}
-
-function barColorClass(count: number, threshold: number): string {
-  return `bg-readion-status-${statusColorForScore(percent(count, threshold))}`
-}
 </script>
 
 <template>
@@ -42,30 +29,13 @@ function barColorClass(count: number, threshold: number): string {
 
     <template v-if="report">
       <ul class="flex flex-col gap-3">
-        <li
-          v-for="domain in report.domains"
-          :key="domain.name"
-          data-testid="coverage-domain-bar"
-          :data-domain="domain.name"
-          class="flex flex-col gap-1"
-        >
-          <div class="flex items-center justify-between text-xs">
-            <span class="font-medium text-slate-100">{{ domain.name }}</span>
-            <span class="font-mono text-slate-400">
-              {{ domain.chunkCount }} / {{ domain.chunkThreshold }}
-              <span :data-testid="`coverage-met-${domain.name}`" class="ml-2">
-                {{ domain.met ? 'Met' : 'Below threshold' }}
-              </span>
-            </span>
-          </div>
-          <div class="h-2 w-full overflow-hidden rounded-full bg-readion-background-surface">
-            <div
-              data-testid="coverage-bar-fill"
-              class="h-full rounded-full transition-all"
-              :class="barColorClass(domain.chunkCount, domain.chunkThreshold)"
-              :style="{ width: barWidth(domain.chunkCount, domain.chunkThreshold) }"
-            />
-          </div>
+        <li v-for="domain in report.domains" :key="domain.name">
+          <CertSetupCoverageBar
+            :name="domain.name"
+            :chunk-count="domain.chunkCount"
+            :chunk-threshold="domain.chunkThreshold"
+            :met="domain.met"
+          />
         </li>
       </ul>
 
