@@ -54,9 +54,9 @@
 
 ## 9. Cert re-verification (due list + client diff)
 
-- [ ] 9.1 RED: Write unit test — due list from `certSetupControllerListDueForReverification`; re-verify reads current values via `certificationsControllerDetail`, re-runs discover/extract, diffs proposed vs current client-side, and submits `certSetupControllerReverify` with `{ confirmedSourceUrl, domains, questionCount, passingScore, timeLimitMinutes, provenance }`; "Accept all" is client-side. Build to `AdminCertSetup.html` → `StaleRecertScreen`. SPEC.md → Certification Setup & Grounding (Metadata freshness)
-- [ ] 9.2 GREEN: Implement the due list + re-verification diff + `reverify` mutation
-- [ ] 9.3 REFACTOR: Reuse the discovery/extraction steps from the setup wizard
+- [x] 9.1 RED: Write unit test — due list from `certSetupControllerListDueForReverification`; re-verify reads current values via `certificationsControllerDetail`, re-runs discover/extract, diffs proposed vs current client-side, and submits `certSetupControllerReverify` with `{ confirmedSourceUrl, domains, questionCount, passingScore, timeLimitMinutes, provenance }`; "Accept all" is client-side. Build to `AdminCertSetup.html` → `StaleRecertScreen`. SPEC.md → Certification Setup & Grounding (Metadata freshness)
+- [x] 9.2 GREEN: Implement the due list + re-verification diff + `reverify` mutation
+- [x] 9.3 REFACTOR: Reuse the discovery/extraction steps from the setup wizard
 
 ## 10. Review queue placeholder
 
