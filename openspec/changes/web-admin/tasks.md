@@ -24,9 +24,9 @@
 
 ## 4. Audit Log section
 
-- [ ] 4.1 RED: Write unit test for the read-only Audit Log table — renders action, target (`targetType`/`targetId`), before/after JSONB (tolerating `null`), timestamp, and `userId` actor from `adminControllerListAuditLogs`; no edit/delete/export control; no fabricated actor email. Build to `AdminContentUsers.html` → `AuditLogScreen`. SPEC.md → AdminModule (AuditLog)
-- [ ] 4.2 GREEN: Implement the Audit Log section
-- [ ] 4.3 REFACTOR: Clean up snapshot rendering
+- [x] 4.1 RED: Write unit test for the read-only Audit Log table — renders action, target (`targetType`/`targetId`), before/after JSONB (tolerating `null`), timestamp, and `userId` actor from `adminControllerListAuditLogs`; no edit/delete/export control; no fabricated actor email. Build to `AdminContentUsers.html` → `AuditLogScreen`. SPEC.md → AdminModule (AuditLog)
+- [x] 4.2 GREEN: Implement the Audit Log section
+- [x] 4.3 REFACTOR: Clean up snapshot rendering
 
 ## 5. Sources section
 
