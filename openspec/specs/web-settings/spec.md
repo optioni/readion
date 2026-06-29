@@ -46,15 +46,19 @@ The Account tab SHALL render an editable display-timezone control seeded from th
 - **WHEN** the save request returns a `422` problem-details response
 - **THEN** an error message is shown and the control remains editable
 
-### Requirement: Account tab triggers password reset by email
+### Requirement: Account tab password management
 
-Because no dedicated change-password endpoint exists, the Account tab's password control SHALL trigger a password reset for the signed-in user by calling `POST /api/v1/auth/forgot-password` with the user's email, and SHALL show a confirmation that a reset link has been emailed. It SHALL NOT collect or submit current/new password fields against any change-password endpoint.
+The `web-settings` Account tab SHALL let an authenticated user change their password in-session using `POST /api/v1/auth/change-password` (current / new / confirm fields), replacing the prior stopgap that triggered the forgot-password email flow. Validation errors (`422` weak password, `401`/`403` wrong current password) surface inline and keep the form editable; on success the form clears and a confirmation is shown.
 
-#### Scenario: User requests a password reset link
+#### Scenario: In-session password change from Settings
 
-- **WHEN** the signed-in user (email `jamie@org.io`) activates the "Change password" / "Email me a reset link" action
-- **THEN** `POST /api/v1/auth/forgot-password` is called with body `{ "email": "jamie@org.io" }`
-- **THEN** a confirmation message states that a secure reset link has been emailed
+- **WHEN** the user fills current + new + matching confirm and submits, and the backend returns success
+- **THEN** the form clears, a success confirmation is shown, and no forgot-password email is sent
+
+#### Scenario: Wrong current password surfaces inline
+
+- **WHEN** the backend returns `401`/`403` because the current password is wrong
+- **THEN** an inline error is shown on the current-password field and the form stays editable with entered values preserved (except passwords)
 
 ### Requirement: Account tab deletes the account with password re-confirmation
 
