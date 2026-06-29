@@ -12,9 +12,9 @@
 
 ## 2. adminQueryKeys + shared admin query/mutation wrappers
 
-- [ ] 2.1 RED: Write unit test for `app/composables/adminQueryKeys.ts` (stable keys per surface: `users()`, `auditLogs()`, `contentSources(certId)`, `sourceJobs(id)`, `dueForReverification()`, `coverage(certId)`) and the envelope-narrowing helper that types weak Orval responses via `@readion/shared`
-- [ ] 2.2 GREEN: Implement `adminQueryKeys` and the narrowing helpers
-- [ ] 2.3 REFACTOR: Deduplicate against existing query-key composables where sensible
+- [x] 2.1 RED: Write unit test for `app/composables/adminQueryKeys.ts` (stable keys per surface: `users()`, `auditLogs()`, `contentSources(certId)`, `sourceJobs(id)`, `dueForReverification()`, `coverage(certId)`) and the envelope-narrowing helper that types weak Orval responses via `@readion/shared`
+- [x] 2.2 GREEN: Implement `adminQueryKeys` and the narrowing helpers
+- [x] 2.3 REFACTOR: Deduplicate against existing query-key composables where sensible
 
 ## 3. Users section
 
