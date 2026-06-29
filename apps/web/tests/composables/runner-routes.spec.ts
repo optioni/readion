@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   mockExamRunPath,
+  progressPath,
   reviewRunPath,
   sessionRunPath,
   sessionStartPath,
@@ -26,5 +27,9 @@ describe('runner route builders', () => {
 
   it('builds the session-summary path from a session id', () => {
     expect(sessionSummaryPath('sess-1')).toBe('/sessions/sess-1/summary')
+  })
+
+  it('builds the progress path from an enrollment id', () => {
+    expect(progressPath('enr-1')).toBe('/user-certifications/enr-1/progress')
   })
 })

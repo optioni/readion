@@ -36,6 +36,7 @@ function mountPage() {
   return mount(CertDetailPage, {
     global: {
       stubs: {
+        NuxtLink: { props: ['to'], template: '<a :href="to"><slot /></a>' },
         OverviewTab: { template: '<div data-testid="overview-tab-stub" />' },
         SessionsTab: { template: '<div data-testid="sessions-tab-stub" />' },
         ExamHistoryTab: { template: '<div data-testid="exam-history-tab-stub" />' },
@@ -106,5 +107,14 @@ describe('Cert detail not-found state', () => {
     const wrapper = mountPage()
     expect(wrapper.find('[data-testid="cert-detail-not-found"]').exists()).toBe(true)
     expect(tabs(wrapper)).toHaveLength(0)
+  })
+})
+
+describe('Cert detail progress link', () => {
+  it('renders a link to the progress page in the header', () => {
+    const wrapper = mountPage()
+    const progressLink = wrapper.find('[data-testid="view-progress-link"]')
+    expect(progressLink.exists()).toBe(true)
+    expect(progressLink.attributes('href')).toBe('/user-certifications/enr-1/progress')
   })
 })

@@ -270,12 +270,12 @@ describe('CertCard due-review quick-start', () => {
     expect(banner.text()).toContain('12')
   })
 
-  it('starts the review and navigates into the review run on activation', async () => {
+  it('navigates into the review queue entry without pre-calling start on activation', async () => {
     stubDueReviews(12)
     const wrapper = mountCard()
     await wrapper.find('[data-testid="review-start-btn"]').trigger('click')
     await flushPromises()
-    expect(enrollmentReviewControllerStart).toHaveBeenCalledWith('enr-1')
+    expect(enrollmentReviewControllerStart).not.toHaveBeenCalled()
     expect(mockPush).toHaveBeenCalledWith('/user-certifications/enr-1/review')
   })
 })
