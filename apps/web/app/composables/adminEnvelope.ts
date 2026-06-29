@@ -8,17 +8,7 @@ import type {
   ExtractionStatusResponse,
   IngestionJobStatus,
 } from '@readion/shared'
-
-export interface AdminCoverageDomain {
-  name: string
-  chunkCount: number
-  coverage: number
-}
-
-export interface AdminCoverageResponse {
-  domains: AdminCoverageDomain[]
-  overallCoverage: number
-}
+import type { CoverageReportDto } from '~~/src/api/model/coverageReportDto'
 
 export const readListEnvelope = <T>(response: {
   data: unknown
@@ -53,5 +43,5 @@ export const readDueForReverificationEnvelope = (response: {
   data: unknown
 }): DueForReverificationItem[] => readDataEnvelope<DueForReverificationItem[]>(response)
 
-export const readCoverageEnvelope = (response: { data: unknown }): AdminCoverageResponse =>
-  readDataEnvelope<AdminCoverageResponse>(response)
+export const readCoverageEnvelope = (response: { data: unknown }): CoverageReportDto =>
+  readDataEnvelope<CoverageReportDto>(response)

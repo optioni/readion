@@ -197,14 +197,43 @@ const CERTIFICATION = {
   state: 'live',
 }
 
+// The real GET /certifications/:id/coverage shape (CoverageReportDto): per-domain chunkCount vs
+// chunkThreshold + met flag, plus the overall totals/state. No fabricated `coverage` fraction.
 const COVERAGE = {
   domains: [
-    { name: 'Secure Architectures', chunkCount: 142, coverage: 0.88 },
-    { name: 'Resilient Architectures', chunkCount: 96, coverage: 0.71 },
-    { name: 'High-Performing Architectures', chunkCount: 80, coverage: 0.64 },
-    { name: 'Cost-Optimized Architectures', chunkCount: 55, coverage: 0.49 },
+    {
+      name: 'Secure Architectures',
+      chunkCount: 142,
+      chunkThreshold: 120,
+      enabledSourceCount: 3,
+      met: true,
+    },
+    {
+      name: 'Resilient Architectures',
+      chunkCount: 96,
+      chunkThreshold: 120,
+      enabledSourceCount: 2,
+      met: false,
+    },
+    {
+      name: 'High-Performing Architectures',
+      chunkCount: 80,
+      chunkThreshold: 120,
+      enabledSourceCount: 1,
+      met: false,
+    },
+    {
+      name: 'Cost-Optimized Architectures',
+      chunkCount: 55,
+      chunkThreshold: 120,
+      enabledSourceCount: 1,
+      met: false,
+    },
   ],
-  overallCoverage: 0.68,
+  totalChunks: 373,
+  totalThreshold: 480,
+  state: 'draft',
+  met: false,
 }
 
 const DISCOVER_RESPONSE = {

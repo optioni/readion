@@ -46,7 +46,10 @@ async function discover() {
       headers: jsonHeaders,
       body: JSON.stringify(body),
     })
-    candidates.value = readDiscoverSourcesEnvelope(response).candidates
+    const discovered = readDiscoverSourcesEnvelope(response)
+    candidates.value = discovered.candidates
+    // Carried into wizard state so step 3 can offer them for registration after the draft exists.
+    props.state.suggestedContentSources = discovered.suggestedContentSources ?? []
   } catch (error) {
     if (error instanceof ReadionProblemDetailsError) {
       discoverError.value = error.detail ?? error.title

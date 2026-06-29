@@ -4,13 +4,13 @@ import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import CertSetupWizard from '~/components/admin/CertSetupWizard.vue'
-import { certificationCoverageControllerCoverage } from '~~/src/api/certification-coverage/certification-coverage'
 import {
   certSetupControllerCreate,
   certSetupControllerDiscoverSources,
   certSetupControllerExtract,
   certSetupControllerReadExtraction,
 } from '~~/src/api/cert-setup/cert-setup'
+import { certificationCoverageControllerCoverage } from '~~/src/api/certification-coverage/certification-coverage'
 
 vi.mock('~~/src/api/cert-setup/cert-setup')
 vi.mock('~~/src/api/certification-coverage/certification-coverage')
@@ -236,7 +236,9 @@ describe('CertSetupWizard step 2→3 — submit draft + coverage', () => {
   }
 
   const COVERAGE_REPORT = {
-    domains: [{ name: 'Secure', chunkCount: 10, chunkThreshold: 20, enabledSourceCount: 1, met: false }],
+    domains: [
+      { name: 'Secure', chunkCount: 10, chunkThreshold: 20, enabledSourceCount: 1, met: false },
+    ],
     totalChunks: 10,
     totalThreshold: 20,
     state: 'draft',
@@ -276,9 +278,7 @@ describe('CertSetupWizard step 2→3 — submit draft + coverage', () => {
     await flushPromises()
 
     expect(certSetupControllerCreate).toHaveBeenCalledTimes(1)
-    const body = JSON.parse(
-      vi.mocked(certSetupControllerCreate).mock.calls[0]?.[0]?.body as string,
-    )
+    const body = JSON.parse(vi.mocked(certSetupControllerCreate).mock.calls[0]?.[0]?.body as string)
     expect(body).toMatchObject({ name: CERT_NAME, provider: 'AWS', code: CODE })
 
     expect(wrapper.find('[data-testid="cert-coverage"]').exists()).toBe(true)

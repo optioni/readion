@@ -1,4 +1,9 @@
-import type { CertExtractionFields, CertificationDomain, ExtractedField } from '@readion/shared'
+import type {
+  CertExtractionFields,
+  CertificationDomain,
+  ExtractedField,
+  SuggestedContentSource,
+} from '@readion/shared'
 import { extractRequestSchema } from '@readion/shared'
 import { reactive } from 'vue'
 import { readDataEnvelope } from '~/composables/adminEnvelope'
@@ -35,6 +40,9 @@ export interface CertSetupWizardState {
   fieldValues: CertSetupFieldValues // editable working values used to build the create body
   manualFields: CertExtractionFieldKey[] // keys the admin edited/flagged → provenance { manuallyConfirmed }
   identity: { name: string; provider: string; code: string } // admin-entered cert identity
+  // --- added by group 8 (step 3 sources/coverage + step 4 draft submit) ---
+  suggestedContentSources: SuggestedContentSource[] // captured from discovery; step 3 registers/discards
+  createdCertId: string | null // the created draft cert id; gates coverage + sources sub-steps
 }
 
 export interface CertSetupWizard {
@@ -43,6 +51,7 @@ export interface CertSetupWizard {
   applyExtraction: (fields: CertExtractionFields) => void
   editFieldValue: <K extends CertExtractionFieldKey>(key: K, value: CertSetupFieldValues[K]) => void
   flagField: (key: CertExtractionFieldKey) => void
+  registerCreatedDraft: (certId: string) => void
 }
 
 function isGrounded<T>(
@@ -71,6 +80,8 @@ export function useCertSetupWizard(): CertSetupWizard {
     },
     manualFields: [],
     identity: { name: '', provider: '', code: '' },
+    suggestedContentSources: [],
+    createdCertId: null,
   })
 
   // Step 1 confirm action: persist the confirmed url, kick off grounded extraction,
@@ -124,5 +135,12 @@ export function useCertSetupWizard(): CertSetupWizard {
     markManual(key)
   }
 
-  return { state, confirmSource, applyExtraction, editFieldValue, flagField }
+  // Step 4 success: store the created draft's id and advance to step 3 (sources +
+  // read-only coverage). Keeping the transition here so step components stay declarative.
+  function registerCreatedDraft(certId: string): void {
+    state.createdCertId = certId
+    state.step = 3
+  }
+
+  return { state, confirmSource, applyExtraction, editFieldValue, flagField, registerCreatedDraft }
 }

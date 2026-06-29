@@ -1,9 +1,9 @@
-import type { CoverageReportDto } from '~~/src/api/model/coverageReportDto'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import CertSetupCoverage from '~/components/admin/CertSetupCoverage.vue'
 import { certificationCoverageControllerCoverage } from '~~/src/api/certification-coverage/certification-coverage'
+import type { CoverageReportDto } from '~~/src/api/model/coverageReportDto'
 
 vi.mock('~~/src/api/certification-coverage/certification-coverage')
 

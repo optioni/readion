@@ -24,7 +24,7 @@ function mountStep() {
   wizard.state.createdCertId = CERT_ID
   wizard.state.suggestedContentSources = [
     { url: 'https://docs.aws.amazon.com/', type: 'web' },
-    { url: 'https://aws.amazon.com/blogs/architecture/feed/', type: 'rss' },
+    { url: 'https://www.youtube.com/watch?v=saa', type: 'youtube' },
   ]
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -87,7 +87,9 @@ describe('CertSetupSourcesStep manual add', () => {
     vi.mocked(contentControllerRegister).mockResolvedValue(registered())
     const { wrapper, invalidateSpy } = mountStep()
 
-    await wrapper.find('[data-testid="cert-source-url-input"]').setValue('https://example.com/guide')
+    await wrapper
+      .find('[data-testid="cert-source-url-input"]')
+      .setValue('https://example.com/guide')
     await wrapper.find('[data-testid="cert-source-type-select"]').setValue('web')
     await wrapper.find('[data-testid="cert-source-add-btn"]').trigger('submit')
     await flushPromises()
