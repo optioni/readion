@@ -3,6 +3,7 @@ import { forgotPasswordRequestSchema, updateUserProfileRequestSchema } from '@re
 import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref, watch } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
+import { emailInitials } from '~/composables/emailInitials'
 import { settingsQueryKeys } from '~/composables/settingsQueryKeys'
 import { useSettingsProfile } from '~/composables/useSettingsProfile'
 import { useAuthStore } from '~/stores/auth'
@@ -16,11 +17,7 @@ const profileQuery = useSettingsProfile()
 
 const email = computed(() => profileQuery.data.value?.email ?? '')
 
-const initials = computed(() => {
-  const localPart = email.value.split('@')[0] ?? ''
-  const letters = localPart.replace(/[^a-zA-Z]/g, '').slice(0, 2)
-  return (letters || email.value.slice(0, 2)).toUpperCase()
-})
+const initials = computed(() => emailInitials(email.value))
 
 const timeZones = Intl.supportedValuesOf('timeZone')
 

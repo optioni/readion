@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
+import { emailInitials } from '~/composables/emailInitials'
 import { useAdminUsers } from '~/composables/useAdminUsers'
 import { adminControllerDemote, adminControllerPromote } from '~~/src/api/admin/admin'
 
@@ -16,12 +17,6 @@ const isLoading = computed(() => usersQuery.isLoading.value)
 const isError = computed(() => usersQuery.isError.value)
 
 const demoteError = ref<string | null>(null)
-
-function initials(email: string): string {
-  const localPart = email.split('@')[0] ?? ''
-  const letters = localPart.replace(/[^a-zA-Z]/g, '').slice(0, 2)
-  return (letters || email.slice(0, 2)).toUpperCase()
-}
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
@@ -91,7 +86,7 @@ async function demote(id: string) {
                   data-testid="user-avatar"
                   class="flex size-9 items-center justify-center rounded-full bg-readion-primary font-medium text-white text-xs"
                 >
-                  {{ initials(user.email) }}
+                  {{ emailInitials(user.email) }}
                 </span>
                 <span data-testid="user-email" class="text-slate-100">{{ user.email }}</span>
               </div>
