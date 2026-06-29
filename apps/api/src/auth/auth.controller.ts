@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common'
 import type { ValidationErrorItem } from '@readion/shared'
 import {
+  changePasswordRequestSchema,
   forgotPasswordRequestSchema,
   loginRequestSchema,
   passwordResetRequestSchema,
@@ -94,6 +95,22 @@ export class AuthController {
   @Post('resend-verification')
   resendVerification(@CurrentUser() user: CurrentUserPrincipal) {
     return this.auth.resendVerification(user.id)
+  }
+
+  @AuthThrottle()
+  @HttpCode(200)
+  @Post('change-password')
+  async changePassword(
+    @CurrentUser() user: CurrentUserPrincipal,
+    @Body() body: unknown,
+    @Res({ passthrough: true }) response: CookieResponse,
+  ) {
+    const session = await this.auth.changePassword(
+      user.id,
+      parseBody(changePasswordRequestSchema, body),
+    )
+    this.setSessionCookies(response, session.refreshToken)
+    return { accessToken: session.accessToken }
   }
 
   @Public()

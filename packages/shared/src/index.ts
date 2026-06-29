@@ -25,6 +25,7 @@ export {
 export type {
   AuthSessionResponse,
   AuthUser,
+  ChangePasswordRequest,
   ForgotPasswordRequest,
   LoginRequest,
   PasswordResetRequest,
@@ -35,6 +36,7 @@ export type {
 export {
   authSessionResponseSchema,
   authUserSchema,
+  changePasswordRequestSchema,
   forgotPasswordRequestSchema,
   loginRequestSchema,
   passwordResetRequestSchema,
