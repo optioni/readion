@@ -1,21 +1,14 @@
 <script setup lang="ts">
-import {
-  type DiscoveryCandidate,
-  discoverSourcesRequestSchema,
-  extractRequestSchema,
-} from '@readion/shared'
+import { type DiscoveryCandidate, extractRequestSchema } from '@readion/shared'
 import { computed, ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
-import { readDiscoverSourcesEnvelope } from '~/composables/adminEnvelope'
+import { discoverCertSources } from '~/composables/certSetupKickoff'
 import type { CertSetupWizardState } from '~/composables/useCertSetupWizard'
-import { certSetupControllerDiscoverSources } from '~~/src/api/cert-setup/cert-setup'
 
 const props = defineProps<{
   state: CertSetupWizardState
   confirmSource: (url: string) => Promise<void>
 }>()
-
-const jsonHeaders = { 'Content-Type': 'application/json' }
 
 const candidates = ref<DiscoveryCandidate[]>([])
 const selectedUrl = ref<string | null>(null)
@@ -37,16 +30,8 @@ const canConfirm = computed(() => isValidUrl(effectiveUrl.value))
 async function discover() {
   if (!canDiscover.value) return
   discoverError.value = null
-  const body = discoverSourcesRequestSchema.parse({
-    name: props.state.name,
-    ...(props.state.code ? { code: props.state.code } : {}),
-  })
   try {
-    const response = await certSetupControllerDiscoverSources({
-      headers: jsonHeaders,
-      body: JSON.stringify(body),
-    })
-    const discovered = readDiscoverSourcesEnvelope(response)
+    const discovered = await discoverCertSources(props.state.name, props.state.code)
     candidates.value = discovered.candidates
     // Carried into wizard state so step 3 can offer them for registration after the draft exists.
     props.state.suggestedContentSources = discovered.suggestedContentSources ?? []

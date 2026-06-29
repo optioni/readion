@@ -1,25 +1,16 @@
 <script setup lang="ts">
 import type { CertExtractionFields, DueForReverificationItem } from '@readion/shared'
-import {
-  discoverSourcesRequestSchema,
-  extractRequestSchema,
-  reverifyCertificationRequestSchema,
-} from '@readion/shared'
+import { reverifyCertificationRequestSchema } from '@readion/shared'
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref, watch } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
-import {
-  readDataEnvelope,
-  readDiscoverSourcesEnvelope,
-  readExtractionStatusEnvelope,
-} from '~/composables/adminEnvelope'
+import { readDataEnvelope, readExtractionStatusEnvelope } from '~/composables/adminEnvelope'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import { isTerminalWithoutFields, nextRefetchInterval } from '~/composables/certExtractionPoll'
 import { buildCertDiff, buildReverifyBody, type CertDiff } from '~/composables/certReverifyDiff'
+import { discoverCertSources, enqueueCertExtraction } from '~/composables/certSetupKickoff'
 import { useDueForReverification } from '~/composables/useDueForReverification'
 import {
-  certSetupControllerDiscoverSources,
-  certSetupControllerExtract,
   certSetupControllerReadExtraction,
   certSetupControllerReverify,
 } from '~~/src/api/cert-setup/cert-setup'
@@ -85,27 +76,10 @@ async function startReverify(item: DueForReverificationItem): Promise<void> {
     const detail = await certificationsControllerDetail(item.id)
     currentCert.value = readDataEnvelope<CertificationResponseDto>(detail)
 
-    const discoverBody = discoverSourcesRequestSchema.parse({
-      name: item.name,
-      ...(item.code ? { code: item.code } : {}),
-    })
-    const discovered = readDiscoverSourcesEnvelope(
-      await certSetupControllerDiscoverSources({
-        headers: jsonHeaders,
-        body: JSON.stringify(discoverBody),
-      }),
-    )
+    const discovered = await discoverCertSources(item.name, item.code)
     confirmedSourceUrl.value = discovered.candidates[0]?.url ?? ''
 
-    const extractBody = extractRequestSchema.parse({
-      name: item.name,
-      ...(item.code ? { code: item.code } : {}),
-      confirmedSourceUrl: confirmedSourceUrl.value,
-    })
-    const enqueued = readDataEnvelope<{ jobId: string; state: string }>(
-      await certSetupControllerExtract({ headers: jsonHeaders, body: JSON.stringify(extractBody) }),
-    )
-    jobId.value = enqueued.jobId
+    jobId.value = await enqueueCertExtraction(item.name, item.code, confirmedSourceUrl.value)
   } catch (error) {
     reverifyError.value =
       error instanceof ReadionProblemDetailsError

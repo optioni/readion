@@ -4,12 +4,8 @@ import type {
   ExtractedField,
   SuggestedContentSource,
 } from '@readion/shared'
-import { extractRequestSchema } from '@readion/shared'
 import { reactive } from 'vue'
-import { readDataEnvelope } from '~/composables/adminEnvelope'
-import { certSetupControllerExtract } from '~~/src/api/cert-setup/cert-setup'
-
-const jsonHeaders = { 'Content-Type': 'application/json' }
+import { enqueueCertExtraction } from '~/composables/certSetupKickoff'
 
 export type CertExtractionFieldKey = keyof CertExtractionFields
 
@@ -88,17 +84,8 @@ export function useCertSetupWizard(): CertSetupWizard {
   // then advance to step 2. Group 7 owns the poll + render of the extraction result;
   // it reads `state.extractionJobId` (plus `state.name`/`state.code`) to do so.
   async function confirmSource(url: string): Promise<void> {
-    const body = extractRequestSchema.parse({
-      name: state.name,
-      ...(state.code ? { code: state.code } : {}),
-      confirmedSourceUrl: url,
-    })
     state.confirmedSourceUrl = url
-    const response = await certSetupControllerExtract({
-      headers: jsonHeaders,
-      body: JSON.stringify(body),
-    })
-    state.extractionJobId = readDataEnvelope<{ jobId: string; state: string }>(response).jobId
+    state.extractionJobId = await enqueueCertExtraction(state.name, state.code, url)
     state.step = 2
   }
 
