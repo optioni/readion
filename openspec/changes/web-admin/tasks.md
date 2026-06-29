@@ -30,9 +30,9 @@
 
 ## 5. Sources section
 
-- [ ] 5.1 RED: Write unit test for the Sources section — cert selector drives `contentControllerList({ certificationId })`; rows show url/type + an enabled toggle; register-by-URL (`contentControllerRegister` with `{ certificationId, type, url }`, validated by `registerSourceRequestSchema`, no file upload); Re-ingest (`contentControllerReingest`, 202); "Remove" → `contentControllerDisable`; status pill + running-jobs banner derived from `contentControllerListJobs` (`active`→ingesting, `failed`→error, `!enabled`→disabled); NO chunk-count column, NO cancel control. Build to `AdminContentUsers.html` → `ContentSourcesScreen`. SPEC.md → ContentModule
-- [ ] 5.2 GREEN: Implement the Sources section + register/enable/disable/reingest mutations + job-status polling
-- [ ] 5.3 REFACTOR: Extract the status-derivation helper; reuse `statusColor`
+- [x] 5.1 RED: Write unit test for the Sources section — cert selector drives `contentControllerList({ certificationId })`; rows show url/type + an enabled toggle; register-by-URL (`contentControllerRegister` with `{ certificationId, type, url }`, validated by `registerSourceRequestSchema`, no file upload); Re-ingest (`contentControllerReingest`, 202); "Remove" → `contentControllerDisable`; status pill + running-jobs banner derived from `contentControllerListJobs` (`active`→ingesting, `failed`→error, `!enabled`→disabled); NO chunk-count column, NO cancel control. Build to `AdminContentUsers.html` → `ContentSourcesScreen`. SPEC.md → ContentModule
+- [x] 5.2 GREEN: Implement the Sources section + register/enable/disable/reingest mutations + job-status polling
+- [x] 5.3 REFACTOR: Extract the status-derivation helper; reuse `statusColor`
 
 ## 6. Cert setup — Step 1 discovery + confirm
 
