@@ -36,9 +36,9 @@
 
 ## 6. Cert setup — Step 1 discovery + confirm
 
-- [ ] 6.1 RED: Write unit test — name/code entry triggers `certSetupControllerDiscoverSources`; `candidates[]` (`url`,`title`,`snippet?`) render selectable with a manual-URL input; NO confidence badge; confirming one url advances to extraction. Build to `AdminCertSetup.html` → `SourceConfirmationScreen`. SPEC.md → Certification Setup & Grounding
-- [ ] 6.2 GREEN: Implement the discovery/confirm step
-- [ ] 6.3 REFACTOR: Clean up source-selection state
+- [x] 6.1 RED: Write unit test — name/code entry triggers `certSetupControllerDiscoverSources`; `candidates[]` (`url`,`title`,`snippet?`) render selectable with a manual-URL input; NO confidence badge; confirming one url advances to extraction. Build to `AdminCertSetup.html` → `SourceConfirmationScreen`. SPEC.md → Certification Setup & Grounding
+- [x] 6.2 GREEN: Implement the discovery/confirm step
+- [x] 6.3 REFACTOR: Clean up source-selection state
 
 ## 7. Cert setup — Step 2 grounded extraction + citations
 
