@@ -1,3 +1,4 @@
+import type { RoleValue } from '@readion/shared'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
@@ -7,6 +8,7 @@ export type AuthUser = {
   emailVerified: boolean
   displayTimezone: string
   createdAt: string
+  role: RoleValue
 }
 
 export const useAuthStore = defineStore('auth', () => {
