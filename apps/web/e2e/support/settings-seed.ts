@@ -3,9 +3,9 @@ import type { BrowserContext, Page, Route } from '@playwright/test'
 // Route-mock harness for the web-settings acceptance loop. Mirrors progress-seed.ts and
 // session-view-seed.ts: per design.md Test Boundaries this change is frontend-only and drives the
 // REAL apps/web against a FULLY MOCKED HTTP API (Playwright `route` fulfil) so the settings tabs,
-// timezone save, study-defaults save, password-reset, and delete-account flows are exercised
+// timezone save, study-defaults save, change-password, and delete-account flows are exercised
 // deterministically without a running NestJS backend or Postgres. Every endpoint below is already a
-// committed Orval method (GET/PATCH/DELETE /users/me, POST /auth/forgot-password).
+// committed Orval method (GET/PATCH/DELETE /users/me, POST /auth/change-password).
 
 const WEB_ORIGIN = 'http://127.0.0.1:3000'
 
@@ -38,8 +38,7 @@ type Profile = {
 }
 
 // The /users/me body satisfies both the auth bootstrap (id/email/emailVerified/displayTimezone) and
-// the settings profile read (role + sessionDefaults). Served as { data: <profile> }. Email is
-// jamie@org.io because the forgot-password assertion checks that exact address.
+// the settings profile read (role + sessionDefaults). Served as { data: <profile> }.
 export const SETTINGS_PROFILE: Profile = {
   id: SETTINGS_USER_ID,
   email: 'jamie@org.io',
@@ -59,7 +58,7 @@ export const SETTINGS_PROFILE: Profile = {
 // handlers as the page issues mutations.
 export interface SettingsMockHandles {
   profilePatches: Array<Record<string, unknown>>
-  forgotPasswordBodies: Array<Record<string, unknown>>
+  changePasswordBodies: Array<Record<string, unknown>>
   deletePayloads: Array<Record<string, unknown>>
 }
 
@@ -70,6 +69,25 @@ async function fulfilJson(route: Route, status: number, body: unknown): Promise<
     headers: CORS_HEADERS,
     body: JSON.stringify(body),
   })
+}
+
+// The web mutator only maps a response to ReadionProblemDetailsError (preserving `status`) when the
+// content-type is application/problem+json; the 401 wrong-current-password case must use this so the
+// Account tab surfaces the inline current-password error.
+async function fulfilProblem(route: Route, problem: ProblemDetails): Promise<void> {
+  await route.fulfill({
+    status: problem.status,
+    contentType: 'application/problem+json',
+    headers: CORS_HEADERS,
+    body: JSON.stringify(problem),
+  })
+}
+
+type ProblemDetails = {
+  type: string
+  title: string
+  status: number
+  detail: string
 }
 
 async function fulfilNoContent(route: Route): Promise<void> {
@@ -103,8 +121,15 @@ function readJsonBody(route: Route): Record<string, unknown> {
  *
  * `deleteStatus` controls the DELETE /users/me response: 204 (success → logout + redirect) by
  * default, or 401 to exercise the wrong-password path that keeps the modal open.
+ *
+ * `changePasswordStatus` controls POST /auth/change-password: 200 (success → confirmation) by
+ * default, or 401 (problem+json) to exercise the wrong-current-password inline error.
  */
-export function mockSettings(page: Page, deleteStatus = 204): SettingsMockHandles {
+export function mockSettings(
+  page: Page,
+  deleteStatus = 204,
+  changePasswordStatus = 200,
+): SettingsMockHandles {
   const context = page.context()
 
   // Mutable profile so PATCH saves are reflected by subsequent GET /users/me reads.
@@ -115,7 +140,7 @@ export function mockSettings(page: Page, deleteStatus = 204): SettingsMockHandle
 
   const handles: SettingsMockHandles = {
     profilePatches: [],
-    forgotPasswordBodies: [],
+    changePasswordBodies: [],
     deletePayloads: [],
   }
 
@@ -133,10 +158,20 @@ export function mockSettings(page: Page, deleteStatus = 204): SettingsMockHandle
     await fulfilJson(route, 200, { data: { accessToken: 'mock-access-token' } })
   })
 
-  // POST /auth/forgot-password — body-less Orval method; the signed-in email is sent in the body.
-  mock(page, /\/api\/v1\/auth\/forgot-password$/, async (route) => {
-    handles.forgotPasswordBodies.push(readJsonBody(route))
-    await fulfilNoContent(route)
+  // POST /auth/change-password — captures { currentPassword, newPassword }. Success mirrors
+  // /auth/refresh (200 { data: { accessToken } }); the wrong-current case returns problem+json 401.
+  mock(page, /\/api\/v1\/auth\/change-password$/, async (route) => {
+    handles.changePasswordBodies.push(readJsonBody(route))
+    if (changePasswordStatus === 200) {
+      await fulfilJson(route, 200, { data: { accessToken: 'mock-access-token' } })
+      return
+    }
+    await fulfilProblem(route, {
+      type: 'about:blank',
+      title: 'Unauthorized',
+      status: 401,
+      detail: 'Current password is incorrect',
+    })
   })
 
   // GET / PATCH / DELETE /api/v1/users/me — one handler branches by method.

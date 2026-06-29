@@ -24,18 +24,18 @@
 
 ## 4. Codegen + client
 
-- [ ] 4.1 Run `yarn codegen` (api running) and commit the regenerated Orval client containing `authControllerChangePassword`.
+- [x] 4.1 Run `yarn codegen` (api running) and commit the regenerated Orval client containing `authControllerChangePassword`.
 
 ## 5. web-settings Account tab rewire
 
-- [ ] 5.1 RED: unit test — Account password section renders current/new/confirm; submit calls `authControllerChangePassword`; `422`→new-password field error, `401`/`403`→current-password field error; success clears form + shows confirmation; no `forgot-password` call.
-- [ ] 5.2 GREEN: replace the forgot-password stopgap with the change-password form.
-- [ ] 5.3 REFACTOR: clean up form/error state; remove now-dead forgot-password-from-settings copy.
+- [x] 5.1 RED: unit test — Account password section renders current/new/confirm; submit calls `authControllerChangePassword`; `422`→new-password field error, `401`/`403`→current-password field error; success clears form + shows confirmation; no `forgot-password` call.
+- [x] 5.2 GREEN: replace the forgot-password stopgap with the change-password form.
+- [x] 5.3 REFACTOR: clean up form/error state; remove now-dead forgot-password-from-settings copy.
 
 ## 6. e2e + close the outer loop
 
-- [ ] 6.1 Update/Add Playwright e2e (`apps/web/e2e/`) for the Settings change-password happy path + wrong-current inline error with the endpoint mocked.
-- [ ] 6.2 Make the Section 0 acceptance test green end-to-end.
+- [x] 6.1 Update/Add Playwright e2e (`apps/web/e2e/`) for the Settings change-password happy path + wrong-current inline error with the endpoint mocked.
+- [x] 6.2 Make the Section 0 acceptance test green end-to-end.
 
 ## 7. Verification gates
 

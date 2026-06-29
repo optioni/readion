@@ -18,7 +18,7 @@ import { mockSettings, SETTINGS_PROFILE } from './support/settings-seed'
 //   GET    /api/v1/users/me              (profile read — narrowed via userProfileResponseSchema)
 //   PATCH  /api/v1/users/me              ({ displayTimezone } and/or { sessionDefaults } only)
 //   DELETE /api/v1/users/me              ({ password } → 204 logout+redirect / 401 invalid)
-//   POST   /api/v1/auth/forgot-password  ({ email } — password "change" = reset-by-email)
+//   POST   /api/v1/auth/change-password  ({ currentPassword, newPassword } → 200 / 401 wrong current)
 //
 // Key data-testids (the contract for groups 1–7)
 //   Shell / layout : settings-page, app-nav-settings (data-active="true" when on /settings)
@@ -28,7 +28,9 @@ import { mockSettings, SETTINGS_PROFILE } from './support/settings-seed'
 //   Account        : account-email (read-only), account-avatar (derived initials),
 //                    account-full-name (MUST be absent — User has no name attribute),
 //                    timezone-select, save-timezone-btn,
-//                    request-reset-btn, reset-link-confirmation,
+//                    current-password-input, new-password-input, confirm-password-input,
+//                    change-password-btn, change-password-confirmation,
+//                    current-password-error, new-password-error, confirm-password-error,
 //                    delete-account-btn, delete-account-modal, delete-password-input,
 //                    confirm-delete-btn, delete-account-error
 //   Study defaults : reuses OnboardingSessionPrefs option buttons (duration-option-60,
@@ -38,7 +40,7 @@ import { mockSettings, SETTINGS_PROFILE } from './support/settings-seed'
 // ============================================================================
 
 test.describe('web-settings — settings page', () => {
-  test('account → study-defaults → notifications journey: edit + save profile, reset password, delete account', async ({
+  test('account → study-defaults → notifications journey: edit + save profile, change password, delete account', async ({
     page,
   }) => {
     const handles = mockSettings(page)
@@ -102,14 +104,16 @@ test.describe('web-settings — settings page', () => {
       .poll(() => handles.profilePatches.at(-1))
       .toEqual({ displayTimezone: 'America/New_York' })
 
-    // --- Password: "email me a reset link" → POST /auth/forgot-password { email } ---
-    await page.getByTestId('request-reset-btn').click()
-    await expect(page.getByTestId('reset-link-confirmation')).toBeVisible()
+    // --- Password: change password → POST /auth/change-password { currentPassword, newPassword } ---
+    await page.getByTestId('current-password-input').fill('correcthorse')
+    await page.getByTestId('new-password-input').fill('batterystaple9')
+    await page.getByTestId('confirm-password-input').fill('batterystaple9')
+    await page.getByTestId('change-password-btn').click()
+
+    await expect(page.getByTestId('change-password-confirmation')).toBeVisible()
     await expect
-      .poll(() => handles.forgotPasswordBodies.at(-1))
-      .toEqual({
-        email: SETTINGS_PROFILE.email,
-      })
+      .poll(() => handles.changePasswordBodies.at(-1))
+      .toEqual({ currentPassword: 'correcthorse', newPassword: 'batterystaple9' })
 
     // --- Delete account: confirm modal requires password → 204 → auth cleared + redirect ---
     await page.getByTestId('delete-account-btn').click()
@@ -119,6 +123,30 @@ test.describe('web-settings — settings page', () => {
 
     await expect.poll(() => handles.deletePayloads.at(-1)).toEqual({ password: 'correct-horse' })
     await expect(page).toHaveURL(/\/login(\?|$)/)
+  })
+
+  test('wrong current password blocks the change: 401 shows an inline error, form stays editable', async ({
+    page,
+  }) => {
+    const handles = mockSettings(page, 204, 401)
+
+    await gotoAuthenticated(page, '/settings')
+    await expect(page.getByTestId('settings-page')).toBeVisible()
+    await expect(page.getByTestId('account-panel')).toBeVisible()
+
+    await page.getByTestId('current-password-input').fill('wrongcurrent')
+    await page.getByTestId('new-password-input').fill('batterystaple9')
+    await page.getByTestId('confirm-password-input').fill('batterystaple9')
+    await page.getByTestId('change-password-btn').click()
+
+    await expect
+      .poll(() => handles.changePasswordBodies.at(-1))
+      .toEqual({ currentPassword: 'wrongcurrent', newPassword: 'batterystaple9' })
+
+    await expect(page.getByTestId('current-password-error')).toBeVisible()
+    await expect(page.getByTestId('change-password-confirmation')).toHaveCount(0)
+    await expect(page.getByTestId('change-password-btn')).toBeEnabled()
+    await expect(page).toHaveURL(/\/settings(\?|$)/)
   })
 
   test('delete account requires a password: empty confirm sends no DELETE request', async ({
