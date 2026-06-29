@@ -40,6 +40,10 @@ export class UsersService {
       user.displayTimezone = input.displayTimezone
     }
 
+    if (input.digestOptOut !== undefined) {
+      user.digestOptOut = input.digestOptOut
+    }
+
     this.applySessionDefaults(user, input.sessionDefaults)
 
     await em.flush()
@@ -106,6 +110,7 @@ export class UsersService {
       role: user.role,
       emailVerified: user.emailVerified,
       displayTimezone: user.displayTimezone,
+      digestOptOut: user.digestOptOut,
       sessionDefaults: {
         duration: user.sessionDefaultDuration,
         contentMix: user.sessionDefaultContentMix,

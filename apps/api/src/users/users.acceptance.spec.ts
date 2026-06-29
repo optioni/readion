@@ -133,7 +133,18 @@ describe('users acceptance', () => {
       .set('Authorization', authorization)
       .send({ digestOptOut: true })
     expect(optOut.status).toBe(200)
-    expect(optOut.body.data).toMatchObject({ digestOptOut: true })
+    expect(optOut.body.data).toMatchObject({
+      digestOptOut: true,
+      email: 'digest-profile@example.com',
+      displayTimezone: 'Europe/Helsinki',
+      sessionDefaults: {
+        duration: 30,
+        contentMix: 'balanced',
+        difficulty: 'intermediate',
+        focusArea: 'auto',
+        learningStyle: 'weak-area-focus',
+      },
+    })
 
     em.clear()
     const afterOptOut = await em.findOneOrFail(User, { id: userId })
