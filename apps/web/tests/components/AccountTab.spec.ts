@@ -7,7 +7,7 @@ import { ReadionProblemDetailsError } from '~/api/mutator'
 import AccountTab from '~/components/AccountTab.vue'
 import { settingsQueryKeys } from '~/composables/settingsQueryKeys'
 import { useAuthStore } from '~/stores/auth'
-import { authControllerForgotPassword } from '~~/src/api/auth/auth'
+import { authControllerChangePassword } from '~~/src/api/auth/auth'
 import {
   usersControllerDeleteMe,
   usersControllerGetMe,
@@ -20,9 +20,9 @@ vi.mock('~~/src/api/auth/auth')
 const mockNavigate = vi.fn()
 vi.stubGlobal('navigateTo', mockNavigate)
 
-const forgotPasswordEnvelope = () => ({
+const changePasswordEnvelope = () => ({
   data: undefined,
-  status: 202,
+  status: 200,
   headers: new Headers(),
 })
 
@@ -162,58 +162,160 @@ describe('AccountTab timezone control', () => {
   })
 })
 
-describe('AccountTab password reset action', () => {
-  it('renders no current/new/confirm password fields', async () => {
+async function fillPasswordForm(
+  wrapper: ReturnType<typeof mountTab>['wrapper'],
+  values: { current: string; next: string; confirm: string },
+) {
+  await wrapper.find('[data-testid="current-password-input"]').setValue(values.current)
+  await wrapper.find('[data-testid="new-password-input"]').setValue(values.next)
+  await wrapper.find('[data-testid="confirm-password-input"]').setValue(values.confirm)
+}
+
+describe('AccountTab change password', () => {
+  it('renders current/new/confirm password inputs', async () => {
     stubProfile()
     const { wrapper } = mountTab()
     await flushPromises()
 
-    expect(wrapper.find('[data-testid="current-password-input"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="new-password-input"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="confirm-password-input"]').exists()).toBe(false)
-    expect(wrapper.findAll('input[type="password"]')).toHaveLength(0)
+    const current = wrapper.find('[data-testid="current-password-input"]')
+    const next = wrapper.find('[data-testid="new-password-input"]')
+    const confirm = wrapper.find('[data-testid="confirm-password-input"]')
+
+    expect(current.exists()).toBe(true)
+    expect(next.exists()).toBe(true)
+    expect(confirm.exists()).toBe(true)
+    expect(current.attributes('type')).toBe('password')
+    expect(next.attributes('type')).toBe('password')
+    expect(confirm.attributes('type')).toBe('password')
   })
 
-  it('requests a reset link for the signed-in email and shows a confirmation', async () => {
+  it('submits the change, clears the form, and shows a confirmation on success', async () => {
     stubProfile()
-    vi.mocked(authControllerForgotPassword).mockResolvedValue(
+    vi.mocked(authControllerChangePassword).mockResolvedValue(
       // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
-      forgotPasswordEnvelope() as any,
+      changePasswordEnvelope() as any,
     )
 
     const { wrapper } = mountTab()
     await flushPromises()
 
-    expect(wrapper.find('[data-testid="reset-link-confirmation"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="change-password-confirmation"]').exists()).toBe(false)
 
-    await wrapper.find('[data-testid="request-reset-btn"]').trigger('click')
+    await fillPasswordForm(wrapper, {
+      current: 'oldpass1',
+      next: 'newpass123',
+      confirm: 'newpass123',
+    })
+    await wrapper.find('[data-testid="change-password-btn"]').trigger('click')
     await flushPromises()
 
-    expect(authControllerForgotPassword).toHaveBeenCalledTimes(1)
-    expect(authControllerForgotPassword).toHaveBeenCalledWith(
-      expect.objectContaining({ body: JSON.stringify({ email: 'jamie@org.io' }) }),
+    expect(authControllerChangePassword).toHaveBeenCalledTimes(1)
+    expect(authControllerChangePassword).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: JSON.stringify({ currentPassword: 'oldpass1', newPassword: 'newpass123' }),
+      }),
     )
-    expect(wrapper.find('[data-testid="reset-link-confirmation"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="change-password-confirmation"]').exists()).toBe(true)
+
+    expect(
+      (wrapper.find('[data-testid="current-password-input"]').element as HTMLInputElement).value,
+    ).toBe('')
+    expect(
+      (wrapper.find('[data-testid="new-password-input"]').element as HTMLInputElement).value,
+    ).toBe('')
+    expect(
+      (wrapper.find('[data-testid="confirm-password-input"]').element as HTMLInputElement).value,
+    ).toBe('')
   })
 
-  it('surfaces an error when the reset request fails', async () => {
+  it('shows an error on the new-password field and keeps the form on 422', async () => {
     stubProfile()
-    vi.mocked(authControllerForgotPassword).mockRejectedValue(
+    vi.mocked(authControllerChangePassword).mockRejectedValue(
       new ReadionProblemDetailsError({
-        title: 'Too Many Requests',
-        status: 429,
-        detail: 'Please wait before requesting another reset link.',
+        title: 'Unprocessable Entity',
+        status: 422,
+        detail: 'Password is too weak',
       }),
     )
 
     const { wrapper } = mountTab()
     await flushPromises()
 
-    await wrapper.find('[data-testid="request-reset-btn"]').trigger('click')
+    await fillPasswordForm(wrapper, { current: 'oldpass1', next: 'weak1234', confirm: 'weak1234' })
+    await wrapper.find('[data-testid="change-password-btn"]').trigger('click')
     await flushPromises()
 
-    expect(wrapper.find('[data-testid="reset-error"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="reset-link-confirmation"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="new-password-error"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="change-password-confirmation"]').exists()).toBe(false)
+    expect(
+      (wrapper.find('[data-testid="new-password-input"]').element as HTMLInputElement).value,
+    ).toBe('weak1234')
+  })
+
+  it('shows an error on the current-password field on 401', async () => {
+    stubProfile()
+    vi.mocked(authControllerChangePassword).mockRejectedValue(
+      new ReadionProblemDetailsError({
+        title: 'Unauthorized',
+        status: 401,
+        detail: 'Current password is incorrect',
+      }),
+    )
+
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    await fillPasswordForm(wrapper, {
+      current: 'wrongpass',
+      next: 'newpass123',
+      confirm: 'newpass123',
+    })
+    await wrapper.find('[data-testid="change-password-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="current-password-error"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="change-password-confirmation"]').exists()).toBe(false)
+  })
+
+  it('shows an error on the current-password field on 403', async () => {
+    stubProfile()
+    vi.mocked(authControllerChangePassword).mockRejectedValue(
+      new ReadionProblemDetailsError({
+        title: 'Forbidden',
+        status: 403,
+        detail: 'Current password is incorrect',
+      }),
+    )
+
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    await fillPasswordForm(wrapper, {
+      current: 'wrongpass',
+      next: 'newpass123',
+      confirm: 'newpass123',
+    })
+    await wrapper.find('[data-testid="change-password-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="current-password-error"]').exists()).toBe(true)
+  })
+
+  it('shows a confirm error and sends no request when confirm does not match', async () => {
+    stubProfile()
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    await fillPasswordForm(wrapper, {
+      current: 'oldpass1',
+      next: 'newpass123',
+      confirm: 'different123',
+    })
+    await wrapper.find('[data-testid="change-password-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="confirm-password-error"]').exists()).toBe(true)
+    expect(authControllerChangePassword).not.toHaveBeenCalled()
   })
 })
 
