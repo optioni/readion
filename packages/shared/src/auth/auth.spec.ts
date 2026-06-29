@@ -3,6 +3,8 @@ import {
   type AuthUser,
   authSessionResponseSchema,
   authUserSchema,
+  type ChangePasswordRequest,
+  changePasswordRequestSchema,
   forgotPasswordRequestSchema,
   loginRequestSchema,
   passwordResetRequestSchema,
@@ -49,6 +51,37 @@ describe('auth shared contracts', () => {
     expect(passwordResetRequestSchema.safeParse({ token: '', password: 'short' }).success).toBe(
       false,
     )
+  })
+
+  it('validates change password payloads', () => {
+    expect(
+      changePasswordRequestSchema.parse({
+        currentPassword: 'correcthorse',
+        newPassword: 'batterystaple9',
+      }),
+    ).toEqual({
+      currentPassword: 'correcthorse',
+      newPassword: 'batterystaple9',
+    })
+    expect(
+      changePasswordRequestSchema.safeParse({ newPassword: 'batterystaple9' }).success,
+    ).toBe(false)
+    expect(
+      changePasswordRequestSchema.safeParse({
+        currentPassword: '',
+        newPassword: 'batterystaple9',
+      }).success,
+    ).toBe(false)
+    expect(
+      changePasswordRequestSchema.safeParse({
+        currentPassword: 'correcthorse',
+        newPassword: 'short',
+      }).success,
+    ).toBe(false)
+    expectTypeOf<ChangePasswordRequest>().toEqualTypeOf<{
+      currentPassword: string
+      newPassword: string
+    }>()
   })
 
   it('models auth user responses without password fields', () => {
