@@ -28,6 +28,7 @@ function mountBody(
     summary?: SessionSummaryResponse
     timeLabel?: string | null
     drillNoMisses?: boolean
+    hideAskAgent?: boolean
   } = {},
 ) {
   return mount(SessionSummaryBody, {
@@ -35,6 +36,7 @@ function mountBody(
       summary: props.summary ?? baseSummary(),
       timeLabel: props.timeLabel ?? null,
       drillNoMisses: props.drillNoMisses ?? false,
+      hideAskAgent: props.hideAskAgent ?? false,
     },
   })
 }
@@ -128,6 +130,21 @@ describe('SessionSummaryBody strongest and weakest', () => {
     })
     expect(wrapper.find('[data-testid="summary-strongest"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="summary-weakest"]').exists()).toBe(false)
+  })
+})
+
+describe('SessionSummaryBody ask-agent suppression', () => {
+  it('shows the ask-agent affordances by default', () => {
+    const wrapper = mountBody()
+    expect(wrapper.findAll('[data-testid="ask-agent-button"]')).toHaveLength(2)
+  })
+
+  it('hides both ask-agent affordances when hideAskAgent is true', () => {
+    const wrapper = mountBody({ hideAskAgent: true })
+    expect(wrapper.findAll('[data-testid="ask-agent-button"]')).toHaveLength(0)
+    // The strongest/weakest cards themselves still render — only the action is suppressed.
+    expect(wrapper.find('[data-testid="summary-strongest"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="summary-weakest"]').exists()).toBe(true)
   })
 })
 
