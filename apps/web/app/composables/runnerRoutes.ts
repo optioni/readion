@@ -17,3 +17,7 @@ export function sessionStartPath(enrollmentId: string): string {
 export function sessionSummaryPath(sessionId: string): string {
   return `/sessions/${sessionId}/summary`
 }
+
+export function progressPath(enrollmentId: string): string {
+  return `/user-certifications/${enrollmentId}/progress`
+}

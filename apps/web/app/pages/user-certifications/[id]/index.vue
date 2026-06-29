@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import ExamHistoryTab from '~/components/ExamHistoryTab.vue'
 import OverviewTab from '~/components/OverviewTab.vue'
 import SessionsTab from '~/components/SessionsTab.vue'
+import { progressPath } from '~/composables/runnerRoutes'
 import { useCertDetail } from '~/composables/useCertDetail'
 
 type TabId = 'overview' | 'sessions' | 'exam-history'
@@ -53,6 +54,13 @@ function selectTab(id: TabId) {
             {{ name }}
           </h1>
           <p data-testid="cert-detail-provider" class="text-slate-400 text-sm">{{ provider }}</p>
+          <NuxtLink
+            data-testid="view-progress-link"
+            :to="progressPath(enrollmentId)"
+            class="mt-2 inline-flex items-center text-sm text-readion-primary hover:underline"
+          >
+            View progress
+          </NuxtLink>
         </template>
         <p
           v-if="isError"

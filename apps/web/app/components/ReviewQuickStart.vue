@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { reviewRunPath } from '~/composables/runnerRoutes'
-import { enrollmentReviewControllerStart } from '~~/src/api/enrollment-review/enrollment-review'
 
 const props = defineProps<{ enrollmentId: string; dueCount: number }>()
 const router = useRouter()
 
-async function startReview() {
-  await enrollmentReviewControllerStart(props.enrollmentId)
+function startReview() {
   router.push(reviewRunPath(props.enrollmentId))
 }
 </script>

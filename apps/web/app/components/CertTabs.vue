@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import AddCertificationModal from '~/components/AddCertificationModal.vue'
+import { progressPath } from '~/composables/runnerRoutes'
 
 export interface SwitcherEntry {
   enrollmentId: string
@@ -18,7 +19,7 @@ function switchTo(enrollmentId: string) {
   if (enrollmentId === props.activeEnrollmentId) {
     return
   }
-  navigateTo(`/user-certifications/${enrollmentId}/progress`)
+  navigateTo(progressPath(enrollmentId))
 }
 </script>
 
