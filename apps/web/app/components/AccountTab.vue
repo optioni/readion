@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { updateUserProfileRequestSchema } from '@readion/shared'
+import { forgotPasswordRequestSchema, updateUserProfileRequestSchema } from '@readion/shared'
 import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref, watch } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import { settingsQueryKeys } from '~/composables/settingsQueryKeys'
 import { useSettingsProfile } from '~/composables/useSettingsProfile'
+import { authControllerForgotPassword } from '~~/src/api/auth/auth'
 import { usersControllerUpdateMe } from '~~/src/api/users/users'
 
 const jsonHeaders = { 'Content-Type': 'application/json' }
@@ -51,6 +52,28 @@ async function saveTimezone() {
         : 'Could not save your timezone. Please try again.'
   } finally {
     saving.value = false
+  }
+}
+
+const requestingReset = ref(false)
+const resetRequested = ref(false)
+const resetError = ref<string | null>(null)
+
+async function requestPasswordReset() {
+  resetError.value = null
+  const body = forgotPasswordRequestSchema.parse({ email: email.value })
+
+  requestingReset.value = true
+  try {
+    await authControllerForgotPassword({ headers: jsonHeaders, body: JSON.stringify(body) })
+    resetRequested.value = true
+  } catch (error) {
+    resetError.value =
+      error instanceof ReadionProblemDetailsError
+        ? (error.detail ?? error.title)
+        : 'Could not send a reset link. Please try again.'
+  } finally {
+    requestingReset.value = false
   }
 }
 </script>
@@ -103,6 +126,35 @@ async function saveTimezone() {
           Save
         </button>
       </div>
+    </section>
+
+    <section class="flex flex-col gap-3">
+      <h2 class="font-medium text-slate-100 text-sm">Password</h2>
+      <p class="text-slate-400 text-sm">
+        We'll email a secure reset link to your account address. No passwords are entered here.
+      </p>
+
+      <p v-if="resetError" data-testid="reset-error" class="text-red-400 text-sm">
+        {{ resetError }}
+      </p>
+
+      <p
+        v-if="resetRequested"
+        data-testid="reset-link-confirmation"
+        class="text-emerald-400 text-sm"
+      >
+        Check your inbox — we've emailed a secure reset link to {{ email }}.
+      </p>
+
+      <button
+        type="button"
+        data-testid="request-reset-btn"
+        :disabled="requestingReset"
+        class="self-start rounded-lg border border-readion-background-surface bg-readion-background-elevated px-5 py-2.5 font-medium text-slate-100 text-sm transition-colors hover:bg-readion-background-surface disabled:opacity-60"
+        @click="requestPasswordReset"
+      >
+        Change password / Email me a reset link
+      </button>
     </section>
   </div>
 </template>
