@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { forgotPasswordRequestSchema, updateUserProfileRequestSchema } from '@readion/shared'
+import { changePasswordRequestSchema, updateUserProfileRequestSchema } from '@readion/shared'
 import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref, watch } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
@@ -7,7 +7,7 @@ import { emailInitials } from '~/composables/emailInitials'
 import { settingsQueryKeys } from '~/composables/settingsQueryKeys'
 import { useSettingsProfile } from '~/composables/useSettingsProfile'
 import { useAuthStore } from '~/stores/auth'
-import { authControllerForgotPassword } from '~~/src/api/auth/auth'
+import { authControllerChangePassword } from '~~/src/api/auth/auth'
 import { usersControllerDeleteMe, usersControllerUpdateMe } from '~~/src/api/users/users'
 
 const jsonHeaders = { 'Content-Type': 'application/json' }
@@ -53,25 +53,54 @@ async function saveTimezone() {
   }
 }
 
-const requestingReset = ref(false)
-const resetRequested = ref(false)
-const resetError = ref<string | null>(null)
+const currentPassword = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
+const changingPassword = ref(false)
+const passwordChanged = ref(false)
+const currentPasswordError = ref<string | null>(null)
+const newPasswordError = ref<string | null>(null)
+const confirmPasswordError = ref<string | null>(null)
 
-async function requestPasswordReset() {
-  resetError.value = null
-  const body = forgotPasswordRequestSchema.parse({ email: email.value })
+async function changePassword() {
+  currentPasswordError.value = null
+  newPasswordError.value = null
+  confirmPasswordError.value = null
+  passwordChanged.value = false
 
-  requestingReset.value = true
+  if (confirmPassword.value !== newPassword.value) {
+    confirmPasswordError.value = 'Passwords do not match.'
+    return
+  }
+
+  const body = changePasswordRequestSchema.parse({
+    currentPassword: currentPassword.value,
+    newPassword: newPassword.value,
+  })
+
+  changingPassword.value = true
   try {
-    await authControllerForgotPassword({ headers: jsonHeaders, body: JSON.stringify(body) })
-    resetRequested.value = true
+    await authControllerChangePassword({ headers: jsonHeaders, body: JSON.stringify(body) })
+    currentPassword.value = ''
+    newPassword.value = ''
+    confirmPassword.value = ''
+    passwordChanged.value = true
   } catch (error) {
-    resetError.value =
-      error instanceof ReadionProblemDetailsError
-        ? (error.detail ?? error.title)
-        : 'Could not send a reset link. Please try again.'
+    if (
+      error instanceof ReadionProblemDetailsError &&
+      (error.status === 401 || error.status === 403)
+    ) {
+      currentPasswordError.value = error.detail ?? error.title
+    } else if (error instanceof ReadionProblemDetailsError && error.status === 422) {
+      newPasswordError.value = error.detail ?? error.title
+    } else {
+      newPasswordError.value =
+        error instanceof ReadionProblemDetailsError
+          ? (error.detail ?? error.title)
+          : 'Could not change your password. Please try again.'
+    }
   } finally {
-    requestingReset.value = false
+    changingPassword.value = false
   }
 }
 
@@ -175,30 +204,88 @@ async function confirmDeleteAccount() {
 
     <section class="flex flex-col gap-3">
       <h2 class="font-medium text-slate-100 text-sm">Password</h2>
-      <p class="text-slate-400 text-sm">
-        We'll email a secure reset link to your account address. No passwords are entered here.
-      </p>
 
-      <p v-if="resetError" data-testid="reset-error" class="text-red-400 text-sm">
-        {{ resetError }}
-      </p>
+      <div class="flex flex-col gap-2">
+        <label
+          for="current-password"
+          class="font-mono text-slate-400 text-xs uppercase tracking-wide"
+        >
+          Current password
+        </label>
+        <input
+          id="current-password"
+          v-model="currentPassword"
+          type="password"
+          data-testid="current-password-input"
+          class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
+        />
+        <p
+          v-if="currentPasswordError"
+          data-testid="current-password-error"
+          class="text-red-400 text-sm"
+        >
+          {{ currentPasswordError }}
+        </p>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label
+          for="new-password"
+          class="font-mono text-slate-400 text-xs uppercase tracking-wide"
+        >
+          New password
+        </label>
+        <input
+          id="new-password"
+          v-model="newPassword"
+          type="password"
+          data-testid="new-password-input"
+          class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
+        />
+        <p v-if="newPasswordError" data-testid="new-password-error" class="text-red-400 text-sm">
+          {{ newPasswordError }}
+        </p>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label
+          for="confirm-password"
+          class="font-mono text-slate-400 text-xs uppercase tracking-wide"
+        >
+          Confirm new password
+        </label>
+        <input
+          id="confirm-password"
+          v-model="confirmPassword"
+          type="password"
+          data-testid="confirm-password-input"
+          class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
+        />
+        <p
+          v-if="confirmPasswordError"
+          data-testid="confirm-password-error"
+          class="text-red-400 text-sm"
+        >
+          {{ confirmPasswordError }}
+        </p>
+      </div>
 
       <p
-        v-if="resetRequested"
-        data-testid="reset-link-confirmation"
+        v-if="passwordChanged"
+        data-testid="change-password-confirmation"
         class="text-emerald-400 text-sm"
       >
-        Check your inbox — we've emailed a secure reset link to {{ email }}.
+        Your password has been changed.
       </p>
 
       <button
         type="button"
-        data-testid="request-reset-btn"
-        :disabled="requestingReset"
-        class="self-start rounded-lg border border-readion-background-surface bg-readion-background-elevated px-5 py-2.5 font-medium text-slate-100 text-sm transition-colors hover:bg-readion-background-surface disabled:opacity-60"
-        @click="requestPasswordReset"
+        data-testid="change-password-btn"
+        :disabled="changingPassword"
+        class="self-start rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
+        @click="changePassword"
       >
-        Change password / Email me a reset link
+        Change password
       </button>
     </section>
 
