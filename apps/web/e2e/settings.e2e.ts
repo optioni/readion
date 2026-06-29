@@ -76,6 +76,14 @@ test.describe('web-settings — settings page', () => {
     // --- Study defaults tab: edit two of the five defaults and save ---
     await page.getByTestId('settings-tab-study-defaults').click()
     await expect(page.getByTestId('study-defaults-panel')).toBeVisible()
+
+    // Profile-seeded defaults (settings-seed.ts fixture: duration 30, weak-area-focus) are pre-selected.
+    await expect(page.getByTestId('duration-option-30')).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByTestId('learning-style-weak-area-focus')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
     await page.getByTestId('duration-option-60').click()
     await page.getByTestId('learning-style-spaced-repetition').click()
     await page.getByTestId('save-defaults-btn').click()
@@ -134,5 +142,25 @@ test.describe('web-settings — settings page', () => {
 
     await expect(page.getByTestId('delete-account-modal')).toBeVisible()
     expect(handles.deletePayloads).toHaveLength(0)
+  })
+
+  test('wrong password blocks deletion: 401 keeps the modal open, shows an error, no redirect', async ({
+    page,
+  }) => {
+    const handles = mockSettings(page, 401)
+
+    await gotoAuthenticated(page, '/settings')
+    await expect(page.getByTestId('settings-page')).toBeVisible()
+
+    await page.getByTestId('delete-account-btn').click()
+    await expect(page.getByTestId('delete-account-modal')).toBeVisible()
+    await page.getByTestId('delete-password-input').fill('wrong-password')
+    await page.getByTestId('confirm-delete-btn').click()
+
+    await expect.poll(() => handles.deletePayloads.at(-1)).toEqual({ password: 'wrong-password' })
+
+    await expect(page.getByTestId('delete-account-modal')).toBeVisible()
+    await expect(page.getByTestId('delete-account-error')).toBeVisible()
+    await expect(page).toHaveURL(/\/settings(\?|$)/)
   })
 })

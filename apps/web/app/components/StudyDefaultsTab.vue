@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { SessionDefaults } from '@readion/shared'
-import { sessionDefaultsSchema } from '@readion/shared'
+import { DEFAULT_SESSION_DEFAULTS, sessionDefaultsSchema } from '@readion/shared'
 import { useQueryClient } from '@tanstack/vue-query'
 import { ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
@@ -12,7 +12,7 @@ const jsonHeaders = { 'Content-Type': 'application/json' }
 
 const queryClient = useQueryClient()
 
-const selected = ref<SessionDefaults | null>(null)
+const selected = ref<SessionDefaults>({ ...DEFAULT_SESSION_DEFAULTS })
 const saving = ref(false)
 const errorMessage = ref<string | null>(null)
 
@@ -21,9 +21,6 @@ function trackSelection(defaults: SessionDefaults) {
 }
 
 async function saveDefaults() {
-  if (!selected.value) {
-    return
-  }
   errorMessage.value = null
   const sessionDefaults = sessionDefaultsSchema.parse(selected.value)
 
