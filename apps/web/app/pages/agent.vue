@@ -1,38 +1,22 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import AgentBubble from '~/components/AgentBubble.vue'
-import { createStandaloneAgentConversation } from '~/composables/agentChatApi'
-import type { AgentPanelMessage } from '~/composables/agentMessages'
+import { useStandaloneAgentChat } from '~/composables/useStandaloneAgentChat'
 
-const conversationId = ref<string | null>(null)
-const messages = ref<AgentPanelMessage[]>([])
-const isStreaming = ref(false)
+const { messages, isStreaming, send, newChat } = useStandaloneAgentChat()
 const input = ref('')
-const lastActivityAt = ref<string | null>(null)
 
 const QUICK_SUGGESTIONS = ['Explain this topic', 'What should I study next?', 'Quiz me on this']
 
-onMounted(async () => {
-  const detail = await createStandaloneAgentConversation()
-  conversationId.value = detail.data.id
-  lastActivityAt.value = detail.data.lastActivityAt
-})
-
-async function send(): Promise<void> {
-  const content = input.value.trim()
-  if (content.length === 0 || isStreaming.value || conversationId.value === null) {
-    return
-  }
+async function handleSend(): Promise<void> {
+  const content = input.value
+  await send(content)
+  input.value = ''
 }
 
-async function newChat(): Promise<void> {
-  conversationId.value = null
-  messages.value = []
+async function handleNewChat(): Promise<void> {
+  await newChat()
   input.value = ''
-  lastActivityAt.value = null
-  const detail = await createStandaloneAgentConversation()
-  conversationId.value = detail.data.id
-  lastActivityAt.value = detail.data.lastActivityAt
 }
 </script>
 
@@ -52,7 +36,7 @@ async function newChat(): Promise<void> {
           type="button"
           data-testid="agent-new-chat-button"
           class="rounded-md border border-readion-border-strong bg-readion-background-surface px-2.5 py-1 text-[11px] text-readion-text-muted transition-colors hover:text-readion-text-secondary"
-          @click="newChat"
+          @click="handleNewChat"
         >
           New chat
         </button>
@@ -98,7 +82,7 @@ async function newChat(): Promise<void> {
           type="text"
           placeholder="Ask anything..."
           class="flex-1 bg-transparent text-[13px] text-readion-text-primary outline-none"
-          @keydown.enter="send"
+          @keydown.enter="handleSend"
         />
         <button
           type="button"
@@ -106,7 +90,7 @@ async function newChat(): Promise<void> {
           :disabled="isStreaming"
           aria-label="Send message"
           class="flex h-6.5 w-6.5 flex-shrink-0 items-center justify-center rounded-md bg-readion-primary text-white disabled:opacity-60"
-          @click="send"
+          @click="handleSend"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 19V5M5 12l7-7 7 7" />

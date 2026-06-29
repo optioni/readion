@@ -24,7 +24,9 @@ function standaloneConversationDetail(messages: unknown[] = []) {
 beforeEach(() => {
   vi.clearAllMocks()
   // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
-  vi.mocked(createStandaloneAgentConversation).mockResolvedValue(standaloneConversationDetail() as any)
+  vi.mocked(createStandaloneAgentConversation).mockResolvedValue(
+    standaloneConversationDetail() as any,
+  )
 })
 
 afterEach(() => {
