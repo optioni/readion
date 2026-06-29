@@ -5,9 +5,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import AccountTab from '~/components/AccountTab.vue'
 import { settingsQueryKeys } from '~/composables/settingsQueryKeys'
+import { authControllerForgotPassword } from '~~/src/api/auth/auth'
 import { usersControllerGetMe, usersControllerUpdateMe } from '~~/src/api/users/users'
 
 vi.mock('~~/src/api/users/users')
+vi.mock('~~/src/api/auth/auth')
+
+const forgotPasswordEnvelope = () => ({
+  data: undefined,
+  status: 202,
+  headers: new Headers(),
+})
 
 const PROFILE: UserProfileResponse = {
   id: '77777777-7777-7777-7777-777777777777',
@@ -135,5 +143,60 @@ describe('AccountTab timezone control', () => {
     const select = wrapper.find('[data-testid="timezone-select"]')
     expect(select.attributes('disabled')).toBeUndefined()
     expect((select.element as HTMLSelectElement).value).toBe('America/New_York')
+  })
+})
+
+describe('AccountTab password reset action', () => {
+  it('renders no current/new/confirm password fields', async () => {
+    stubProfile()
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="current-password-input"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="new-password-input"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="confirm-password-input"]').exists()).toBe(false)
+    expect(wrapper.findAll('input[type="password"]')).toHaveLength(0)
+  })
+
+  it('requests a reset link for the signed-in email and shows a confirmation', async () => {
+    stubProfile()
+    vi.mocked(authControllerForgotPassword).mockResolvedValue(
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      forgotPasswordEnvelope() as any,
+    )
+
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="reset-link-confirmation"]').exists()).toBe(false)
+
+    await wrapper.find('[data-testid="request-reset-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(authControllerForgotPassword).toHaveBeenCalledTimes(1)
+    expect(authControllerForgotPassword).toHaveBeenCalledWith(
+      expect.objectContaining({ body: JSON.stringify({ email: 'jamie@org.io' }) }),
+    )
+    expect(wrapper.find('[data-testid="reset-link-confirmation"]').exists()).toBe(true)
+  })
+
+  it('surfaces an error when the reset request fails', async () => {
+    stubProfile()
+    vi.mocked(authControllerForgotPassword).mockRejectedValue(
+      new ReadionProblemDetailsError({
+        title: 'Too Many Requests',
+        status: 429,
+        detail: 'Please wait before requesting another reset link.',
+      }),
+    )
+
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="request-reset-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="reset-error"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="reset-link-confirmation"]').exists()).toBe(false)
   })
 })
