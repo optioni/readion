@@ -58,11 +58,6 @@ export const AGENT_STANDALONE_STREAM_EVENTS: unknown[] = [
   { type: 'text-delta', textDelta: 'while UDP is connectionless.' },
 ]
 
-export const AGENT_STANDALONE_ERROR_EVENTS: unknown[] = [
-  { type: 'text-delta', textDelta: 'Let me check that' },
-  { type: 'error', error: 'upstream model timeout' },
-]
-
 export function buildEventStream(events: unknown[]): string {
   const lines = events.map((event) => `data: ${JSON.stringify(event)}\n\n`)
   lines.push('data: [DONE]\n\n')
