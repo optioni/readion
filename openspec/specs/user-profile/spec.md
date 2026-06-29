@@ -24,13 +24,18 @@ The system SHALL extend the `auth`-owned `User` entity (no new entity; `users` o
 
 ### Requirement: Authenticated user can read their own profile
 
-The system SHALL expose `GET /api/v1/users/me`, protected by the global `JwtAuthGuard`, returning the authenticated principal's profile in the single-resource envelope `{ data }`. The response MUST include `id`, `email`, `role`, `emailVerified`, `displayTimezone`, and `sessionDefaults` (the five preferences). It MUST NEVER include the password hash.
+The system SHALL expose `GET /api/v1/users/me`, protected by the global `JwtAuthGuard`, returning the authenticated principal's profile in the single-resource envelope `{ data }`. The response MUST include `id`, `email`, `role`, `emailVerified`, `displayTimezone`, `sessionDefaults` (the five preferences), and `digestOptOut` (the weekly-digest preference), so an authenticated client can read the current weekly-digest preference. It MUST NEVER include the password hash.
 
 #### Scenario: Authenticated read returns own profile
 
 - **WHEN** a request with a valid access token for user `ada@example.com` GETs `/api/v1/users/me`
 - **THEN** the response is `200` with `data` containing `id`, `email: "ada@example.com"`, `role`, `emailVerified`, `displayTimezone`, and `sessionDefaults`
 - **AND** the payload contains no `passwordHash` field
+
+#### Scenario: Profile read includes digest preference
+
+- **WHEN** an authenticated user GETs `/api/v1/users/me`
+- **THEN** the `data` envelope includes `digestOptOut` reflecting the persisted `User.digestOptOut` value
 
 #### Scenario: Unauthenticated read is rejected
 
@@ -39,7 +44,7 @@ The system SHALL expose `GET /api/v1/users/me`, protected by the global `JwtAuth
 
 ### Requirement: Authenticated user can update timezone and session defaults
 
-The system SHALL expose `PATCH /api/v1/users/me`, protected by the global `JwtAuthGuard`, accepting a partial body of `displayTimezone` and/or `sessionDefaults` fields. `email`, `role`, `emailVerified`, and `passwordHash` MUST NOT be mutable through this endpoint and SHALL be ignored or rejected. On success it returns `200` with the updated profile in `{ data }`.
+The system SHALL expose `PATCH /api/v1/users/me`, protected by the global `JwtAuthGuard`, accepting a partial body of `displayTimezone`, `sessionDefaults`, and/or `digestOptOut` fields. The `digestOptOut` field (boolean) is a two-way toggle persisted to `User.digestOptOut`: setting it `true` opts the user out of the weekly digest; setting it `false` opts them back in. `email`, `role`, `emailVerified`, and `passwordHash` MUST NOT be mutable through this endpoint and SHALL be ignored or rejected. On success it returns `200` with the updated profile in `{ data }`.
 
 #### Scenario: Update display timezone
 
@@ -69,3 +74,19 @@ The system SHALL expose `PATCH /api/v1/users/me`, protected by the global `JwtAu
 
 - **WHEN** an authenticated user PATCHes `/api/v1/users/me` with `{ "email": "new@example.com", "role": "admin" }`
 - **THEN** the user's `email` and `role` are unchanged
+
+#### Scenario: Opt out via authenticated profile update
+
+- **WHEN** an authenticated user PATCHes `{ "digestOptOut": true }`
+- **THEN** the response reflects `digestOptOut: true`
+- **AND** the persisted `User.digestOptOut` is `true`, so the weekly-digest cron skips this user
+
+#### Scenario: Opt back in via authenticated profile update
+
+- **WHEN** a user who previously opted out (including via the email unsubscribe link) PATCHes `{ "digestOptOut": false }`
+- **THEN** the persisted `User.digestOptOut` becomes `false` and the user is eligible for the digest again
+
+#### Scenario: Invalid type is rejected
+
+- **WHEN** `digestOptOut` is sent as a non-boolean
+- **THEN** the response is `422` RFC 7807 with an `errors[]` entry for `digestOptOut` and the stored value is unchanged

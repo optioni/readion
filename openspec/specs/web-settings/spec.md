@@ -91,17 +91,11 @@ The Study defaults tab SHALL let the user view and edit all five session-default
 - **THEN** `PATCH /api/v1/users/me` is called with a `sessionDefaults` object whose `duration` is `60` and `learningStyle` is `spaced-repetition`
 - **THEN** on a `200` response the profile query is invalidated and the saved selections persist
 
-### Requirement: Notifications tab surfaces the weekly-digest opt-out only
+### Requirement: Notifications tab digest preference
 
-The Notifications tab SHALL surface the weekly progress digest opt-out — the only notification preference with a backing field (`digestOptOut`) — and explain the one-click unsubscribe mechanism. Because `digestOptOut` is not readable or writable through `GET`/`PATCH /api/v1/users/me`, the tab SHALL NOT present an authenticated two-way toggle wired to a non-existent field, and SHALL NOT render toggles for notification types that have no backend field (review reminders, streak alerts, exam countdown, or any in-app notification toggle).
+The `web-settings` Notifications tab SHALL render the weekly-digest preference as a real two-way switch bound to the profile contract: seeded from `GET /users/me`'s `digestOptOut`, and toggling it issues `PATCH /users/me { digestOptOut }` and reflects the new state. This replaces the prior informational-only treatment that issued no request. The tab MAY still mention the one-click unsubscribe link in the digest email.
 
-#### Scenario: Digest opt-out is surfaced
+#### Scenario: Toggle digest from Settings
 
-- **WHEN** the user opens the Notifications tab
-- **THEN** the weekly progress digest opt-out is described, including that unsubscribe is via the one-click link in the digest email
-- **THEN** no toggles are rendered for review reminders, streak alerts, exam countdown, or in-app notifications
-
-#### Scenario: Unsupported toggles are absent
-
-- **WHEN** the Notifications tab is rendered
-- **THEN** the page issues no request to any endpoint that would read or write `digestOptOut` through `/api/v1/users/me`
+- **WHEN** the user flips the weekly-digest switch in the Notifications tab
+- **THEN** a `PATCH /users/me { digestOptOut }` is sent with the new value and the switch reflects the persisted state after the response

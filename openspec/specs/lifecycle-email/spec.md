@@ -105,6 +105,16 @@ The system SHALL expose a public, token-guarded endpoint `GET /api/v1/email/unsu
 - **WHEN** a request uses a token that matches no user
 - **THEN** the response is a generic confirmation and no user state changes
 
+### Requirement: Weekly digest opt-out
+
+`User.digestOptOut` SHALL be mutable through **two** paths that write the same field: the existing public tokenized one-click `GET /api/v1/email/unsubscribe?token=...` link in the digest email (opt-out only), and the authenticated `PATCH /api/v1/users/me { digestOptOut }` two-way toggle. Digest send-eligibility logic is unchanged — the weekly-digest cron continues to skip any user whose `digestOptOut` is `true`, regardless of which path set it.
+
+#### Scenario: Both paths converge on the same field
+
+- **WHEN** a user opts out via the email unsubscribe link and later opts back in via authenticated Settings (`PATCH /users/me { digestOptOut: false }`)
+- **THEN** the weekly-digest cron treats them as eligible again
+- **AND** the tokenized unsubscribe link continues to function unchanged for users who only have the email
+
 ### Requirement: Post-exam outcome nudge trigger
 
 The system SHALL send a post-exam outcome nudge for an enrollment only when the enrollment is calibrated, its readiness is greater than or equal to `EXAM_READY_THRESHOLD`, its study activity has lulled (no session or graded answer within `NUDGE_ACTIVITY_LULL_DAYS`), and its nudge allowance is not exhausted. A worker cron SHALL select lull candidates from database-readable activity timestamps and allowance counters; the API SHALL apply the calibrated-and-ready gate (computing readiness via `ReadinessService`) before sending. The nudge email SHALL present the one-tap survey "Did you take the exam yet? Passed / Didn't pass / Not yet."
