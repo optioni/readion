@@ -5,7 +5,12 @@ import ExamHeader from '~/components/ExamHeader.vue'
 describe('ExamHeader', () => {
   it('renders the cert code chip', () => {
     const wrapper = mount(ExamHeader, {
-      props: { certCode: 'SAA-C03', certName: 'AWS Solutions Architect', mode: 'active', totalQuestions: 65 },
+      props: {
+        certCode: 'SAA-C03',
+        certName: 'AWS Solutions Architect',
+        mode: 'active',
+        totalQuestions: 65,
+      },
     })
 
     const chip = wrapper.find('[data-testid="exam-cert-chip"]')
@@ -73,7 +78,13 @@ describe('ExamHeader', () => {
     expect(calm.find('[data-testid="exam-timer"]').attributes('data-urgent')).toBe('false')
 
     const urgent = mount(ExamHeader, {
-      props: { certCode: 'SAA-C03', mode: 'active', totalQuestions: 65, timer: '00:00:09', urgent: true },
+      props: {
+        certCode: 'SAA-C03',
+        mode: 'active',
+        totalQuestions: 65,
+        timer: '00:00:09',
+        urgent: true,
+      },
     })
     expect(urgent.find('[data-testid="exam-timer"]').attributes('data-urgent')).toBe('true')
   })
@@ -94,7 +105,8 @@ describe('ExamHeader', () => {
     await toggle.trigger('click')
     expect(wrapper.find('[data-testid="exam-flag-toggle"]').attributes('data-flagged')).toBe('true')
 
-    // Session-local: a flag never emits a persistence event.
-    expect(wrapper.emitted()).toEqual({})
+    // Session-local: a flag never emits a persistence event (no custom flag/save emit).
+    expect(wrapper.emitted('flag')).toBeUndefined()
+    expect(wrapper.emitted('save')).toBeUndefined()
   })
 })

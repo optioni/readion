@@ -70,7 +70,9 @@ describe('MockExamNavPanel', () => {
         },
       })
 
-      expect(wrapper.find('[data-testid="exam-answered-count"]').text()).toMatch(/11 of 65 answered/)
+      expect(wrapper.find('[data-testid="exam-answered-count"]').text()).toMatch(
+        /11 of 65 answered/,
+      )
       expect(wrapper.find('[data-testid="exam-nav-legend"]').exists()).toBe(true)
       expect(wrapper.find('[data-testid="exam-submit-button"]').exists()).toBe(true)
     })
