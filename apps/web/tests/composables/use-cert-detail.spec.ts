@@ -72,6 +72,7 @@ describe('useCertDetail', () => {
     expect(result.provider.value).toBe('AWS')
     expect(result.code.value).toBe('CLF-C02')
     expect(result.certificationId.value).toBe('cert-1')
+    expect(result.questionCount.value).toBe(65)
     expect(result.notFound.value).toBe(false)
     expect(result.isError.value).toBe(false)
   })

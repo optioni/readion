@@ -13,6 +13,7 @@ function stubCert(options: { code?: string; name?: string } = {}) {
     code: computed(() => options.code ?? 'SAA-C03'),
     certificationId: computed(() => 'cert-1'),
     domains: computed(() => []),
+    questionCount: computed(() => 65),
     isLoading: computed(() => false),
     isError: computed(() => false),
     notFound: computed(() => false),

@@ -25,6 +25,7 @@ function stubCertDetail(
     code: computed(() => options.code ?? 'CLF-C02'),
     certificationId: computed(() => options.certificationId ?? 'cert-1'),
     domains: computed(() => []),
+    questionCount: computed(() => 65),
     isLoading: computed(() => options.isLoading ?? false),
     isError: computed(() => options.isError ?? false),
     notFound: computed(() => options.notFound ?? false),
