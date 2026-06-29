@@ -1,3 +1,4 @@
+import type { CertExtractionFields, CertificationDomain, ExtractedField } from '@readion/shared'
 import { extractRequestSchema } from '@readion/shared'
 import { reactive } from 'vue'
 import { readDataEnvelope } from '~/composables/adminEnvelope'
@@ -5,23 +6,53 @@ import { certSetupControllerExtract } from '~~/src/api/cert-setup/cert-setup'
 
 const jsonHeaders = { 'Content-Type': 'application/json' }
 
-// Shared wizard state across the four cert-setup steps. Step 1 (this group) writes
-// `name`, `code`, `confirmedSourceUrl` and `extractionJobId`. Steps 2–4 (groups 7, 8)
-// READ these fields — group 7 polls `extractionJobId`, group 8 reads `confirmedSourceUrl`
-// and the extracted/identity fields it appends here — so extend this shape rather than
-// replacing it.
+export type CertExtractionFieldKey = keyof CertExtractionFields
+
+// Working values the admin reviews/edits before submit. Initialised from each grounded
+// field's `value`; unverified fields start null and await admin input. Group 8 reads
+// these to build the `POST /admin/certifications` create body.
+export interface CertSetupFieldValues {
+  domains: CertificationDomain[] | null
+  questionCount: number | null
+  passingScore: number | null
+  timeLimitMinutes: number | null
+}
+
+// Shared wizard state across the four cert-setup steps. Step 1 (group 6) writes
+// `name`, `code`, `confirmedSourceUrl` and `extractionJobId`. Step 2 (group 7) polls
+// `extractionJobId`, stores the grounded `fields`, the editable `fieldValues`, the
+// admin-flagged/edited `manualFields`, and the admin-entered `identity`. Group 8 reads
+// `fieldValues` + `identity` + `manualFields` + `confirmedSourceUrl` to build the
+// create body — so extend this shape rather than replacing it.
 export interface CertSetupWizardState {
   step: 1 | 2 | 3 | 4
   name: string
-  code: string // optional code; '' when empty
+  code: string // optional discovery code; '' when empty
   confirmedSourceUrl: string | null
-  extractionJobId: string | null // set in step 2 (group 7) via confirmSource below
-  // fields/manualFields/identity/createdCertId added by groups 7, 8 — extend here.
+  extractionJobId: string | null // set in step 1 (group 6) via confirmSource below
+  // --- added by group 7 (step 2 extraction review) ---
+  fields: CertExtractionFields | null // raw grounded|unverified extraction result
+  fieldValues: CertSetupFieldValues // editable working values used to build the create body
+  manualFields: CertExtractionFieldKey[] // keys the admin edited/flagged → provenance { manuallyConfirmed }
+  identity: { name: string; provider: string; code: string } // admin-entered cert identity
 }
 
 export interface CertSetupWizard {
   state: CertSetupWizardState
   confirmSource: (url: string) => Promise<void>
+  applyExtraction: (fields: CertExtractionFields) => void
+  editFieldValue: <K extends CertExtractionFieldKey>(key: K, value: CertSetupFieldValues[K]) => void
+  flagField: (key: CertExtractionFieldKey) => void
+}
+
+function isGrounded<T>(
+  field: ExtractedField<T>,
+): field is { value: T; citation: { url: string; passage: string } } {
+  return 'citation' in field
+}
+
+function groundedValue<T>(field: ExtractedField<T>): T | null {
+  return isGrounded(field) ? field.value : null
 }
 
 export function useCertSetupWizard(): CertSetupWizard {
@@ -31,6 +62,15 @@ export function useCertSetupWizard(): CertSetupWizard {
     code: '',
     confirmedSourceUrl: null,
     extractionJobId: null,
+    fields: null,
+    fieldValues: {
+      domains: null,
+      questionCount: null,
+      passingScore: null,
+      timeLimitMinutes: null,
+    },
+    manualFields: [],
+    identity: { name: '', provider: '', code: '' },
   })
 
   // Step 1 confirm action: persist the confirmed url, kick off grounded extraction,
@@ -51,5 +91,38 @@ export function useCertSetupWizard(): CertSetupWizard {
     state.step = 2
   }
 
-  return { state, confirmSource }
+  // Called once when the poll first yields a non-null `fields`. Stores the raw result
+  // and seeds the editable working values from grounded fields (unverified → null).
+  function applyExtraction(fields: CertExtractionFields): void {
+    if (state.fields) return
+    state.fields = fields
+    state.fieldValues = {
+      domains: groundedValue(fields.domains),
+      questionCount: groundedValue(fields.questionCount),
+      passingScore: groundedValue(fields.passingScore),
+      timeLimitMinutes: groundedValue(fields.timeLimitMinutes),
+    }
+  }
+
+  function markManual(key: CertExtractionFieldKey): void {
+    if (!state.manualFields.includes(key)) state.manualFields.push(key)
+  }
+
+  // Admin edited a field's working value (grounded override or unverified entry):
+  // record the value and flag the field as manually confirmed for provenance.
+  function editFieldValue<K extends CertExtractionFieldKey>(
+    key: K,
+    value: CertSetupFieldValues[K],
+  ): void {
+    state.fieldValues[key] = value
+    markManual(key)
+  }
+
+  // Per-field "Flag as uncertain": client-side review state that also marks the field
+  // manual so downstream provenance reflects the admin's judgement.
+  function flagField(key: CertExtractionFieldKey): void {
+    markManual(key)
+  }
+
+  return { state, confirmSource, applyExtraction, editFieldValue, flagField }
 }

@@ -1,11 +1,13 @@
 import type { DiscoverSourcesResponse } from '@readion/shared'
+import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import CertSetupWizard from '~/components/admin/CertSetupWizard.vue'
 import {
   certSetupControllerDiscoverSources,
   certSetupControllerExtract,
+  certSetupControllerReadExtraction,
 } from '~~/src/api/cert-setup/cert-setup'
 
 vi.mock('~~/src/api/cert-setup/cert-setup')
@@ -37,12 +39,30 @@ function mockExtract(jobId = 'extract-job-1') {
   )
 }
 
+beforeEach(() => {
+  // Step 2 (extraction step) polls this on mount; default to an in-flight job so the
+  // poll stays pending while step-1 assertions run.
+  vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
+    // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+    {
+      data: { data: { state: 'active', fields: null } },
+      status: 200,
+      headers: new Headers(),
+    } as any,
+  )
+})
+
 afterEach(() => {
   vi.clearAllMocks()
 })
 
 function mountWizard() {
-  return mount(CertSetupWizard)
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  })
+  return mount(CertSetupWizard, {
+    global: { plugins: [[VueQueryPlugin, { queryClient }]] },
+  })
 }
 
 async function fillAndDiscover(
@@ -144,7 +164,7 @@ describe('CertSetupWizard step 1 — confirm', () => {
     })
 
     expect(wrapper.find('[data-testid="discover-submit-btn"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="cert-setup-step-placeholder"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="cert-extraction-step"]').exists()).toBe(true)
   })
 
   it('omits the code field from the extract body when no code was entered', async () => {

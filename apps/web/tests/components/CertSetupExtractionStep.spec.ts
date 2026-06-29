@@ -213,6 +213,23 @@ describe('CertSetupExtractionStep review state', () => {
     wrapper.unmount()
   })
 
+  it('records a per-field confirm as client review state without flagging it manual', async () => {
+    vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
+      statusEnvelope({ state: 'completed', fields: EXTRACTION_FIELDS }),
+    )
+    const wizard = setupWizardAtStep2()
+    const wrapper = mountStep(wizard)
+    await pollToComplete()
+
+    const field = wrapper.find('[data-testid="extraction-field-passingScore"]')
+    await field.find('[data-testid="field-confirm-btn"]').trigger('click')
+
+    expect(field.attributes('data-review')).toBe('confirmed')
+    expect(wizard.state.manualFields).not.toContain('passingScore')
+
+    wrapper.unmount()
+  })
+
   it('flags a field as uncertain via the per-field flag button', async () => {
     vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
       statusEnvelope({ state: 'completed', fields: EXTRACTION_FIELDS }),

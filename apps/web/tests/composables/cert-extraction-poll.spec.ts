@@ -1,9 +1,6 @@
 import type { ExtractionStatusResponse } from '@readion/shared'
 import { describe, expect, it } from 'vitest'
-import {
-  isTerminalWithoutFields,
-  nextRefetchInterval,
-} from '~/composables/certExtractionPoll'
+import { isTerminalWithoutFields, nextRefetchInterval } from '~/composables/certExtractionPoll'
 
 const POLL_MS = 1500
 
