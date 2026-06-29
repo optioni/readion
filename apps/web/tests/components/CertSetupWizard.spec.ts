@@ -57,8 +57,10 @@ async function fillAndDiscover(
   await flushPromises()
 }
 
-function lastBody(mock: ReturnType<typeof vi.mocked>): Record<string, unknown> {
-  const options = mock.mock.calls.at(-1)?.[0] as { body: string }
+function lastBody(
+  fn: typeof certSetupControllerDiscoverSources | typeof certSetupControllerExtract,
+): Record<string, unknown> {
+  const options = vi.mocked(fn).mock.calls.at(-1)?.[0] as { body: string }
   return JSON.parse(options.body)
 }
 
@@ -78,15 +80,15 @@ describe('CertSetupWizard step 1 — discovery', () => {
     await fillAndDiscover(wrapper)
 
     expect(certSetupControllerDiscoverSources).toHaveBeenCalledTimes(1)
-    expect(lastBody(vi.mocked(certSetupControllerDiscoverSources))).toEqual({
+    expect(lastBody(certSetupControllerDiscoverSources)).toEqual({
       name: CERT_NAME,
       code: CODE,
     })
 
     const candidates = wrapper.findAll('[data-testid="source-candidate"]')
     expect(candidates).toHaveLength(2)
-    expect(candidates[0].attributes('data-url')).toBe(FIRST_URL)
-    expect(candidates[1].attributes('data-url')).toBe(PDF_URL)
+    expect(candidates[0]!.attributes('data-url')).toBe(FIRST_URL)
+    expect(candidates[1]!.attributes('data-url')).toBe(PDF_URL)
     expect(wrapper.find('[data-testid="source-confidence"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="manual-url-input"]').exists()).toBe(true)
   })
@@ -97,7 +99,7 @@ describe('CertSetupWizard step 1 — discovery', () => {
 
     await fillAndDiscover(wrapper, { name: CERT_NAME, code: null })
 
-    expect(lastBody(vi.mocked(certSetupControllerDiscoverSources))).toEqual({ name: CERT_NAME })
+    expect(lastBody(certSetupControllerDiscoverSources)).toEqual({ name: CERT_NAME })
   })
 
   it('disables the discover button until a name is entered', async () => {
@@ -130,12 +132,12 @@ describe('CertSetupWizard step 1 — confirm', () => {
     const wrapper = mountWizard()
 
     await fillAndDiscover(wrapper)
-    await wrapper.findAll('[data-testid="source-candidate"]')[0].trigger('click')
+    await wrapper.findAll('[data-testid="source-candidate"]')[0]!.trigger('click')
     await wrapper.find('[data-testid="confirm-source-btn"]').trigger('click')
     await flushPromises()
 
     expect(certSetupControllerExtract).toHaveBeenCalledTimes(1)
-    expect(lastBody(vi.mocked(certSetupControllerExtract))).toEqual({
+    expect(lastBody(certSetupControllerExtract)).toEqual({
       name: CERT_NAME,
       code: CODE,
       confirmedSourceUrl: FIRST_URL,
@@ -143,6 +145,22 @@ describe('CertSetupWizard step 1 — confirm', () => {
 
     expect(wrapper.find('[data-testid="discover-submit-btn"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="cert-setup-step-placeholder"]').exists()).toBe(true)
+  })
+
+  it('omits the code field from the extract body when no code was entered', async () => {
+    mockDiscover()
+    mockExtract()
+    const wrapper = mountWizard()
+
+    await fillAndDiscover(wrapper, { name: CERT_NAME, code: null })
+    await wrapper.findAll('[data-testid="source-candidate"]')[0]!.trigger('click')
+    await wrapper.find('[data-testid="confirm-source-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(lastBody(certSetupControllerExtract)).toEqual({
+      name: CERT_NAME,
+      confirmedSourceUrl: FIRST_URL,
+    })
   })
 
   it('confirms a manually pasted url over the candidate list', async () => {
@@ -155,7 +173,7 @@ describe('CertSetupWizard step 1 — confirm', () => {
     await wrapper.find('[data-testid="confirm-source-btn"]').trigger('click')
     await flushPromises()
 
-    expect(lastBody(vi.mocked(certSetupControllerExtract))).toMatchObject({
+    expect(lastBody(certSetupControllerExtract)).toMatchObject({
       confirmedSourceUrl: 'https://example.com/guide',
     })
   })
@@ -170,7 +188,7 @@ describe('CertSetupWizard step 1 — confirm', () => {
     await wrapper.find('[data-testid="manual-url-input"]').setValue('not-a-url')
     expect(wrapper.find('[data-testid="confirm-source-btn"]').attributes('disabled')).toBeDefined()
 
-    await wrapper.findAll('[data-testid="source-candidate"]')[0].trigger('click')
+    await wrapper.findAll('[data-testid="source-candidate"]')[0]!.trigger('click')
     await wrapper.find('[data-testid="manual-url-input"]').setValue('')
     expect(
       wrapper.find('[data-testid="confirm-source-btn"]').attributes('disabled'),
