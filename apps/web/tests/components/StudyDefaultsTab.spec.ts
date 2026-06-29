@@ -25,6 +25,7 @@ const profileEnvelope = (sessionDefaults: SessionDefaults) => ({
       role: 'user',
       emailVerified: true,
       displayTimezone: 'Europe/Helsinki',
+      digestOptOut: false,
       sessionDefaults,
     },
   },
@@ -126,19 +127,15 @@ describe('StudyDefaultsTab save defaults', () => {
     await flushPromises()
 
     expect(usersControllerUpdateMe).toHaveBeenCalledTimes(1)
-    expect(usersControllerUpdateMe).toHaveBeenCalledWith(
-      expect.objectContaining({
-        body: JSON.stringify({
-          sessionDefaults: {
-            duration: 60,
-            contentMix: 'balanced',
-            difficulty: 'intermediate',
-            focusArea: 'auto',
-            learningStyle: 'spaced-repetition',
-          },
-        }),
-      }),
-    )
+    expect(usersControllerUpdateMe).toHaveBeenCalledWith({
+      sessionDefaults: {
+        duration: 60,
+        contentMix: 'balanced',
+        difficulty: 'intermediate',
+        focusArea: 'auto',
+        learningStyle: 'spaced-repetition',
+      },
+    })
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: settingsQueryKeys.profile() })
   })
 

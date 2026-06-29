@@ -27,6 +27,7 @@ const profileFixture = (role: 'user' | 'admin'): UserProfileResponse => ({
   role,
   emailVerified: true,
   displayTimezone: 'Europe/Helsinki',
+  digestOptOut: false,
   sessionDefaults,
 })
 

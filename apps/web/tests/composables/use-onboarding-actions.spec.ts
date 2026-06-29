@@ -63,10 +63,7 @@ describe('useOnboardingActions saveDefaultsAndEnroll', () => {
       sessionDefaults,
     })
 
-    expect(usersControllerUpdateMe).toHaveBeenCalledWith({
-      headers: jsonHeaders,
-      body: JSON.stringify({ sessionDefaults }),
-    })
+    expect(usersControllerUpdateMe).toHaveBeenCalledWith({ sessionDefaults })
     expect(userCertificationsControllerEnroll).toHaveBeenCalledWith({
       headers: jsonHeaders,
       body: JSON.stringify({ certificationId: 'cert-1', sessionDefaults }),

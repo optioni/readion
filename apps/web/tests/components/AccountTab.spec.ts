@@ -32,6 +32,7 @@ const PROFILE: UserProfileResponse = {
   role: 'user',
   emailVerified: true,
   displayTimezone: 'Europe/Helsinki',
+  digestOptOut: false,
   sessionDefaults: {
     duration: 30,
     contentMix: 'balanced',
@@ -132,9 +133,7 @@ describe('AccountTab timezone control', () => {
     await flushPromises()
 
     expect(usersControllerUpdateMe).toHaveBeenCalledTimes(1)
-    expect(usersControllerUpdateMe).toHaveBeenCalledWith(
-      expect.objectContaining({ body: JSON.stringify({ displayTimezone: 'America/New_York' }) }),
-    )
+    expect(usersControllerUpdateMe).toHaveBeenCalledWith({ displayTimezone: 'America/New_York' })
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: settingsQueryKeys.profile() })
   })
 
@@ -387,9 +386,7 @@ describe('AccountTab delete account danger zone', () => {
     await flushPromises()
 
     expect(usersControllerDeleteMe).toHaveBeenCalledTimes(1)
-    expect(usersControllerDeleteMe).toHaveBeenCalledWith(
-      expect.objectContaining({ body: JSON.stringify({ password: 'hunter2' }) }),
-    )
+    expect(usersControllerDeleteMe).toHaveBeenCalledWith({ password: 'hunter2' })
     expect(auth.isAuthenticated).toBe(false)
     expect(auth.user).toBeNull()
     expect(mockNavigate).toHaveBeenCalledWith('/login')

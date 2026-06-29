@@ -41,7 +41,7 @@ async function saveTimezone() {
 
   saving.value = true
   try {
-    await usersControllerUpdateMe({ headers: jsonHeaders, body: JSON.stringify(body) })
+    await usersControllerUpdateMe(body)
     await queryClient.invalidateQueries({ queryKey: settingsQueryKeys.profile() })
   } catch (error) {
     errorMessage.value =
@@ -133,10 +133,7 @@ async function confirmDeleteAccount() {
 
   deletingAccount.value = true
   try {
-    await usersControllerDeleteMe({
-      headers: jsonHeaders,
-      body: JSON.stringify({ password: deletePassword.value }),
-    })
+    await usersControllerDeleteMe({ password: deletePassword.value })
     authStore.clear()
     await navigateTo('/login')
   } catch (error) {

@@ -13,6 +13,7 @@ const profileFixture: UserProfileResponse = {
   role: 'user',
   emailVerified: true,
   displayTimezone: 'Europe/Helsinki',
+  digestOptOut: false,
   sessionDefaults: {
     duration: 30,
     contentMix: 'balanced',

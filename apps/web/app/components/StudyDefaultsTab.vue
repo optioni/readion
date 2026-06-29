@@ -8,8 +8,6 @@ import OnboardingSessionPrefs from '~/components/OnboardingSessionPrefs.vue'
 import { settingsQueryKeys } from '~/composables/settingsQueryKeys'
 import { usersControllerUpdateMe } from '~~/src/api/users/users'
 
-const jsonHeaders = { 'Content-Type': 'application/json' }
-
 const queryClient = useQueryClient()
 
 const selected = ref<SessionDefaults>({ ...DEFAULT_SESSION_DEFAULTS })
@@ -26,10 +24,7 @@ async function saveDefaults() {
 
   saving.value = true
   try {
-    await usersControllerUpdateMe({
-      headers: jsonHeaders,
-      body: JSON.stringify({ sessionDefaults }),
-    })
+    await usersControllerUpdateMe({ sessionDefaults })
     await queryClient.invalidateQueries({ queryKey: settingsQueryKeys.profile() })
   } catch (error) {
     errorMessage.value =
