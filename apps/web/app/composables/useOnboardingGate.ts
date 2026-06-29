@@ -1,8 +1,4 @@
-import {
-  type SessionDefaults,
-  type UserProfileResponse,
-  userProfileResponseSchema,
-} from '@readion/shared'
+import type { SessionDefaults, UserProfileResponse } from '@readion/shared'
 import { useQuery } from '@tanstack/vue-query'
 import { type ComputedRef, computed } from 'vue'
 import { onboardingQueryKeys } from '~/composables/onboardingQueryKeys'
@@ -15,7 +11,7 @@ import { userCertificationsControllerList } from '~~/src/api/user-certifications
 import { usersControllerGetMe } from '~~/src/api/users/users'
 
 export const readProfileEnvelope = (response: { data: unknown }): UserProfileResponse =>
-  userProfileResponseSchema.parse((response.data as { data: unknown }).data)
+  (response.data as { data: UserProfileResponse }).data
 
 export function useOnboardingGate() {
   const profileQuery = useQuery({
