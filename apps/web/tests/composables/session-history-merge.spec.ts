@@ -13,12 +13,12 @@ const makeSession = (
 ): SessionResponseDto => ({
   id,
   userCertificationId: 'uc-1',
-  kind: (opts.kind ?? 'study') as SessionResponseDto['kind'],
-  status: (opts.status ?? 'completed') as SessionResponseDto['status'],
+  kind: (opts.kind ?? 'study') as unknown as SessionResponseDto['kind'],
+  status: (opts.status ?? 'completed') as unknown as SessionResponseDto['status'],
   durationMinutes: opts.durationMinutes ?? 30,
   contentMix: 'balanced',
   difficulty: 'medium',
-  focusArea: 'general' as SessionResponseDto['focusArea'],
+  focusArea: 'general' as unknown as SessionResponseDto['focusArea'],
   learningStyle: 'visual',
   lastItemIndex: 0,
   startedAt,
@@ -31,9 +31,9 @@ const makeMockExam = (
 ): MockExamResponseDto => ({
   id,
   userCertificationId: 'uc-1',
-  type: (opts.type ?? 'mock') as MockExamResponseDto['type'],
-  status: (opts.status ?? 'submitted') as MockExamResponseDto['status'],
-  generation: 'generated' as MockExamResponseDto['generation'],
+  type: (opts.type ?? 'mock') as unknown as MockExamResponseDto['type'],
+  status: (opts.status ?? 'submitted') as unknown as MockExamResponseDto['status'],
+  generation: 'generated' as unknown as MockExamResponseDto['generation'],
   startedAt: startedAt as unknown as MockExamResponseDto['startedAt'],
   score: (opts.score !== undefined ? opts.score : null) as unknown as MockExamResponseDto['score'],
   passed: null,
@@ -80,9 +80,9 @@ describe('useSessionHistoryMerge', () => {
 
     const [row] = useSessionHistoryMerge(sessions, [], summaries)
 
-    expect(row.questionsAnswered).toBe(12)
-    expect(row.accuracy).toBe(83)
-    expect(row.readinessDelta).toBe(5)
+    expect(row!.questionsAnswered).toBe(12)
+    expect(row!.accuracy).toBe(83)
+    expect(row!.readinessDelta).toBe(5)
   })
 
   it('sets questionsAnswered/accuracy/readinessDelta to null when a session has no summary', () => {
@@ -91,9 +91,9 @@ describe('useSessionHistoryMerge', () => {
 
     const [row] = useSessionHistoryMerge(sessions, [], summaries)
 
-    expect(row.questionsAnswered).toBe(null)
-    expect(row.accuracy).toBe(null)
-    expect(row.readinessDelta).toBe(null)
+    expect(row!.questionsAnswered).toBe(null)
+    expect(row!.accuracy).toBe(null)
+    expect(row!.readinessDelta).toBe(null)
   })
 
   it('sets kind from the session kind field for study/review sessions', () => {
@@ -103,8 +103,8 @@ describe('useSessionHistoryMerge', () => {
     ]
     const result = useSessionHistoryMerge(sessions, [], new Map())
 
-    expect(result[0].kind).toBe('study')
-    expect(result[1].kind).toBe('review')
+    expect(result[0]!.kind).toBe('study')
+    expect(result[1]!.kind).toBe('review')
   })
 
   it('sets kind from the mock exam type for mock/diagnostic attempts', () => {
@@ -114,8 +114,8 @@ describe('useSessionHistoryMerge', () => {
     ]
     const result = useSessionHistoryMerge([], mocks, new Map())
 
-    expect(result[0].kind).toBe('mock')
-    expect(result[1].kind).toBe('diagnostic')
+    expect(result[0]!.kind).toBe('mock')
+    expect(result[1]!.kind).toBe('diagnostic')
   })
 
   it('populates score for mock exam rows and leaves it null for study sessions', () => {
@@ -135,23 +135,23 @@ describe('useSessionHistoryMerge', () => {
     const mocks = [makeMockExam('m-1', null)]
     const result = useSessionHistoryMerge(sessions, mocks, new Map())
 
-    expect(result[result.length - 1].id).toBe('m-1')
+    expect(result[result.length - 1]!.id).toBe('m-1')
   })
 
   it('sets readinessDelta to null when summary readiness.delta is null', () => {
     const sessions = [makeSession('s-1', '2026-01-01T10:00:00Z')]
     // Accuracy is a 0-1 fraction from the API.
-    const summaries = new Map([['s-1', makeSummary(10, 0.80, null)]])
+    const summaries = new Map([['s-1', makeSummary(10, 0.8, null)]])
 
     const [row] = useSessionHistoryMerge(sessions, [], summaries)
 
-    expect(row.readinessDelta).toBe(null)
+    expect(row!.readinessDelta).toBe(null)
   })
 
   it('exposes session durationMinutes on study/review rows', () => {
     const sessions = [makeSession('s-1', '2026-01-01T10:00:00Z', { durationMinutes: 45 })]
     const [row] = useSessionHistoryMerge(sessions, [], new Map())
 
-    expect(row.durationMinutes).toBe(45)
+    expect(row!.durationMinutes).toBe(45)
   })
 })

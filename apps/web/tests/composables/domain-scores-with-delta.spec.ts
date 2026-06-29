@@ -50,8 +50,8 @@ describe('useDomainScores', () => {
       null,
     )
 
-    expect(poor.status).toBe('poor')
-    expect(good.status).toBe('good')
+    expect(poor!.status).toBe('poor')
+    expect(good!.status).toBe('good')
   })
 
   it('sets delta: null for all domains when no latest summary is provided', () => {
@@ -75,9 +75,9 @@ describe('useDomainScores', () => {
       summary,
     )
 
-    expect(rows[0].delta).toBe(7)
-    expect(rows[1].delta).toBe(-3)
-    expect(rows[2].delta).toBe(null)
+    expect(rows[0]!.delta).toBe(7)
+    expect(rows[1]!.delta).toBe(-3)
+    expect(rows[2]!.delta).toBe(null)
   })
 
   it('sets delta: null for a domain absent from weakAreaDeltas even with a summary', () => {
@@ -88,17 +88,17 @@ describe('useDomainScores', () => {
       summary,
     )
 
-    expect(rows[0].delta).toBe(null)
-    expect(rows[1].delta).toBe(5)
+    expect(rows[0]!.delta).toBe(null)
+    expect(rows[1]!.delta).toBe(5)
   })
 
   it('keeps the "no data yet" state for domains with no weak-area record', () => {
     const [row] = useDomainScores([domain('Networking')], [], null)
 
-    expect(row.hasData).toBe(false)
-    expect(row.score).toBe(null)
-    expect(row.status).toBe(null)
-    expect(row.delta).toBe(null)
+    expect(row!.hasData).toBe(false)
+    expect(row!.score).toBe(null)
+    expect(row!.status).toBe(null)
+    expect(row!.delta).toBe(null)
   })
 
   it('keeps the existing joinDomainScores tests green — correct score and status', () => {

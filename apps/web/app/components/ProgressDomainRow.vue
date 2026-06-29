@@ -23,7 +23,9 @@ async function markMastered() {
   await suppressDomain(props.enrollmentId, { domain: props.domain })
   mastered.value = true
   await queryClient.invalidateQueries({ queryKey: progressQueryKeys.weakAreas(props.enrollmentId) })
-  await queryClient.invalidateQueries({ queryKey: progressQueryKeys.reviewQueue(props.enrollmentId) })
+  await queryClient.invalidateQueries({
+    queryKey: progressQueryKeys.reviewQueue(props.enrollmentId),
+  })
 }
 
 const scoreColorClass = (status: StatusColorKey) => statusTextColorClass(status)

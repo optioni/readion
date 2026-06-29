@@ -60,10 +60,10 @@ describe('useDueDomainBreakdown', () => {
 
     const result = useDueDomainBreakdown(items)
 
-    expect(result[0].domain).toBe('Security')
-    expect(result[0].count).toBe(3)
-    expect(result[1].count).toBe(2)
-    expect(result[2].count).toBe(1)
+    expect(result[0]!.domain).toBe('Security')
+    expect(result[0]!.count).toBe(3)
+    expect(result[1]!.count).toBe(2)
+    expect(result[2]!.count).toBe(1)
   })
 
   it('sorts alphabetically by domain name when counts are equal', () => {

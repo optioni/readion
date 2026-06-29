@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { ReviewItemResponse } from '@readion/shared'
 import { computed } from 'vue'
-import { useDueDomainBreakdown } from '~/composables/useDueDomainBreakdown'
 import { sessionStartPath } from '~/composables/runnerRoutes'
+import { useDueDomainBreakdown } from '~/composables/useDueDomainBreakdown'
 
 const props = defineProps<{
   enrollmentId: string

@@ -14,7 +14,7 @@ function dueItem(domain: string, id = domain): ReviewItemResponse {
     anchorChunkId: `chunk-${id}`,
     domain,
     box: 1,
-    state: 'due',
+    state: 'active',
     dueAt: '2026-06-29T00:00:00.000Z',
     lastReviewedAt: null,
   }

@@ -1,8 +1,13 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { drillSession, fetchSessionSummary } from '~/composables/sessionViewApi'
 import { fetchReviewQueue, startReview } from '~/composables/progressApi'
-import { completeSessionItem, endSession, fetchSessionDetail } from '~/composables/sessionViewApi'
+import {
+  completeSessionItem,
+  drillSession,
+  endSession,
+  fetchSessionDetail,
+  fetchSessionSummary,
+} from '~/composables/sessionViewApi'
 import ReviewPage from '~/pages/user-certifications/[id]/review.vue'
 
 vi.mock('~/composables/progressApi', () => ({
@@ -69,25 +74,26 @@ function sessionDetail(items: ReturnType<typeof quizItem>[], sessionId = 'sess-r
 }
 
 function stubQueue(dueCount = 3, count = 3) {
-  const items = Array.from({ length: count }, (_, i) =>
-    ({
-      id: `ri-${i}`,
-      userCertificationId: 'enr-1',
-      anchorChunkId: `chunk-${i}`,
-      domain: 'Secure Architectures',
-      box: 1,
-      state: 'due',
-      dueAt: '2026-06-29T00:00:00.000Z',
-      lastReviewedAt: null,
-    }),
-  )
+  const items = Array.from({ length: count }, (_, i) => ({
+    id: `ri-${i}`,
+    userCertificationId: 'enr-1',
+    anchorChunkId: `chunk-${i}`,
+    domain: 'Secure Architectures',
+    box: 1,
+    state: 'due',
+    dueAt: '2026-06-29T00:00:00.000Z',
+    lastReviewedAt: null,
+  }))
   // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
   vi.mocked(fetchReviewQueue).mockResolvedValue({ items, meta: { dueCount, total: count } } as any)
 }
 
 function stubQueueEmpty() {
   // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
-  vi.mocked(fetchReviewQueue).mockResolvedValue({ items: [], meta: { dueCount: 0, total: 2 } } as any)
+  vi.mocked(fetchReviewQueue).mockResolvedValue({
+    items: [],
+    meta: { dueCount: 0, total: 2 },
+  } as any)
 }
 
 function stubStartReview(sessionId = 'sess-review') {

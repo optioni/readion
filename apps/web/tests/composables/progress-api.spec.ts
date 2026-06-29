@@ -93,7 +93,7 @@ describe('fetchWeakAreas', () => {
   it('GETs weak areas and returns the WeakAreaListResponseDto', async () => {
     const dto: WeakAreaListResponseDto = {
       data: [],
-      meta: { total: 0 },
+      meta: { total: 0, page: 1, limit: 20 },
     }
     vi.mocked(userCertificationsControllerListWeakAreas).mockResolvedValue(ok(dto))
 
