@@ -63,9 +63,9 @@ describe('auth shared contracts', () => {
       currentPassword: 'correcthorse',
       newPassword: 'batterystaple9',
     })
-    expect(
-      changePasswordRequestSchema.safeParse({ newPassword: 'batterystaple9' }).success,
-    ).toBe(false)
+    expect(changePasswordRequestSchema.safeParse({ newPassword: 'batterystaple9' }).success).toBe(
+      false,
+    )
     expect(
       changePasswordRequestSchema.safeParse({
         currentPassword: '',
