@@ -2,10 +2,10 @@
 import { useQueryClient } from '@tanstack/vue-query'
 import { ref } from 'vue'
 import DeltaBadge from '~/components/DeltaBadge.vue'
-import { progressQueryKeys } from '~/composables/progressQueryKeys'
 import { suppressDomain } from '~/composables/progressApi'
-import { statusTextColorClass } from '~/composables/statusColor'
+import { progressQueryKeys } from '~/composables/progressQueryKeys'
 import type { StatusColorKey } from '~/composables/statusColor'
+import { statusTextColorClass } from '~/composables/statusColor'
 
 const props = defineProps<{
   domain: string

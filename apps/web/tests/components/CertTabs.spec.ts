@@ -10,7 +10,7 @@ vi.mock('~/components/AddCertificationModal.vue', () => ({
   default: { template: '<div data-testid="add-cert-modal-stub" />' },
 }))
 
-export interface SwitcherEntry {
+interface SwitcherEntry {
   enrollmentId: string
   certName: string
 }

@@ -90,9 +90,7 @@ export function useProgressData(enrollmentId: string) {
       return {
         sessions,
         summariesMap: new Map(
-          entries.filter(
-            (e): e is [string, SessionSummaryResponseDto] => e !== null,
-          ),
+          entries.filter((e): e is [string, SessionSummaryResponseDto] => e !== null),
         ),
       }
     },
@@ -223,8 +221,7 @@ export function useProgressData(enrollmentId: string) {
   )
 
   const isError = computed(
-    () =>
-      (enrollmentQuery.isError.value && !notFound.value) || certQuery.isError.value,
+    () => (enrollmentQuery.isError.value && !notFound.value) || certQuery.isError.value,
   )
 
   return {

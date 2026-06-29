@@ -11,7 +11,9 @@ describe('TrajectoryCallout', () => {
   it('shows the number of weeks in the callout text', () => {
     const wrapper = mount(TrajectoryCallout, { props: { weeksToReady: 3 } })
     expect(wrapper.find('[data-testid="trajectory-callout"]').text()).toContain('3')
-    expect(wrapper.find('[data-testid="trajectory-callout"]').text().toLowerCase()).toContain('week')
+    expect(wrapper.find('[data-testid="trajectory-callout"]').text().toLowerCase()).toContain(
+      'week',
+    )
   })
 
   it('does not render anything when weeksToReady is null', () => {

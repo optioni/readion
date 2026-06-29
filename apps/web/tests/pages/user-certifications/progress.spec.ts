@@ -14,7 +14,9 @@ type ProgressData = ReturnType<typeof useProgressData>
 function stubProgressData(overrides: Partial<Record<keyof ProgressData, unknown>> = {}) {
   vi.mocked(useProgressData).mockReturnValue({
     notFound: computed(() => (overrides.notFound as boolean | undefined) ?? false),
-    certName: computed(() => (overrides.certName as string | undefined) ?? 'AWS Cloud Practitioner'),
+    certName: computed(
+      () => (overrides.certName as string | undefined) ?? 'AWS Cloud Practitioner',
+    ),
     certProvider: computed(() => (overrides.certProvider as string | undefined) ?? 'AWS'),
     domains: computed(() => (overrides.domains as unknown[]) ?? []),
     domainScores: computed(() => (overrides.domainScores as unknown[]) ?? []),
@@ -31,11 +33,8 @@ function stubProgressData(overrides: Partial<Record<keyof ProgressData, unknown>
           { sessionId: 's1', accuracy: 60 },
         ],
     ),
-    weeksToReady: computed(
-      () =>
-        overrides.weeksToReady !== undefined
-          ? (overrides.weeksToReady as number | null)
-          : 3,
+    weeksToReady: computed(() =>
+      overrides.weeksToReady !== undefined ? (overrides.weeksToReady as number | null) : 3,
     ),
     readiness: computed(
       () =>
@@ -163,8 +162,28 @@ describe('Progress page — session count stat', () => {
   it('renders a session count based on historyRows length', () => {
     stubProgressData({
       historyRows: [
-        { id: 's1', kind: 'study', startedAt: '2026-06-01T09:00:00Z', status: 'completed', accuracy: 60, durationMinutes: 60, questionsAnswered: 8, readinessDelta: 7, score: null },
-        { id: 's2', kind: 'study', startedAt: '2026-06-10T09:00:00Z', status: 'completed', accuracy: 70, durationMinutes: 60, questionsAnswered: 8, readinessDelta: 7, score: null },
+        {
+          id: 's1',
+          kind: 'study',
+          startedAt: '2026-06-01T09:00:00Z',
+          status: 'completed',
+          accuracy: 60,
+          durationMinutes: 60,
+          questionsAnswered: 8,
+          readinessDelta: 7,
+          score: null,
+        },
+        {
+          id: 's2',
+          kind: 'study',
+          startedAt: '2026-06-10T09:00:00Z',
+          status: 'completed',
+          accuracy: 70,
+          durationMinutes: 60,
+          questionsAnswered: 8,
+          readinessDelta: 7,
+          score: null,
+        },
       ],
     })
     const wrapper = mountPage()
