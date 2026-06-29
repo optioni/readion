@@ -3,10 +3,11 @@ import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import MockExamActiveScene from '~/components/MockExamActiveScene.vue'
-import { saveMockExamAnswer } from '~/composables/mockExamApi'
+import { saveMockExamAnswer, submitMockExam } from '~/composables/mockExamApi'
 
 vi.mock('~/composables/mockExamApi', () => ({
   saveMockExamAnswer: vi.fn(),
+  submitMockExam: vi.fn(),
 }))
 
 const Q0_OPTIONS = [
@@ -83,6 +84,9 @@ function optionByText(wrapper: ReturnType<typeof mountScene>, text: RegExp) {
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(saveMockExamAnswer).mockResolvedValue(examWith65())
+  vi.mocked(submitMockExam).mockResolvedValue(
+    buildExam(examWith65().questions, { status: 'submitted', score: 73, passed: true }),
+  )
 })
 
 describe('MockExamActiveScene', () => {
@@ -187,10 +191,40 @@ describe('MockExamActiveScene', () => {
     )
   })
 
-  it('emits submit when the nav submit button is clicked', async () => {
-    const wrapper = mountScene(examWith65())
-    await wrapper.find('[data-testid="exam-submit-button"]').trigger('click')
-    expect(wrapper.emitted('submit')).toHaveLength(1)
+  describe('submit', () => {
+    it('opens the unanswered confirmation when the nav submit button is clicked', async () => {
+      const wrapper = mountScene(examWith65())
+
+      expect(wrapper.find('[data-testid="exam-submit-confirm"]').exists()).toBe(false)
+      await wrapper.find('[data-testid="exam-submit-button"]').trigger('click')
+
+      const confirm = wrapper.find('[data-testid="exam-submit-confirm"]')
+      expect(confirm.exists()).toBe(true)
+      // No answers recorded yet: all 65 questions are unanswered and warned to score as incorrect.
+      expect(confirm.text()).toMatch(/unanswered/i)
+      expect(confirm.text()).toContain('65')
+      expect(submitMockExam).not.toHaveBeenCalled()
+    })
+
+    it('reflects the live unanswered count after a question is answered', async () => {
+      const wrapper = mountScene(examWith65())
+
+      await optionByText(wrapper, /multi-az/i).trigger('click')
+      await flushPromises()
+      await wrapper.find('[data-testid="exam-submit-button"]').trigger('click')
+
+      expect(wrapper.find('[data-testid="exam-submit-confirm"]').text()).toContain('64')
+    })
+
+    it('submits when the confirmation button is clicked', async () => {
+      const wrapper = mountScene(examWith65())
+
+      await wrapper.find('[data-testid="exam-submit-button"]').trigger('click')
+      await wrapper.find('[data-testid="exam-submit-confirm-button"]').trigger('click')
+      await flushPromises()
+
+      expect(submitMockExam).toHaveBeenCalledWith('exam-1')
+    })
   })
 
   describe('resume', () => {
@@ -248,11 +282,14 @@ describe('MockExamActiveScene', () => {
       wrapper.unmount()
     })
 
-    it('emits time-up when the countdown reaches zero', async () => {
+    it('auto-submits without confirmation when the countdown reaches zero', async () => {
       const wrapper = mountScene(buildExam([question(0)], { deadline: null, remainingSeconds: 2 }))
 
       await vi.advanceTimersByTimeAsync(2000)
-      expect(wrapper.emitted('time-up')).toHaveLength(1)
+      await flushPromises()
+
+      expect(submitMockExam).toHaveBeenCalledWith('exam-1')
+      expect(wrapper.find('[data-testid="exam-submit-confirm"]').exists()).toBe(false)
 
       wrapper.unmount()
     })
