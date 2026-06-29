@@ -55,9 +55,9 @@ describe('latestJob', () => {
 
   it('returns the job with the highest timestamp', () => {
     const newest = job({ jobId: 'b', timestamp: 50 })
-    expect(latestJob([job({ jobId: 'a', timestamp: 10 }), newest, job({ jobId: 'c', timestamp: 5 })])).toBe(
-      newest,
-    )
+    expect(
+      latestJob([job({ jobId: 'a', timestamp: 10 }), newest, job({ jobId: 'c', timestamp: 5 })]),
+    ).toBe(newest)
   })
 
   it('treats a null timestamp as the oldest', () => {

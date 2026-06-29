@@ -110,7 +110,6 @@ const created = (source: ContentSourceResponse) => ({
 })
 
 beforeEach(() => {
-  // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
   vi.mocked(certificationsControllerList).mockResolvedValue({
     data: { data: [], meta: { total: 0, page: 1, limit: 20 } },
     status: 200,
@@ -161,9 +160,9 @@ describe('AdminSources render', () => {
     stubJobs()
     const { wrapper } = mountSources()
 
-    expect(rowFor(wrapper, DISABLED_ID).find('[data-testid="source-status-pill"]').text()).toContain(
-      'Disabled',
-    )
+    expect(
+      rowFor(wrapper, DISABLED_ID).find('[data-testid="source-status-pill"]').text(),
+    ).toContain('Disabled')
   })
 
   it('shows an ingesting pill and the running-jobs banner when a job is in flight', () => {
@@ -255,7 +254,11 @@ describe('AdminSources register', () => {
     stubSources()
     stubJobs()
     vi.mocked(contentControllerRegister).mockRejectedValue(
-      new ReadionProblemDetailsError({ title: 'Bad Request', status: 400, detail: 'Already exists.' }),
+      new ReadionProblemDetailsError({
+        title: 'Bad Request',
+        status: 400,
+        detail: 'Already exists.',
+      }),
     )
     const { wrapper } = mountSources()
 
@@ -265,7 +268,9 @@ describe('AdminSources register', () => {
     await wrapper.find('[data-testid="register-source-submit"]').trigger('submit')
     await flushPromises()
 
-    expect(wrapper.find('[data-testid="register-source-error"]').text()).toContain('Already exists.')
+    expect(wrapper.find('[data-testid="register-source-error"]').text()).toContain(
+      'Already exists.',
+    )
   })
 })
 
@@ -314,7 +319,29 @@ describe('AdminSources cert selector', () => {
   it('writes the chosen certification back to the route query', async () => {
     stubSources()
     stubJobs()
+    vi.mocked(certificationsControllerList).mockResolvedValue({
+      data: {
+        data: [
+          {
+            id: 'c0000000-0000-0000-0000-000000000002',
+            name: 'Azure Fundamentals',
+            provider: 'Microsoft',
+            code: 'AZ-900',
+            domains: [],
+            questionCount: 40,
+            passingScore: 700,
+            timeLimitMinutes: 60,
+            state: 'published',
+          },
+        ],
+        meta: { total: 1, page: 1, limit: 20 },
+      },
+      status: 200,
+      headers: new Headers(),
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+    } as any)
     const { wrapper, replace } = mountSources()
+    await flushPromises()
 
     const select = wrapper.find('[data-testid="source-cert-select"]')
     expect(select.exists()).toBe(true)
