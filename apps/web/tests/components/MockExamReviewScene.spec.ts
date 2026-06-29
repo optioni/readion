@@ -10,10 +10,7 @@ const Q0_OPTIONS = [
   'Increase the instance size',
 ]
 
-function terminalQuestion(
-  index: number,
-  userAnswer: string | null,
-): MockExamQuestionResponse {
+function terminalQuestion(index: number, userAnswer: string | null): MockExamQuestionResponse {
   if (index === 0) {
     return {
       id: 'q-0',
@@ -109,9 +106,7 @@ describe('MockExamReviewScene', () => {
   it('shows the explanation and at least one citation chip', () => {
     const wrapper = mountScene(terminalExam())
 
-    expect(wrapper.find('[data-testid="exam-explanation"]').text()).toContain(
-      'synchronous standby',
-    )
+    expect(wrapper.find('[data-testid="exam-explanation"]').text()).toContain('synchronous standby')
     expect(wrapper.findAll('[data-testid="citation-chip"]').length).toBeGreaterThanOrEqual(1)
   })
 
@@ -139,9 +134,7 @@ describe('MockExamReviewScene', () => {
     expect(wrapper.find('[data-testid="exam-question-stem"]').text()).toContain(
       'Sample mock-exam question 2',
     )
-    expect(wrapper.find('[data-testid="exam-explanation"]').text()).toContain(
-      'option B is correct',
-    )
+    expect(wrapper.find('[data-testid="exam-explanation"]').text()).toContain('option B is correct')
   })
 
   it('steps forward and back through questions with Next and Previous', async () => {

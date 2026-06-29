@@ -4,6 +4,7 @@ import { computed, ref, toRef } from 'vue'
 import ExamHeader from '~/components/ExamHeader.vue'
 import MockExamNavPanel from '~/components/MockExamNavPanel.vue'
 import QuizOption, { type QuizOptionState } from '~/components/QuizOption.vue'
+import { optionRevealState } from '~/composables/examOptionState'
 import { firstUnansweredIndex, optionLetter } from '~/composables/examQuestionPosition'
 import { useDeadlineCountdown } from '~/composables/useDeadlineCountdown'
 import { useMockExamAnswers } from '~/composables/useMockExamAnswers'
@@ -57,7 +58,7 @@ const lastIndex = computed<number>(() => Math.max(props.exam.questions.length - 
 const currentQuestion = computed(() => props.exam.questions[currentIndex.value])
 
 function optionStateFor(option: string): QuizOptionState {
-  return answerFor(currentIndex.value) === option ? 'selected' : 'rest'
+  return optionRevealState(option, answerFor(currentIndex.value))
 }
 
 async function handleSelect(option: string): Promise<void> {
