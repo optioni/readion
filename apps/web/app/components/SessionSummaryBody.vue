@@ -10,8 +10,9 @@ const props = withDefaults(
     summary: SessionSummaryResponse
     timeLabel?: string | null
     drillNoMisses?: boolean
+    hideAskAgent?: boolean
   }>(),
-  { timeLabel: null, drillNoMisses: false },
+  { timeLabel: null, drillNoMisses: false, hideAskAgent: false },
 )
 
 const emit = defineEmits<{
@@ -141,6 +142,7 @@ const readiness = computed(() => {
         <div class="text-[11px] text-readion-status-good uppercase tracking-wider">Strongest</div>
         <p class="text-[13px] text-readion-text-secondary leading-relaxed">{{ summary.strongestQuestion.question }}</p>
         <button
+          v-if="!hideAskAgent"
           type="button"
           data-testid="ask-agent-button"
           class="self-start rounded-full border border-readion-status-good/20 px-3 py-1 text-[12px] text-readion-status-good"
@@ -158,6 +160,7 @@ const readiness = computed(() => {
         <div class="text-[11px] text-readion-status-poor uppercase tracking-wider">Weakest</div>
         <p class="text-[13px] text-readion-text-secondary leading-relaxed">{{ summary.weakestQuestion.question }}</p>
         <button
+          v-if="!hideAskAgent"
           type="button"
           data-testid="ask-agent-button"
           class="self-start rounded-full border border-readion-status-poor/20 px-3 py-1 text-[12px] text-readion-status-poor"
