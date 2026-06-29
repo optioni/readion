@@ -185,7 +185,7 @@ describe('fetchEnrollmentMockExams', () => {
 })
 
 describe('fetchReviewQueue', () => {
-  it('GETs the review queue and unwraps the envelope', async () => {
+  it('GETs the review queue and returns items and meta from the direct response body', async () => {
     const items: ReviewItemResponse[] = [
       {
         id: 'ri-1',
@@ -199,7 +199,8 @@ describe('fetchReviewQueue', () => {
       },
     ]
     const meta: ReviewQueueMeta = { dueCount: 1, total: 5 }
-    vi.mocked(enrollmentReviewControllerQueue).mockResolvedValue(ok({ data: { items, meta } }))
+    // The queue endpoint returns { items, meta } directly without a data-envelope wrapper.
+    vi.mocked(enrollmentReviewControllerQueue).mockResolvedValue(ok({ items, meta }))
 
     const result = await fetchReviewQueue('e-1')
 

@@ -100,7 +100,8 @@ export async function fetchReviewQueue(
   enrollmentId: string,
 ): Promise<{ items: ReviewItemResponse[]; meta: ReviewQueueMeta }> {
   const response = await enrollmentReviewControllerQueue(enrollmentId)
-  return unwrapEnvelope<{ items: ReviewItemResponse[]; meta: ReviewQueueMeta }>(response)
+  // The queue endpoint returns { items, meta } directly without the standard data-envelope.
+  return response.data as unknown as { items: ReviewItemResponse[]; meta: ReviewQueueMeta }
 }
 
 export async function startReview(enrollmentId: string): Promise<StartReviewResponse> {
