@@ -13,9 +13,9 @@
 
 ## 2. Persist at the quarantine point
 
-- [ ] 2.1 RED: integration test that quarantining an item writes a `pending` row AND still evicts from cache + increments the metric.
-- [ ] 2.2 GREEN: add the write in `QuarantineService` (additive; do not change eviction/metric/budget).
-- [ ] 2.3 REFACTOR: keep the quarantine path cohesive.
+- [x] 2.1 RED: integration test that quarantining an item writes a `pending` row AND still evicts from cache + increments the metric.
+- [x] 2.2 GREEN: add the write in `QuarantineService` (additive; do not change eviction/metric/budget).
+- [x] 2.3 REFACTOR: keep the quarantine path cohesive.
 
 ## 3. Admin list endpoint
 

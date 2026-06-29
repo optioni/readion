@@ -1,3 +1,4 @@
+import type { EntityManager } from '@mikro-orm/core'
 import { ConfigService } from '@nestjs/config'
 import { startRedisContainer } from '@readion/db'
 import type { Provenance } from '@readion/shared'
@@ -38,6 +39,15 @@ function makeCounter(): Counter {
   return { inc: vi.fn() } as unknown as Counter
 }
 
+function makeEntityManager(): EntityManager {
+  const fork = {
+    create: vi.fn(() => ({})),
+    persist: vi.fn(),
+    flush: vi.fn().mockResolvedValue(undefined),
+  }
+  return { fork: vi.fn(() => fork) } as unknown as EntityManager
+}
+
 describe('QuarantineService (real Redis)', () => {
   let container: StartedTestContainer
   let redis: Redis
@@ -48,7 +58,7 @@ describe('QuarantineService (real Redis)', () => {
     container = await startRedisContainer()
     redis = new Redis(`redis://${container.getHost()}:${container.getMappedPort(6379)}`)
     cacheService = new LlmResponseCacheService(redis, makeConfigService())
-    quarantineService = new QuarantineService(cacheService, makeCounter())
+    quarantineService = new QuarantineService(cacheService, makeCounter(), makeEntityManager())
   }, 60_000)
 
   afterAll(async () => {
@@ -96,7 +106,7 @@ describe('QuarantineService (real Redis)', () => {
 
   it('increments the quarantined-items metric labelled by certification', async () => {
     const counter = makeCounter()
-    const svc = new QuarantineService(cacheService, counter)
+    const svc = new QuarantineService(cacheService, counter, makeEntityManager())
     await cacheService.set(CACHE_KEY, [], VERIFIED_PAYLOAD)
 
     await svc.quarantine(CACHE_KEY, PROVENANCE, 'user-report', 'aws-saa')

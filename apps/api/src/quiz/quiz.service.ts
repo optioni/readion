@@ -363,11 +363,15 @@ export class QuizService {
     }
 
     const { provenance } = this.readQuizPayload(cached)
+    // The reported question's domain is not recoverable here: the quiz cache payload does not
+    // persist it, and provenance only carries source-chunk ids. Persist an empty-safe domain
+    // rather than blocking the quarantine write on a value this path cannot derive.
     await this.quarantine.quarantine(
       questionId,
       provenance,
       request.reason,
       enrollment.certification.id,
+      '',
     )
   }
 

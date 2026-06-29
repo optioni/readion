@@ -1,4 +1,6 @@
 import type { LanguageModelV3FinishReason } from '@ai-sdk/provider'
+import { EntityManager } from '@mikro-orm/core'
+import { Global, Module } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { startRedisContainer } from '@readion/db'
 import type { ExtractiveItem, VerifierVerdict } from '@readion/shared'
@@ -16,6 +18,21 @@ import { QuarantineService } from './quarantine.service'
 import type { GenerationFn, GroundedChunk } from './types'
 
 const FINISH_REASON_STOP: LanguageModelV3FinishReason = { unified: 'stop', raw: 'stop' }
+
+const mockEntityManager = {
+  fork: () => ({
+    create: () => ({}),
+    persist: () => undefined,
+    flush: async () => undefined,
+  }),
+}
+
+@Global()
+@Module({
+  providers: [{ provide: EntityManager, useValue: mockEntityManager }],
+  exports: [EntityManager],
+})
+class MockEntityManagerModule {}
 
 const FIXTURE_CHUNKS: GroundedChunk[] = [
   {
@@ -84,7 +101,7 @@ describe('GroundingModule acceptance', () => {
     })
 
     const moduleRef = await Test.createTestingModule({
-      imports: [ApiConfigModule, RedisModule, LlmModule, GroundingModule],
+      imports: [ApiConfigModule, RedisModule, LlmModule, GroundingModule, MockEntityManagerModule],
     })
       .overrideProvider(ProviderAdapter)
       .useValue({
