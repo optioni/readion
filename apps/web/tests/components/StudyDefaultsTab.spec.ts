@@ -165,4 +165,39 @@ describe('StudyDefaultsTab save defaults', () => {
     )
     expect(invalidateSpy).not.toHaveBeenCalled()
   })
+
+  it('falls back to the problem title when the error carries no detail', async () => {
+    stubProfile()
+    vi.mocked(usersControllerUpdateMe).mockRejectedValue(
+      new ReadionProblemDetailsError({
+        title: 'Unprocessable Entity',
+        status: 422,
+      }),
+    )
+
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="save-defaults-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="study-defaults-error"]').text()).toContain(
+      'Unprocessable Entity',
+    )
+  })
+
+  it('shows a generic message for a non-problem-details error', async () => {
+    stubProfile()
+    vi.mocked(usersControllerUpdateMe).mockRejectedValue(new Error('network down'))
+
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="save-defaults-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="study-defaults-error"]').text()).toContain(
+      'Could not save your study defaults',
+    )
+  })
 })
