@@ -53,13 +53,13 @@ test.describe('web-agent-chat — standalone /agent chat', () => {
     // At least the first suggestion chip must be rendered.
     const firstSuggestion = page.getByTestId('agent-suggestion').first()
     await expect(firstSuggestion).toBeVisible()
-    await expect(firstSuggestion).toContainText(SUGGESTIONS[0])
+    await expect(firstSuggestion).toContainText(SUGGESTIONS[0]!)
 
     // Clicking the suggestion submits it as the first user message.
     await firstSuggestion.click()
 
     // A user message bubble containing the suggestion text must appear.
-    await expect(page.getByTestId('agent-message').first()).toContainText(SUGGESTIONS[0])
+    await expect(page.getByTestId('agent-message').first()).toContainText(SUGGESTIONS[0]!)
 
     // The assistant response streams in; wait for the full concatenated phrase to appear.
     const streamedText = (AGENT_STANDALONE_STREAM_EVENTS as Array<{ textDelta: string }>)

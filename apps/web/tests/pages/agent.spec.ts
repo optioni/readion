@@ -228,10 +228,10 @@ describe('Agent chat empty state and suggestions', () => {
 
     const chips = wrapper.findAll('[data-testid="agent-suggestion"]')
     expect(chips).toHaveLength(4)
-    expect(chips[0].text()).toBe("What's the difference between TCP and UDP?")
-    expect(chips[1].text()).toBe('Explain eventual consistency in plain language')
-    expect(chips[2].text()).toBe('How does TLS handshake work?')
-    expect(chips[3].text()).toBe('When would I use a queue vs a topic?')
+    expect(chips[0]!.text()).toBe("What's the difference between TCP and UDP?")
+    expect(chips[1]!.text()).toBe('Explain eventual consistency in plain language')
+    expect(chips[2]!.text()).toBe('How does TLS handshake work?')
+    expect(chips[3]!.text()).toBe('When would I use a queue vs a topic?')
   })
 
   it('clicking a suggestion chip submits its text as the first turn and removes the empty state', async () => {
@@ -239,7 +239,7 @@ describe('Agent chat empty state and suggestions', () => {
 
     const wrapper = await mountPage()
     const chips = wrapper.findAll('[data-testid="agent-suggestion"]')
-    await chips[0].trigger('click')
+    await chips[0]!.trigger('click')
     await flushPromises()
 
     expect(streamTurnMock).toHaveBeenCalledWith(

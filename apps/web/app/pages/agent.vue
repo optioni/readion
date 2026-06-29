@@ -2,11 +2,7 @@
 import { computed, onUnmounted, ref } from 'vue'
 import AgentBubble from '~/components/AgentBubble.vue'
 import { AGENT_COPY, AGENT_SUGGESTIONS } from '~/composables/agentChatCopy'
-import {
-  formatTtlRemaining,
-  isTtlWarning,
-  ttlRemainingMs,
-} from '~/composables/agentChatTtl'
+import { formatTtlRemaining, isTtlWarning, ttlRemainingMs } from '~/composables/agentChatTtl'
 import { useStandaloneAgentChat } from '~/composables/useStandaloneAgentChat'
 
 const { messages, isStreaming, lastActivityAt, send, newChat } = useStandaloneAgentChat()
@@ -30,9 +26,7 @@ const ttlChipText = computed(() => {
   return `Resets after 4h idle · ${formatted} remaining`
 })
 
-const ttlBannerMinutes = computed(() =>
-  Math.floor(ttlRemaining.value / (60 * 1000)),
-)
+const ttlBannerMinutes = computed(() => Math.floor(ttlRemaining.value / (60 * 1000)))
 
 async function handleSend(): Promise<void> {
   const content = input.value
