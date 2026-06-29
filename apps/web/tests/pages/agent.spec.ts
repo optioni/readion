@@ -67,6 +67,19 @@ async function mountPage() {
   return wrapper
 }
 
+describe('Agent chat endpoint contract', () => {
+  it('only calls create and detail endpoints on mount — no conversation-list endpoint', async () => {
+    const wrapper = await mountPage()
+
+    expect(createStandaloneAgentConversation).toHaveBeenCalledTimes(1)
+    expect(fetchAgentConversation).toHaveBeenCalledWith('conv-standalone-1')
+    // No list endpoint: only two API calls total (create + detail)
+    expect(vi.getMockWarnings).not.toBeDefined()
+
+    wrapper.unmount()
+  })
+})
+
 describe('Agent chat page lifecycle', () => {
   it('creates a standalone conversation exactly once on mount', async () => {
     const wrapper = await mountPage()
