@@ -265,6 +265,70 @@ describe('Agent chat new-chat reset', () => {
   })
 })
 
+describe('Agent chat TTL chip and expiry banner', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    // "now" is 10 minutes after lastActivityAt ('2026-06-29T09:05:00.000Z')
+    vi.setSystemTime(new Date('2026-06-29T09:15:00.000Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('shows chip with ~3h 50m remaining when lastActivityAt is 10 min ago', async () => {
+    const wrapper = await mountPage()
+
+    const chip = wrapper.find('[data-testid="agent-ttl-chip"]')
+    expect(chip.exists()).toBe(true)
+    expect(chip.text()).toContain('3h 50m')
+    expect(wrapper.find('[data-testid="agent-expiry-banner"]').exists()).toBe(false)
+  })
+
+  it('shows expiry banner when conversation is near expiry (5 min remaining)', async () => {
+    // 3h 55min after lastActivityAt (09:05) → only 5 min left < 15 min threshold
+    vi.setSystemTime(new Date('2026-06-29T13:00:00.000Z'))
+    const wrapper = await mountPage()
+
+    expect(wrapper.find('[data-testid="agent-expiry-banner"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('5 minutes')
+  })
+
+  it('hides banner after send due to optimistic lastActivityAt reset', async () => {
+    // Start near expiry
+    vi.setSystemTime(new Date('2026-06-29T13:00:00.000Z'))
+    emitEvents([{ type: 'text-delta', textDelta: 'Sure!' }])
+
+    const wrapper = await mountPage()
+    expect(wrapper.find('[data-testid="agent-expiry-banner"]').exists()).toBe(true)
+
+    await wrapper.find('[data-testid="agent-input"]').setValue('Hello')
+    await wrapper.find('[data-testid="agent-send-button"]').trigger('click')
+    await flushPromises()
+
+    // Optimistic reset sets lastActivityAt to now (13:00:00), remaining becomes ~4h
+    expect(wrapper.find('[data-testid="agent-expiry-banner"]').exists()).toBe(false)
+  })
+
+  it('chip text jumps back to ~4h after send', async () => {
+    // Start near expiry
+    vi.setSystemTime(new Date('2026-06-29T13:00:00.000Z'))
+    emitEvents([{ type: 'text-delta', textDelta: 'Reply' }])
+
+    const wrapper = await mountPage()
+    const chip = wrapper.find('[data-testid="agent-ttl-chip"]')
+    // Before send: 5 min remaining
+    expect(chip.text()).toContain('5m')
+
+    await wrapper.find('[data-testid="agent-input"]').setValue('Question')
+    await wrapper.find('[data-testid="agent-send-button"]').trigger('click')
+    await flushPromises()
+
+    // After send: lastActivityAt reset to now, remaining ~4h
+    expect(chip.text()).toContain('4h')
+  })
+})
+
 describe('Agent chat page error handling', () => {
   it('renders error from error SSE event on assistant message and re-enables send', async () => {
     emitEvents([
