@@ -517,6 +517,89 @@ export const useAuthControllerResendVerification = <
 
   return useMutation(mutationOptions)
 }
+export type authControllerChangePasswordResponse200 = {
+  data: void
+  status: 200
+}
+
+export type authControllerChangePasswordResponseSuccess =
+  authControllerChangePasswordResponse200 & {
+    headers: Headers
+  }
+
+export type authControllerChangePasswordResponse = authControllerChangePasswordResponseSuccess
+
+export const getAuthControllerChangePasswordUrl = () => {
+  return `/api/v1/auth/change-password`
+}
+
+export const authControllerChangePassword = async (
+  options?: RequestInit,
+): Promise<authControllerChangePasswordResponse> => {
+  return readionFetch<authControllerChangePasswordResponse>(getAuthControllerChangePasswordUrl(), {
+    ...options,
+    method: 'POST',
+  })
+}
+
+export const getAuthControllerChangePasswordMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authControllerChangePassword>>,
+    TError,
+    void,
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authControllerChangePassword>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ['authControllerChangePassword']
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authControllerChangePassword>>,
+    void
+  > = () => {
+    return authControllerChangePassword(requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type AuthControllerChangePasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authControllerChangePassword>>
+>
+
+export type AuthControllerChangePasswordMutationError = unknown
+
+export const useAuthControllerChangePassword = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authControllerChangePassword>>,
+    TError,
+    void,
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationReturnType<
+  Awaited<ReturnType<typeof authControllerChangePassword>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationOptions = getAuthControllerChangePasswordMutationOptions(options)
+
+  return useMutation(mutationOptions)
+}
 export type authControllerForgotPasswordResponse202 = {
   data: void
   status: 202
