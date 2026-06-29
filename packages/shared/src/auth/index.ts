@@ -16,11 +16,9 @@ export const authUserSchema = z.object({
   emailVerified: z.boolean(),
 })
 
-export const passwordSchema = z.string().min(8)
-
 export const registerRequestSchema = z.object({
   email: z.email(),
-  password: passwordSchema,
+  password: z.string().min(8),
 })
 
 export const loginRequestSchema = registerRequestSchema
@@ -40,12 +38,7 @@ export const forgotPasswordRequestSchema = z.object({
 
 export const passwordResetRequestSchema = z.object({
   token: z.string().min(1),
-  password: passwordSchema,
-})
-
-export const changePasswordRequestSchema = z.object({
-  currentPassword: z.string().min(1),
-  newPassword: passwordSchema,
+  password: z.string().min(8),
 })
 
 export type AuthUser = z.infer<typeof authUserSchema>
@@ -55,4 +48,3 @@ export type RefreshResponse = z.infer<typeof refreshResponseSchema>
 export type AuthSessionResponse = z.infer<typeof authSessionResponseSchema>
 export type ForgotPasswordRequest = z.infer<typeof forgotPasswordRequestSchema>
 export type PasswordResetRequest = z.infer<typeof passwordResetRequestSchema>
-export type ChangePasswordRequest = z.infer<typeof changePasswordRequestSchema>
