@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-
-type NavSquareState =
-  | 'ready'
-  | 'answered'
-  | 'current'
-  | 'unanswered'
-  | 'correct'
-  | 'incorrect'
-  | 'skipped'
+import {
+  buildExamNavSquares,
+  type NavSquareState,
+  type ReviewOutcome,
+} from '~/composables/examNavSquares'
+import { statusBorderColorClass, statusTextColorClass } from '~/composables/statusColor'
 
 const props = defineProps<{
   mode: 'preparing' | 'active' | 'review'
@@ -16,7 +13,7 @@ const props = defineProps<{
   readyCount?: number
   currentIndex?: number
   answeredIndices?: number[] | Set<number>
-  outcomes?: ('correct' | 'incorrect' | 'skipped')[]
+  outcomes?: ReviewOutcome[]
 }>()
 
 const emit = defineEmits<{ navigate: [index: number]; submit: [] }>()
@@ -27,44 +24,25 @@ const answeredSet = computed<Set<number>>(() =>
     : new Set(props.answeredIndices ?? []),
 )
 
-interface NavSquare {
-  index: number
-  label: number
-  state: NavSquareState
-}
+const squares = computed(() =>
+  buildExamNavSquares({
+    mode: props.mode,
+    total: props.total,
+    readyCount: props.readyCount,
+    currentIndex: props.currentIndex,
+    answeredIndices: answeredSet.value,
+    outcomes: props.outcomes,
+  }),
+)
 
-const squares = computed<NavSquare[]>(() => {
-  if (props.mode === 'preparing') {
-    return Array.from({ length: props.readyCount ?? 0 }, (_, index) => ({
-      index,
-      label: index + 1,
-      state: 'ready' as const,
-    }))
-  }
-
-  if (props.mode === 'review') {
-    const outcomes = props.outcomes ?? []
-    return outcomes.map((state, index) => ({ index, label: index + 1, state }))
-  }
-
-  return Array.from({ length: props.total }, (_, index) => {
-    let state: NavSquareState = 'unanswered'
-    if (index === props.currentIndex) {
-      state = 'current'
-    } else if (answeredSet.value.has(index)) {
-      state = 'answered'
-    }
-    return { index, label: index + 1, state }
-  })
-})
-
+// Review outcomes share the same status palette as QuizOption's correct/incorrect states.
 const squareClass: Record<NavSquareState, string> = {
   ready: 'border-readion-border-default bg-readion-background-elevated text-readion-text-subtle',
   unanswered: 'border-readion-border-strong bg-readion-background-surface text-readion-text-muted',
   answered: 'border-readion-primary bg-readion-primary text-white',
   current: 'border-readion-accent-label bg-readion-background-surface text-readion-accent-label',
-  correct: 'border-readion-status-good bg-readion-status-good/15 text-readion-status-good',
-  incorrect: 'border-readion-status-poor bg-readion-status-poor/15 text-readion-status-poor',
+  correct: `${statusBorderColorClass('good')} bg-readion-status-good/15 ${statusTextColorClass('good')}`,
+  incorrect: `${statusBorderColorClass('poor')} bg-readion-status-poor/15 ${statusTextColorClass('poor')}`,
   skipped: 'border-readion-border-default bg-readion-background-surface text-readion-text-subtle',
 }
 

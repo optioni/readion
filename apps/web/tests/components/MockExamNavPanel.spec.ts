@@ -18,9 +18,9 @@ describe('MockExamNavPanel', () => {
     })
 
     const squares = wrapper.findAll('[data-testid="exam-nav-square"]')
-    expect(squares[0].text()).toBe('1')
-    expect(squares[1].text()).toBe('2')
-    expect(squares[2].text()).toBe('3')
+    expect(squares[0]!.text()).toBe('1')
+    expect(squares[1]!.text()).toBe('2')
+    expect(squares[2]!.text()).toBe('3')
   })
 
   describe('preparing mode', () => {
@@ -54,10 +54,10 @@ describe('MockExamNavPanel', () => {
       })
 
       const squares = wrapper.findAll('[data-testid="exam-nav-square"]')
-      expect(squares[0].attributes('data-state')).toBe('answered')
-      expect(squares[10].attributes('data-state')).toBe('answered')
-      expect(squares[11].attributes('data-state')).toBe('current')
-      expect(squares[12].attributes('data-state')).toBe('unanswered')
+      expect(squares[0]!.attributes('data-state')).toBe('answered')
+      expect(squares[10]!.attributes('data-state')).toBe('answered')
+      expect(squares[11]!.attributes('data-state')).toBe('current')
+      expect(squares[12]!.attributes('data-state')).toBe('unanswered')
     })
 
     it('summarises the answered count, a legend, and a submit button', () => {
@@ -82,7 +82,7 @@ describe('MockExamNavPanel', () => {
         props: { mode: 'active', total: 65, currentIndex: 0, answeredIndices: [] },
       })
 
-      await wrapper.findAll('[data-testid="exam-nav-square"]')[30].trigger('click')
+      await wrapper.findAll('[data-testid="exam-nav-square"]')[30]!.trigger('click')
 
       expect(wrapper.emitted('navigate')).toEqual([[30]])
     })
@@ -136,7 +136,7 @@ describe('MockExamNavPanel', () => {
         props: { mode: 'review', total: 4, outcomes },
       })
 
-      await wrapper.findAll('[data-testid="exam-nav-square"]')[1].trigger('click')
+      await wrapper.findAll('[data-testid="exam-nav-square"]')[1]!.trigger('click')
 
       expect(wrapper.emitted('navigate')).toEqual([[1]])
     })
