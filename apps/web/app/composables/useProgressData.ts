@@ -7,11 +7,11 @@ import {
   fetchEnrollmentMockExams,
   fetchEnrollments,
   fetchReadiness,
-  fetchSessionSummary,
   fetchSessions,
   fetchWeakAreas,
 } from '~/composables/progressApi'
 import { progressQueryKeys } from '~/composables/progressQueryKeys'
+import { fetchSessionSummary } from '~/composables/sessionViewApi'
 import { useAccuracySeries } from '~/composables/useAccuracySeries'
 import { useDomainScores } from '~/composables/useDomainScores'
 import { useReadinessTrend } from '~/composables/useReadinessTrend'

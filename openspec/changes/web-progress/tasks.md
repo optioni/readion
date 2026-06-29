@@ -29,33 +29,33 @@
 
 ## 3. Progress page components + page (to `../../design/Progress.html`, applying the reconciliation)
 
-- [ ] 3.1 RED: Component tests for `ReadinessTrend` (SVG line; current-value label; calibrated vs early state) and `AccuracyBars`
-- [ ] 3.2 GREEN: Implement `ReadinessTrend` + `AccuracyBars`; drop/de-emphasise the decorative 80% "target" line per reconciliation
-- [ ] 3.3 RED: Component test for `ProgressDomainRow` — status-coloured score bar, conditional delta, "Mark mastered" action; no functional un-retire control
-- [ ] 3.4 GREEN: Implement `ProgressDomainRow` wired to `suppress-domain` with query invalidation
-- [ ] 3.5 RED: Component test for `ProgressSessionHistoryTable` — type pills, accuracy colour, "—" for summary-less rows, mock rows link via `runnerRoutes`
-- [ ] 3.6 GREEN: Implement `ProgressSessionHistoryTable`
-- [ ] 3.7 RED: Component test for `TrajectoryCallout` (visible with `weeksToReady`) / insufficient-history state (hidden when null) and the `CertTabs` switcher
-- [ ] 3.8 GREEN: Implement trajectory call-out + cert-switcher (reuse `readinessFormat`; "+ Add" reuses `AddCertificationModal`)
-- [ ] 3.9 GREEN: Assemble the Progress page (`pages/user-certifications/[id]/progress.vue`) using the app shell/sidebar; render only honestly-derivable activity figures (session count, optional questions-answered) — drop streak/study-time per reconciliation
-- [ ] 3.10 REFACTOR: Reuse `web-cert-detail` section-label/status conventions; trim duplication
+- [x] 3.1 RED: Component tests for `ReadinessTrend` (SVG line; current-value label; calibrated vs early state) and `AccuracyBars`
+- [x] 3.2 GREEN: Implement `ReadinessTrend` + `AccuracyBars`; drop/de-emphasise the decorative 80% "target" line per reconciliation
+- [x] 3.3 RED: Component test for `ProgressDomainRow` — status-coloured score bar, conditional delta, "Mark mastered" action; no functional un-retire control
+- [x] 3.4 GREEN: Implement `ProgressDomainRow` wired to `suppress-domain` with query invalidation
+- [x] 3.5 RED: Component test for `ProgressSessionHistoryTable` — type pills, accuracy colour, "—" for summary-less rows, mock rows link via `runnerRoutes`
+- [x] 3.6 GREEN: Implement `ProgressSessionHistoryTable`
+- [x] 3.7 RED: Component test for `TrajectoryCallout` (visible with `weeksToReady`) / insufficient-history state (hidden when null) and the `CertTabs` switcher
+- [x] 3.8 GREEN: Implement trajectory call-out + cert-switcher (reuse `readinessFormat`; "+ Add" reuses `AddCertificationModal`)
+- [x] 3.9 GREEN: Assemble the Progress page (`pages/user-certifications/[id]/progress.vue`) using the app shell/sidebar; render only honestly-derivable activity figures (session count, optional questions-answered) — drop streak/study-time per reconciliation
+- [x] 3.10 REFACTOR: Reuse `web-cert-detail` section-label/status conventions; trim duplication
 
 ## 4. Five-minute review run loop + page (to `../../design/QuickReview.html`, applying the reconciliation)
 
-- [ ] 4.1 RED: Component test for `ReviewQueueEntry` — due count, per-domain breakdown, "Start review" → `start`; all-caught-up empty state offering a normal session
-- [ ] 4.2 GREEN: Implement `ReviewQueueEntry`
-- [ ] 4.3 RED: Component test for the review question step — reuses `QuizCard` + `ConfidenceRating` + `CitationChip`; submitting calls `quizControllerSubmitAnswer` with `{ answer, confidence, timeTakenMs }`; report path; no Again/Hard/Good/Easy buttons; header shows progress (countdown is decorative)
-- [ ] 4.4 GREEN: Implement the review question step reusing the session-view surfaces
-- [ ] 4.5 RED: Component test for `ReviewCompletion` — renders reused `SessionSummaryBody` from the review session summary; drill-my-misses CTA; back-to-dashboard
-- [ ] 4.6 GREEN: Implement `ReviewCompletion` (drill maps to the existing drill endpoint)
-- [ ] 4.7 GREEN: Assemble the review run-loop page (`pages/user-certifications/[id]/review.vue`) driving entry → loop → completion
-- [ ] 4.8 REFACTOR: Factor any per-concept `reviewItemsControllerMaster` action into the loop; de-duplicate against session-view
+- [x] 4.1 RED: Component test for `ReviewQueueEntry` — due count, per-domain breakdown, "Start review" → `start`; all-caught-up empty state offering a normal session
+- [x] 4.2 GREEN: Implement `ReviewQueueEntry`
+- [x] 4.3 RED: Component test for the review question step — reuses `QuizCard` + `ConfidenceRating` + `CitationChip`; submitting calls `quizControllerSubmitAnswer` with `{ answer, confidence, timeTakenMs }`; report path; no Again/Hard/Good/Easy buttons; header shows progress (countdown is decorative)
+- [x] 4.4 GREEN: Implement the review question step reusing the session-view surfaces
+- [x] 4.5 RED: Component test for `ReviewCompletion` — renders reused `SessionSummaryBody` from the review session summary; drill-my-misses CTA; back-to-dashboard
+- [x] 4.6 GREEN: Implement `ReviewCompletion` (drill maps to the existing drill endpoint)
+- [x] 4.7 GREEN: Assemble the review run-loop page (`pages/user-certifications/[id]/review.vue`) driving entry → loop → completion
+- [x] 4.8 REFACTOR: Factor any per-concept `reviewItemsControllerMaster` action into the loop; de-duplicate against session-view
 
 ## 5. Navigation wiring
 
-- [ ] 5.1 RED: Test that the app-shell/sidebar Progress entry and the dashboard/cert-detail review quick-start route into the new pages via `runnerRoutes`
-- [ ] 5.2 GREEN: Wire navigation entries; align route names with `runnerRoutes`
-- [ ] 5.3 REFACTOR: Confirm reuse of existing nav components; no duplicated route constants
+- [x] 5.1 RED: Test that the app-shell/sidebar Progress entry and the dashboard/cert-detail review quick-start route into the new pages via `runnerRoutes`
+- [x] 5.2 GREEN: Wire navigation entries; align route names with `runnerRoutes`
+- [x] 5.3 REFACTOR: Confirm reuse of existing nav components; no duplicated route constants
 
 ## 6. Acceptance Test — Outer Loop GREEN
 

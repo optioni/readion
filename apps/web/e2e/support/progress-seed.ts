@@ -326,7 +326,6 @@ const {
   sessionId1,
   sessionId2,
   sessionId3,
-  mockExamId: _mockExamId,
   drillSessionId,
 } = PROGRESS_IDS
 

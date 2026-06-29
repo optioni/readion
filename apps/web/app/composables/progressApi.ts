@@ -31,14 +31,6 @@ import {
   userCertificationsControllerListWeakAreas,
 } from '~~/src/api/user-certifications/user-certifications'
 
-export {
-  drillSession,
-  fetchSessionSummary,
-  generateQuizExplanation,
-  reportQuizQuestion,
-  submitQuizAnswer,
-} from '~/composables/sessionViewApi'
-
 const jsonHeaders = { 'Content-Type': 'application/json' }
 
 const jsonBody = (body: unknown): RequestInit => ({
