@@ -1,4 +1,5 @@
 import type { RoleValue } from '../auth'
+import type { Provenance } from '../grounding'
 
 export const AuditAction = {
   UserRolePromoted: 'user.role.promoted',
@@ -51,4 +52,19 @@ export interface AuditLogEntry {
 export interface RoleChangeResponse {
   id: string
   role: RoleValue
+}
+
+export const quarantinedItemStatuses = ['pending', 'approved', 'rejected'] as const
+
+export type QuarantinedItemStatus = (typeof quarantinedItemStatuses)[number]
+
+export interface QuarantinedItemListItem {
+  id: string
+  certificationId: string
+  domain: string
+  verdict: string
+  reason: string
+  status: QuarantinedItemStatus
+  provenance: Provenance
+  createdAt: string
 }

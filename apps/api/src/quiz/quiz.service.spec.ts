@@ -114,7 +114,7 @@ describe('QuizService (integration)', () => {
 
     redis = new Redis(`redis://${redisHost}:${redisPort}`)
     cacheService = new LlmResponseCacheService(redis, makeConfigService())
-    quarantine = new QuarantineService(cacheService, makeCounter())
+    quarantine = new QuarantineService(cacheService, makeCounter(), em)
 
     embeddingService = {
       embed: vi.fn().mockResolvedValue(new Array(1536).fill(0.1)),

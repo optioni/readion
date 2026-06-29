@@ -5,9 +5,11 @@ export type {
   AdminUserListItem,
   AuditActionValue,
   AuditLogEntry,
+  QuarantinedItemListItem,
+  QuarantinedItemStatus,
   RoleChangeResponse,
 } from './admin'
-export { AuditAction, auditActions } from './admin'
+export { AuditAction, auditActions, quarantinedItemStatuses } from './admin'
 export type {
   AgentConversationMode,
   AgentConversationResponse,

@@ -19,9 +19,9 @@
 
 ## 3. Admin list endpoint
 
-- [ ] 3.1 RED: integration test — `GET /admin/quarantine` admin-only, paginated (25/100), filter by certification/status; non-admin → `403`.
-- [ ] 3.2 GREEN: implement the controller/service + list DTO under `RolesGuard(admin)`; swagger DTOs for Orval.
-- [ ] 3.3 REFACTOR: reuse the standard collection envelope + pagination.
+- [x] 3.1 RED: integration test — `GET /admin/quarantine` admin-only, paginated (25/100), filter by certification/status; non-admin → `403`.
+- [x] 3.2 GREEN: implement the controller/service + list DTO under `RolesGuard(admin)`; swagger DTOs for Orval.
+- [x] 3.3 REFACTOR: reuse the standard collection envelope + pagination.
 
 ## 4. Approve / Reject + audit
 
