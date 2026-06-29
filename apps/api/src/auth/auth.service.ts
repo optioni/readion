@@ -102,7 +102,7 @@ export class AuthService {
     }
 
     return {
-      accessToken: await this.accessTokens.issue({ userId: user.id, role: user.role }),
+      accessToken: await this.issueAccessToken(user),
       refreshToken: rotated.token,
     }
   }
@@ -217,7 +217,7 @@ export class AuthService {
     const issued = await this.refreshTokens.issue(user.id)
 
     return {
-      accessToken: await this.accessTokens.issue({ userId: user.id, role: user.role }),
+      accessToken: await this.issueAccessToken(user),
       refreshToken: issued.token,
     }
   }
@@ -226,9 +226,13 @@ export class AuthService {
     const refreshToken = await this.refreshTokens.issue(user.id)
     return {
       user: this.toAuthUser(user),
-      accessToken: await this.accessTokens.issue({ userId: user.id, role: user.role }),
+      accessToken: await this.issueAccessToken(user),
       refreshToken: refreshToken.token,
     }
+  }
+
+  private issueAccessToken(user: User): Promise<string> {
+    return this.accessTokens.issue({ userId: user.id, role: user.role })
   }
 
   private async sendVerificationEmail(user: User) {
