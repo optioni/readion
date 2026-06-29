@@ -28,10 +28,9 @@ function standaloneConversationDetail(messages: unknown[] = []) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  const createMock = vi.mocked(createStandaloneAgentConversation)
   // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
-  vi.mocked(createStandaloneAgentConversation).mockResolvedValue(
-    standaloneConversationDetail() as any,
-  )
+  createMock.mockResolvedValue(standaloneConversationDetail() as any)
   // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
   vi.mocked(fetchAgentConversation).mockResolvedValue(standaloneConversationDetail() as any)
 })
@@ -77,19 +76,18 @@ describe('Agent chat page scaffold', () => {
 
 describe('Agent chat page message hydration', () => {
   it('hydrates prior messages after create and renders user/assistant bubbles in order; skips tool and system rows', async () => {
+    const detailWithMessages = standaloneConversationDetail([
+      { role: 'user', content: 'Hi', createdAt: '2026-06-29T09:05:00.000Z' },
+      {
+        role: 'assistant',
+        content: [{ type: 'text', text: 'Hello' }],
+        createdAt: '2026-06-29T09:05:01.000Z',
+      },
+      { role: 'system', content: 'You are a tutor.', createdAt: '2026-06-29T09:05:02.000Z' },
+      { role: 'tool', content: 'tool-output', createdAt: '2026-06-29T09:05:03.000Z' },
+    ])
     // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
-    vi.mocked(fetchAgentConversation).mockResolvedValue(
-      standaloneConversationDetail([
-        { role: 'user', content: 'Hi', createdAt: '2026-06-29T09:05:00.000Z' },
-        {
-          role: 'assistant',
-          content: [{ type: 'text', text: 'Hello' }],
-          createdAt: '2026-06-29T09:05:01.000Z',
-        },
-        { role: 'system', content: 'You are a tutor.', createdAt: '2026-06-29T09:05:02.000Z' },
-        { role: 'tool', content: 'tool-output', createdAt: '2026-06-29T09:05:03.000Z' },
-      ]) as any,
-    )
+    vi.mocked(fetchAgentConversation).mockResolvedValue(detailWithMessages as any)
 
     const wrapper = await mountPage()
 

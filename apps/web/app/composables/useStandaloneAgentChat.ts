@@ -1,6 +1,8 @@
+import type { AgentMessageResponse } from '@readion/shared'
 import { onMounted, ref } from 'vue'
 import { createStandaloneAgentConversation } from '~/composables/agentChatApi'
-import type { AgentPanelMessage } from '~/composables/agentMessages'
+import { type AgentPanelMessage, hydrateAgentMessages } from '~/composables/agentMessages'
+import { fetchAgentConversation } from '~/composables/sessionViewApi'
 
 export function useStandaloneAgentChat() {
   const conversationId = ref<string | null>(null)
@@ -9,9 +11,14 @@ export function useStandaloneAgentChat() {
   const lastActivityAt = ref<string | null>(null)
 
   async function initConversation(): Promise<void> {
-    const detail = await createStandaloneAgentConversation()
-    conversationId.value = detail.data.id
-    lastActivityAt.value = detail.data.lastActivityAt
+    const created = await createStandaloneAgentConversation()
+    const id = created.data.id
+    conversationId.value = id
+    lastActivityAt.value = created.data.lastActivityAt
+
+    const detail = await fetchAgentConversation(id)
+    const raw = (detail.relationships?.messages?.data ?? []) as AgentMessageResponse[]
+    messages.value = hydrateAgentMessages(raw)
   }
 
   async function send(content: string): Promise<void> {
