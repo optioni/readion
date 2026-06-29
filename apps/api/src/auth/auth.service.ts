@@ -194,6 +194,34 @@ export class AuthService {
     return { ok: true }
   }
 
+  async changePassword(
+    userId: string,
+    input: { currentPassword: string; newPassword: string },
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const em = this.em.fork()
+    const user = await em.findOne(User, { id: userId, deletedAt: null })
+
+    if (user === null) {
+      throw new UnauthorizedException('Authentication required')
+    }
+
+    const matches = await this.passwords.verify(input.currentPassword, user.passwordHash)
+
+    if (!matches) {
+      throw new UnauthorizedException(INVALID_CREDENTIALS_MESSAGE)
+    }
+
+    user.passwordHash = await this.passwords.hash(input.newPassword)
+    await em.flush()
+    await this.refreshTokens.revokeAllForUser(user.id)
+    const issued = await this.refreshTokens.issue(user.id)
+
+    return {
+      accessToken: await this.accessTokens.issue({ userId: user.id, role: user.role }),
+      refreshToken: issued.token,
+    }
+  }
+
   private async issueSession(user: User): Promise<IssuedSession> {
     const refreshToken = await this.refreshTokens.issue(user.id)
     return {
