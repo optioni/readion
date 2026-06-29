@@ -6,11 +6,11 @@
 
 ## Approach
 
-- **API**: add `POST /api/v1/auth/change-password` to `AuthController`, guarded by the global `JwtAuthGuard`. A `ChangePasswordDto` (class-validator) requires `currentPassword` (non-empty) and `newPassword` (min length 8, matching the registration rule — reuse the existing password-strength validator/constant rather than duplicating the literal). `AuthService.changePassword(userId, dto)`:
-  1. Load the user; bcrypt-compare `currentPassword` against `passwordHash`. Mismatch → throw the same unauthorized problem used elsewhere for bad credentials.
-  2. Bcrypt-hash `newPassword`, persist via the repository.
-  3. Revoke all of the user's refresh tokens in the Redis store, then issue a fresh rotating refresh token for the caller (so the current session survives) — reuse the existing rotation/revocation helpers from login/refresh; do not reimplement.
-- **Response**: `204 No Content`, setting the rotated refresh cookie (consistent with how login/refresh transport the refresh token). If the client needs a new access token inline, return it in the body envelope instead — pick whichever matches the existing refresh response shape; document the choice in tasks.
+- **API**: add `POST /api/v1/auth/change-password` to `AuthController`, guarded by the global `JwtAuthGuard` (no `@Public()` decorator). Validation follows the established controller pattern: a `changePasswordRequestSchema` Zod schema in `@readion/shared` validated via the controller's existing `parseBody(schema, body)` helper (the codebase uses Zod schemas, not class-validator DTOs — there are no class-validator DTOs or swagger decorators in `auth`). The schema requires `currentPassword` (non-empty) and `newPassword` (the shared min-length-8 password rule reused from `registerRequestSchema`, not a duplicated literal). `AuthService.changePassword(userId, dto)`:
+  1. Load the user; bcrypt-compare `currentPassword` against `passwordHash` via `PasswordHashingService.verify`. Mismatch → throw `UnauthorizedException` (the same bad-credentials problem `login` uses).
+  2. Bcrypt-hash `newPassword` via `PasswordHashingService.hash`, persist via the EntityManager (`flush`).
+  3. Revoke all of the user's refresh tokens with `RefreshTokenStore.revokeAllForUser`, then `issue` a fresh rotating refresh token for the caller (so the current session survives) — reuse the existing helpers (the same ones `resetPassword` and `issueSession` use); do not reimplement.
+- **Response**: match the existing `auth/refresh` endpoint — `200` with a `{ accessToken }` envelope and the rotated refresh + CSRF cookies set via the controller's `setSessionCookies` helper. (Resolved: refresh returns `200 { accessToken }` + rotated cookie, so change-password mirrors it rather than `204`.)
 - **Shared**: add request schema/types to `@readion/shared` mirroring the DTO.
 - **Web**: replace the Account-tab password section's forgot-password action with a current/new/confirm form calling the regenerated `authControllerChangePassword`; map `422`→field error on new password, `401`/`403`→field error on current password.
 
@@ -26,7 +26,8 @@
 - **Reuse, don't duplicate**: the password-strength rule, bcrypt helpers, and refresh-token rotation/revocation already exist in `auth`; this change wires them, adding only the controller route + service method + DTO.
 - **Revoke-others, keep-caller**: matches the capability invariant ("credential-changing operations revoke outstanding sessions") without logging the user out of the device they just used.
 
-## Open questions
+## Resolved questions
 
-- `204` + rotated cookie vs. an envelope returning a fresh access token — resolve against the existing `auth/refresh` response shape during task 1.
-- Rate limiting: reuse the auth throttler tier applied to login/reset (default yes).
+- Response shape: matches `auth/refresh` → `200` with `{ accessToken }` envelope + rotated refresh/CSRF cookies (not `204`).
+- Rate limiting: reuse the `@AuthThrottle()` tier applied to login/register (yes).
+- Validation: Zod `parseBody` + a shared `changePasswordRequestSchema`, matching every other `auth` route (no class-validator).
