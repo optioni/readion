@@ -30,7 +30,7 @@ const sessionToRow = (
     kind: String(session.kind),
     durationMinutes: session.durationMinutes,
     questionsAnswered: summary?.questionsAnswered ?? null,
-    accuracy: summary?.accuracy ?? null,
+    accuracy: summary?.accuracy != null ? Math.round(summary.accuracy * 100) : null,
     readinessDelta: typeof delta === 'number' ? delta : null,
     status: String(session.status),
     score: null,

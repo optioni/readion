@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import DeltaBadge from '~/components/DeltaBadge.vue'
 import { mockExamRunPath, sessionRunPath } from '~/composables/runnerRoutes'
+import { statusColorForScore, statusTextColorClass } from '~/composables/statusColor'
 import type { MergedHistoryRow } from '~/composables/useSessionHistoryMerge'
 
 defineProps<{
@@ -18,6 +20,10 @@ function formatDate(iso: string | null): string {
     return '—'
   }
   return new Date(iso).toLocaleDateString()
+}
+
+function accuracyColorClass(accuracy: number): string {
+  return statusTextColorClass(statusColorForScore(accuracy))
 }
 </script>
 
@@ -53,19 +59,24 @@ function formatDate(iso: string | null): string {
 
           <span class="flex-1 text-slate-400 text-xs">{{ formatDate(row.startedAt) }}</span>
 
+          <span data-testid="session-duration" class="text-slate-400 text-xs">
+            {{ row.durationMinutes !== null ? `${row.durationMinutes}m` : '—' }}
+          </span>
+
+          <span data-testid="session-questions" class="text-slate-400 text-xs">
+            {{ row.questionsAnswered !== null ? row.questionsAnswered : '—' }}
+          </span>
+
           <span
             class="text-xs"
-            :class="
-              row.accuracy !== null
-                ? row.accuracy >= 70
-                  ? 'text-readion-status-good'
-                  : row.accuracy >= 50
-                    ? 'text-readion-status-warning'
-                    : 'text-readion-status-poor'
-                : 'text-slate-500'
-            "
+            :class="row.accuracy !== null ? accuracyColorClass(row.accuracy) : 'text-slate-500'"
           >
             {{ row.accuracy !== null ? `${row.accuracy}%` : '—' }}
+          </span>
+
+          <span data-testid="session-readiness-delta" class="text-xs">
+            <DeltaBadge v-if="row.readinessDelta !== null" :value="row.readinessDelta" />
+            <span v-else class="text-slate-500">—</span>
           </span>
         </a>
       </div>
