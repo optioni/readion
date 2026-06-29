@@ -130,13 +130,13 @@ async function handleNewChat(): Promise<void> {
       <div
         class="flex items-center gap-2 rounded-lg border border-readion-border-strong bg-readion-background-surface px-3 py-1.5"
       >
-        <input
+        <textarea
           v-model="input"
           data-testid="agent-input"
-          type="text"
+          rows="1"
           placeholder="Ask anything..."
-          class="flex-1 bg-transparent text-[13px] text-readion-text-primary outline-none"
-          @keydown.enter="handleSend"
+          class="flex-1 resize-none bg-transparent text-[13px] text-readion-text-primary outline-none"
+          @keydown.enter.exact.prevent="handleSend"
         />
         <button
           type="button"

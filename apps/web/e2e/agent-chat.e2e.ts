@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test'
 import {
   AGENT_STANDALONE_STREAM_EVENTS,
+  fulfilJson,
   gotoAuthenticated,
+  mock,
   mockAgentChat,
   SUGGESTIONS,
 } from './support/agent-chat-seed'
@@ -71,5 +73,30 @@ test.describe('web-agent-chat — standalone /agent chat', () => {
     // Negative assertions: standalone mode must never render tool cards or citation chips.
     await expect(page.getByTestId('tool-result-card')).not.toBeVisible()
     await expect(page.getByTestId('citation-chip')).not.toBeVisible()
+  })
+
+  test('unauthenticated visitor is redirected to /login — standalone create endpoint never requested', async ({
+    page,
+  }) => {
+    // Return 401 from refresh so the client-side bootstrap stays logged out after the SSR redirect.
+    mock(page, /\/api\/v1\/auth\/refresh$/, async (route) => {
+      await fulfilJson(route, 401, { type: 'about:blank', title: 'Unauthorized', status: 401 })
+    })
+
+    let createRequestCount = 0
+    mock(page, /\/api\/v1\/agent-conversations$/, async (route) => {
+      if (route.request().method() === 'POST') {
+        createRequestCount++
+      }
+      await fulfilJson(route, 403, { type: 'about:blank', title: 'Forbidden', status: 403 })
+    })
+
+    await page.goto('/agent')
+    await page.waitForLoadState('networkidle')
+
+    // The SSR auth middleware redirects /agent → /login?redirect=/agent.
+    expect(page.url()).toContain('/login')
+    // The standalone-create endpoint must never have been requested.
+    expect(createRequestCount).toBe(0)
   })
 })

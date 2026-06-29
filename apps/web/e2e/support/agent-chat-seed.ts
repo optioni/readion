@@ -12,7 +12,7 @@ const WEB_ORIGIN = 'http://127.0.0.1:3000'
 
 // Cross-origin (web :3000 → api :3001) credentialed fetches require explicit CORS headers; a wildcard
 // origin is rejected by the browser when `credentials: 'include'` is used (auth bootstrap + mutator).
-const CORS_HEADERS: Record<string, string> = {
+export const CORS_HEADERS: Record<string, string> = {
   'access-control-allow-origin': WEB_ORIGIN,
   'access-control-allow-credentials': 'true',
   'access-control-allow-methods': 'GET,POST,PATCH,DELETE,OPTIONS',
@@ -64,7 +64,7 @@ export function buildEventStream(events: unknown[]): string {
   return lines.join('')
 }
 
-async function fulfilJson(
+export async function fulfilJson(
   route: Route,
   status: number,
   body: unknown,
@@ -83,7 +83,7 @@ type Handler = (route: Route) => Promise<void>
 
 // Registers a handler that short-circuits the CORS preflight (custom Authorization / x-csrf-token
 // headers trigger one) before delegating the real method to `handler`.
-function mock(target: Target, pattern: RegExp, handler: Handler): void {
+export function mock(target: Target, pattern: RegExp, handler: Handler): void {
   void target.route(pattern, async (route) => {
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: CORS_HEADERS, body: '' })

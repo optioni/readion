@@ -73,8 +73,7 @@ describe('Agent chat endpoint contract', () => {
 
     expect(createStandaloneAgentConversation).toHaveBeenCalledTimes(1)
     expect(fetchAgentConversation).toHaveBeenCalledWith('conv-standalone-1')
-    // No list endpoint: only two API calls total (create + detail)
-    expect(vi.getMockWarnings).not.toBeDefined()
+    expect(fetchAgentConversation).toHaveBeenCalledTimes(1)
 
     wrapper.unmount()
   })
@@ -207,7 +206,7 @@ describe('Agent chat page SSE turn streaming', () => {
 
   it('clears the input after sending', async () => {
     const wrapper = await mountPage()
-    const input = wrapper.find<HTMLInputElement>('[data-testid="agent-input"]')
+    const input = wrapper.find<HTMLTextAreaElement>('[data-testid="agent-input"]')
     await input.setValue('Something to ask')
     await wrapper.find('[data-testid="agent-send-button"]').trigger('click')
     await flushPromises()
