@@ -1,15 +1,24 @@
 import type { UserProfileResponse } from '@readion/shared'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount } from '@vue/test-utils'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import AccountTab from '~/components/AccountTab.vue'
 import { settingsQueryKeys } from '~/composables/settingsQueryKeys'
+import { useAuthStore } from '~/stores/auth'
 import { authControllerForgotPassword } from '~~/src/api/auth/auth'
-import { usersControllerGetMe, usersControllerUpdateMe } from '~~/src/api/users/users'
+import {
+  usersControllerDeleteMe,
+  usersControllerGetMe,
+  usersControllerUpdateMe,
+} from '~~/src/api/users/users'
 
 vi.mock('~~/src/api/users/users')
 vi.mock('~~/src/api/auth/auth')
+
+const mockNavigate = vi.fn()
+vi.stubGlobal('navigateTo', mockNavigate)
 
 const forgotPasswordEnvelope = () => ({
   data: undefined,
@@ -45,16 +54,23 @@ function stubProfile(profile: UserProfileResponse = PROFILE) {
   )
 }
 
+let pinia: ReturnType<typeof createPinia>
+
 function mountTab() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   })
   const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
   const wrapper = mount(AccountTab, {
-    global: { plugins: [[VueQueryPlugin, { queryClient }]] },
+    global: { plugins: [pinia, [VueQueryPlugin, { queryClient }]] },
   })
   return { wrapper, queryClient, invalidateSpy }
 }
+
+beforeEach(() => {
+  pinia = createPinia()
+  setActivePinia(pinia)
+})
 
 afterEach(() => {
   vi.clearAllMocks()
@@ -198,5 +214,107 @@ describe('AccountTab password reset action', () => {
 
     expect(wrapper.find('[data-testid="reset-error"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="reset-link-confirmation"]').exists()).toBe(false)
+  })
+})
+
+const deleteEnvelope = () => ({
+  data: undefined,
+  status: 204,
+  headers: new Headers(),
+})
+
+function seedAuth() {
+  const auth = useAuthStore()
+  auth.setSession('tok', {
+    id: PROFILE.id,
+    email: PROFILE.email,
+    emailVerified: true,
+    displayTimezone: 'Europe/Helsinki',
+    createdAt: '',
+  })
+  return auth
+}
+
+describe('AccountTab delete account danger zone', () => {
+  it('shows the danger-zone button but no modal until it is clicked', async () => {
+    stubProfile()
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="delete-account-btn"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="delete-account-modal"]').exists()).toBe(false)
+
+    await wrapper.find('[data-testid="delete-account-btn"]').trigger('click')
+
+    expect(wrapper.find('[data-testid="delete-account-modal"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="delete-password-input"]').exists()).toBe(true)
+  })
+
+  it('blocks confirmation and sends no request when the password is empty', async () => {
+    stubProfile()
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="delete-account-btn"]').trigger('click')
+
+    const confirm = wrapper.find('[data-testid="confirm-delete-btn"]')
+    expect(confirm.attributes('disabled')).toBeDefined()
+
+    await confirm.trigger('click')
+    await flushPromises()
+
+    expect(usersControllerDeleteMe).not.toHaveBeenCalled()
+    expect(wrapper.find('[data-testid="delete-account-modal"]').exists()).toBe(true)
+  })
+
+  it('deletes the account, clears auth, and redirects to login on success', async () => {
+    stubProfile()
+    vi.mocked(usersControllerDeleteMe).mockResolvedValue(
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      deleteEnvelope() as any,
+    )
+    const auth = seedAuth()
+
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="delete-account-btn"]').trigger('click')
+    await wrapper.find('[data-testid="delete-password-input"]').setValue('hunter2')
+    await wrapper.find('[data-testid="confirm-delete-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(usersControllerDeleteMe).toHaveBeenCalledTimes(1)
+    expect(usersControllerDeleteMe).toHaveBeenCalledWith(
+      expect.objectContaining({ body: JSON.stringify({ password: 'hunter2' }) }),
+    )
+    expect(auth.isAuthenticated).toBe(false)
+    expect(auth.user).toBeNull()
+    expect(mockNavigate).toHaveBeenCalledWith('/login')
+  })
+
+  it('keeps the modal open with an invalid-password error and leaves auth intact on 401', async () => {
+    stubProfile()
+    vi.mocked(usersControllerDeleteMe).mockRejectedValue(
+      new ReadionProblemDetailsError({
+        title: 'Unauthorized',
+        status: 401,
+        detail: 'Invalid password',
+      }),
+    )
+    const auth = seedAuth()
+
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="delete-account-btn"]').trigger('click')
+    await wrapper.find('[data-testid="delete-password-input"]').setValue('wrong-pass')
+    await wrapper.find('[data-testid="confirm-delete-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="delete-account-modal"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="delete-account-error"]').exists()).toBe(true)
+    expect(auth.isAuthenticated).toBe(true)
+    expect(auth.user).not.toBeNull()
+    expect(mockNavigate).not.toHaveBeenCalled()
   })
 })
