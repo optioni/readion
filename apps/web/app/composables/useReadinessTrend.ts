@@ -1,4 +1,9 @@
-import type { ReadinessResponseDto, SessionResponseDto, SessionSummaryResponseDto } from '~~/src/api/model'
+import { chronologicalByStartedAt, isCompletedSession } from '~/composables/sessionSummaryHelpers'
+import type {
+  ReadinessResponseDto,
+  SessionResponseDto,
+  SessionSummaryResponseDto,
+} from '~~/src/api/model'
 
 export interface ReadinessTrend {
   points: number[]
@@ -6,11 +11,6 @@ export interface ReadinessTrend {
 }
 
 const EMPTY_TREND: ReadinessTrend = { points: [], hasData: false }
-
-const isCompleted = (session: SessionResponseDto) => String(session.status) === 'completed'
-
-const chronological = (a: SessionResponseDto, b: SessionResponseDto) =>
-  a.startedAt < b.startedAt ? -1 : a.startedAt > b.startedAt ? 1 : 0
 
 export function useReadinessTrend(
   sessions: SessionResponseDto[],
@@ -21,7 +21,7 @@ export function useReadinessTrend(
     return EMPTY_TREND
   }
 
-  const completedChronological = sessions.filter(isCompleted).sort(chronological)
+  const completedChronological = sessions.filter(isCompletedSession).sort(chronologicalByStartedAt)
 
   const summaryPoints: number[] = []
   for (const session of completedChronological) {

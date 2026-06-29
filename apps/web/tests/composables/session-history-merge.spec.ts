@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { useSessionHistoryMerge } from '~/composables/useSessionHistoryMerge'
-import type { MockExamResponseDto, SessionResponseDto, SessionSummaryResponseDto } from '~~/src/api/model'
+import type {
+  MockExamResponseDto,
+  SessionResponseDto,
+  SessionSummaryResponseDto,
+} from '~~/src/api/model'
 
 const makeSession = (
   id: string,
@@ -30,7 +34,7 @@ const makeMockExam = (
   type: (opts.type ?? 'mock') as MockExamResponseDto['type'],
   status: (opts.status ?? 'submitted') as MockExamResponseDto['status'],
   generation: 'generated' as MockExamResponseDto['generation'],
-  startedAt: (startedAt as unknown) as MockExamResponseDto['startedAt'],
+  startedAt: startedAt as unknown as MockExamResponseDto['startedAt'],
   score: (opts.score !== undefined ? opts.score : null) as unknown as MockExamResponseDto['score'],
   passed: null,
   domainBreakdown: {} as MockExamResponseDto['domainBreakdown'],
@@ -49,7 +53,7 @@ const makeSummary = (
   readiness: {
     before: null,
     after: null,
-    delta: (readinessDelta as unknown) as SessionSummaryResponseDto['readiness']['delta'],
+    delta: readinessDelta as unknown as SessionSummaryResponseDto['readiness']['delta'],
   },
 })
 

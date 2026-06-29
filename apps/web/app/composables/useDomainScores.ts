@@ -1,6 +1,10 @@
-import { joinDomainScores } from '~/composables/domainScores'
 import type { DomainScoreRow } from '~/composables/domainScores'
-import type { CertificationDomainDto, SessionSummaryResponseDto, WeakAreaResponseDto } from '~~/src/api/model'
+import { joinDomainScores } from '~/composables/domainScores'
+import type {
+  CertificationDomainDto,
+  SessionSummaryResponseDto,
+  WeakAreaResponseDto,
+} from '~~/src/api/model'
 
 export interface DomainScoreWithDeltaRow extends DomainScoreRow {
   delta: number | null

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { useReadinessTrend } from '~/composables/useReadinessTrend'
-import type { ReadinessResponseDto, SessionResponseDto, SessionSummaryResponseDto } from '~~/src/api/model'
+import type {
+  ReadinessResponseDto,
+  SessionResponseDto,
+  SessionSummaryResponseDto,
+} from '~~/src/api/model'
 
 const makeSession = (id: string, startedAt: string, status = 'completed'): SessionResponseDto => ({
   id,
@@ -23,7 +27,7 @@ const makeSummary = (readinessAfter: number | null = 70): SessionSummaryResponse
   weakAreaDeltas: [],
   readiness: {
     before: 60 as unknown as SessionSummaryResponseDto['readiness']['before'],
-    after: (readinessAfter as unknown) as SessionSummaryResponseDto['readiness']['after'],
+    after: readinessAfter as unknown as SessionSummaryResponseDto['readiness']['after'],
     delta: 10 as unknown as SessionSummaryResponseDto['readiness']['delta'],
   },
 })

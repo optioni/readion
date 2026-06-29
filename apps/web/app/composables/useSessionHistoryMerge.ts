@@ -1,4 +1,8 @@
-import type { MockExamResponseDto, SessionResponseDto, SessionSummaryResponseDto } from '~~/src/api/model'
+import type {
+  MockExamResponseDto,
+  SessionResponseDto,
+  SessionSummaryResponseDto,
+} from '~~/src/api/model'
 
 export interface MergedHistoryRow {
   id: string

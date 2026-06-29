@@ -1,6 +1,6 @@
+import type { ReviewItemResponse } from '@readion/shared'
 import { describe, expect, it } from 'vitest'
 import { useDueDomainBreakdown } from '~/composables/useDueDomainBreakdown'
-import type { ReviewItemResponse } from '@readion/shared'
 
 const makeItem = (id: string, domain: string): ReviewItemResponse => ({
   id,
@@ -67,10 +67,7 @@ describe('useDueDomainBreakdown', () => {
   })
 
   it('sorts alphabetically by domain name when counts are equal', () => {
-    const items = [
-      makeItem('i-1', 'Storage'),
-      makeItem('i-2', 'Networking'),
-    ]
+    const items = [makeItem('i-1', 'Storage'), makeItem('i-2', 'Networking')]
 
     const result = useDueDomainBreakdown(items)
 

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { useDomainScores } from '~/composables/useDomainScores'
-import type { CertificationDomainDto, SessionSummaryResponseDto, WeakAreaResponseDto } from '~~/src/api/model'
+import type {
+  CertificationDomainDto,
+  SessionSummaryResponseDto,
+  WeakAreaResponseDto,
+} from '~~/src/api/model'
 
 const domain = (name: string, weight = 0.25): CertificationDomainDto => ({ name, weight })
 
@@ -67,10 +71,7 @@ describe('useDomainScores', () => {
     ])
     const rows = useDomainScores(
       [domain('Networking'), domain('Security'), domain('Storage')],
-      [
-        weakArea({ domain: 'Networking', score: 72 }),
-        weakArea({ domain: 'Security', score: 55 }),
-      ],
+      [weakArea({ domain: 'Networking', score: 72 }), weakArea({ domain: 'Security', score: 55 })],
       summary,
     )
 
@@ -83,10 +84,7 @@ describe('useDomainScores', () => {
     const summary = makeSummary([{ domain: 'Security', delta: 5 }])
     const rows = useDomainScores(
       [domain('Networking'), domain('Security')],
-      [
-        weakArea({ domain: 'Networking', score: 70 }),
-        weakArea({ domain: 'Security', score: 60 }),
-      ],
+      [weakArea({ domain: 'Networking', score: 70 }), weakArea({ domain: 'Security', score: 60 })],
       summary,
     )
 
@@ -115,9 +113,33 @@ describe('useDomainScores', () => {
       null,
     )
 
-    expect(rows[0]).toMatchObject({ domain: 'A', score: 40, status: 'poor', hasData: true, delta: null })
-    expect(rows[1]).toMatchObject({ domain: 'B', score: 60, status: 'warning', hasData: true, delta: null })
-    expect(rows[2]).toMatchObject({ domain: 'C', score: 75, status: 'medium', hasData: true, delta: null })
-    expect(rows[3]).toMatchObject({ domain: 'D', score: 90, status: 'good', hasData: true, delta: null })
+    expect(rows[0]).toMatchObject({
+      domain: 'A',
+      score: 40,
+      status: 'poor',
+      hasData: true,
+      delta: null,
+    })
+    expect(rows[1]).toMatchObject({
+      domain: 'B',
+      score: 60,
+      status: 'warning',
+      hasData: true,
+      delta: null,
+    })
+    expect(rows[2]).toMatchObject({
+      domain: 'C',
+      score: 75,
+      status: 'medium',
+      hasData: true,
+      delta: null,
+    })
+    expect(rows[3]).toMatchObject({
+      domain: 'D',
+      score: 90,
+      status: 'good',
+      hasData: true,
+      delta: null,
+    })
   })
 })
