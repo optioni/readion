@@ -9,7 +9,6 @@ import type {
 } from '@readion/shared'
 import { describe, expect, it } from 'vitest'
 import {
-  type AdminCoverageResponse,
   readAuditLogsEnvelope,
   readContentSourcesEnvelope,
   readCoverageEnvelope,
@@ -21,6 +20,7 @@ import {
   readSourceJobsEnvelope,
   readUsersEnvelope,
 } from '~/composables/adminEnvelope'
+import type { CoverageReportDto } from '~~/src/api/model/coverageReportDto'
 
 describe('admin envelope narrowing helpers', () => {
   it('readListEnvelope extracts data and meta from a collection envelope', () => {
@@ -136,10 +136,15 @@ describe('admin envelope narrowing helpers', () => {
     expect(readDueForReverificationEnvelope(response)[0]).toEqual(item)
   })
 
-  it('readCoverageEnvelope narrows to the coverage response', () => {
-    const payload: AdminCoverageResponse = {
-      domains: [{ name: 'IAM', chunkCount: 25, coverage: 0.9 }],
-      overallCoverage: 0.9,
+  it('readCoverageEnvelope narrows to the real coverage report shape', () => {
+    const payload: CoverageReportDto = {
+      domains: [
+        { name: 'IAM', chunkCount: 25, chunkThreshold: 30, enabledSourceCount: 2, met: false },
+      ],
+      totalChunks: 25,
+      totalThreshold: 30,
+      state: 'draft',
+      met: false,
     }
     const response = { data: { data: payload } }
 

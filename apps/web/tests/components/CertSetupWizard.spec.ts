@@ -4,13 +4,16 @@ import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import CertSetupWizard from '~/components/admin/CertSetupWizard.vue'
+import { certificationCoverageControllerCoverage } from '~~/src/api/certification-coverage/certification-coverage'
 import {
+  certSetupControllerCreate,
   certSetupControllerDiscoverSources,
   certSetupControllerExtract,
   certSetupControllerReadExtraction,
 } from '~~/src/api/cert-setup/cert-setup'
 
 vi.mock('~~/src/api/cert-setup/cert-setup')
+vi.mock('~~/src/api/certification-coverage/certification-coverage')
 
 const CERT_NAME = 'AWS Certified Solutions Architect — Associate'
 const CODE = 'SAA-C03'
@@ -213,5 +216,74 @@ describe('CertSetupWizard step 1 — confirm', () => {
     expect(
       wrapper.find('[data-testid="confirm-source-btn"]').attributes('disabled'),
     ).toBeUndefined()
+  })
+})
+
+describe('CertSetupWizard step 2→3 — submit draft + coverage', () => {
+  const GROUNDED_FIELDS = {
+    domains: {
+      value: [
+        { name: 'Secure', weight: 30 },
+        { name: 'Resilient', weight: 26 },
+        { name: 'High-Performing', weight: 24 },
+        { name: 'Cost-Optimized', weight: 20 },
+      ],
+      citation: { url: PDF_URL, passage: 'Four domains' },
+    },
+    questionCount: { unverified: true },
+    passingScore: { value: 67, citation: { url: FIRST_URL, passage: '720/1000' } },
+    timeLimitMinutes: { value: 130, citation: { url: FIRST_URL, passage: '130 minutes' } },
+  }
+
+  const COVERAGE_REPORT = {
+    domains: [{ name: 'Secure', chunkCount: 10, chunkThreshold: 20, enabledSourceCount: 1, met: false }],
+    totalChunks: 10,
+    totalThreshold: 20,
+    state: 'draft',
+    met: false,
+  }
+
+  function envelope(payload: unknown, status: number) {
+    // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+    return { data: { data: payload }, status, headers: new Headers() } as any
+  }
+
+  it('creates a draft from the reviewed fields and reveals read-only coverage without an extra navigation', async () => {
+    mockDiscover()
+    mockExtract()
+    vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
+      envelope({ state: 'completed', fields: GROUNDED_FIELDS }, 200),
+    )
+    vi.mocked(certSetupControllerCreate).mockResolvedValue(
+      envelope({ id: 'c0000000-0000-0000-0000-000000000002', state: 'draft' }, 201),
+    )
+    vi.mocked(certificationCoverageControllerCoverage).mockResolvedValue(
+      envelope(COVERAGE_REPORT, 200),
+    )
+
+    const wrapper = mountWizard()
+    await fillAndDiscover(wrapper)
+    await wrapper.findAll('[data-testid="source-candidate"]')[0]!.trigger('click')
+    await wrapper.find('[data-testid="confirm-source-btn"]').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-testid="cert-name-input"]').setValue(CERT_NAME)
+    await wrapper.find('[data-testid="cert-provider-input"]').setValue('AWS')
+    await wrapper.find('[data-testid="cert-code-input"]').setValue(CODE)
+
+    expect(wrapper.find('[data-testid="publish-cert-btn"]').exists()).toBe(false)
+    await wrapper.find('[data-testid="submit-draft-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(certSetupControllerCreate).toHaveBeenCalledTimes(1)
+    const body = JSON.parse(
+      vi.mocked(certSetupControllerCreate).mock.calls[0]?.[0]?.body as string,
+    )
+    expect(body).toMatchObject({ name: CERT_NAME, provider: 'AWS', code: CODE })
+
+    expect(wrapper.find('[data-testid="cert-coverage"]').exists()).toBe(true)
+    expect(certificationCoverageControllerCoverage).toHaveBeenCalledWith(
+      'c0000000-0000-0000-0000-000000000002',
+    )
   })
 })

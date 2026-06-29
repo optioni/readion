@@ -51,3 +51,21 @@ describe('useCertSetupWizard extraction state', () => {
     expect(state.manualFields).toEqual(['passingScore', 'timeLimitMinutes'])
   })
 })
+
+describe('useCertSetupWizard draft creation', () => {
+  it('starts with no created draft and no suggested sources', () => {
+    const { state } = useCertSetupWizard()
+
+    expect(state.createdCertId).toBeNull()
+    expect(state.suggestedContentSources).toEqual([])
+  })
+
+  it('records the created draft id and advances to the coverage step', () => {
+    const { state, registerCreatedDraft } = useCertSetupWizard()
+
+    registerCreatedDraft('c0000000-0000-0000-0000-000000000002')
+
+    expect(state.createdCertId).toBe('c0000000-0000-0000-0000-000000000002')
+    expect(state.step).toBe(3)
+  })
+})
