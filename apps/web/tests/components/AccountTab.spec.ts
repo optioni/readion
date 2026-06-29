@@ -2,9 +2,9 @@ import type { UserProfileResponse } from '@readion/shared'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { ReadionProblemDetailsError } from '~/api/mutator'
 import AccountTab from '~/components/AccountTab.vue'
 import { settingsQueryKeys } from '~/composables/settingsQueryKeys'
-import { ReadionProblemDetailsError } from '~/api/mutator'
 import { usersControllerGetMe, usersControllerUpdateMe } from '~~/src/api/users/users'
 
 vi.mock('~~/src/api/users/users')

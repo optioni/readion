@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import AccountTab from '~/components/AccountTab.vue'
 import SettingsLayout from '~/components/SettingsLayout.vue'
 </script>
 
 <template>
   <SettingsLayout>
     <template #account>
-      <p class="text-slate-400 text-sm">Account settings</p>
+      <AccountTab />
     </template>
     <template #study-defaults>
       <p class="text-slate-400 text-sm">Study defaults</p>

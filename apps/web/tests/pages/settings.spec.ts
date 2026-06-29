@@ -1,9 +1,45 @@
+import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { type DOMWrapper, mount, type VueWrapper } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import SettingsPage from '~/pages/settings/index.vue'
+import { usersControllerGetMe } from '~~/src/api/users/users'
+
+vi.mock('~~/src/api/users/users')
+
+beforeEach(() => {
+  vi.mocked(usersControllerGetMe).mockResolvedValue(
+    // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+    {
+      data: {
+        data: {
+          id: 'user-1',
+          email: 'jamie@org.io',
+          role: 'user',
+          emailVerified: true,
+          displayTimezone: 'Europe/Helsinki',
+          sessionDefaults: {
+            duration: 30,
+            contentMix: 'balanced',
+            difficulty: 'intermediate',
+            focusArea: 'auto',
+            learningStyle: 'weak-area-focus',
+          },
+        },
+      },
+      status: 200,
+      headers: new Headers(),
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+    } as any,
+  )
+})
 
 function mountPage() {
-  return mount(SettingsPage)
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  })
+  return mount(SettingsPage, {
+    global: { plugins: [[VueQueryPlugin, { queryClient }]] },
+  })
 }
 
 // happy-dom's getComputedStyle does not reflect v-show, so DOMWrapper.isVisible() is unreliable
