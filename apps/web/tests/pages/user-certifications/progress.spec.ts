@@ -32,7 +32,10 @@ function stubProgressData(overrides: Partial<Record<keyof ProgressData, unknown>
         ],
     ),
     weeksToReady: computed(
-      () => (overrides.weeksToReady as number | null | undefined) ?? 3,
+      () =>
+        overrides.weeksToReady !== undefined
+          ? (overrides.weeksToReady as number | null)
+          : 3,
     ),
     readiness: computed(
       () =>
