@@ -5,6 +5,7 @@ import AppNavBar from '~/components/AppNavBar.vue'
 import DefaultLayout from '~/layouts/default.vue'
 
 vi.stubGlobal('useRouter', () => ({ push: vi.fn() }))
+vi.stubGlobal('useRoute', () => ({ path: '/' }))
 vi.stubGlobal('useRuntimeConfig', () => ({
   public: { apiBaseUrl: 'http://localhost:3001/api/v1' },
 }))

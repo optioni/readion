@@ -11,6 +11,7 @@ vi.stubGlobal('useRuntimeConfig', () => ({
 
 const mockRouterPush = vi.fn()
 vi.stubGlobal('useRouter', () => ({ push: mockRouterPush }))
+vi.stubGlobal('useRoute', () => ({ path: '/' }))
 
 let pinia: ReturnType<typeof createPinia>
 
@@ -76,5 +77,55 @@ describe('AppNavBar logout', () => {
 
     expect(auth.isAuthenticated).toBe(false)
     expect(mockRouterPush).toHaveBeenCalledWith('/login')
+  })
+})
+
+describe('AppNavBar settings nav', () => {
+  beforeEach(() => {
+    pinia = createPinia()
+    setActivePinia(pinia)
+    vi.restoreAllMocks()
+  })
+
+  function authenticate() {
+    const auth = useAuthStore()
+    auth.setSession('tok', {
+      id: '1',
+      email: 'u@example.com',
+      emailVerified: true,
+      displayTimezone: 'UTC',
+      createdAt: '',
+    })
+    return auth
+  }
+
+  it('marks the Settings nav affordance active when on /settings', () => {
+    vi.stubGlobal('useRoute', () => ({ path: '/settings' }))
+    authenticate()
+
+    const wrapper = mountComponent()
+    const link = wrapper.find('[data-testid="app-nav-settings"]')
+
+    expect(link.exists()).toBe(true)
+    expect(link.attributes('data-active')).toBe('true')
+  })
+
+  it('marks the Settings nav affordance inactive on other routes', () => {
+    vi.stubGlobal('useRoute', () => ({ path: '/' }))
+    authenticate()
+
+    const wrapper = mountComponent()
+    const link = wrapper.find('[data-testid="app-nav-settings"]')
+
+    expect(link.exists()).toBe(true)
+    expect(link.attributes('data-active')).toBe('false')
+  })
+
+  it('does not render the Settings nav affordance when unauthenticated', () => {
+    vi.stubGlobal('useRoute', () => ({ path: '/settings' }))
+
+    const wrapper = mountComponent()
+
+    expect(wrapper.find('[data-testid="app-nav-settings"]').exists()).toBe(false)
   })
 })

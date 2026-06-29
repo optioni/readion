@@ -40,6 +40,14 @@ describe('auth global middleware', () => {
     expect(result).toMatchObject({ path: '/login', query: { redirect: '/dashboard' } })
   })
 
+  it('redirects unauthenticated user from /settings to /login with redirect param', async () => {
+    const auth = useAuthStore()
+    auth.markReady()
+
+    const result = await runMiddleware(auth, { path: '/settings' })
+    expect(result).toMatchObject({ path: '/login', query: { redirect: '/settings' } })
+  })
+
   it('redirects authenticated user from /login to home', async () => {
     const auth = useAuthStore()
     auth.setSession('tok', null)
