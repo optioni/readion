@@ -20,7 +20,7 @@ export const passwordSchema = z.string().min(8)
 
 export const registerRequestSchema = z.object({
   email: z.email(),
-  password: z.string().min(8),
+  password: passwordSchema,
 })
 
 export const loginRequestSchema = registerRequestSchema
@@ -40,7 +40,7 @@ export const forgotPasswordRequestSchema = z.object({
 
 export const passwordResetRequestSchema = z.object({
   token: z.string().min(1),
-  password: z.string().min(8),
+  password: passwordSchema,
 })
 
 export const changePasswordRequestSchema = z.object({
