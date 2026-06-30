@@ -103,7 +103,7 @@ describe('OverviewTab stat row', () => {
 })
 
 describe('OverviewTab domain breakdown', () => {
-  it('renders one status-coloured row per certification domain', () => {
+  it('renders one status-coloured bar per certification domain', () => {
     stubWeakAreas([
       weakArea({ domain: 'Security', score: 48 }),
       weakArea({ domain: 'Storage', score: 90 }),
@@ -114,21 +114,25 @@ describe('OverviewTab domain breakdown', () => {
     expect(rows).toHaveLength(2)
     expect(rows[0]!.text()).toContain('Security')
     expect(rows[0]!.text()).toContain('48%')
-    expect(rows[0]!.find('[data-testid="domain-score"]').classes()).toContain(
-      'text-readion-status-poor',
-    )
-    expect(rows[1]!.find('[data-testid="domain-score"]').classes()).toContain(
-      'text-readion-status-good',
-    )
+    const securityFill = rows[0]!.find('[data-testid="domain-score-bar-fill"]')
+    expect(securityFill.classes()).toContain('bg-readion-status-poor')
+    expect(securityFill.attributes('style')).toContain('width: 48%')
+    const storageFill = rows[1]!.find('[data-testid="domain-score-bar-fill"]')
+    expect(storageFill.classes()).toContain('bg-readion-status-good')
+    expect(storageFill.attributes('style')).toContain('width: 90%')
   })
 
-  it('renders a "no data yet" placeholder for a domain without a weak-area record', () => {
+  it('renders a neutral no-data state for a domain without a weak-area record', () => {
     stubWeakAreas([])
     const rows = mountTab([domain('Security')]).findAll('[data-testid="domain-score-row"]')
     expect(rows).toHaveLength(1)
     expect(rows[0]!.text()).toContain('Security')
     expect(rows[0]!.text().toLowerCase()).toContain('no data yet')
-    expect(rows[0]!.find('[data-testid="domain-score"]').exists()).toBe(false)
+    expect(rows[0]!.text()).not.toContain('%')
+    const fill = rows[0]!.find('[data-testid="domain-score-bar-fill"]')
+    if (fill.exists()) {
+      expect(fill.attributes('class') ?? '').not.toContain('bg-readion-status-')
+    }
   })
 })
 

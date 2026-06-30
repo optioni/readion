@@ -66,25 +66,25 @@ describe('ProgressDomainRow — structure', () => {
 })
 
 describe('ProgressDomainRow — status colour', () => {
-  it('applies the status colour class for the score', () => {
+  it('applies the status colour class to the bar fill', () => {
     const wrapper = mountRow({ score: 41, status: 'poor', hasData: true })
-    expect(wrapper.find('[data-testid="progress-domain-row"]').html()).toContain(
-      'text-readion-status-poor',
+    expect(wrapper.find('[data-testid="domain-score-bar-fill"]').classes()).toContain(
+      'bg-readion-status-poor',
     )
   })
 
-  it('applies the medium colour class', () => {
+  it('applies the medium colour class to the bar fill', () => {
     const wrapper = mountRow({ score: 68, status: 'medium', hasData: true })
-    expect(wrapper.find('[data-testid="progress-domain-row"]').html()).toContain(
-      'text-readion-status-medium',
+    expect(wrapper.find('[data-testid="domain-score-bar-fill"]').classes()).toContain(
+      'bg-readion-status-medium',
     )
   })
 })
 
 describe('ProgressDomainRow — delta badge', () => {
-  it('shows the domain-delta badge when a delta is provided', () => {
+  it('shows exactly one domain-delta badge when a delta is provided', () => {
     const wrapper = mountRow({ delta: 12 })
-    expect(wrapper.find('[data-testid="domain-delta"]').exists()).toBe(true)
+    expect(wrapper.findAll('[data-testid="domain-delta"]')).toHaveLength(1)
   })
 
   it('does not render domain-delta when delta is null', () => {
