@@ -1,7 +1,7 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-- [ ] 0.1 Playwright assertions: Settings actions right-aligned; Login/Settings forms in the contained-card layout; Onboarding step 1 has a cert search and no global app chrome.
-- [ ] 0.2 Confirm they fail against current behavior.
+- [x] 0.1 Playwright assertions: Settings actions right-aligned; Login/Settings forms in the contained-card layout; Onboarding step 1 has a cert search and no global app chrome.
+- [x] 0.2 Confirm they fail against current behavior.
 
 ## 1. Settings alignment + whitespace
 

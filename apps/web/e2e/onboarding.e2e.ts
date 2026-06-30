@@ -113,6 +113,38 @@ test.describe('web-onboarding — first-run flow (cert-select, defaults, diagnos
     await expect(page).toHaveURL(/\/mock-exams\/[0-9a-f-]{36}$/)
   })
 
+  test('polish: step 1 renders a cert search that filters the catalog, and the route hides the global app chrome', async ({
+    page,
+  }) => {
+    // Fresh user so this does not depend on (or mutate) the happy-path enrollment.
+    const searcher = await seedOnboardingNewUser(api, mailpit)
+    await signIn(page, searcher)
+
+    await expect(page).toHaveURL('/onboarding')
+    await expect(page.getByTestId('onboarding-page')).toBeVisible()
+
+    // RED — standalone chrome: onboarding currently inherits the default sidebar shell, so the
+    // global app sidebar wraps the wizard. The polish pass assigns a bare layout so it is absent.
+    await expect(page.getByTestId('app-sidebar')).toHaveCount(0)
+
+    // RED — cert search box above the list (`openspec/design/Onboarding.html` step 1). Absent today.
+    const search = page.getByTestId('cert-search-input')
+    await expect(search).toBeVisible()
+    await expect(search).toHaveAttribute('placeholder', /search certifications/i)
+
+    // The seeded live cert is listed before filtering.
+    const liveOption = page.getByTestId('cert-option').filter({ hasText: searcher.liveCert.name })
+    await expect(liveOption).toBeVisible()
+
+    // Client-side filter over name/provider/code: a non-matching query empties the list; clearing
+    // the query restores the full live-cert catalog (no extra GET /certifications request).
+    await search.fill('zzz-no-such-certification')
+    await expect(page.getByTestId('cert-option')).toHaveCount(0)
+
+    await search.fill('')
+    await expect(liveOption).toBeVisible()
+  })
+
   test('already-enrolled user is redirected away from /onboarding to the dashboard', async ({
     page,
   }) => {

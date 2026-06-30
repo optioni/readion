@@ -1,6 +1,25 @@
-import { expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 import { gotoAuthenticated } from './support/session-view-seed'
 import { mockSettings, SETTINGS_PROFILE } from './support/settings-seed'
+
+// Asserts a settings primary action is right-aligned at the trailing edge of the contained reading
+// column (the spec's "not left-aligned against the column's leading edge"). Geometry-based so it
+// holds whether the implementation uses `self-end` on the button or wraps it in a `flex justify-end`
+// row. A left-aligned action (`self-start`) starts at the column's leading edge — well inside the
+// left half — so this fails for the current markup and passes once the action moves right.
+async function expectActionRightAligned(
+  page: Page,
+  buttonTestId: string,
+  containerTestId: string,
+): Promise<void> {
+  const button = await page.getByTestId(buttonTestId).boundingBox()
+  const container = await page.getByTestId(containerTestId).boundingBox()
+  if (!button || !container) {
+    throw new Error(`missing bounding box for ${buttonTestId} / ${containerTestId}`)
+  }
+  expect(button.x).toBeGreaterThan(container.x + container.width / 2)
+  expect(button.x + button.width).toBeLessThanOrEqual(container.x + container.width + 1)
+}
 
 // ============================================================================
 // web-settings — acceptance test (outer-loop RED).
@@ -140,6 +159,30 @@ test.describe('web-settings — settings page', () => {
 
     await expect.poll(() => handles.deletePayloads.at(-1)).toEqual({ password: 'correct-horse' })
     await expect(page).toHaveURL(/\/login(\?|$)/)
+  })
+
+  test('polish: primary actions are right-aligned at the trailing edge of the contained column', async ({
+    page,
+  }) => {
+    mockSettings(page)
+
+    await gotoAuthenticated(page, '/settings')
+    await expect(page.getByTestId('settings-page')).toBeVisible()
+    await expect(page.getByTestId('account-panel')).toBeVisible()
+
+    // Contained reading column — regression guard. SettingsLayout already constrains the content to
+    // max-w-[580px], so this currently passes; it pins the contained-card invariant the polish keeps.
+    const panel = await page.getByTestId('account-panel').boundingBox()
+    if (!panel) {
+      throw new Error('missing account-panel bounding box')
+    }
+    expect(panel.width).toBeLessThanOrEqual(580)
+
+    // RED: Save, Update-password, and Delete-account currently use `self-start` (left-aligned). The
+    // polish pass right-aligns each primary action to the column's trailing edge.
+    await expectActionRightAligned(page, 'save-timezone-btn', 'account-panel')
+    await expectActionRightAligned(page, 'change-password-btn', 'account-panel')
+    await expectActionRightAligned(page, 'delete-account-btn', 'account-panel')
   })
 
   test('wrong current password blocks the change: 401 shows an inline error, form stays editable', async ({

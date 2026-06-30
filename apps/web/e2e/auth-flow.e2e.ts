@@ -51,3 +51,25 @@ test.describe('J1 auth flow — register → verify → protected → reload →
     await expect(page).toHaveURL('/login')
   })
 })
+
+test.describe('web-ui-polish — login contained-card placement (SSO stays omitted)', () => {
+  test('login form sits in a contained card within the split-panel layout, with no SSO control', async ({
+    page,
+  }) => {
+    await page.goto('/login')
+    await page.waitForLoadState('networkidle')
+
+    // Contained-card placement: the form is constrained to a fixed reading width within the split-
+    // panel form panel (auth.vue's max-w-sm container), not stretched across the full panel width.
+    const form = await page.locator('form').boundingBox()
+    if (!form) {
+      throw new Error('missing login form bounding box')
+    }
+    expect(form.width).toBeLessThanOrEqual(420)
+
+    // Deliberately preserved divergence: the artboard's "Sign in with SSO" button and `or` divider
+    // stay omitted — assert their ABSENCE so the placement tightening does not reintroduce them.
+    await expect(page.getByRole('button', { name: /sso/i })).toHaveCount(0)
+    await expect(page.getByText(/^or$/i)).toHaveCount(0)
+  })
+})
