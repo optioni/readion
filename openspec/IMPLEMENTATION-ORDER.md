@@ -343,6 +343,27 @@ Gaps surfaced while reconciling the Phase-10 frontend against the implemented ba
 |---|---|---|---|---|
 | `k8s-deployment` | Per-app Deployments/Services/Ingress, ConfigMap/Secret, migration `Job` (pre-sync hook), ArgoCD + Image Updater, scrapper sidecar. | Infrastructure (Kubernetes, Database Migrations, CI/CD) | `kubernetes-deployment`, `db-migration-job` | `scaffold-monorepo`, `observability` (logically after all feature work) |
 
+### Phase 13 — Frontend design convergence (post-Phase-11)
+
+Gaps found by comparing the implemented `apps/web` UI against the **Claude Design artboards** (`openspec/design/*.html`, the "final" reference). Unlike Phases 1–12, the **source of truth for these changes is the design artboards + the comparison report** (`scratchpad/UI-COMPARISON-REPORT.md` at authoring time; fold the concrete findings into each proposal), not new SPEC.md/PRD.md requirements — these are fidelity/bug-fix deltas over already-archived `web-*` capabilities. No new entities or migrations. Sequence before `k8s-deployment`. Capabilities marked _(modified)_ add a delta to an existing spec.
+
+Recommended order: P0 bugs (independent) → `web-app-shell-sidebar` (everything renders inside it) → `web-domain-score-bars` (shared, unblocks Progress + CertDetail) → `web-progress-fidelity` → P2 → P3.
+
+| Change | Scope | Design ref | Capabilities | Depends on |
+|---|---|---|---|---|
+| `web-cert-detail-recent-sessions-fix` | **Bug**: CertDetail "Recent sessions" renders `[object Object]` (session label not stringified) with 0% scores; render a proper type/date/score label. | `CertDetail.html` | `web-cert-detail` _(modified)_ | `web-cert-detail` |
+| `web-progress-accuracy-chart-fix` | **Bug**: Progress "quiz accuracy" chart renders empty (axis labels only, no bars); render the per-session bars. | `Progress.html` | `web-progress` _(modified)_ | `web-progress` |
+| `web-agent-ttl-display-fix` | **Bug/polish**: standalone agent shows a persistent "Expires in 0m" pill; show the real remaining TTL and surface it as a near-expiry banner per design. | `AgentChat.html` | `web-agent-chat` _(modified)_ | `web-agent-chat` |
+| `web-app-shell-sidebar` | Replace the top nav bar with the design's persistent **left sidebar** app shell (Readion + Dashboard/Sessions/Progress/Ask AI/Settings + user footer); relocate the **Dark-mode toggle** (kept) into the sidebar footer. Focused flows (mock exam, review run, session) keep their bare chrome. | `App Shell.html` | `web-shell` _(modified)_ | `web-foundation` |
+| `web-domain-score-bars` | Shared **colored domain progress-bar** component (status-colour scale) for per-domain score rows; adopt in Progress + CertDetail (currently text-only). | `Progress.html`, `CertDetail.html` | `web-domain-scores` (new), `web-progress` _(modified)_, `web-cert-detail` _(modified)_ | `web-progress`, `web-cert-detail` |
+| `web-progress-fidelity` | Restore Progress to design fidelity: **4 stat cards** (add Study time + Current streak), a real readiness **line chart** (points/axis/%), the quiz-accuracy **bar chart**, and the fuller pace-estimate copy. | `Progress.html` | `web-progress` _(modified)_ | `web-app-shell-sidebar`, `web-domain-score-bars` |
+| `web-quarantine-reviewer-detail` | Phase-11 follow-up: replace the admin review-queue stacked cards (raw JSON verdict) with the design's **two-pane master-detail** reviewer — item list + detail panel rendering the question/options + a **formatted verdict**. | `AdminContentUsers.html` | `web-admin` _(modified)_ | `quarantine-review-queue`, `web-admin` |
+| `web-cert-detail-polish` | Add the design's 4th overview stat (questions/accuracy) and the **weakest-domain side panel**. | `CertDetail.html` | `web-cert-detail` _(modified)_ | `web-app-shell-sidebar`, `web-domain-score-bars` |
+| `web-review-entry-polish` | Review entry: domain **chips** (vs plain list) and unify the self-grade entry with the design (self-grade as the review flow, not a separate button). | `QuickReview.html` | `web-progress` _(modified)_ | `web-progress`, `review-self-grade` |
+| `web-ui-polish-pass` | Cross-screen polish: Settings button alignment, Login/Settings form placement/whitespace, Onboarding cert-search + hide global chrome on the onboarding card. | `Settings.html`, `Login.html`, `Onboarding.html` | `web-settings` _(modified)_, `web-auth` _(modified)_, `web-onboarding` _(modified)_ | `web-app-shell-sidebar` |
+
+**Preserved deliberate divergences** (already reconciled in archived changes — do NOT "fix" toward the artboard): no Full-name field / avatar upload (User has no name attribute), no SSO on Login (not in auth backend), Approve/Reject vocab on quarantine (audit-log vocabulary) rather than the artboard's "Edit key/Discard".
+
 ## Entity ownership
 
 Each entity (from SPEC → Core Entities) is created — table + migration — by exactly one change. `db-foundation` owns the database setup (extension, conventions, migration tooling) but **no domain entity**. A later change may extend an existing entity with new columns via its own migration; the owner column is who introduces it.
