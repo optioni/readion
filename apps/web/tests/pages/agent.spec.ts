@@ -306,6 +306,18 @@ describe('Agent chat TTL chip and expiry banner', () => {
     expect(wrapper.text()).toContain('5 minutes')
   })
 
+  it('chip keeps the calm copy and never reads "Expires in" even near expiry', async () => {
+    // Near expiry (5 min remaining) — the prominent warning is the banner, not the chip
+    vi.setSystemTime(new Date('2026-06-29T13:00:00.000Z'))
+    const wrapper = await mountPage()
+
+    const chip = wrapper.find('[data-testid="agent-ttl-chip"]')
+    expect(chip.exists()).toBe(true)
+    expect(chip.text()).not.toContain('Expires in')
+    expect(chip.text()).toContain('Resets after 4h idle')
+    expect(chip.text()).toContain('5m')
+  })
+
   it('hides banner after send due to optimistic lastActivityAt reset', async () => {
     // Start near expiry
     vi.setSystemTime(new Date('2026-06-29T13:00:00.000Z'))
