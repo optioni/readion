@@ -16,6 +16,6 @@ The Phase-11 `quarantine-review-queue` shipped a functional admin review queue (
 
 ## Impact
 
-- **Code**: `apps/web/app/components/admin/` review-queue components (list + detail pane + verdict formatter); vitest tests; Playwright e2e (`apps/web/e2e/admin.e2e.ts`). Consumes the existing `GET /admin/quarantine` + approve/reject endpoints — **no API change** unless the list response lacks question/options/verdict fields, in which case STOP and flag (that would be a separate backend delta to `content-quarantine-review`).
+- **Code**: `apps/web/app/components/admin/` review-queue components (list + detail pane + verdict formatter); vitest tests; Playwright e2e (`apps/web/e2e/admin.e2e.ts`). The detail pane loads the item's question/options/answer-key from **`GET /api/v1/admin/quarantine/:id`** (added by `admin-quarantine-item-detail`); the list still uses `GET /admin/quarantine`; approve/reject unchanged. No new API endpoint added here.
 - **No new entity/migration.**
-- **Dependencies**: archived `quarantine-review-queue`, `web-admin`. Renders inside `web-app-shell-sidebar`.
+- **Dependencies**: `admin-quarantine-item-detail` (provides the detail read — must land first), archived `quarantine-review-queue`, `web-admin`. Renders inside `web-app-shell-sidebar`.

@@ -11,8 +11,8 @@
 
 ## 2. Master-detail layout
 
-- [ ] 2.1 RED: component test — list selects an item; detail pane renders question/options/answer key + formatted verdict; empty/selection states.
-- [ ] 2.2 GREEN: build the two-pane reviewer per `AdminContentUsers.html`. If the API response lacks question/options/verdict, STOP and flag.
+- [ ] 2.1 RED: component test — selecting a list item loads its detail via `GET /api/v1/admin/quarantine/:id` and the detail pane renders question/options/answer key + formatted verdict; empty/selection/loading states.
+- [ ] 2.2 GREEN: build the two-pane reviewer per `AdminContentUsers.html`, fetching the detail from the new endpoint (provided by `admin-quarantine-item-detail`).
 - [ ] 2.3 REFACTOR: extract list + detail components.
 
 ## 3. Resolve actions
