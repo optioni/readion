@@ -1,6 +1,7 @@
 export const adminQueryKeys = {
   users: () => ['admin', 'users'] as const,
   auditLogs: () => ['admin', 'audit-logs'] as const,
+  quarantine: () => ['admin', 'quarantine'] as const,
   contentSources: (certId: string) => ['admin', 'content-sources', certId] as const,
   sourceJobs: (id: string) => ['admin', 'source-jobs', id] as const,
   dueForReverification: () => ['admin', 'due-for-reverification'] as const,

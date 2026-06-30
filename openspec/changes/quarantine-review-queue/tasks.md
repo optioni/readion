@@ -35,9 +35,9 @@
 
 ## 6. web-admin Review queue
 
-- [ ] 6.1 RED: unit test — Review queue renders the real list (verdict/reason/provenance) and Approve/Reject call the endpoints, removing the item on success; admin-gated.
-- [ ] 6.2 GREEN: replace the placeholder with the real list + actions.
-- [ ] 6.3 REFACTOR: clean up loading/empty/error states.
+- [x] 6.1 RED: unit test — Review queue renders the real list (verdict/reason/provenance) and Approve/Reject call the endpoints, removing the item on success; admin-gated.
+- [x] 6.2 GREEN: replace the placeholder with the real list + actions.
+- [x] 6.3 REFACTOR: clean up loading/empty/error states.
 
 ## 7. e2e + close the outer loop
 

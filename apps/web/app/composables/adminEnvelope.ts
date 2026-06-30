@@ -7,6 +7,7 @@ import type {
   DueForReverificationItem,
   ExtractionStatusResponse,
   IngestionJobStatus,
+  QuarantinedItemListItem,
 } from '@readion/shared'
 import type { CoverageReportDto } from '~~/src/api/model/coverageReportDto'
 
@@ -25,6 +26,11 @@ export const readUsersEnvelope = (response: {
 export const readAuditLogsEnvelope = (response: {
   data: unknown
 }): { data: AuditLogEntry[]; meta: CollectionMeta } => readListEnvelope<AuditLogEntry>(response)
+
+export const readQuarantineEnvelope = (response: {
+  data: unknown
+}): { data: QuarantinedItemListItem[]; meta: CollectionMeta } =>
+  readListEnvelope<QuarantinedItemListItem>(response)
 
 export const readContentSourcesEnvelope = (response: { data: unknown }): ContentSourceResponse[] =>
   readDataEnvelope<ContentSourceResponse[]>(response)
