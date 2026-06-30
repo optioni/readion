@@ -106,7 +106,7 @@ The review run loop SHALL open on a queue-entry screen driven by `enrollmentRevi
 
 ### Requirement: Five-minute review — question and confidence loop
 
-The review session SHALL be run as the quiz-question loop established by `web-session-view`, not a self-graded flashcard. Each due concept presents a freshly generated quiz question; the user answers and gives a confidence rating (1–5); the answer is submitted via `quizControllerSubmitAnswer` (`{ answer, confidence, timeTakenMs }`). The reused `QuizCard`, `ConfidenceRating`, `CitationChip`, report, and explanation surfaces SHALL be used. There is no Again/Hard/Good/Easy rating enum — Leitner scheduling is driven server-side by correctness + confidence.
+The review session SHALL be run as the quiz-question loop established by `web-session-view`, not a self-graded flashcard. Each due concept presents a freshly generated quiz question; the user answers and gives a confidence rating (1–5); the answer is submitted via `quizControllerSubmitAnswer` (`{ answer, confidence, timeTakenMs }`). The reused `QuizCard`, `ConfidenceRating`, `CitationChip`, report, and explanation surfaces SHALL be used. In this quiz + confidence mode Leitner scheduling is driven server-side by correctness + confidence; the explicit Again/Hard/Good/Easy self-grade enum is available as the alternative run-loop mode (see "Five-minute review run loop").
 
 #### Scenario: Answering a review question
 - **WHEN** the user selects an answer, sets a confidence of 4, and submits
@@ -129,3 +129,13 @@ On completing the review session, the loop SHALL show a completion screen reusin
 #### Scenario: Completion breakdown is sourced from the session summary, not a per-rating tally
 - **WHEN** rendering the completion breakdown
 - **THEN** the figures come from `sessionSummaryControllerSummary` (the real review session) rather than client-side Again/Hard/Good/Easy bucket counts that have no backend source
+
+### Requirement: Five-minute review run loop
+
+The `web-progress` review run loop SHALL render the reveal step's Again / Hard / Good / Easy buttons as real self-grade submissions calling the explicit self-grade endpoint, driving Leitner scheduling, in addition to (or as an alternative mode to) the existing quiz + confidence path. Each grade submits and advances to the next due item; the completion breakdown reflects the graded items.
+
+#### Scenario: Self-grade advances the review loop
+
+- **WHEN** the user reveals a review card and taps `Good`
+- **THEN** the self-grade endpoint is called with `grade: good` for that `ReviewItem` and the loop advances to the next due item
+- **AND** the completion breakdown counts the item as reviewed
