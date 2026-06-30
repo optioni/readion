@@ -1,8 +1,9 @@
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useProgressData } from '~/composables/useProgressData'
 import ProgressPage from '~/pages/user-certifications/[id]/progress.vue'
+import type { SessionSummaryResponseDto } from '~~/src/api/model'
 
 vi.mock('~/composables/useProgressData', () => ({ useProgressData: vi.fn() }))
 
@@ -45,6 +46,8 @@ function stubProgressData(overrides: Partial<Record<keyof ProgressData, unknown>
         },
     ),
     historyRows: computed(() => (overrides.historyRows as unknown[]) ?? []),
+    sessions: computed(() => (overrides.sessions as unknown[]) ?? []),
+    summariesMap: ref(new Map<string, SessionSummaryResponseDto>()),
     switcher: computed(
       () =>
         (overrides.switcher as Array<{ enrollmentId: string; certName: string }>) ?? [
@@ -159,35 +162,33 @@ describe('Progress page — cert switcher', () => {
   })
 })
 
-describe('Progress page — session count stat', () => {
-  it('renders a session count based on historyRows length', () => {
+describe('Progress page — stat cards', () => {
+  it('renders four stat cards from sessions and summariesMap', () => {
     stubProgressData({
-      historyRows: [
+      sessions: [
         {
           id: 's1',
+          userCertificationId: 'uc-1',
           kind: 'study',
-          startedAt: '2026-06-01T09:00:00Z',
           status: 'completed',
-          accuracy: 60,
           durationMinutes: 60,
-          questionsAnswered: 8,
-          readinessDelta: 7,
-          score: null,
+          startedAt: '2026-06-01T09:00:00Z',
         },
         {
           id: 's2',
+          userCertificationId: 'uc-1',
           kind: 'study',
-          startedAt: '2026-06-10T09:00:00Z',
           status: 'completed',
-          accuracy: 70,
           durationMinutes: 60,
-          questionsAnswered: 8,
-          readinessDelta: 7,
-          score: null,
+          startedAt: '2026-06-10T09:00:00Z',
         },
       ],
     })
     const wrapper = mountPage()
-    expect(wrapper.find('[data-testid="progress-page"]').text()).toContain('2')
+    expect(wrapper.findAll('[data-testid="progress-stat-card"]')).toHaveLength(4)
+    expect(wrapper.find('[data-testid="progress-page"]').text()).toContain('Sessions')
+    expect(wrapper.find('[data-testid="progress-page"]').text()).toContain('Questions answered')
+    expect(wrapper.find('[data-testid="progress-page"]').text()).toContain('Study time')
+    expect(wrapper.find('[data-testid="progress-page"]').text()).toContain('Current streak')
   })
 })

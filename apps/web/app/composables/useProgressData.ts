@@ -219,6 +219,8 @@ export function useProgressData(enrollmentId: string) {
     weeksToReady,
     readiness,
     historyRows,
+    sessions,
+    summariesMap,
     switcher,
     isLoading,
     isError,

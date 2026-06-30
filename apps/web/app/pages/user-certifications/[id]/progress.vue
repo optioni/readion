@@ -5,8 +5,10 @@ import CardPanel from '~/components/CardPanel.vue'
 import CertTabs from '~/components/CertTabs.vue'
 import ProgressDomainRow from '~/components/ProgressDomainRow.vue'
 import ProgressSessionHistoryTable from '~/components/ProgressSessionHistoryTable.vue'
+import ProgressStatCard from '~/components/ProgressStatCard.vue'
 import ReadinessTrend from '~/components/ReadinessTrend.vue'
 import TrajectoryCallout from '~/components/TrajectoryCallout.vue'
+import { useActivityStats } from '~/composables/useActivityStats'
 import { useProgressData } from '~/composables/useProgressData'
 
 const route = useRoute()
@@ -21,14 +23,13 @@ const {
   accuracySeries,
   weeksToReady,
   historyRows,
+  sessions,
+  summariesMap,
   switcher,
   isLoading,
 } = useProgressData(enrollmentId.value)
 
-const sessionCount = computed(() => historyRows.value.length)
-const questionsAnswered = computed(() =>
-  historyRows.value.reduce((sum, r) => sum + (r.questionsAnswered ?? 0), 0),
-)
+const activityStats = computed(() => useActivityStats(sessions.value, summariesMap.value))
 </script>
 
 <template>
@@ -67,15 +68,18 @@ const questionsAnswered = computed(() =>
 
       <TrajectoryCallout :weeks-to-ready="weeksToReady" class="mb-6" />
 
-      <div class="mb-4 grid grid-cols-2 gap-3 rounded-md bg-black/25 p-4">
-        <div>
-          <div class="mb-1 text-[11px] uppercase tracking-wider opacity-70">Sessions</div>
-          <div class="font-semibold text-2xl text-slate-100">{{ sessionCount }}</div>
-        </div>
-        <div v-if="questionsAnswered > 0">
-          <div class="mb-1 text-[11px] uppercase tracking-wider opacity-70">Questions</div>
-          <div class="font-semibold text-2xl text-slate-100">{{ questionsAnswered }}</div>
-        </div>
+      <div class="mb-4 grid grid-cols-2 gap-3 rounded-md bg-black/25 p-4 sm:grid-cols-4">
+        <ProgressStatCard label="Sessions" :value="String(activityStats.sessionCount)" />
+        <ProgressStatCard
+          label="Questions answered"
+          :value="String(activityStats.questionsAnswered)"
+        />
+        <ProgressStatCard label="Study time" :value="activityStats.studyTimeLabel" />
+        <ProgressStatCard
+          label="Current streak"
+          :value="String(activityStats.currentStreakDays)"
+          unit="days"
+        />
       </div>
 
       <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
