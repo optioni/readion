@@ -7,6 +7,7 @@ import {
   fetchRecentSessionSummaries,
   RECENT_SESSIONS_LIMIT,
 } from '~/composables/recentSessionSummaries'
+import { aggregateSessionStats } from '~/composables/sessionStatsAggregate'
 import type { RecentSessionEntry } from '~/composables/useCardRecentSessions'
 import type { SessionSummaryResponseDtoNextFocus } from '~~/src/api/model'
 import { sessionsControllerList } from '~~/src/api/sessions/sessions'
@@ -15,6 +16,8 @@ interface OverviewSessionsData {
   sessions: RecentSessionEntry[]
   totalSessions: number
   nextFocusDomain: string | null
+  questionsAnswered: number
+  accuracy: number | null
 }
 
 const readNextFocusDomain = (
@@ -51,18 +54,30 @@ export function useOverviewSessions(certificationId: MaybeRefOrGetter<string | n
         ? readNextFocusDomain(summaries.get(latestCompleted.id)?.nextFocus)
         : null
 
-      return { sessions, totalSessions: response.data.meta.total, nextFocusDomain }
+      const { questionsAnswered, accuracy } = aggregateSessionStats(summaries)
+
+      return {
+        sessions,
+        totalSessions: response.data.meta.total,
+        nextFocusDomain,
+        questionsAnswered,
+        accuracy,
+      }
     },
   })
 
   const sessions = computed<RecentSessionEntry[]>(() => query.data.value?.sessions ?? [])
   const totalSessions = computed<number>(() => query.data.value?.totalSessions ?? 0)
   const nextFocusDomain = computed<string | null>(() => query.data.value?.nextFocusDomain ?? null)
+  const questionsAnswered = computed<number>(() => query.data.value?.questionsAnswered ?? 0)
+  const accuracy = computed<number | null>(() => query.data.value?.accuracy ?? null)
 
   return {
     sessions,
     totalSessions,
     nextFocusDomain,
+    questionsAnswered,
+    accuracy,
     isLoading: query.isLoading,
     isError: query.isError,
   }

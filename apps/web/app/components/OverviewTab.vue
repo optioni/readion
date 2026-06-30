@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import CardPanel from '~/components/CardPanel.vue'
 import DomainScoreBar from '~/components/DomainScoreBar.vue'
+import ProgressStatCard from '~/components/ProgressStatCard.vue'
 import RecentSessionsPanel from '~/components/RecentSessionsPanel.vue'
 import { formatCertStatRow } from '~/composables/certStatRow'
 import { joinDomainScores } from '~/composables/domainScores'
@@ -20,9 +21,8 @@ const props = defineProps<{
 
 const { readiness } = useCardReadiness(props.enrollmentId)
 const { weakAreas } = useCertWeakAreas(props.enrollmentId)
-const { sessions, totalSessions, nextFocusDomain } = useOverviewSessions(
-  computed(() => props.certificationId),
-)
+const { sessions, totalSessions, nextFocusDomain, questionsAnswered, accuracy } =
+  useOverviewSessions(computed(() => props.certificationId))
 const { dueCount } = useCardDueReviews(props.enrollmentId)
 
 const statRow = computed(() =>
@@ -30,6 +30,8 @@ const statRow = computed(() =>
     readiness: readiness.value,
     totalSessions: totalSessions.value,
     dueCount: dueCount.value,
+    questionsAnswered: questionsAnswered.value,
+    accuracy: accuracy.value,
   }),
 )
 
@@ -42,7 +44,7 @@ const nextFocus = computed(() => selectSuggestedNextFocus(nextFocusDomain.value,
   <div class="space-y-4">
     <div
       data-testid="cert-detail-stat-row"
-      class="grid grid-cols-3 gap-3 rounded-md bg-black/25 p-4"
+      class="grid grid-cols-4 gap-3 rounded-md bg-black/25 p-4"
     >
       <div>
         <div class="mb-1 text-[11px] uppercase tracking-wider opacity-70">Readiness</div>
@@ -63,6 +65,13 @@ const nextFocus = computed(() => selectSuggestedNextFocus(nextFocusDomain.value,
         <div class="mb-1 text-[11px] uppercase tracking-wider opacity-70">Due Reviews</div>
         <div class="font-semibold text-2xl text-slate-100">{{ statRow.dueCount }}</div>
       </div>
+      <ProgressStatCard
+        data-testid="cert-detail-questions-stat"
+        label="Questions"
+        :value="String(statRow.questionsAnswered)"
+        :unit="statRow.accuracyLabel ?? undefined"
+        :unit-class="statRow.accuracyColorClass ?? undefined"
+      />
     </div>
 
     <CardPanel label="Domain Breakdown">

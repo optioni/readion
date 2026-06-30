@@ -3,6 +3,7 @@ defineProps<{
   label: string
   value: string
   unit?: string
+  unitClass?: string
 }>()
 </script>
 
@@ -11,7 +12,7 @@ defineProps<{
     <div class="mb-1 text-[11px] uppercase tracking-wider opacity-70">{{ label }}</div>
     <div class="flex items-baseline gap-1">
       <span class="font-semibold text-2xl text-slate-100">{{ value }}</span>
-      <span v-if="unit" class="text-slate-400 text-sm">{{ unit }}</span>
+      <span v-if="unit" class="text-sm" :class="unitClass ?? 'text-slate-400'">{{ unit }}</span>
     </div>
   </div>
 </template>

@@ -5,9 +5,9 @@
 
 ## 1. 4th overview stat
 
-- [ ] 1.1 RED: component test — stat row renders the questions/accuracy stat from the read model.
-- [ ] 1.2 GREEN: add the stat (STOP + flag if the field isn't exposed).
-- [ ] 1.3 REFACTOR: reuse the shared stat-card.
+- [x] 1.1 RED: component test — stat row renders the questions/accuracy stat from the read model.
+- [x] 1.2 GREEN: add the stat (STOP + flag if the field isn't exposed).
+- [x] 1.3 REFACTOR: reuse the shared stat-card.
 
 ## 2. Weakest-domain side panel
 
