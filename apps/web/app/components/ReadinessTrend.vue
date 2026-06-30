@@ -34,6 +34,14 @@ const svgPoints = computed(() =>
 )
 
 const currentValue = computed(() => props.points.at(-1) ?? null)
+
+const tickLabels = computed(() =>
+  GRID_YS.map((tickY) => ({
+    value: tickY,
+    label: ` ${tickY} `,
+    topPct: (yScale(tickY) / HEIGHT) * 100,
+  })),
+)
 </script>
 
 <template>
@@ -51,51 +59,56 @@ const currentValue = computed(() => props.points.at(-1) ?? null)
       <div class="mb-2 flex items-end justify-between">
         <span class="font-semibold text-2xl text-slate-100">{{ currentValue }}%</span>
       </div>
-      <svg
-        :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
-        class="w-full"
-        aria-hidden="true"
-      >
-        <g v-for="tickY in GRID_YS" :key="tickY">
-          <line
-            :x1="PAD_LEFT"
-            :y1="yScale(tickY)"
-            :x2="WIDTH - PAD"
-            :y2="yScale(tickY)"
+      <div class="relative">
+        <svg
+          :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
+          class="w-full"
+          aria-hidden="true"
+        >
+          <g v-for="tickY in GRID_YS" :key="tickY">
+            <line
+              :x1="PAD_LEFT"
+              :y1="yScale(tickY)"
+              :x2="WIDTH - PAD"
+              :y2="yScale(tickY)"
+              stroke="currentColor"
+              stroke-width="0.5"
+              class="text-slate-800"
+            />
+          </g>
+
+          <polyline
+            :points="svgPoints"
+            fill="none"
             stroke="currentColor"
-            stroke-width="0.5"
-            class="text-slate-800"
+            stroke-width="2"
+            class="text-readion-primary"
           />
-          <text
-            :x="PAD_LEFT - 4"
-            :y="yScale(tickY) + 4"
-            text-anchor="end"
-            font-size="9"
-            class="fill-slate-500"
-          >{{ tickY }}</text>
-        </g>
 
-        <polyline
-          :points="svgPoints"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          class="text-readion-primary"
-        />
+          <circle
+            v-for="(pt, i) in pointCoords"
+            :key="i"
+            data-testid="readiness-point"
+            :cx="pt.x"
+            :cy="pt.y"
+            :r="pt.isLast ? 5 : 3"
+            :fill="pt.isLast ? 'currentColor' : '#0f172a'"
+            stroke="currentColor"
+            stroke-width="1.5"
+            class="text-readion-primary"
+          />
+        </svg>
 
-        <circle
-          v-for="(pt, i) in pointCoords"
-          :key="i"
-          data-testid="readiness-point"
-          :cx="pt.x"
-          :cy="pt.y"
-          :r="pt.isLast ? 5 : 3"
-          :fill="pt.isLast ? 'currentColor' : '#0f172a'"
-          stroke="currentColor"
-          stroke-width="1.5"
-          class="text-readion-primary"
-        />
-      </svg>
+        <div
+          v-for="tick in tickLabels"
+          :key="tick.value"
+          class="pointer-events-none absolute right-[calc(100%-6.5%)] -translate-y-1/2 text-slate-500"
+          style="font-size: 9px"
+          :style="{ top: `${tick.topPct}%` }"
+        >
+          {{ tick.label }}
+        </div>
+      </div>
     </template>
   </div>
 </template>
