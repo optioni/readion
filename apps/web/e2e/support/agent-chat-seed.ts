@@ -93,14 +93,21 @@ export function mock(target: Target, pattern: RegExp, handler: Handler): void {
   })
 }
 
-function buildConversationDetail(messages: unknown[] = []): AgentConversationDetailResponseDto {
+// The standalone agent page derives the remaining inactivity TTL from `lastActivityAt + 4h - now`,
+// so callers can drive fresh-vs-near-expiry states deterministically by overriding this timestamp.
+const DEFAULT_LAST_ACTIVITY_AT = '2026-06-29T09:05:00.000Z'
+
+function buildConversationDetail(
+  messages: unknown[] = [],
+  lastActivityAt: string | null = DEFAULT_LAST_ACTIVITY_AT,
+): AgentConversationDetailResponseDto {
   return {
     data: {
       id: AGENT_IDS.conversationId,
       mode: 'standalone',
       studySessionId: null,
       certificationId: null,
-      lastActivityAt: '2026-06-29T09:05:00.000Z',
+      lastActivityAt,
       createdAt: '2026-06-29T09:05:00.000Z',
     },
     relationships: { messages: { data: messages } },
@@ -113,10 +120,15 @@ function buildConversationDetail(messages: unknown[] = []): AgentConversationDet
  * context-level catch-all keeps any unforeseen /api/v1 call from hitting the (absent) backend;
  * page-level mocks always win over context-level mocks in Playwright.
  */
-export function mockAgentChat(page: Page): {
+export function mockAgentChat(
+  page: Page,
+  options: { lastActivityAt?: string | null } = {},
+): {
   ids: typeof AGENT_IDS
   streamEvents: unknown[]
 } {
+  const lastActivityAt =
+    'lastActivityAt' in options ? (options.lastActivityAt ?? null) : DEFAULT_LAST_ACTIVITY_AT
   const context = page.context()
 
   // Context-level safety net (page routes take precedence over context routes in Playwright).
@@ -138,7 +150,7 @@ export function mockAgentChat(page: Page): {
 
   // --- Standalone conversation create (POST /api/v1/agent-conversations, no body) ---
   mock(page, /\/api\/v1\/agent-conversations$/, async (route) => {
-    await fulfilJson(route, 201, buildConversationDetail())
+    await fulfilJson(route, 201, buildConversationDetail([], lastActivityAt))
   })
 
   // --- Agent turn stream: registered BEFORE the detail GET so the /messages$ pattern is
@@ -161,7 +173,7 @@ export function mockAgentChat(page: Page): {
     page,
     new RegExp(`/api/v1/agent-conversations/${AGENT_IDS.conversationId}(\\?|$)`),
     async (route) => {
-      await fulfilJson(route, 200, buildConversationDetail())
+      await fulfilJson(route, 200, buildConversationDetail([], lastActivityAt))
     },
   )
 
