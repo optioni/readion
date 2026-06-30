@@ -196,6 +196,35 @@ describe('OverviewTab suggested next focus', () => {
   })
 })
 
+describe('OverviewTab weakest-domain side panel', () => {
+  it('highlights the session next-focus domain alongside the domain breakdown', () => {
+    stubSessions({ sessions: [], totalSessions: 0, nextFocusDomain: 'Networking' })
+    const panel = mountTab([domain('Security')]).find('[data-testid="weakest-domain-panel"]')
+    expect(panel.exists()).toBe(true)
+    expect(panel.text()).toContain('Networking')
+  })
+
+  it('surfaces the weakest weak-area domain together with its score on the fallback', () => {
+    stubSessions({ sessions: [], totalSessions: 0, nextFocusDomain: null })
+    stubWeakAreas([
+      weakArea({ domain: 'Security', score: 61 }),
+      weakArea({ domain: 'Billing', score: 41 }),
+    ])
+    const panel = mountTab([domain('Security')]).find('[data-testid="weakest-domain-panel"]')
+    expect(panel.exists()).toBe(true)
+    expect(panel.text()).toContain('Billing')
+    expect(panel.text()).toContain('41%')
+  })
+
+  it('shows a neutral placeholder with no percent when there is no data', () => {
+    stubSessions({ sessions: [], totalSessions: 0, nextFocusDomain: null })
+    stubWeakAreas([])
+    const panel = mountTab([domain('Security')]).find('[data-testid="weakest-domain-panel"]')
+    expect(panel.exists()).toBe(true)
+    expect(panel.text()).not.toContain('%')
+  })
+})
+
 describe('OverviewTab recent sessions', () => {
   it('renders recent session rows from the reused panel', () => {
     stubSessions({

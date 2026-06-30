@@ -15,7 +15,7 @@ describe('selectSuggestedNextFocus', () => {
   it('prefers the latest completed session nextFocus domain', () => {
     expect(
       selectSuggestedNextFocus('Networking', [weakArea({ domain: 'Security', score: 30 })]),
-    ).toEqual({ domain: 'Networking', source: 'session' })
+    ).toEqual({ domain: 'Networking', source: 'session', score: null })
   })
 
   it('falls back to the lowest-scoring weak-area domain when there is no session focus', () => {
@@ -25,10 +25,10 @@ describe('selectSuggestedNextFocus', () => {
         weakArea({ domain: 'Billing', score: 42 }),
         weakArea({ domain: 'Storage', score: 70 }),
       ]),
-    ).toEqual({ domain: 'Billing', source: 'weak-area' })
+    ).toEqual({ domain: 'Billing', source: 'weak-area', score: 42 })
   })
 
   it('yields a neutral placeholder when neither a session focus nor weak areas exist', () => {
-    expect(selectSuggestedNextFocus(null, [])).toEqual({ domain: null, source: 'none' })
+    expect(selectSuggestedNextFocus(null, [])).toEqual({ domain: null, source: 'none', score: null })
   })
 })
