@@ -17,14 +17,9 @@ onUnmounted(() => clearInterval(nowInterval))
 const ttlRemaining = computed(() => ttlRemainingMs(lastActivityAt.value, now.value))
 const ttlWarning = computed(() => isTtlWarning(ttlRemaining.value))
 
-const ttlChipText = computed(() => {
-  const remaining = ttlRemaining.value
-  const formatted = formatTtlRemaining(remaining)
-  if (ttlWarning.value || remaining === 0) {
-    return `Expires in ${formatted}`
-  }
-  return `Resets after 4h idle · ${formatted} remaining`
-})
+const ttlChipText = computed(
+  () => `Resets after 4h idle · ${formatTtlRemaining(ttlRemaining.value)} remaining`,
+)
 
 const ttlBannerMinutes = computed(() => Math.floor(ttlRemaining.value / (60 * 1000)))
 
