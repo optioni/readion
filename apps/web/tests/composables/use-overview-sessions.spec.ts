@@ -11,7 +11,7 @@ const session = (overrides: {
   id: string
   status: string
   startedAt: string
-  focusArea: string
+  focusArea: unknown
 }) => ({
   id: overrides.id,
   userCertificationId: 'enr-1',
@@ -60,13 +60,13 @@ describe('useOverviewSessions', () => {
             id: 's1',
             status: 'completed',
             startedAt: '2026-06-20T00:00:00Z',
-            focusArea: 'Networking',
+            focusArea: { mode: 'domains', domains: ['Networking'] },
           }),
           session({
             id: 's2',
             status: 'abandoned',
             startedAt: '2026-06-19T00:00:00Z',
-            focusArea: 'Storage',
+            focusArea: { mode: 'auto' },
           }),
         ],
         7,
@@ -86,8 +86,8 @@ describe('useOverviewSessions', () => {
 
     expect(sessionsControllerList).toHaveBeenCalledWith({ certificationId: 'cert-1', limit: 3 })
     expect(result.sessions.value).toEqual([
-      { id: 's1', date: '2026-06-20T00:00:00Z', label: 'Networking', accuracy: 0.8 },
-      { id: 's2', date: '2026-06-19T00:00:00Z', label: 'Storage', accuracy: null },
+      { id: 's1', date: '2026-06-20T00:00:00Z', label: 'Study · Networking', accuracy: 0.8 },
+      { id: 's2', date: '2026-06-19T00:00:00Z', label: 'Study · All domains', accuracy: null },
     ])
     expect(result.totalSessions.value).toBe(7)
     expect(result.nextFocusDomain.value).toBe('Networking')

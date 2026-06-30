@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { dashboardQueryKeys } from '~/composables/dashboardQueryKeys'
+import { recentSessionLabel } from '~/composables/recentSessionLabel'
 import {
   fetchRecentSessionSummaries,
   RECENT_SESSIONS_LIMIT,
@@ -35,7 +36,7 @@ export function useCardRecentSessions(enrollmentId: string, certificationId: str
         return {
           id: session.id,
           date: session.startedAt,
-          label: String(session.focusArea),
+          label: recentSessionLabel(session),
           accuracy: summary ? summary.accuracy : null,
         }
       })

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/vue-query'
 import type { MaybeRefOrGetter } from 'vue'
 import { computed, toValue } from 'vue'
 import { certDetailQueryKeys } from '~/composables/certDetailQueryKeys'
+import { recentSessionLabel } from '~/composables/recentSessionLabel'
 import {
   fetchRecentSessionSummaries,
   RECENT_SESSIONS_LIMIT,
@@ -40,7 +41,7 @@ export function useOverviewSessions(certificationId: MaybeRefOrGetter<string | n
         return {
           id: session.id,
           date: session.startedAt,
-          label: String(session.focusArea),
+          label: recentSessionLabel(session),
           accuracy: summary ? summary.accuracy : null,
         }
       })

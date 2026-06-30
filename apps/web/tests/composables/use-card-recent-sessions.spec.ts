@@ -11,7 +11,7 @@ const session = (overrides: {
   id: string
   status: string
   startedAt: string
-  focusArea: string
+  focusArea: unknown
 }) => ({
   id: overrides.id,
   userCertificationId: 'enr-1',
@@ -58,19 +58,19 @@ describe('useCardRecentSessions', () => {
           id: 's1',
           status: 'completed',
           startedAt: '2026-06-20T00:00:00Z',
-          focusArea: 'Networking',
+          focusArea: { mode: 'domains', domains: ['Networking'] },
         }),
         session({
           id: 's2',
           status: 'abandoned',
           startedAt: '2026-06-19T00:00:00Z',
-          focusArea: 'Storage',
+          focusArea: { mode: 'auto' },
         }),
         session({
           id: 's3',
           status: 'completed',
           startedAt: '2026-06-18T00:00:00Z',
-          focusArea: 'Security',
+          focusArea: { mode: 'domains', domains: ['Security', 'IAM'] },
         }),
         // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
       ]) as any,
@@ -96,9 +96,9 @@ describe('useCardRecentSessions', () => {
 
     expect(sessionsControllerList).toHaveBeenCalledWith({ certificationId: 'cert-1', limit: 3 })
     expect(result.sessions.value).toEqual([
-      { id: 's1', date: '2026-06-20T00:00:00Z', label: 'Networking', accuracy: 0.8 },
-      { id: 's2', date: '2026-06-19T00:00:00Z', label: 'Storage', accuracy: null },
-      { id: 's3', date: '2026-06-18T00:00:00Z', label: 'Security', accuracy: 0.6 },
+      { id: 's1', date: '2026-06-20T00:00:00Z', label: 'Study · Networking', accuracy: 0.8 },
+      { id: 's2', date: '2026-06-19T00:00:00Z', label: 'Study · All domains', accuracy: null },
+      { id: 's3', date: '2026-06-18T00:00:00Z', label: 'Study · Security, IAM', accuracy: 0.6 },
     ])
     expect(result.readinessDelta.value).toBe(5)
   })
@@ -149,7 +149,7 @@ describe('useCardRecentSessions', () => {
           id: 's1',
           status: 'completed',
           startedAt: '2026-06-20T00:00:00Z',
-          focusArea: 'Networking',
+          focusArea: { mode: 'domains', domains: ['Networking'] },
         }),
         // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
       ]) as any,
@@ -163,7 +163,7 @@ describe('useCardRecentSessions', () => {
     })
 
     expect(result.sessions.value).toEqual([
-      { id: 's1', date: '2026-06-20T00:00:00Z', label: 'Networking', accuracy: null },
+      { id: 's1', date: '2026-06-20T00:00:00Z', label: 'Study · Networking', accuracy: null },
     ])
     expect(result.readinessDelta.value).toBeNull()
   })

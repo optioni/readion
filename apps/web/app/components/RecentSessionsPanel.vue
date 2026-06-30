@@ -4,8 +4,7 @@ import type { RecentSessionEntry } from '~/composables/useCardRecentSessions'
 
 const props = defineProps<{ sessions: RecentSessionEntry[] }>()
 
-const rowLabel = (session: RecentSessionEntry) =>
-  session.accuracy === null ? `${session.date.slice(0, 10)} · ${session.label}` : session.label
+const rowLabel = (session: RecentSessionEntry) => `${session.date.slice(0, 10)} · ${session.label}`
 
 const accuracyPercent = (accuracy: number) => `${Math.round(accuracy * 100)}%`
 </script>
