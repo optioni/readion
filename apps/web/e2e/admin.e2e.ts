@@ -4,6 +4,8 @@ import {
   CERT_ID,
   mockAdmin,
   PROMOTE_USER_ID,
+  QUARANTINE_ITEM_A_ID,
+  QUARANTINE_ITEM_B_ID,
   SOURCE_ENABLED_ID,
 } from './support/admin-seed'
 import { gotoAuthenticated } from './support/session-view-seed'
@@ -24,7 +26,7 @@ import { gotoAuthenticated } from './support/session-view-seed'
 //   /admin/sources                 → Content sources per certification
 //   /admin/certifications          → Certifications list + re-verification due list
 //   /admin/certifications/new      → Cert setup wizard (discover → extract → submit draft)
-//   /admin/review-queue            → honest placeholder (no backend)
+//   /admin/review-queue            → quarantine review (list + approve/reject)
 //
 // Role gate
 //   Signed-in non-admin (role: 'user') hitting /admin/** is redirected to '/'. (Unauthenticated →
@@ -44,6 +46,8 @@ import { gotoAuthenticated } from './support/session-view-seed'
 //   GET  /api/v1/admin/certifications/due-for-reverification
 //   POST /api/v1/admin/certifications                     (creates a DRAFT — no publish)
 //   POST /api/v1/admin/certifications/:id/reverify
+//   GET  /api/v1/admin/quarantine?status=                  ({ data: QuarantinedItemListItem[], meta })
+//   POST /api/v1/admin/quarantine/:id/approve | :id/reject ({ data: { id, status } })
 //   GET  /api/v1/certifications/:id  &  :id/coverage       (read-only)
 //
 // Key data-testids (the contract for the implementer groups)
@@ -67,8 +71,10 @@ import { gotoAuthenticated } from './support/session-view-seed'
 //                   cert-coverage (read-only); publish-cert-btn MUST be absent
 //   Re-verify     : admin-certifications-page, due-reverification-row (data-cert-id),
 //                   reverify-btn, reverify-diff, reverify-submit-btn
-//   Review queue  : admin-review-queue-page, review-queue-placeholder; review-queue-item /
-//                   review-queue-verdict / review-queue-badge MUST be absent (issues NO request)
+//   Review queue  : admin-review-queue-page, review-queue-item (data-item-id),
+//                   review-queue-verdict, review-queue-reason, review-queue-provenance,
+//                   approve-item-btn, reject-item-btn, review-queue-empty;
+//                   review-queue-placeholder MUST be absent (queue is backed by the API)
 // ============================================================================
 
 test.describe('web-admin — admin console', () => {
@@ -245,22 +251,36 @@ test.describe('web-admin — admin console', () => {
     await expect.poll(() => handles.reverifyBodies.at(-1)?.id).toBe(CERT_ID)
   })
 
-  test('review queue: shows the placeholder and issues no request', async ({ page }) => {
-    mockAdmin(page)
-
-    let reviewRequestCount = 0
-    page.on('request', (request) => {
-      if (/\/api\/v1\/admin\/(review|quarantine)/.test(request.url())) {
-        reviewRequestCount += 1
-      }
-    })
+  test('review queue: lists quarantined items, approves one and rejects another', async ({
+    page,
+  }) => {
+    const handles = mockAdmin(page)
 
     await gotoAuthenticated(page, '/admin/review-queue')
 
     await expect(page.getByTestId('admin-review-queue-page')).toBeVisible()
-    await expect(page.getByTestId('review-queue-placeholder')).toContainText(/not yet available/i)
+    await expect(page.getByTestId('review-queue-placeholder')).toHaveCount(0)
+    await expect(page.getByTestId('review-queue-item')).toHaveCount(2)
+
+    const rowA = page.locator(
+      `[data-testid="review-queue-item"][data-item-id="${QUARANTINE_ITEM_A_ID}"]`,
+    )
+    await expect(rowA.getByTestId('review-queue-reason')).toContainText('The answer key is incorrect')
+    await expect(rowA.getByTestId('review-queue-verdict')).toBeVisible()
+    await expect(rowA.getByTestId('review-queue-provenance')).toContainText('chunk-1')
+
+    // Approve item A — it leaves the pending queue on the refetch.
+    await rowA.getByTestId('approve-item-btn').click()
+    await expect.poll(() => handles.approvedQuarantineIds.at(-1)).toBe(QUARANTINE_ITEM_A_ID)
+    await expect(page.getByTestId('review-queue-item')).toHaveCount(1)
+
+    // Reject item B — the queue then empties.
+    const rowB = page.locator(
+      `[data-testid="review-queue-item"][data-item-id="${QUARANTINE_ITEM_B_ID}"]`,
+    )
+    await rowB.getByTestId('reject-item-btn').click()
+    await expect.poll(() => handles.rejectedQuarantineIds.at(-1)).toBe(QUARANTINE_ITEM_B_ID)
     await expect(page.getByTestId('review-queue-item')).toHaveCount(0)
-    await expect(page.getByTestId('review-queue-badge')).toHaveCount(0)
-    expect(reviewRequestCount).toBe(0)
+    await expect(page.getByTestId('review-queue-empty')).toBeVisible()
   })
 })

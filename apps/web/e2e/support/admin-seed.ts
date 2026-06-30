@@ -36,6 +36,10 @@ export const SOURCE_DISABLED_ID = 'd0000000-0000-0000-0000-000000000002'
 export const EXTRACT_JOB_ID = 'e0000000-0000-0000-0000-000000000001'
 export const REINGEST_JOB_ID = 'e0000000-0000-0000-0000-000000000002'
 
+// Pending quarantined items the Review queue lists and resolves.
+export const QUARANTINE_ITEM_A_ID = 'f0000000-0000-0000-0000-000000000001'
+export const QUARANTINE_ITEM_B_ID = 'f0000000-0000-0000-0000-000000000002'
+
 type Role = 'admin' | 'user'
 
 type Profile = {
@@ -79,6 +83,19 @@ export interface AdminMockHandles {
   extractBodies: Array<Record<string, unknown>>
   certificationCreates: Array<Record<string, unknown>>
   reverifyBodies: Array<{ id: string; body: Record<string, unknown> }>
+  approvedQuarantineIds: string[]
+  rejectedQuarantineIds: string[]
+}
+
+type QuarantinedItem = {
+  id: string
+  certificationId: string
+  domain: string
+  verdict: string
+  reason: string
+  status: 'pending' | 'approved' | 'rejected'
+  provenance: { sourceChunkIds: string[]; supportingSpans: string[]; score: number }
+  createdAt: string
 }
 
 async function fulfilJson(route: Route, status: number, body: unknown): Promise<void> {
@@ -355,7 +372,40 @@ export function mockAdmin(page: Page, options: { role?: Role } = {}): AdminMockH
     extractBodies: [],
     certificationCreates: [],
     reverifyBodies: [],
+    approvedQuarantineIds: [],
+    rejectedQuarantineIds: [],
   }
+
+  const quarantineItems: QuarantinedItem[] = [
+    {
+      id: QUARANTINE_ITEM_A_ID,
+      certificationId: CERT_ID,
+      domain: 'Secure Architectures',
+      verdict: JSON.stringify({ pass: false, score: 0.2 }),
+      reason: 'The answer key is incorrect',
+      status: 'pending',
+      provenance: {
+        sourceChunkIds: ['chunk-1'],
+        supportingSpans: ['Amazon EC2 provides scalable computing capacity'],
+        score: 0.2,
+      },
+      createdAt: '2026-06-20T10:00:00.000Z',
+    },
+    {
+      id: QUARANTINE_ITEM_B_ID,
+      certificationId: CERT_ID,
+      domain: 'Resilient Architectures',
+      verdict: JSON.stringify({ pass: false, score: 0.4 }),
+      reason: 'Hallucinated distractor',
+      status: 'pending',
+      provenance: {
+        sourceChunkIds: ['chunk-2'],
+        supportingSpans: ['Amazon S3 stores objects durably'],
+        score: 0.4,
+      },
+      createdAt: '2026-06-21T10:00:00.000Z',
+    },
+  ]
 
   // Context-level safety net (page routes take precedence over context routes in Playwright).
   mock(context, /\/api\/v1\//, async (route) => {
@@ -511,6 +561,31 @@ export function mockAdmin(page: Page, options: { role?: Role } = {}): AdminMockH
     await fulfilJson(route, 201, {
       data: { ...CERTIFICATION, id: NEW_CERT_ID, state: 'draft' },
     })
+  })
+
+  // --- Quarantine review queue ---
+  mock(page, new RegExp(`/api/v1/admin/quarantine/${UUID}/approve$`), async (route) => {
+    const id = pathSegment(route, 5)
+    handles.approvedQuarantineIds.push(id)
+    const target = quarantineItems.find((item) => item.id === id)
+    if (target) {
+      target.status = 'approved'
+    }
+    await fulfilJson(route, 200, { data: { id, status: 'approved' } })
+  })
+  mock(page, new RegExp(`/api/v1/admin/quarantine/${UUID}/reject$`), async (route) => {
+    const id = pathSegment(route, 5)
+    handles.rejectedQuarantineIds.push(id)
+    const target = quarantineItems.find((item) => item.id === id)
+    if (target) {
+      target.status = 'rejected'
+    }
+    await fulfilJson(route, 200, { data: { id, status: 'rejected' } })
+  })
+  mock(page, /\/api\/v1\/admin\/quarantine(\?|$)/, async (route) => {
+    const status = new URL(route.request().url()).searchParams.get('status')
+    const data = status ? quarantineItems.filter((item) => item.status === status) : quarantineItems
+    await fulfilJson(route, 200, { data, meta: { total: data.length, page: 1, limit: 25 } })
   })
 
   // --- Certifications (read) ---

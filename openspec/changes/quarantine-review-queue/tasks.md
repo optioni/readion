@@ -41,8 +41,8 @@
 
 ## 7. e2e + close the outer loop
 
-- [ ] 7.1 Add/extend admin Playwright e2e listing + resolving a quarantined item (endpoints mocked).
-- [ ] 7.2 Make the Section 0 acceptance test green.
+- [x] 7.1 Add/extend admin Playwright e2e listing + resolving a quarantined item (endpoints mocked).
+- [x] 7.2 Make the Section 0 acceptance test green.
 
 ## 8. Verification gates
 
