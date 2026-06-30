@@ -1,7 +1,12 @@
 <template>
   <aside
     data-testid="app-sidebar"
-    class="hidden min-h-screen w-52 flex-shrink-0 flex-col border-slate-700 border-r bg-readion-background-elevated px-4 py-6 lg:flex"
+    class="min-h-screen w-52 flex-shrink-0 flex-col border-slate-700 border-r bg-readion-background-elevated px-4 py-6"
+    :class="
+      open
+        ? 'flex fixed inset-y-0 left-0 z-40 lg:static lg:z-auto'
+        : 'hidden lg:flex'
+    "
   >
     <div class="mb-8 flex items-center gap-2 px-1.5">
       <div
@@ -15,6 +20,28 @@
         </svg>
       </div>
       <span class="font-bold text-slate-100 text-sm tracking-tight">Readion</span>
+      <div class="flex-1" />
+      <button
+        data-testid="sidebar-drawer-close"
+        type="button"
+        aria-label="Close navigation"
+        class="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:text-slate-200 lg:hidden"
+        @click="emit('close')"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
     </div>
 
     <div class="mb-1.5 px-1.5 text-[10px] text-slate-500 uppercase tracking-wider">Study</div>
@@ -121,6 +148,9 @@ interface NavItem {
   icon: string
   active: boolean
 }
+
+withDefaults(defineProps<{ open?: boolean }>(), { open: false })
+const emit = defineEmits<{ close: [] }>()
 
 const auth = useAuthStore()
 const router = useRouter()
