@@ -79,6 +79,16 @@ test.describe('web-cert-detail — tabbed enrollment detail (Overview, Sessions,
       await expect(domainRows.first()).toContainText(firstFocusDomain)
     }
 
+    // Each domain breakdown row renders as a status-coloured progress bar (shared DomainScoreBar),
+    // NOT a text-only "NN%" row. The first domain is seeded as the weakest (non-zero score), so its
+    // fill element must be visible with a non-zero, score-proportional inline width.
+    const firstDomainBarFill = domainRows.first().getByTestId('domain-score-bar-fill')
+    await expect(firstDomainBarFill).toBeVisible()
+    const firstDomainBarStyle = await firstDomainBarFill.getAttribute('style')
+    expect(firstDomainBarStyle, 'domain score bar fill must set a non-zero width').toMatch(
+      /width:\s*[1-9]\d*(\.\d+)?%/,
+    )
+
     // Suggested next focus surfaces the weakest domain.
     const nextFocus = page.getByTestId('suggested-next-focus')
     await expect(nextFocus).toBeVisible()

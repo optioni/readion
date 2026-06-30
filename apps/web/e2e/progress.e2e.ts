@@ -86,6 +86,21 @@ test.describe('web-progress — progress page', () => {
     // Per-domain rows: one per certification.domains entry (CERTIFICATION1 has 4 domains).
     await expect(page.getByTestId('progress-domain-row')).toHaveCount(4)
 
+    // Per-domain scores render as status-coloured horizontal progress bars (shared DomainScoreBar),
+    // NOT text-only "NN%" rows. The bar's fill element carries an inline width proportional to the
+    // score and a status-colour band class. The Secure Architectures domain has score 41 (sub-50 →
+    // "poor"), so its fill must be visible, ~41% wide, and use the poor status colour.
+    const secureBarRow = page
+      .getByTestId('progress-domain-row')
+      .filter({ hasText: /Secure Architectures/i })
+    const secureBarFill = secureBarRow.getByTestId('domain-score-bar-fill')
+    await expect(secureBarFill).toBeVisible()
+    const secureBarStyle = await secureBarFill.getAttribute('style')
+    expect(secureBarStyle, 'domain score bar fill must set a non-zero width').toMatch(
+      /width:\s*41(\.0+)?%/,
+    )
+    await expect(secureBarFill).toHaveClass(/bg-readion-status-poor/)
+
     // Domain deltas are shown for domains present in the latest summary's weakAreaDeltas.
     // SUMMARY3 has deltas for Secure (+12 pp) and Resilient (-4 pp); the other two are absent.
     await expect(page.getByTestId('domain-delta').first()).toBeVisible()
