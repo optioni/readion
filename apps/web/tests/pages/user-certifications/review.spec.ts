@@ -90,10 +90,10 @@ function stubQueue(dueCount = 3, count = 3) {
 }
 
 function stubQueueEmpty() {
-  // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
   vi.mocked(fetchReviewQueue).mockResolvedValue({
     items: [],
     meta: { dueCount: 0, total: 2 },
+    // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
   } as any)
 }
 
