@@ -39,8 +39,8 @@ describe('ReadinessTrend', () => {
       props: { points: [55, 62, 66], hasData: true },
     })
     const circles = wrapper.findAll('[data-testid="readiness-point"]')
-    const lastR = Number(circles[circles.length - 1].attributes('r'))
-    const firstR = Number(circles[0].attributes('r'))
+    const lastR = Number(circles[circles.length - 1]?.attributes('r'))
+    const firstR = Number(circles[0]?.attributes('r'))
     expect(lastR).toBeGreaterThan(firstR)
   })
 

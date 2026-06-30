@@ -23,4 +23,4 @@
 
 ## 4. Verification gates
 
-- [ ] 4.1 `yarn lint`, `yarn typecheck`, web unit tests + e2e green; coverage ≥ 80%.
+- [x] 4.1 `yarn lint`, `yarn typecheck`, web unit tests + e2e green; coverage ≥ 80%.

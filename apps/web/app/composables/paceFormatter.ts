@@ -1,9 +1,9 @@
 export function computePaceRate(points: number[]): number | null {
-  if (points.length < 2) {
+  const first = points[0]
+  const last = points.at(-1)
+  if (first === undefined || last === undefined || points.length < 2) {
     return null
   }
-  const first = points[0]
-  const last = points[points.length - 1]
   return (last - first) / (points.length - 1)
 }
 

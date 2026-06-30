@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
+import { computePaceRate } from '~/composables/paceFormatter'
 import {
   fetchCertificationDetail,
   fetchEnrollmentDetail,
@@ -12,7 +13,6 @@ import {
 } from '~/composables/progressApi'
 import { progressQueryKeys } from '~/composables/progressQueryKeys'
 import { fetchSessionSummary } from '~/composables/sessionViewApi'
-import { computePaceRate } from '~/composables/paceFormatter'
 import { useAccuracySeries } from '~/composables/useAccuracySeries'
 import { useDomainScores } from '~/composables/useDomainScores'
 import { useReadinessTrend } from '~/composables/useReadinessTrend'
