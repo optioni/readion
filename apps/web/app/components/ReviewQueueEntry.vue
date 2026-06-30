@@ -10,7 +10,10 @@ const props = defineProps<{
   dueCount: number
 }>()
 
-const emit = defineEmits<{ start: [] }>()
+const emit = defineEmits<{
+  start: []
+  'start-self-grade': []
+}>()
 
 const domainBreakdown = computed(() => useDueDomainBreakdown(props.items))
 </script>
@@ -79,6 +82,15 @@ const domainBreakdown = computed(() => useDueDomainBreakdown(props.items))
       @click="emit('start')"
     >
       Start review →
+    </button>
+
+    <button
+      type="button"
+      data-testid="start-self-grade-button"
+      class="w-full rounded-md border border-readion-border-strong px-5 py-2.5 text-readion-text-secondary text-sm hover:border-readion-primary hover:text-readion-primary"
+      @click="emit('start-self-grade')"
+    >
+      Self-grade flashcards
     </button>
   </div>
 </template>

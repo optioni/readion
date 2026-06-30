@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fetchReviewQueue, startReview } from '~/composables/progressApi'
+import { fetchReviewQueue, gradeReviewItem, startReview } from '~/composables/progressApi'
 import {
   completeSessionItem,
   drillSession,
@@ -13,6 +13,7 @@ import ReviewPage from '~/pages/user-certifications/[id]/review.vue'
 vi.mock('~/composables/progressApi', () => ({
   fetchReviewQueue: vi.fn(),
   startReview: vi.fn(),
+  gradeReviewItem: vi.fn(),
 }))
 
 vi.mock('~/composables/sessionViewApi', () => ({
@@ -142,8 +143,8 @@ function mountPage() {
         ReviewQueueEntry: {
           props: ['enrollmentId', 'items', 'dueCount'],
           template:
-            '<div data-testid="review-queue-entry-stub"><button data-testid="start-review-button" @click="$emit(\'start\')">Start</button></div>',
-          emits: ['start'],
+            '<div data-testid="review-queue-entry-stub"><button data-testid="start-review-button" @click="$emit(\'start\')">Start</button><button data-testid="start-self-grade-button" @click="$emit(\'start-self-grade\')">Self-grade</button></div>',
+          emits: ['start', 'start-self-grade'],
         },
         ReviewCompletion: {
           props: ['summary', 'drillNoMisses'],
@@ -169,6 +170,7 @@ beforeEach(() => {
   vi.mocked(completeSessionItem).mockResolvedValue({} as any)
   // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
   vi.mocked(endSession).mockResolvedValue({} as any)
+  vi.mocked(gradeReviewItem).mockResolvedValue(undefined)
 })
 
 afterEach(() => {
@@ -292,5 +294,56 @@ describe('Review page — completion: drill action', () => {
     await flushPromises()
 
     expect(mockNavigate).toHaveBeenCalledWith('/')
+  })
+})
+
+describe('Review page — self-grade mode', () => {
+  it('entering self-grade mode shows the first due item reveal card', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="start-self-grade-button"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="self-grade-card"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="review-queue-entry-stub"]').exists()).toBe(false)
+  })
+
+  it('revealing and tapping Good calls gradeReviewItem with the first item id and grade, then advances', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="start-self-grade-button"]').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-testid="reveal-button"]').trigger('click')
+    await wrapper.find('[data-testid="grade-good"]').trigger('click')
+    await flushPromises()
+
+    expect(gradeReviewItem).toHaveBeenCalledWith('ri-0', 'good')
+    expect(wrapper.find('[data-testid="reveal-button"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="grade-good"]').exists()).toBe(false)
+  })
+
+  it('after grading all items shows self-grade-completion with per-grade counts', async () => {
+    stubQueue(2, 2)
+    const wrapper = mountPage()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="start-self-grade-button"]').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-testid="reveal-button"]').trigger('click')
+    await wrapper.find('[data-testid="grade-good"]').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-testid="reveal-button"]').trigger('click')
+    await wrapper.find('[data-testid="grade-again"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="self-grade-completion"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="self-grade-card"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="self-grade-count-good"]').text()).toContain('1')
+    expect(wrapper.find('[data-testid="self-grade-count-again"]').text()).toContain('1')
   })
 })

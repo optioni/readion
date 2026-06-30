@@ -29,9 +29,9 @@
 
 ## 5. web-progress review loop
 
-- [ ] 5.1 RED: unit test — reveal-step Again/Hard/Good/Easy buttons call the self-grade endpoint with the right grade, advance to the next due item, and count the item in the completion breakdown.
-- [ ] 5.2 GREEN: wire the buttons to the endpoint (decide self-grade vs. quiz+confidence mode per design open question).
-- [ ] 5.3 REFACTOR: clean up loop state.
+- [x] 5.1 RED: unit test — reveal-step Again/Hard/Good/Easy buttons call the self-grade endpoint with the right grade, advance to the next due item, and count the item in the completion breakdown.
+- [x] 5.2 GREEN: wire the buttons to the endpoint (decide self-grade vs. quiz+confidence mode per design open question).
+- [x] 5.3 REFACTOR: clean up loop state.
 
 ## 6. e2e + close the outer loop
 

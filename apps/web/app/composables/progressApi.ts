@@ -1,4 +1,5 @@
 import type {
+  ReviewGrade,
   ReviewItemResponse,
   ReviewQueueMeta,
   StartReviewResponse,
@@ -23,7 +24,10 @@ import type {
   WeakAreaListResponseDto,
 } from '~~/src/api/model'
 import { readinessControllerRead } from '~~/src/api/readiness/readiness'
-import { reviewItemsControllerMaster } from '~~/src/api/review-items/review-items'
+import {
+  reviewItemsControllerGrade,
+  reviewItemsControllerMaster,
+} from '~~/src/api/review-items/review-items'
 import { sessionsControllerList } from '~~/src/api/sessions/sessions'
 import {
   userCertificationsControllerDetail,
@@ -114,4 +118,8 @@ export async function suppressDomain(
 
 export async function masterReviewItem(reviewItemId: string): Promise<void> {
   await reviewItemsControllerMaster(reviewItemId)
+}
+
+export async function gradeReviewItem(reviewItemId: string, grade: ReviewGrade): Promise<void> {
+  await reviewItemsControllerGrade(reviewItemId, { grade })
 }
