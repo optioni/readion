@@ -5,9 +5,9 @@
 
 ## 1. Stat row (4 cards)
 
-- [ ] 1.1 RED: component test for the stat row — renders Sessions, Questions answered, Study time, Current streak from the progress read model.
-- [ ] 1.2 GREEN: add the two cards (Study time, Current streak). If the API doesn't expose them, STOP and flag (no backend scope here).
-- [ ] 1.3 REFACTOR: shared stat-card; align labels with `Progress.html`.
+- [x] 1.1 RED: component test for the stat row — renders Sessions, Questions answered, Study time, Current streak from the progress read model.
+- [x] 1.2 GREEN: add the two cards (Study time, Current streak). If the API doesn't expose them, STOP and flag (no backend scope here).
+- [x] 1.3 REFACTOR: shared stat-card; align labels with `Progress.html`.
 
 ## 2. Readiness line chart
 
