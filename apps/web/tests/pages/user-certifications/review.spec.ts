@@ -196,8 +196,8 @@ describe('Review page — queue scene', () => {
   })
 })
 
-describe('Review page — queue → loop transition', () => {
-  it('calls startReview and loads session items when start is emitted', async () => {
+describe('Review page — queue → self-grade flow (primary)', () => {
+  it('calls startReview and enters the self-grade flow when start is emitted', async () => {
     const wrapper = mountPage()
     await flushPromises()
 
@@ -205,11 +205,11 @@ describe('Review page — queue → loop transition', () => {
     await flushPromises()
 
     expect(startReview).toHaveBeenCalledWith('enr-1')
-    expect(fetchSessionDetail).toHaveBeenCalledWith('sess-review')
-    expect(wrapper.find('[data-testid="quiz-card"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="self-grade-card"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="quiz-card"]').exists()).toBe(false)
   })
 
-  it('hides the queue entry once the loop starts', async () => {
+  it('hides the queue entry once the self-grade flow starts', async () => {
     const wrapper = mountPage()
     await flushPromises()
 
@@ -218,16 +218,92 @@ describe('Review page — queue → loop transition', () => {
 
     expect(wrapper.find('[data-testid="review-queue-entry-stub"]').exists()).toBe(false)
   })
-})
 
-describe('Review page — loop: advancing items', () => {
-  it('completes the item and advances when advance is emitted', async () => {
-    stubSessionDetail([quizItem(0), quizItem(1)])
+  it('reveals and grades each card, advancing through the queue to the completion breakdown', async () => {
+    stubQueue(2, 2)
     const wrapper = mountPage()
     await flushPromises()
 
     await wrapper.find('[data-testid="start-review-button"]').trigger('click')
     await flushPromises()
+
+    // First card: reveal then rate "good" in-flow.
+    expect(wrapper.find('[data-testid="self-grade-card"]').exists()).toBe(true)
+    await wrapper.find('[data-testid="reveal-button"]').trigger('click')
+    await wrapper.find('[data-testid="grade-good"]').trigger('click')
+    await flushPromises()
+
+    expect(gradeReviewItem).toHaveBeenCalledWith('ri-0', 'good')
+
+    // Second (last) card: reveal then rate "again"; the flow then shows the completion breakdown.
+    expect(wrapper.find('[data-testid="self-grade-card"]').exists()).toBe(true)
+    await wrapper.find('[data-testid="reveal-button"]').trigger('click')
+    await wrapper.find('[data-testid="grade-again"]').trigger('click')
+    await flushPromises()
+
+    expect(gradeReviewItem).toHaveBeenCalledWith('ri-1', 'again')
+    expect(wrapper.find('[data-testid="self-grade-completion"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="self-grade-count-good"]').text()).toContain('1')
+    expect(wrapper.find('[data-testid="self-grade-count-again"]').text()).toContain('1')
+  })
+
+  it('returns to the queue from the self-grade completion screen', async () => {
+    stubQueue(1, 1)
+    const wrapper = mountPage()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="start-review-button"]').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-testid="reveal-button"]').trigger('click')
+    await wrapper.find('[data-testid="grade-easy"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="self-grade-completion"]').exists()).toBe(true)
+    await wrapper.find('[data-testid="self-grade-completion"] button').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="review-queue-entry-stub"]').exists()).toBe(true)
+  })
+})
+
+// The quiz + confidence run loop stays reachable as a secondary in-flow rating mode. These tests
+// opt into it via the review-mode-quiz toggle before starting the run loop.
+async function startInQuizMode(wrapper: ReturnType<typeof mountPage>) {
+  await wrapper.find('[data-testid="review-mode-quiz"]').trigger('click')
+  await wrapper.find('[data-testid="start-review-button"]').trigger('click')
+  await flushPromises()
+}
+
+describe('Review page — quiz mode toggle → loop transition', () => {
+  it('calls startReview and loads session items when started in quiz mode', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    await startInQuizMode(wrapper)
+
+    expect(startReview).toHaveBeenCalledWith('enr-1')
+    expect(fetchSessionDetail).toHaveBeenCalledWith('sess-review')
+    expect(wrapper.find('[data-testid="quiz-card"]').exists()).toBe(true)
+  })
+
+  it('hides the queue entry once the quiz loop starts', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    await startInQuizMode(wrapper)
+
+    expect(wrapper.find('[data-testid="review-queue-entry-stub"]').exists()).toBe(false)
+  })
+})
+
+describe('Review page — quiz loop: advancing items', () => {
+  it('completes the item and advances when advance is emitted', async () => {
+    stubSessionDetail([quizItem(0), quizItem(1)])
+    const wrapper = mountPage()
+    await flushPromises()
+
+    await startInQuizMode(wrapper)
 
     expect(wrapper.find('[data-testid="quiz-card"]').text()).toContain('quiz 0')
 
@@ -242,8 +318,7 @@ describe('Review page — loop: advancing items', () => {
     const wrapper = mountPage()
     await flushPromises()
 
-    await wrapper.find('[data-testid="start-review-button"]').trigger('click')
-    await flushPromises()
+    await startInQuizMode(wrapper)
 
     await wrapper.find('[data-testid="quiz-card"]').trigger('click')
     await flushPromises()
@@ -255,7 +330,7 @@ describe('Review page — loop: advancing items', () => {
   })
 })
 
-describe('Review page — completion: drill action', () => {
+describe('Review page — quiz completion: drill action', () => {
   it('re-enters the loop with existing items when drill starts a new session', async () => {
     vi.mocked(drillSession).mockResolvedValue({
       status: 'started',
@@ -265,8 +340,7 @@ describe('Review page — completion: drill action', () => {
     const wrapper = mountPage()
     await flushPromises()
 
-    await wrapper.find('[data-testid="start-review-button"]').trigger('click')
-    await flushPromises()
+    await startInQuizMode(wrapper)
 
     await wrapper.find('[data-testid="quiz-card"]').trigger('click')
     await flushPromises()
@@ -284,8 +358,7 @@ describe('Review page — completion: drill action', () => {
     const wrapper = mountPage()
     await flushPromises()
 
-    await wrapper.find('[data-testid="start-review-button"]').trigger('click')
-    await flushPromises()
+    await startInQuizMode(wrapper)
 
     await wrapper.find('[data-testid="quiz-card"]').trigger('click')
     await flushPromises()
@@ -304,5 +377,14 @@ describe('Review page — unified entry', () => {
 
     expect(wrapper.find('[data-testid="start-self-grade-button"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="start-review-button"]').exists()).toBe(true)
+  })
+
+  it('defaults the in-flow rating mode to self-grade and offers a secondary quiz toggle', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="review-mode-toggle"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="review-mode-self-grade"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="review-mode-quiz"]').exists()).toBe(true)
   })
 })

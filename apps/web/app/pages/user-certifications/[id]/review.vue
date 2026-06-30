@@ -30,6 +30,12 @@ const enrollmentId = computed(() => String(route.params.id))
 type Scene = 'queue' | 'loop' | 'completion' | 'self-grade' | 'self-grade-completion'
 const scene = ref<Scene>('queue')
 
+// The single "Start review" launches the self-grade flashcard flow by default (the design's
+// single-entry model). The quiz + confidence run loop stays reachable as a secondary in-flow rating
+// mode — selecting between the two paths is a property of the run loop, not a competing entry CTA.
+type ReviewMode = 'self-grade' | 'quiz'
+const reviewMode = ref<ReviewMode>('self-grade')
+
 // --- Queue state ---
 const queueItems = ref<ReviewItemResponse[]>([])
 const dueCount = ref(0)
@@ -76,7 +82,7 @@ onMounted(async () => {
   dueCount.value = queue.meta.dueCount
 })
 
-// --- Quiz loop handlers ---
+// --- Run-loop entry ---
 async function handleStart() {
   const result = await startReview(enrollmentId.value)
   if (result.status === 'all_caught_up') {
@@ -85,11 +91,16 @@ async function handleStart() {
   }
   const sessionId = String(result.session.id)
   activeSessionId.value = sessionId
-  const detail = await fetchSessionDetail(sessionId)
-  const mapped = (detail.data.items ?? []).map(toItem)
-  items.value = mapped
-  currentPos.value = 0
-  scene.value = 'loop'
+
+  if (reviewMode.value === 'quiz') {
+    const detail = await fetchSessionDetail(sessionId)
+    items.value = (detail.data.items ?? []).map(toItem)
+    currentPos.value = 0
+    scene.value = 'loop'
+    return
+  }
+
+  enterSelfGradeFlow()
 }
 
 async function handleAdvance(index: number) {
@@ -131,7 +142,7 @@ async function handleBack() {
 }
 
 // --- Self-grade handlers ---
-function handleStartSelfGrade() {
+function enterSelfGradeFlow() {
   selfGradeItems.value = [...queueItems.value]
   selfGradePos.value = 0
   selfGradeRevealed.value = false
@@ -158,13 +169,48 @@ async function handleGrade(grade: ReviewGrade) {
     data-testid="review-page"
     class="mx-auto flex w-full max-w-2xl flex-col gap-6 px-6 py-8"
   >
-    <ReviewQueueEntry
-      v-if="scene === 'queue'"
-      :enrollment-id="enrollmentId"
-      :items="queueItems"
-      :due-count="dueCount"
-      @start="handleStart"
-    />
+    <template v-if="scene === 'queue'">
+      <ReviewQueueEntry
+        :enrollment-id="enrollmentId"
+        :items="queueItems"
+        :due-count="dueCount"
+        @start="handleStart"
+      />
+
+      <div
+        v-if="dueCount > 0"
+        data-testid="review-mode-toggle"
+        class="flex items-center justify-center gap-2 text-readion-text-muted text-xs"
+      >
+        <span>Rating style</span>
+        <button
+          type="button"
+          data-testid="review-mode-self-grade"
+          :class="[
+            'rounded-md px-2.5 py-1',
+            reviewMode === 'self-grade'
+              ? 'bg-readion-primary/10 font-medium text-readion-primary'
+              : 'text-readion-text-muted hover:text-readion-text-secondary',
+          ]"
+          @click="reviewMode = 'self-grade'"
+        >
+          Self-grade
+        </button>
+        <button
+          type="button"
+          data-testid="review-mode-quiz"
+          :class="[
+            'rounded-md px-2.5 py-1',
+            reviewMode === 'quiz'
+              ? 'bg-readion-primary/10 font-medium text-readion-primary'
+              : 'text-readion-text-muted hover:text-readion-text-secondary',
+          ]"
+          @click="reviewMode = 'quiz'"
+        >
+          Quiz
+        </button>
+      </div>
+    </template>
 
     <template v-else-if="scene === 'loop'">
       <QuizCard

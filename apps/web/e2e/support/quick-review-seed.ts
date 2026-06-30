@@ -409,6 +409,28 @@ export function mockReviewSelfGrade(page: Page): void {
     },
   )
 
+  // Start review: the single "Start review" launches the self-grade flow, but it still opens the
+  // run loop via enrollmentReviewControllerStart, which returns a started review session.
+  mock(
+    page,
+    new RegExp(`/api/v1/user-certifications/${enrollmentId}/review/start$`),
+    async (route) => {
+      await fulfilJson(route, 200, {
+        data: {
+          status: 'started',
+          session: {
+            id: reviewSessionId,
+            userCertificationId: enrollmentId,
+            kind: 'review',
+            status: 'active',
+            durationMinutes: 5,
+            startedAt: '2026-06-29T09:00:00.000Z',
+          },
+        },
+      })
+    },
+  )
+
   // Grade endpoint — called once per item as the user taps a grade button.
   mock(page, /\/api\/v1\/review-items\/[0-9a-f-]+\/grade$/, async (route) => {
     await fulfilJson(route, 200, { data: {} })
