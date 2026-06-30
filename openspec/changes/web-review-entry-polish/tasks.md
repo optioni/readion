@@ -5,9 +5,9 @@
 
 ## 1. Domain chips
 
-- [ ] 1.1 RED: component test — by-domain breakdown renders chips (domain + count).
-- [ ] 1.2 GREEN: replace the plain list with chips per `QuickReview.html`.
-- [ ] 1.3 REFACTOR: reuse any existing chip component.
+- [x] 1.1 RED: component test — by-domain breakdown renders chips (domain + count).
+- [x] 1.2 GREEN: replace the plain list with chips per `QuickReview.html`.
+- [x] 1.3 REFACTOR: reuse any existing chip component.
 
 ## 2. Unified entry
 

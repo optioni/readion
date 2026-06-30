@@ -72,6 +72,25 @@ describe('ReviewQueueEntry — with due items', () => {
     expect(breakdown.text()).toContain('Resilient Architectures')
   })
 
+  it('renders one chip per distinct domain with its label and count', () => {
+    const items = [
+      dueItem('Secure Architectures', 'i1'),
+      dueItem('Secure Architectures', 'i2'),
+      dueItem('Resilient Architectures', 'i3'),
+    ]
+    const wrapper = mountEntry({ items, dueCount: 3 })
+    const chips = wrapper.findAll('[data-testid="review-domain-chip"]')
+    expect(chips).toHaveLength(2)
+
+    const secure = chips.find((chip) => chip.text().includes('Secure Architectures'))
+    expect(secure).toBeDefined()
+    expect(secure?.text()).toContain('2')
+
+    const resilient = chips.find((chip) => chip.text().includes('Resilient Architectures'))
+    expect(resilient).toBeDefined()
+    expect(resilient?.text()).toContain('1')
+  })
+
   it('renders the start-review button', () => {
     const wrapper = mountEntry({
       items: [dueItem('Security', 'i1')],

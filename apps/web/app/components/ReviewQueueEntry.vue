@@ -62,16 +62,19 @@ const domainBreakdown = computed(() => useDueDomainBreakdown(props.items))
 
     <div
       data-testid="review-domain-breakdown"
-      class="flex flex-col gap-1.5"
+      class="flex flex-col gap-2"
     >
       <p class="mb-1 text-[11px] text-readion-text-muted uppercase tracking-wider">By domain</p>
-      <div
-        v-for="entry in domainBreakdown"
-        :key="entry.domain"
-        class="flex items-center justify-between text-sm"
-      >
-        <span class="text-readion-text-secondary">{{ entry.domain }}</span>
-        <span class="font-medium text-readion-text-primary">{{ entry.count }}</span>
+      <div class="flex flex-wrap gap-2">
+        <span
+          v-for="entry in domainBreakdown"
+          :key="entry.domain"
+          data-testid="review-domain-chip"
+          class="inline-flex items-center gap-1.5 rounded-full border border-readion-border-strong bg-readion-background-surface px-3 py-1"
+        >
+          <span class="text-readion-text-secondary text-xs">{{ entry.domain }}</span>
+          <span class="font-semibold text-readion-primary text-xs">{{ entry.count }}</span>
+        </span>
       </div>
     </div>
 
