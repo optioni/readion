@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { useQueryClient } from '@tanstack/vue-query'
 import { ref } from 'vue'
-import DeltaBadge from '~/components/DeltaBadge.vue'
+import DomainScoreBar from '~/components/DomainScoreBar.vue'
 import { suppressDomain } from '~/composables/progressApi'
 import { progressQueryKeys } from '~/composables/progressQueryKeys'
 import type { StatusColorKey } from '~/composables/statusColor'
-import { statusTextColorClass } from '~/composables/statusColor'
 
 const props = defineProps<{
   domain: string
@@ -27,8 +26,6 @@ async function markMastered() {
     queryKey: progressQueryKeys.reviewQueue(props.enrollmentId),
   })
 }
-
-const scoreColorClass = (status: StatusColorKey) => statusTextColorClass(status)
 </script>
 
 <template>
@@ -37,23 +34,14 @@ const scoreColorClass = (status: StatusColorKey) => statusTextColorClass(status)
     :data-state="mastered ? 'mastered' : undefined"
     class="flex items-center justify-between gap-3 py-2"
   >
-    <span class="flex-1 text-sm text-slate-200">{{ domain }}</span>
-
-    <span
-      v-if="hasData && status !== null && score !== null"
-      :class="scoreColorClass(status)"
-      class="font-medium text-sm"
-    >
-      {{ score }}%
-    </span>
-    <span v-else class="text-slate-500 text-xs">No data yet</span>
-
-    <span
-      v-if="delta !== null"
-      data-testid="domain-delta"
-    >
-      <DeltaBadge :value="delta" />
-    </span>
+    <DomainScoreBar
+      class="flex-1"
+      :domain="domain"
+      :score="score"
+      :status="status"
+      :has-data="hasData"
+      :delta="delta"
+    />
 
     <button
       v-if="!mastered"

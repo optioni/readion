@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import CardPanel from '~/components/CardPanel.vue'
+import DomainScoreBar from '~/components/DomainScoreBar.vue'
 import RecentSessionsPanel from '~/components/RecentSessionsPanel.vue'
 import { formatCertStatRow } from '~/composables/certStatRow'
 import { joinDomainScores } from '~/composables/domainScores'
@@ -35,8 +36,6 @@ const statRow = computed(() =>
 const domainRows = computed(() => joinDomainScores(props.domains, weakAreas.value))
 
 const nextFocus = computed(() => selectSuggestedNextFocus(nextFocusDomain.value, weakAreas.value))
-
-const scoreClass = (status: string) => `text-readion-status-${status}`
 </script>
 
 <template>
@@ -71,17 +70,14 @@ const scoreClass = (status: string) => `text-readion-status-${status}`
         v-for="row in domainRows"
         :key="row.domain"
         data-testid="domain-score-row"
-        class="mb-1 flex justify-between text-xs"
+        class="mb-2"
       >
-        <span>{{ row.domain }}</span>
-        <span
-          v-if="row.hasData && row.status !== null"
-          data-testid="domain-score"
-          :class="scoreClass(row.status)"
-        >
-          {{ row.score }}%
-        </span>
-        <span v-else class="opacity-50">No data yet</span>
+        <DomainScoreBar
+          :domain="row.domain"
+          :score="row.score"
+          :status="row.status"
+          :has-data="row.hasData"
+        />
       </div>
     </CardPanel>
 
