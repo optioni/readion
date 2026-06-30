@@ -17,9 +17,9 @@
 
 ## 3. Onboarding search + standalone chrome
 
-- [ ] 3.1 RED: test step 1 renders a cert search that filters the catalog; the onboarding route hides the global app chrome.
-- [ ] 3.2 GREEN: add the search filter; present onboarding standalone per `Onboarding.html`.
-- [ ] 3.3 REFACTOR: reuse the catalog list; tidy the route layout choice.
+- [x] 3.1 RED: test step 1 renders a cert search that filters the catalog; the onboarding route hides the global app chrome.
+- [x] 3.2 GREEN: add the search filter; present onboarding standalone per `Onboarding.html`.
+- [x] 3.3 REFACTOR: reuse the catalog list; tidy the route layout choice.
 
 ## 4. Verification gates
 

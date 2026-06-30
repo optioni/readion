@@ -16,6 +16,20 @@ const certificationsQuery = useQuery({
 
 const options = computed(() => certificationsQuery.data.value ?? [])
 
+const query = ref('')
+
+const filteredOptions = computed(() => {
+  const needle = query.value.trim().toLowerCase()
+  if (!needle) {
+    return options.value
+  }
+  return options.value.filter((option) =>
+    [option.name, option.provider, option.code].some((field) =>
+      field.toLowerCase().includes(needle),
+    ),
+  )
+})
+
 const selectedId = ref<string | null>(null)
 
 function select(certificationId: string) {
@@ -32,8 +46,16 @@ function confirm() {
 
 <template>
   <div class="flex flex-col gap-6">
+    <input
+      v-model="query"
+      data-testid="cert-search-input"
+      type="search"
+      placeholder="Search certifications…"
+      class="w-full rounded-lg border border-readion-background-surface bg-readion-background-elevated px-4 py-2.5 text-slate-200 text-sm placeholder:text-slate-500 focus:border-readion-primary focus:outline-none"
+    />
+
     <ul class="flex flex-col gap-2">
-      <li v-for="option in options" :key="option.id">
+      <li v-for="option in filteredOptions" :key="option.id">
         <button
           type="button"
           data-testid="cert-option"

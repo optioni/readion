@@ -66,7 +66,7 @@ describe('OnboardingCertSelect options', () => {
     expect(optionEls[1]?.text()).toContain('Azure')
   })
 
-  it('renders every certification the API returns without client-side filtering', async () => {
+  it('renders every certification the API returns when the search query is empty', async () => {
     stubCertifications([
       certification({ id: 'cert-1', name: 'AWS SA' }),
       certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' }),
@@ -87,6 +87,109 @@ describe('OnboardingCertSelect options', () => {
 
     expect(wrapper.findAll('[data-testid="cert-option"]')).toHaveLength(0)
     expect(continueButton(wrapper)?.attributes('disabled')).toBeDefined()
+  })
+})
+
+describe('OnboardingCertSelect search', () => {
+  const searchInput = (wrapper: ReturnType<typeof mountStep>['wrapper']) =>
+    wrapper.find('[data-testid="cert-search-input"]')
+
+  it('renders a search input above the option list', async () => {
+    stubCertifications([certification({ id: 'cert-1', name: 'AWS SA' })])
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    const input = searchInput(wrapper)
+    expect(input.exists()).toBe(true)
+    expect(input.attributes('placeholder')).toMatch(/search certifications/i)
+  })
+
+  it('filters options by name as the query is typed', async () => {
+    stubCertifications([
+      certification({ id: 'cert-1', name: 'AWS Solutions Architect' }),
+      certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' }),
+      certification({ id: 'cert-3', name: 'CKA', provider: 'CNCF' }),
+    ])
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    await searchInput(wrapper).setValue('azure')
+    await flushPromises()
+
+    const optionEls = wrapper.findAll('[data-testid="cert-option"]')
+    expect(optionEls).toHaveLength(1)
+    expect(optionEls[0]?.text()).toContain('Azure Fundamentals')
+  })
+
+  it('matches on provider and code, case-insensitively', async () => {
+    stubCertifications([
+      certification({ id: 'cert-1', name: 'AWS Solutions Architect' }),
+      certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' }),
+      certification({ id: 'cert-3', name: 'Kubernetes Admin', provider: 'CNCF' }),
+    ])
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    await searchInput(wrapper).setValue('cncf')
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="cert-option"]')).toHaveLength(1)
+
+    await searchInput(wrapper).setValue('saa-c03')
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="cert-option"]')).toHaveLength(3)
+  })
+
+  it('renders no options for a non-matching query', async () => {
+    stubCertifications([
+      certification({ id: 'cert-1', name: 'AWS SA' }),
+      certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' }),
+    ])
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    await searchInput(wrapper).setValue('zzz-no-such-certification')
+    await flushPromises()
+
+    expect(wrapper.findAll('[data-testid="cert-option"]')).toHaveLength(0)
+  })
+
+  it('restores the full list when the query is cleared', async () => {
+    stubCertifications([
+      certification({ id: 'cert-1', name: 'AWS SA' }),
+      certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' }),
+    ])
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    await searchInput(wrapper).setValue('zzz')
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="cert-option"]')).toHaveLength(0)
+
+    await searchInput(wrapper).setValue('')
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="cert-option"]')).toHaveLength(2)
+  })
+
+  it('does not refetch the catalog while filtering', async () => {
+    stubCertifications([
+      certification({ id: 'cert-1', name: 'AWS SA' }),
+      certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' }),
+    ])
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    await searchInput(wrapper).setValue('aws')
+    await flushPromises()
+    await searchInput(wrapper).setValue('')
+    await flushPromises()
+
+    expect(certificationsControllerList).toHaveBeenCalledTimes(1)
   })
 })
 

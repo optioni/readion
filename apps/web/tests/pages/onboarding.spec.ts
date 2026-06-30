@@ -44,6 +44,7 @@ const sessionDefaults: SessionDefaults = {
 }
 
 let navigated: string | null
+let definePageMetaSpy: ReturnType<typeof vi.fn>
 
 function stubGate(options: {
   decision: OnboardingDecision | null
@@ -72,7 +73,8 @@ function stubActions() {
 beforeEach(() => {
   navigated = null
   vi.clearAllMocks()
-  vi.stubGlobal('definePageMeta', vi.fn())
+  definePageMetaSpy = vi.fn()
+  vi.stubGlobal('definePageMeta', definePageMetaSpy)
   vi.stubGlobal('navigateTo', (dest: string) => {
     navigated = dest
     return dest
@@ -143,6 +145,15 @@ describe('Onboarding page step flow', () => {
     expect(wrapper.find('[data-testid="session-prefs-stub"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="diagnostic-offer-stub"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="onboarding-enroll-error"]').exists()).toBe(true)
+  })
+})
+
+describe('Onboarding page standalone chrome', () => {
+  it('opts into the minimal layout to suppress the global app sidebar', () => {
+    stubGate({ decision: { kind: 'onboarding' } })
+    mountPage()
+
+    expect(definePageMetaSpy).toHaveBeenCalledWith(expect.objectContaining({ layout: 'minimal' }))
   })
 })
 

@@ -9,6 +9,8 @@ import { ADMIN_CERT_SETUP_ROUTE } from '~/composables/onboardingRoutes'
 import { useOnboardingActions } from '~/composables/useOnboardingActions'
 import { useOnboardingGate } from '~/composables/useOnboardingGate'
 
+definePageMeta({ layout: 'minimal' })
+
 const { decision, isLoading } = useOnboardingGate()
 const { saveDefaultsAndEnroll } = useOnboardingActions()
 
