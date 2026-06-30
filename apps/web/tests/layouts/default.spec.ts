@@ -2,6 +2,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed } from 'vue'
+import AppSidebar from '~/components/AppSidebar.vue'
 import { useEnrollments } from '~/composables/useEnrollments'
 import DefaultLayout from '~/layouts/default.vue'
 
@@ -31,6 +32,7 @@ function mountLayout(slot: string) {
     slots: { default: slot },
     global: {
       plugins: [pinia],
+      components: { AppSidebar },
       stubs: {
         ColorModeToggle: { template: '<button type="button" />' },
         NuxtLink: { props: ['to'], template: '<a :href="to"><slot /></a>' },
