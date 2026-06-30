@@ -48,12 +48,12 @@ Groups:
 
 Work through pending groups in order.
 
-**Before dispatching each group, run a usage safety check.** Run `ccusage blocks --active --json` and read the active 5-hour block. You are guarding against the rate limit being hit **mid-group**, which halts the implementer/reviewer subagent and leaves half-written, uncommitted work (and tasks.md not yet marked).
+**Before dispatching each group, run a usage safety check.** Run the `checking-usage` skill's `fetch-usage.sh --json` and read the authoritative 5-hour session utilization. You are guarding against the rate limit being hit **mid-group**, which halts the implementer/reviewer subagent and leaves half-written, uncommitted work (and tasks.md not yet marked).
 
-- `endTime` is when the current 5-hour window resets; `burnRate.tokensPerMinute` and `totalTokens` show how hard you are consuming it.
-- If consumption is heavy and the burn rate is high — a real risk of hitting the limit before a group completes — **do not dispatch the next group**. Stop here, at a clean boundary where the previous group's tasks are marked `- [x]` and committed, and report `Apply paused` with the usage snapshot, the reset time (`endTime`), and the reason. Resume after the window resets or on the user's instruction.
+- `five_hour.utilization` is the percent of the 5h **session** limit used (remaining = `100 - utilization`); `five_hour.resets_at` is when the window resets. `five_hour.severity` (`warning`/higher) is a ready-made "am I close?" signal.
+- If the session limit is heavily used — a real risk of hitting it before a group completes — **do not dispatch the next group**. Stop here, at a clean boundary where the previous group's tasks are marked `- [x]` and committed, and report `Apply paused` with the utilization, the reset time (`resets_at`), and the reason. Resume after the window resets or on the user's instruction.
 
-`ccusage` reads local logs and cannot see your true remaining quota — only the interactive `/usage` command can. Treat this as a safety heuristic: when in doubt, pause at the boundary rather than risk a mid-group halt. (See the `checking-usage` skill for command details.)
+`fetch-usage.sh` calls the OAuth usage API and reports your true remaining quota — unlike `ccusage`, which estimates from local logs against an assumed budget and is wrong for this purpose. If `fetch-usage.sh` fails (no token / offline), fall back to telling the user to run the interactive `/usage` command. Treat this as a safety heuristic: when in doubt, pause at the boundary rather than risk a mid-group halt. (See the `checking-usage` skill for details.)
 
 ---
 
