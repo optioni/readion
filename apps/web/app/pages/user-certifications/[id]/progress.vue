@@ -22,6 +22,7 @@ const {
   trend,
   accuracySeries,
   weeksToReady,
+  paceRate,
   historyRows,
   sessions,
   summariesMap,
@@ -66,7 +67,7 @@ const activityStats = computed(() => useActivityStats(sessions.value, summariesM
         <CertTabs :enrollments="switcher" :active-enrollment-id="enrollmentId" />
       </div>
 
-      <TrajectoryCallout :weeks-to-ready="weeksToReady" class="mb-6" />
+      <TrajectoryCallout :weeks-to-ready="weeksToReady" :pace-rate="paceRate" class="mb-6" />
 
       <div class="mb-4 grid grid-cols-2 gap-3 rounded-md bg-black/25 p-4 sm:grid-cols-4">
         <ProgressStatCard label="Sessions" :value="String(activityStats.sessionCount)" />

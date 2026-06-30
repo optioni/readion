@@ -12,6 +12,7 @@ import {
 } from '~/composables/progressApi'
 import { progressQueryKeys } from '~/composables/progressQueryKeys'
 import { fetchSessionSummary } from '~/composables/sessionViewApi'
+import { computePaceRate } from '~/composables/paceFormatter'
 import { useAccuracySeries } from '~/composables/useAccuracySeries'
 import { useDomainScores } from '~/composables/useDomainScores'
 import { useReadinessTrend } from '~/composables/useReadinessTrend'
@@ -193,6 +194,8 @@ export function useProgressData(enrollmentId: string) {
     return traj?.weeksToReady ?? null
   })
 
+  const paceRate = computed(() => computePaceRate(trend.value.points))
+
   const switcher = computed<SwitcherEntry[]>(() => enrollmentsQuery.data.value ?? [])
 
   // ─── Loading / error ─────────────────────────────────────────────────────────
@@ -217,6 +220,7 @@ export function useProgressData(enrollmentId: string) {
     trend,
     accuracySeries,
     weeksToReady,
+    paceRate,
     readiness,
     historyRows,
     sessions,
