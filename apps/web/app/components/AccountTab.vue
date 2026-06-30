@@ -3,6 +3,7 @@ import { changePasswordRequestSchema, updateUserProfileRequestSchema } from '@re
 import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref, watch } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
+import FormActions from '~/components/FormActions.vue'
 import { emailInitials } from '~/composables/emailInitials'
 import { settingsQueryKeys } from '~/composables/settingsQueryKeys'
 import { useSettingsProfile } from '~/composables/useSettingsProfile'
@@ -187,15 +188,17 @@ async function confirmDeleteAccount() {
           {{ errorMessage }}
         </p>
 
-        <button
-          type="button"
-          data-testid="save-timezone-btn"
-          :disabled="saving"
-          class="self-start rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
-          @click="saveTimezone"
-        >
-          Save
-        </button>
+        <FormActions>
+          <button
+            type="button"
+            data-testid="save-timezone-btn"
+            :disabled="saving"
+            class="rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
+            @click="saveTimezone"
+          >
+            Save
+          </button>
+        </FormActions>
       </div>
     </section>
 
@@ -275,15 +278,17 @@ async function confirmDeleteAccount() {
         Your password has been changed.
       </p>
 
-      <button
-        type="button"
-        data-testid="change-password-btn"
-        :disabled="changingPassword"
-        class="self-start rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
-        @click="changePassword"
-      >
-        Change password
-      </button>
+      <FormActions>
+        <button
+          type="button"
+          data-testid="change-password-btn"
+          :disabled="changingPassword"
+          class="rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
+          @click="changePassword"
+        >
+          Change password
+        </button>
+      </FormActions>
     </section>
 
     <section class="flex flex-col gap-3 rounded-xl border border-red-500/30 bg-red-500/5 p-5">
@@ -292,14 +297,16 @@ async function confirmDeleteAccount() {
         Deleting your account is permanent. Your sessions, progress, and certifications are removed.
       </p>
 
-      <button
-        type="button"
-        data-testid="delete-account-btn"
-        class="self-start rounded-lg border border-red-500/50 bg-red-500/10 px-5 py-2.5 font-medium text-red-200 text-sm transition-colors hover:bg-red-500/20"
-        @click="openDeleteModal"
-      >
-        Delete account
-      </button>
+      <FormActions>
+        <button
+          type="button"
+          data-testid="delete-account-btn"
+          class="rounded-lg border border-red-500/50 bg-red-500/10 px-5 py-2.5 font-medium text-red-200 text-sm transition-colors hover:bg-red-500/20"
+          @click="openDeleteModal"
+        >
+          Delete account
+        </button>
+      </FormActions>
     </section>
 
     <div

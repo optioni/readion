@@ -5,9 +5,9 @@
 
 ## 1. Settings alignment + whitespace
 
-- [ ] 1.1 RED: component/page test for right-aligned actions + tightened layout.
-- [ ] 1.2 GREEN: align to `Settings.html`.
-- [ ] 1.3 REFACTOR: shared form-actions layout.
+- [x] 1.1 RED: component/page test for right-aligned actions + tightened layout.
+- [x] 1.2 GREEN: align to `Settings.html`.
+- [x] 1.3 REFACTOR: shared form-actions layout.
 
 ## 2. Login form placement
 

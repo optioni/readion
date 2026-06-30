@@ -4,6 +4,7 @@ import { DEFAULT_SESSION_DEFAULTS, sessionDefaultsSchema } from '@readion/shared
 import { useQueryClient } from '@tanstack/vue-query'
 import { ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
+import FormActions from '~/components/FormActions.vue'
 import OnboardingSessionPrefs from '~/components/OnboardingSessionPrefs.vue'
 import { settingsQueryKeys } from '~/composables/settingsQueryKeys'
 import { usersControllerUpdateMe } from '~~/src/api/users/users'
@@ -45,14 +46,16 @@ async function saveDefaults() {
       {{ errorMessage }}
     </p>
 
-    <button
-      type="button"
-      data-testid="save-defaults-btn"
-      :disabled="saving"
-      class="self-end rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
-      @click="saveDefaults"
-    >
-      Save defaults
-    </button>
+    <FormActions>
+      <button
+        type="button"
+        data-testid="save-defaults-btn"
+        :disabled="saving"
+        class="rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
+        @click="saveDefaults"
+      >
+        Save defaults
+      </button>
+    </FormActions>
   </div>
 </template>
