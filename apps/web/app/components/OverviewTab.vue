@@ -75,33 +75,41 @@ const nextFocus = computed(() => selectSuggestedNextFocus(nextFocusDomain.value,
       />
     </div>
 
-    <CardPanel label="Domain Breakdown">
-      <div
-        v-for="row in domainRows"
-        :key="row.domain"
-        data-testid="domain-score-row"
-        class="mb-2"
-      >
-        <DomainScoreBar
-          :domain="row.domain"
-          :score="row.score"
-          :status="row.status"
-          :has-data="row.hasData"
-        />
-      </div>
-    </CardPanel>
+    <div class="grid gap-4 md:grid-cols-[2fr_1fr]">
+      <CardPanel label="Domain Breakdown">
+        <div
+          v-for="row in domainRows"
+          :key="row.domain"
+          data-testid="domain-score-row"
+          class="mb-2"
+        >
+          <DomainScoreBar
+            :domain="row.domain"
+            :score="row.score"
+            :status="row.status"
+            :has-data="row.hasData"
+          />
+        </div>
+      </CardPanel>
 
-    <CardPanel data-testid="suggested-next-focus" label="Suggested Next Focus">
-      <div v-if="nextFocus.domain" data-testid="weakest-domain-panel" class="flex items-baseline gap-2">
-        <span class="text-sm text-slate-200">{{ nextFocus.domain }}</span>
-        <span
-          v-if="nextFocus.source === 'weak-area' && nextFocus.score !== null"
-          class="font-semibold text-sm"
-          :class="statusTextColorClass(statusColorForScore(nextFocus.score))"
-        >{{ nextFocus.score }}%</span>
-      </div>
-      <div v-else data-testid="weakest-domain-panel" class="text-xs opacity-50">No suggestion yet</div>
-    </CardPanel>
+      <CardPanel data-testid="suggested-next-focus" label="Suggested Next Focus">
+        <div
+          v-if="nextFocus.domain"
+          data-testid="weakest-domain-panel"
+          class="flex items-baseline gap-2"
+        >
+          <span class="text-sm text-slate-200">{{ nextFocus.domain }}</span>
+          <span
+            v-if="nextFocus.source === 'weak-area' && nextFocus.score !== null"
+            class="font-semibold text-sm"
+            :class="statusTextColorClass(statusColorForScore(nextFocus.score))"
+          >{{ nextFocus.score }}%</span>
+        </div>
+        <div v-else data-testid="weakest-domain-panel" class="text-xs opacity-50">
+          No suggestion yet
+        </div>
+      </CardPanel>
+    </div>
 
     <RecentSessionsPanel :sessions="sessions" />
   </div>

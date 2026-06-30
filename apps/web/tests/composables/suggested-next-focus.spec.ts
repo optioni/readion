@@ -29,6 +29,10 @@ describe('selectSuggestedNextFocus', () => {
   })
 
   it('yields a neutral placeholder when neither a session focus nor weak areas exist', () => {
-    expect(selectSuggestedNextFocus(null, [])).toEqual({ domain: null, source: 'none', score: null })
+    expect(selectSuggestedNextFocus(null, [])).toEqual({
+      domain: null,
+      source: 'none',
+      score: null,
+    })
   })
 })

@@ -11,9 +11,9 @@
 
 ## 2. Weakest-domain side panel
 
-- [ ] 2.1 RED: component test — renders the weakest domain callout next to the domain breakdown.
-- [ ] 2.2 GREEN: add the side panel per `CertDetail.html`.
-- [ ] 2.3 REFACTOR: align layout/columns with the artboard.
+- [x] 2.1 RED: component test — renders the weakest domain callout next to the domain breakdown.
+- [x] 2.2 GREEN: add the side panel per `CertDetail.html`.
+- [x] 2.3 REFACTOR: align layout/columns with the artboard.
 
 ## 3. Verification gates
 
