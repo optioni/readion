@@ -52,6 +52,31 @@ describe('Default layout', () => {
     expect(container.find('[data-testid="page-content"]').exists()).toBe(true)
   })
 
+  it('opens and closes the nav drawer from the toggle and backdrop', async () => {
+    const wrapper = mountLayout('<section data-testid="page-content">Session content</section>')
+
+    const toggle = wrapper.find('[data-testid="sidebar-drawer-toggle"]')
+    expect(toggle.exists()).toBe(true)
+    expect(toggle.attributes('aria-label')).toMatch(/open navigation/i)
+    expect(toggle.attributes('aria-expanded')).toBe('false')
+
+    expect(wrapper.find('[data-testid="sidebar-drawer-backdrop"]').exists()).toBe(false)
+    expect(wrapper.findComponent(AppSidebar).props('open')).toBe(false)
+
+    await toggle.trigger('click')
+
+    expect(toggle.attributes('aria-expanded')).toBe('true')
+    expect(wrapper.findComponent(AppSidebar).props('open')).toBe(true)
+
+    const backdrop = wrapper.find('[data-testid="sidebar-drawer-backdrop"]')
+    expect(backdrop.exists()).toBe(true)
+
+    await backdrop.trigger('click')
+
+    expect(wrapper.findComponent(AppSidebar).props('open')).toBe(false)
+    expect(wrapper.find('[data-testid="sidebar-drawer-backdrop"]').exists()).toBe(false)
+  })
+
   it('lets in-content section chrome (e.g. the admin sub-nav) render alongside the sidebar', () => {
     const wrapper = mountLayout(
       '<section data-testid="admin-console"><nav data-testid="admin-sidebar" /></section>',

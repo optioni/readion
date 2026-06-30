@@ -53,8 +53,9 @@ function authenticate(role: RoleValue = 'user', email = 'jamie.doe@example.com')
   return auth
 }
 
-function mountComponent() {
+function mountComponent(props: Record<string, unknown> = {}) {
   return mount(AppSidebar, {
+    props,
     global: {
       plugins: [pinia],
       stubs: { NuxtLink: { props: ['to'], template: '<a :href="to"><slot /></a>' } },
@@ -214,6 +215,42 @@ describe('AppSidebar footer user block', () => {
     expect(document.documentElement.classList.contains('light')).toBe(true)
     expect(window.localStorage.getItem('readion-color-mode')).toBe('light')
     expect(userBlock.find('button[aria-label="Switch to dark mode"]').exists()).toBe(true)
+  })
+})
+
+describe('AppSidebar responsive drawer', () => {
+  it('is collapsed off-canvas on narrow viewports when closed (hidden below lg)', () => {
+    authenticate()
+    const wrapper = mountComponent({ open: false })
+
+    const root = wrapper.find('[data-testid="app-sidebar"]')
+    const classes = root.classes()
+    expect(classes).toContain('hidden')
+    expect(classes).toContain('lg:flex')
+    expect(classes).not.toContain('fixed')
+  })
+
+  it('renders as an overlay drawer when open', () => {
+    authenticate()
+    const wrapper = mountComponent({ open: true })
+
+    const root = wrapper.find('[data-testid="app-sidebar"]')
+    const classes = root.classes()
+    expect(classes).toContain('flex')
+    expect(classes).toContain('fixed')
+    expect(classes).not.toContain('hidden')
+  })
+
+  it('emits close from the drawer close control', async () => {
+    authenticate()
+    const wrapper = mountComponent({ open: true })
+
+    const close = wrapper.find('[data-testid="sidebar-drawer-close"]')
+    expect(close.exists()).toBe(true)
+    expect(close.attributes('aria-label')).toMatch(/close navigation/i)
+
+    await close.trigger('click')
+    expect(wrapper.emitted('close')).toBeTruthy()
   })
 })
 

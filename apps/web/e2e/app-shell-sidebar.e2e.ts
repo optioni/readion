@@ -76,6 +76,59 @@ test.describe('web-app-shell-sidebar — persistent left sidebar shell', () => {
     ).toBeVisible()
   })
 
+  test('on a phone viewport the persistent sidebar collapses to a drawer reachable via a toggle', async ({
+    page,
+  }) => {
+    mockSettings(page)
+    await page.setViewportSize({ width: 375, height: 812 })
+
+    await gotoAuthenticated(page, '/settings')
+    await expect(page.getByTestId('settings-page')).toBeVisible()
+
+    // No horizontal overflow at phone width — the collapsed sidebar must not push the layout.
+    const noOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+    )
+    expect(noOverflow).toBe(true)
+
+    // The persistent sidebar is collapsed (off-canvas / not occupying the layout).
+    const sidebar = page.getByTestId('app-sidebar')
+    await expect(sidebar).toBeHidden()
+
+    // A control is available to open the nav drawer.
+    const toggle = page.getByTestId('sidebar-drawer-toggle')
+    await expect(toggle).toBeVisible()
+    await expect(toggle).toHaveAttribute('aria-label', /open navigation/i)
+
+    // After opening, the five nav items are reachable.
+    await toggle.click()
+    await expect(sidebar).toBeVisible()
+    for (const testid of [
+      'app-nav-dashboard',
+      'app-nav-sessions',
+      'app-nav-progress',
+      'app-nav-agent',
+      'app-nav-settings',
+    ]) {
+      await expect(sidebar.getByTestId(testid)).toBeVisible()
+    }
+
+    // The drawer can be dismissed again.
+    await page.getByTestId('sidebar-drawer-close').click()
+    await expect(sidebar).toBeHidden()
+  })
+
+  test('on a desktop viewport the left sidebar is visible without a toggle', async ({ page }) => {
+    mockSettings(page)
+    await page.setViewportSize({ width: 1440, height: 900 })
+
+    await gotoAuthenticated(page, '/settings')
+    await expect(page.getByTestId('settings-page')).toBeVisible()
+
+    await expect(page.getByTestId('app-sidebar')).toBeVisible()
+    await expect(page.getByTestId('sidebar-drawer-toggle')).toBeHidden()
+  })
+
   test('a focused full-screen flow renders WITHOUT the sidebar (bare chrome preserved)', async ({
     page,
   }) => {
