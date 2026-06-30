@@ -38,11 +38,61 @@ describe('AccuracyBars', () => {
     expect(wrapper.find('[data-testid="accuracy-bars"]').text()).toContain('60')
   })
 
+  it('renders one bar fill per series entry with positive accuracy-proportional pixel heights', () => {
+    const wrapper = mount(AccuracyBars, {
+      props: {
+        series: [
+          { sessionId: 's1', accuracy: 60 },
+          { sessionId: 's2', accuracy: 75 },
+        ],
+      },
+    })
+    const fills = wrapper.findAll('[data-testid="accuracy-bar-fill"]')
+    expect(fills).toHaveLength(2)
+
+    const heightPx = (el: (typeof fills)[number] | undefined): number => {
+      expect(el).toBeDefined()
+      const style = el?.attributes('style') ?? ''
+      const match = style.match(/height:\s*([\d.]+)px/)
+      const value = match?.[1]
+      expect(value).toBeDefined()
+      return Number.parseFloat(value ?? '0')
+    }
+
+    const first = heightPx(fills[0])
+    const second = heightPx(fills[1])
+    expect(first).toBeGreaterThan(0)
+    expect(second).toBeGreaterThan(first)
+  })
+
+  it('emphasizes the latest (last) bar fill differently from the others', () => {
+    const wrapper = mount(AccuracyBars, {
+      props: {
+        series: [
+          { sessionId: 's1', accuracy: 60 },
+          { sessionId: 's2', accuracy: 70 },
+          { sessionId: 's3', accuracy: 75 },
+        ],
+      },
+    })
+    const fills = wrapper.findAll('[data-testid="accuracy-bar-fill"]')
+    const latest = fills.at(-1)
+    const others = fills.slice(0, -1)
+
+    expect(latest).toBeDefined()
+    expect(latest?.classes()).toContain('bg-readion-primary')
+    for (const other of others) {
+      expect(other.classes()).not.toContain('bg-readion-primary')
+    }
+  })
+
   it('renders an empty state when series is empty', () => {
     const wrapper = mount(AccuracyBars, {
       props: { series: [] },
     })
     expect(wrapper.find('[data-testid="accuracy-bars"]').exists()).toBe(true)
     expect(wrapper.findAll('[data-testid="accuracy-bar"]')).toHaveLength(0)
+    expect(wrapper.findAll('[data-testid="accuracy-bar-fill"]')).toHaveLength(0)
+    expect(wrapper.find('[data-testid="accuracy-bars"]').text()).toContain('No accuracy data yet')
   })
 })

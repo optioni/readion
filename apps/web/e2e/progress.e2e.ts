@@ -59,6 +59,26 @@ test.describe('web-progress — progress page', () => {
     await expect(page.getByTestId('readiness-trend')).toBeVisible()
     await expect(page.getByTestId('accuracy-bars')).toBeVisible()
 
+    // The accuracy chart must DRAW one bar per session, not just render axis/value labels.
+    // The seeded enrollment has 3 completed sessions (accuracy 60/70/75 after the 0-100 scale),
+    // so there must be exactly 3 bar columns AND each colored fill must have a measured,
+    // non-zero rendered pixel height. A non-empty series that draws no bars (collapsed to 0px)
+    // fails this contract.
+    const accuracyBars = page.getByTestId('accuracy-bar')
+    await expect(accuracyBars).toHaveCount(3)
+
+    const barFills = page.getByTestId('accuracy-bar-fill')
+    await expect(barFills).toHaveCount(3)
+    const fillCount = await barFills.count()
+    for (let i = 0; i < fillCount; i++) {
+      const box = await barFills.nth(i).boundingBox()
+      expect(box, `accuracy bar fill #${i} should have a bounding box`).not.toBeNull()
+      expect(
+        box?.height ?? 0,
+        `accuracy bar fill #${i} should draw with a non-zero pixel height`,
+      ).toBeGreaterThan(0)
+    }
+
     // Trajectory callout is visible and shows the weeks-to-ready derived from readiness.trajectory.
     await expect(page.getByTestId('trajectory-callout')).toBeVisible()
     await expect(page.getByTestId('trajectory-callout')).toContainText(/3\s*week/i)

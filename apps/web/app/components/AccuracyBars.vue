@@ -13,18 +13,26 @@ defineProps<{
   <div data-testid="accuracy-bars" class="rounded-md bg-black/25 p-3">
     <div class="mb-2 text-[11px] uppercase tracking-wider opacity-70">Accuracy per Session</div>
 
-    <div v-if="series.length > 0" class="flex h-20 items-end gap-1">
+    <!-- Fixed-height plot area (56px bars + 20px label row) so the per-bar percentage maps to a definite pixel height; matches openspec/design/Progress.html. -->
+    <div v-if="series.length > 0" class="flex items-end gap-1" :style="{ height: '76px' }">
       <div
-        v-for="point in series"
+        v-for="(point, index) in series"
         :key="point.sessionId"
         data-testid="accuracy-bar"
-        class="relative flex flex-1 flex-col items-center justify-end"
+        class="relative flex flex-1 flex-col items-center justify-end gap-1"
         :title="`${point.accuracy}%`"
       >
-        <span class="mb-1 text-[10px] text-slate-400">{{ point.accuracy }}</span>
+        <span
+          class="text-[10px]"
+          :class="
+            index === series.length - 1 ? 'font-semibold text-readion-primary' : 'text-slate-400'
+          "
+        >{{ point.accuracy }}</span>
         <div
-          class="w-full rounded-t bg-readion-primary/60"
-          :style="{ height: `${point.accuracy}%` }"
+          data-testid="accuracy-bar-fill"
+          class="w-full rounded-t"
+          :class="index === series.length - 1 ? 'bg-readion-primary' : 'bg-readion-primary/40'"
+          :style="{ height: `${Math.max(2, (point.accuracy / 100) * 56)}px` }"
         />
       </div>
     </div>
