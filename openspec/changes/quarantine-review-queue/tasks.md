@@ -31,7 +31,7 @@
 
 ## 5. Codegen + client
 
-- [ ] 5.1 Run `yarn codegen` and commit the regenerated client (admin quarantine methods).
+- [x] 5.1 Run `yarn codegen` and commit the regenerated client (admin quarantine methods).
 
 ## 6. web-admin Review queue
 
