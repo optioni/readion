@@ -46,4 +46,4 @@
 
 ## 8. Verification gates
 
-- [ ] 8.1 `yarn lint`, `yarn typecheck`, `yarn test` (≥80% coverage), `yarn build` green; migration applies cleanly; generated client committed.
+- [x] 8.1 `yarn lint`, `yarn typecheck`, `yarn test` (≥80% coverage), `yarn build` green; migration applies cleanly; generated client committed.

@@ -265,7 +265,9 @@ test.describe('web-admin — admin console', () => {
     const rowA = page.locator(
       `[data-testid="review-queue-item"][data-item-id="${QUARANTINE_ITEM_A_ID}"]`,
     )
-    await expect(rowA.getByTestId('review-queue-reason')).toContainText('The answer key is incorrect')
+    await expect(rowA.getByTestId('review-queue-reason')).toContainText(
+      'The answer key is incorrect',
+    )
     await expect(rowA.getByTestId('review-queue-verdict')).toBeVisible()
     await expect(rowA.getByTestId('review-queue-provenance')).toContainText('chunk-1')
 
