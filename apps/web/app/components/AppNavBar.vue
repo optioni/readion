@@ -13,7 +13,6 @@
         >
           Settings
         </NuxtLink>
-        <ColorModeToggle />
         <button
           v-if="auth.isAuthenticated"
           data-testid="logout-btn"
