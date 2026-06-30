@@ -63,8 +63,11 @@
     </aside>
 
     <!-- Form panel -->
-    <main class="flex flex-1 items-center justify-center px-6 py-12 bg-readion-background-surface">
-      <div class="w-full max-w-sm">
+    <main class="flex flex-1 items-center justify-center px-6 py-12 bg-readion-background-base">
+      <div
+        data-testid="auth-card"
+        class="w-full max-w-sm rounded-xl border border-readion-border-strong bg-readion-background-surface px-8 py-9"
+      >
         <slot />
       </div>
     </main>

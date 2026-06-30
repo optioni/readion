@@ -11,9 +11,9 @@
 
 ## 2. Login form placement
 
-- [ ] 2.1 RED: test the Login form uses the design's contained-card placement.
-- [ ] 2.2 GREEN: adjust layout per `Login.html` (keep SSO omitted — deliberate).
-- [ ] 2.3 REFACTOR: tidy shared auth-layout styles.
+- [x] 2.1 RED: test the Login form uses the design's contained-card placement.
+- [x] 2.2 GREEN: adjust layout per `Login.html` (keep SSO omitted — deliberate).
+- [x] 2.3 REFACTOR: tidy shared auth-layout styles.
 
 ## 3. Onboarding search + standalone chrome
 

@@ -98,6 +98,15 @@ describe('/login page', () => {
     expect(mockRouterPush).not.toHaveBeenCalled()
   })
 
+  it('keeps SSO and the "or" divider omitted (preserved divergence)', () => {
+    const wrapper = mountLogin()
+    const html = wrapper.html()
+
+    expect(html).not.toMatch(/sso/i)
+    expect(wrapper.findAll('button').some((b) => /sso/i.test(b.text()))).toBe(false)
+    expect(wrapper.findAll('*').some((el) => el.text().trim().toLowerCase() === 'or')).toBe(false)
+  })
+
   it('does not show per-field error messages on 401', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(JSON.stringify({ title: 'Unauthorized', status: 401 }), {
