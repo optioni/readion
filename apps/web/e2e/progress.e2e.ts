@@ -59,6 +59,17 @@ test.describe('web-progress — progress page', () => {
     await expect(page.getByTestId('readiness-trend')).toBeVisible()
     await expect(page.getByTestId('accuracy-bars')).toBeVisible()
 
+    // web-progress-fidelity group 2 contract — ReadinessTrend enhancements:
+    //   data-testid="readiness-point"  → <circle> marker per trend data point (one per session).
+    //   Y-axis tick labels appear as SVG <text> or DOM text nodes inside the chart container.
+    //   Current readiness value "66%" (seed score=66, trend 55→62→66) is shown.
+    const readinessTrend = page.getByTestId('readiness-trend')
+    await expect(readinessTrend.getByTestId('readiness-point').first()).toBeVisible()
+    // Y-axis tick: implementer picks "nice" numbers on a 0-100 scale — 50 and 75 are common choices.
+    await expect(readinessTrend).toContainText(/\b(50|75)\b/)
+    // Current value always visible (seed score = 66).
+    await expect(readinessTrend).toContainText('66%')
+
     // The accuracy chart must DRAW one bar per session, not just render axis/value labels.
     // The seeded enrollment has 3 completed sessions (accuracy 60/70/75 after the 0-100 scale),
     // so there must be exactly 3 bar columns AND each colored fill must have a measured,
@@ -79,9 +90,25 @@ test.describe('web-progress — progress page', () => {
       ).toBeGreaterThan(0)
     }
 
+    // web-progress-fidelity group 1 contract — four stat cards:
+    //   data-testid="progress-stat-card" on each card; count must be exactly 4.
+    //   Labels: "Sessions", "Questions answered", "Study time", "Current streak".
+    //   (Current page shows 2 unlabelled cards and uses "Questions" not "Questions answered".)
+    await expect(page.getByTestId('progress-stat-card')).toHaveCount(4)
+    await expect(page.getByTestId('progress-page')).toContainText('Sessions')
+    await expect(page.getByTestId('progress-page')).toContainText('Questions answered')
+    await expect(page.getByTestId('progress-page')).toContainText('Study time')
+    await expect(page.getByTestId('progress-page')).toContainText('Current streak')
+
     // Trajectory callout is visible and shows the weeks-to-ready derived from readiness.trajectory.
     await expect(page.getByTestId('trajectory-callout')).toBeVisible()
     await expect(page.getByTestId('trajectory-callout')).toContainText(/3\s*week/i)
+
+    // web-progress-fidelity group 3 contract — fuller pace copy in TrajectoryCallout:
+    //   Must contain "recent pace" and "session avg" in addition to the week count.
+    //   Current copy is terse: "Exam-ready in ~3 weeks" — lacks both phrases.
+    await expect(page.getByTestId('trajectory-callout')).toContainText(/recent pace/i)
+    await expect(page.getByTestId('trajectory-callout')).toContainText(/session avg/i)
 
     // Per-domain rows: one per certification.domains entry (CERTIFICATION1 has 4 domains).
     await expect(page.getByTestId('progress-domain-row')).toHaveCount(4)

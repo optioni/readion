@@ -1,7 +1,7 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-- [ ] 0.1 Playwright e2e: Progress shows 4 stat cards (Sessions, Questions answered, Study time, Current streak), a readiness line chart with points/axis/value, and the fuller pace copy.
-- [ ] 0.2 Confirm it fails against the current 2-card / bare-line / terse-copy state.
+- [x] 0.1 Playwright e2e: Progress shows 4 stat cards (Sessions, Questions answered, Study time, Current streak), a readiness line chart with points/axis/value, and the fuller pace copy.
+- [x] 0.2 Confirm it fails against the current 2-card / bare-line / terse-copy state.
 
 ## 1. Stat row (4 cards)
 
