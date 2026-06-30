@@ -40,4 +40,4 @@
 
 ## 7. Verification gates
 
-- [ ] 7.1 `yarn lint`, `yarn typecheck`, `yarn test` (≥80% coverage), `yarn build` green; generated client committed.
+- [x] 7.1 `yarn lint`, `yarn typecheck`, `yarn test` (≥80% coverage), `yarn build` green; generated client committed.
