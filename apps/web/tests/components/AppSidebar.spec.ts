@@ -198,6 +198,23 @@ describe('AppSidebar footer user block', () => {
     )
     expect(toggle.exists()).toBe(true)
   })
+
+  it('flips and persists the theme from the footer toggle', async () => {
+    window.localStorage.clear()
+    document.documentElement.className = ''
+    authenticate('user', 'jamie.doe@example.com')
+    const wrapper = mountComponent()
+
+    const userBlock = wrapper.find('[data-testid="sidebar-user"]')
+    const toggle = userBlock.find('button[aria-label="Switch to light mode"]')
+    expect(toggle.exists()).toBe(true)
+
+    await toggle.trigger('click')
+
+    expect(document.documentElement.classList.contains('light')).toBe(true)
+    expect(window.localStorage.getItem('readion-color-mode')).toBe('light')
+    expect(userBlock.find('button[aria-label="Switch to dark mode"]').exists()).toBe(true)
+  })
 })
 
 describe('AppSidebar logout', () => {

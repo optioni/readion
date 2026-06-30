@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AppNavBar from '~/components/AppNavBar.vue'
+import ColorModeToggle from '~/components/ColorModeToggle.vue'
 import { useAuthStore } from '~/stores/auth'
 
 vi.stubGlobal('defineNuxtLink', { name: 'NuxtLink', template: '<a><slot /></a>' })
@@ -19,7 +20,8 @@ function mountComponent() {
   return mount(AppNavBar, {
     global: {
       plugins: [pinia],
-      stubs: { NuxtLink: { template: '<a><slot /></a>' }, ColorModeToggle: true },
+      components: { ColorModeToggle },
+      stubs: { NuxtLink: { template: '<a><slot /></a>' } },
     },
   })
 }
@@ -79,6 +81,24 @@ describe('AppNavBar logout', () => {
 
     expect(auth.isAuthenticated).toBe(false)
     expect(mockRouterPush).toHaveBeenCalledWith('/login')
+  })
+})
+
+describe('AppNavBar dark-mode toggle relocation', () => {
+  beforeEach(() => {
+    pinia = createPinia()
+    setActivePinia(pinia)
+    vi.restoreAllMocks()
+  })
+
+  it('no longer renders the dark-mode toggle in the top bar', () => {
+    const wrapper = mountComponent()
+
+    expect(
+      wrapper
+        .find('button[aria-label="Switch to light mode"], button[aria-label="Switch to dark mode"]')
+        .exists(),
+    ).toBe(false)
   })
 })
 
