@@ -6,6 +6,7 @@ import ProgressStatCard from '~/components/ProgressStatCard.vue'
 import RecentSessionsPanel from '~/components/RecentSessionsPanel.vue'
 import { formatCertStatRow } from '~/composables/certStatRow'
 import { joinDomainScores } from '~/composables/domainScores'
+import { statusColorForScore, statusTextColorClass } from '~/composables/statusColor'
 import { selectSuggestedNextFocus } from '~/composables/suggestedNextFocus'
 import { useCardDueReviews } from '~/composables/useCardDueReviews'
 import { useCardReadiness } from '~/composables/useCardReadiness'
@@ -91,8 +92,15 @@ const nextFocus = computed(() => selectSuggestedNextFocus(nextFocusDomain.value,
     </CardPanel>
 
     <CardPanel data-testid="suggested-next-focus" label="Suggested Next Focus">
-      <div v-if="nextFocus.domain" class="text-sm text-slate-200">{{ nextFocus.domain }}</div>
-      <div v-else class="text-xs opacity-50">No suggestion yet</div>
+      <div v-if="nextFocus.domain" data-testid="weakest-domain-panel" class="flex items-baseline gap-2">
+        <span class="text-sm text-slate-200">{{ nextFocus.domain }}</span>
+        <span
+          v-if="nextFocus.source === 'weak-area' && nextFocus.score !== null"
+          class="font-semibold text-sm"
+          :class="statusTextColorClass(statusColorForScore(nextFocus.score))"
+        >{{ nextFocus.score }}%</span>
+      </div>
+      <div v-else data-testid="weakest-domain-panel" class="text-xs opacity-50">No suggestion yet</div>
     </CardPanel>
 
     <RecentSessionsPanel :sessions="sessions" />

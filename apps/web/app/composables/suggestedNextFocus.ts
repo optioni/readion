@@ -5,6 +5,7 @@ export type SuggestedNextFocusSource = 'session' | 'weak-area' | 'none'
 export interface SuggestedNextFocus {
   domain: string | null
   source: SuggestedNextFocusSource
+  score: number | null
 }
 
 export function selectSuggestedNextFocus(
@@ -12,7 +13,7 @@ export function selectSuggestedNextFocus(
   weakAreas: WeakAreaResponseDto[],
 ): SuggestedNextFocus {
   if (sessionNextFocusDomain) {
-    return { domain: sessionNextFocusDomain, source: 'session' }
+    return { domain: sessionNextFocusDomain, source: 'session', score: null }
   }
 
   const lowest = weakAreas.reduce<WeakAreaResponseDto | null>((min, area) => {
@@ -23,8 +24,8 @@ export function selectSuggestedNextFocus(
   }, null)
 
   if (lowest) {
-    return { domain: lowest.domain, source: 'weak-area' }
+    return { domain: lowest.domain, source: 'weak-area', score: lowest.score }
   }
 
-  return { domain: null, source: 'none' }
+  return { domain: null, source: 'none', score: null }
 }
