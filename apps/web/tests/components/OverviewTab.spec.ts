@@ -46,11 +46,15 @@ function stubSessions(value: {
   sessions: RecentSessionEntry[]
   totalSessions: number
   nextFocusDomain: string | null
+  questionsAnswered?: number
+  accuracy?: number | null
 }) {
   vi.mocked(useOverviewSessions).mockReturnValue({
     sessions: computed(() => value.sessions),
     totalSessions: computed(() => value.totalSessions),
     nextFocusDomain: computed(() => value.nextFocusDomain),
+    questionsAnswered: computed(() => value.questionsAnswered ?? 0),
+    accuracy: computed(() => value.accuracy ?? null),
     isLoading: ref(false),
     isError: ref(false),
   })
@@ -99,6 +103,36 @@ describe('OverviewTab stat row', () => {
 
     stubReadiness({ calibrated: true, score: 72, trajectory: null })
     expect(mountTab([domain('Security')]).text()).not.toContain('exam-ready')
+  })
+
+  it('renders the questions-answered total and a status-coloured accuracy figure', () => {
+    stubSessions({
+      sessions: [],
+      totalSessions: 3,
+      nextFocusDomain: null,
+      questionsAnswered: 44,
+      accuracy: 0.7233,
+    })
+    const row = mountTab([domain('Security')]).find('[data-testid="cert-detail-stat-row"]')
+    expect(row.text().toLowerCase()).toContain('questions')
+    expect(row.text()).toContain('44')
+    expect(row.text()).toContain('72%')
+    const accuracy = row.findAll('span').find((span) => span.text() === '72%')
+    expect(accuracy?.classes()).toContain('text-readion-status-medium')
+  })
+
+  it('shows a neutral placeholder of 0 questions and no accuracy when no summaries exist', () => {
+    stubSessions({
+      sessions: [],
+      totalSessions: 0,
+      nextFocusDomain: null,
+      questionsAnswered: 0,
+      accuracy: null,
+    })
+    const card = mountTab([domain('Security')]).find('[data-testid="cert-detail-questions-stat"]')
+    expect(card.exists()).toBe(true)
+    expect(card.text()).toContain('0')
+    expect(card.text()).not.toContain('%')
   })
 })
 

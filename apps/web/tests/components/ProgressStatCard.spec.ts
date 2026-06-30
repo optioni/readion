@@ -37,4 +37,17 @@ describe('ProgressStatCard', () => {
     })
     expect(wrapper.text()).not.toContain('days')
   })
+
+  it('applies the optional unitClass to the unit span', () => {
+    const wrapper = mount(ProgressStatCard, {
+      props: {
+        label: 'Questions',
+        value: '44',
+        unit: '72%',
+        unitClass: 'text-readion-status-medium',
+      },
+    })
+    const unit = wrapper.findAll('span').find((span) => span.text() === '72%')
+    expect(unit?.classes()).toContain('text-readion-status-medium')
+  })
 })
