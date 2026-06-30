@@ -17,9 +17,9 @@
 
 ## 3. Pace callout
 
-- [ ] 3.1 RED: test — calibrated state shows pace rate + estimated weeks + trend icon; uncalibrated shows the "complete at least N sessions" branch.
-- [ ] 3.2 GREEN: restore the fuller copy from the read-model pace fields.
-- [ ] 3.3 REFACTOR: single formatter for the pace string.
+- [x] 3.1 RED: test — calibrated state shows pace rate + estimated weeks + trend icon; uncalibrated shows the "complete at least N sessions" branch.
+- [x] 3.2 GREEN: restore the fuller copy from the read-model pace fields.
+- [x] 3.3 REFACTOR: single formatter for the pace string.
 
 ## 4. Verification gates
 
