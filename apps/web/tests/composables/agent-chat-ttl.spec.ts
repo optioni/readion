@@ -111,6 +111,27 @@ describe('formatTtlRemaining', () => {
   })
 })
 
+describe('resets on activity', () => {
+  it('recomputes remaining back toward the full window when lastActivityAt is refreshed', () => {
+    const nearExpiryAt = new Date(FIXED_NOW - (TTL_WINDOW_MS - 5 * 60 * 1000)).toISOString()
+    const staleRemaining = ttlRemainingMs(nearExpiryAt, FIXED_NOW)
+    expect(staleRemaining).toBe(5 * 60 * 1000)
+
+    const refreshedAt = new Date(FIXED_NOW).toISOString()
+    const refreshedRemaining = ttlRemainingMs(refreshedAt, FIXED_NOW)
+    expect(refreshedRemaining).toBe(TTL_WINDOW_MS)
+    expect(refreshedRemaining).toBeGreaterThan(staleRemaining)
+  })
+
+  it('flips isTtlWarning from true to false once activity refreshes the window', () => {
+    const nearExpiryAt = new Date(FIXED_NOW - (TTL_WINDOW_MS - 5 * 60 * 1000)).toISOString()
+    expect(isTtlWarning(ttlRemainingMs(nearExpiryAt, FIXED_NOW))).toBe(true)
+
+    const refreshedAt = new Date(FIXED_NOW).toISOString()
+    expect(isTtlWarning(ttlRemainingMs(refreshedAt, FIXED_NOW))).toBe(false)
+  })
+})
+
 describe('null-safety and no NaN', () => {
   it('null lastActivityAt produces no NaN in remaining', () => {
     const result = ttlRemainingMs(null, FIXED_NOW)
