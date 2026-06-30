@@ -11,9 +11,9 @@
 
 ## 2. Unified entry
 
-- [ ] 2.1 RED: test — a single Start enters the flow; self-grade is the in-flow rating (no separate entry button, or a mode toggle if both loops stay selectable).
-- [ ] 2.2 GREEN: rework the entry affordance to match the design; keep the existing self-grade card UI.
-- [ ] 2.3 REFACTOR: remove dead entry copy/handlers.
+- [x] 2.1 RED: test — a single Start enters the flow; self-grade is the in-flow rating (no separate entry button, or a mode toggle if both loops stay selectable).
+- [x] 2.2 GREEN: rework the entry affordance to match the design; keep the existing self-grade card UI.
+- [x] 2.3 REFACTOR: remove dead entry copy/handlers.
 
 ## 3. Verification gates
 

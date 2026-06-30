@@ -115,6 +115,24 @@ describe('ReviewQueueEntry — with due items', () => {
     })
     expect(wrapper.find('[data-testid="review-all-caught-up"]').exists()).toBe(false)
   })
+
+  it('does not render a separate self-grade entry button', () => {
+    const wrapper = mountEntry({
+      items: [dueItem('Security', 'i1')],
+      dueCount: 1,
+    })
+    expect(wrapper.find('[data-testid="start-self-grade-button"]').exists()).toBe(false)
+  })
+
+  it('does not emit start-self-grade', async () => {
+    const wrapper = mountEntry({
+      items: [dueItem('Security', 'i1')],
+      dueCount: 1,
+    })
+    await wrapper.find('[data-testid="start-review-button"]').trigger('click')
+    expect(wrapper.emitted('start')).toHaveLength(1)
+    expect(wrapper.emitted('start-self-grade')).toBeUndefined()
+  })
 })
 
 describe('ReviewQueueEntry — all caught up (dueCount = 0)', () => {

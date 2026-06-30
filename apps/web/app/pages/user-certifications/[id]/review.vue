@@ -164,7 +164,6 @@ async function handleGrade(grade: ReviewGrade) {
       :items="queueItems"
       :due-count="dueCount"
       @start="handleStart"
-      @start-self-grade="handleStartSelfGrade"
     />
 
     <template v-else-if="scene === 'loop'">
