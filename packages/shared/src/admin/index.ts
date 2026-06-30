@@ -12,6 +12,8 @@ export const AuditAction = {
   CertPublished: 'cert.published',
   CertReverified: 'cert.reverified',
   CertCreated: 'cert.created',
+  QuarantineApproved: 'quarantine.approved',
+  QuarantineRejected: 'quarantine.rejected',
 } as const
 
 export const auditActions = [
@@ -25,6 +27,8 @@ export const auditActions = [
   AuditAction.CertPublished,
   AuditAction.CertReverified,
   AuditAction.CertCreated,
+  AuditAction.QuarantineApproved,
+  AuditAction.QuarantineRejected,
 ] as const
 
 export type AuditActionValue = (typeof auditActions)[number]

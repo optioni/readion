@@ -29,6 +29,7 @@ export class QuarantineService {
     reason: string,
     certificationId?: string,
     domain?: string,
+    generatedContent?: Record<string, unknown> | null,
   ): Promise<QuarantineRecord> {
     await this.cache.evict(cacheKey)
 
@@ -38,7 +39,7 @@ export class QuarantineService {
     }
     this.quarantinedItemsCounter.inc(labels)
 
-    await this.persist(cacheKey, provenance, reason, certificationId, domain)
+    await this.persist(cacheKey, provenance, reason, certificationId, domain, generatedContent)
 
     return Object.freeze({
       cacheKey,
@@ -54,6 +55,7 @@ export class QuarantineService {
     reason: string,
     certificationId: string | undefined,
     domain: string | undefined,
+    generatedContent: Record<string, unknown> | null | undefined,
   ): Promise<void> {
     const em = this.em.fork()
     const item = em.create(QuarantinedItem, {
@@ -64,6 +66,7 @@ export class QuarantineService {
       cacheKey,
       provenance,
       status: 'pending',
+      generatedContent: generatedContent ?? null,
     })
     em.persist(item)
     await em.flush()

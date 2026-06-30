@@ -362,16 +362,19 @@ export class QuizService {
       throw new UnprocessableEntityException('Question is no longer available')
     }
 
-    const { provenance } = this.readQuizPayload(cached)
+    const { item, provenance, format } = this.readQuizPayload(cached)
     // The reported question's domain is not recoverable here: the quiz cache payload does not
     // persist it, and provenance only carries source-chunk ids. Persist an empty-safe domain
     // rather than blocking the quarantine write on a value this path cannot derive.
+    // generatedContent captures item + format so an approved item can be faithfully rebuilt into
+    // the verified-cache payload on reinstatement.
     await this.quarantine.quarantine(
       questionId,
       provenance,
       request.reason,
       enrollment.certification.id,
       '',
+      { item, format },
     )
   }
 

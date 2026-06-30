@@ -25,9 +25,9 @@
 
 ## 4. Approve / Reject + audit
 
-- [ ] 4.1 RED: integration test — approve re-instates via the grounding reinstatement path + `AuditLog` + `approved`; reject discards + `AuditLog` + `rejected`; double-resolve → idempotent or `409`; both admin-only.
-- [ ] 4.2 GREEN: implement both actions, reusing the `AuditLog` writer and the grounding reinstatement path. Add the two new `AuditAction` values (`quarantine.approved`, `quarantine.rejected`) to `packages/shared/src/admin` + its spec, since only `content.quarantined` exists today.
-- [ ] 4.3 REFACTOR: share the resolve/transition guard.
+- [x] 4.1 RED: integration test — approve re-instates via the grounding reinstatement path + `AuditLog` + `approved`; reject discards + `AuditLog` + `rejected`; double-resolve → idempotent or `409`; both admin-only.
+- [x] 4.2 GREEN: implement both actions, reusing the `AuditLog` writer and the grounding reinstatement path. Add the two new `AuditAction` values (`quarantine.approved`, `quarantine.rejected`) to `packages/shared/src/admin` + its spec, since only `content.quarantined` exists today.
+- [x] 4.3 REFACTOR: share the resolve/transition guard.
 
 ## 5. Codegen + client
 

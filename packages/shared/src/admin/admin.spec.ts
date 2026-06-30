@@ -24,6 +24,15 @@ describe('AuditAction vocabulary', () => {
     expect(AuditAction.CertPublished).toBe('cert.published')
     expect(AuditAction.CertReverified).toBe('cert.reverified')
     expect(AuditAction.CertCreated).toBe('cert.created')
+    expect(AuditAction.QuarantineApproved).toBe('quarantine.approved')
+    expect(AuditAction.QuarantineRejected).toBe('quarantine.rejected')
+  })
+
+  it('auditActions tuple includes the quarantine review values', () => {
+    expect(auditActions).toContain('quarantine.approved')
+    expect(auditActions).toContain('quarantine.rejected')
+    expectTypeOf<'quarantine.approved'>().toMatchTypeOf<AuditActionValue>()
+    expectTypeOf<'quarantine.rejected'>().toMatchTypeOf<AuditActionValue>()
   })
 
   it('auditActions tuple includes the cert.created value', () => {

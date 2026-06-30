@@ -10,7 +10,7 @@ import supertest from 'supertest'
 import type { StartedTestContainer } from 'testcontainers'
 import { AppModule } from '../../app.module'
 import { bootstrapApp } from '../../bootstrap'
-import { LlmResponseCacheService } from '../../llm/llm-response-cache.service'
+import { LlmResponseCacheService, type VerifiedPayload } from '../../llm/llm-response-cache.service'
 import { REDIS_CLIENT } from '../../redis/redis.module'
 
 export type QuarantineAdminAcceptanceHarness = {
@@ -27,6 +27,7 @@ export type QuarantineAdminAcceptanceHarness = {
     format: string,
   ) => Promise<void>
   enroll: (token: string, certificationId: string) => Promise<string>
+  getCacheEntry: (cacheKey: string) => Promise<VerifiedPayload | null>
 }
 
 export async function createQuarantineAdminAcceptanceHarness(): Promise<QuarantineAdminAcceptanceHarness> {
@@ -99,6 +100,7 @@ export async function createQuarantineAdminAcceptanceHarness(): Promise<Quaranti
         .send({ certificationId })
       return res.body.data.id as string
     },
+    getCacheEntry: async (cacheKey) => cache.get(cacheKey),
   }
 }
 
