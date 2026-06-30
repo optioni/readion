@@ -7,9 +7,9 @@
 
 ## 1. Shared contract
 
-- [ ] 1.1 RED: unit test for the `ReviewGrade` enum (`again|hard|good|easy`) + request DTO in `@readion/shared`.
-- [ ] 1.2 GREEN: add the enum + schema/type.
-- [ ] 1.3 REFACTOR: ensure no parallel grade definition.
+- [x] 1.1 RED: unit test for the `ReviewGrade` enum (`again|hard|good|easy`) + request DTO in `@readion/shared`.
+- [x] 1.2 GREEN: add the enum + schema/type.
+- [x] 1.3 REFACTOR: ensure no parallel grade definition.
 
 ## 2. Grade → Leitner mapping (pure logic)
 

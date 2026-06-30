@@ -253,6 +253,8 @@ export {
 export type { ReadinessResponse, ReadinessTrajectory } from './readiness'
 export { READINESS_CALIBRATION_MIN_ANSWERS_DEFAULT } from './readiness'
 export type {
+  GradeReviewItemRequest,
+  ReviewGrade,
   ReviewItemResponse,
   ReviewItemState,
   ReviewQueueMeta,
@@ -261,9 +263,12 @@ export type {
   SuppressDomainResponse,
 } from './review'
 export {
+  gradeReviewItemRequestSchema,
   LEITNER_CONFIDENT_THRESHOLD,
+  LEITNER_EASY_PROMOTION_DEFAULT,
   LEITNER_INTERVALS_DAYS_DEFAULT,
   REVIEW_SESSION_QUESTION_CAP_DEFAULT,
+  reviewGrades,
   reviewItemStates,
   suppressDomainRequestSchema,
 } from './review'

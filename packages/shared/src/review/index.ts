@@ -35,6 +35,14 @@ export const suppressDomainRequestSchema = z.object({
 })
 export type SuppressDomainRequest = z.infer<typeof suppressDomainRequestSchema>
 
+export const reviewGrades = ['again', 'hard', 'good', 'easy'] as const
+export type ReviewGrade = (typeof reviewGrades)[number]
+
+export const gradeReviewItemRequestSchema = z.object({ grade: z.enum(reviewGrades) })
+export type GradeReviewItemRequest = z.infer<typeof gradeReviewItemRequestSchema>
+
+export const LEITNER_EASY_PROMOTION_DEFAULT = 2
+
 export interface SuppressDomainResponse {
   suppressedCount: number
 }
