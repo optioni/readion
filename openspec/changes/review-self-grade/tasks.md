@@ -25,7 +25,7 @@
 
 ## 4. Codegen + client
 
-- [ ] 4.1 Run `yarn codegen` and commit the regenerated client (self-grade method).
+- [x] 4.1 Run `yarn codegen` and commit the regenerated client (self-grade method).
 
 ## 5. web-progress review loop
 

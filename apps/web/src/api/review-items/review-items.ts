@@ -11,8 +11,8 @@ import type {
   UseMutationReturnType,
 } from '@tanstack/vue-query'
 import { useMutation } from '@tanstack/vue-query'
-
 import { readionFetch } from '../../../app/api/mutator'
+import type { GradeReviewItemDto } from '.././model'
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 
@@ -98,6 +98,94 @@ export const useReviewItemsControllerMaster = <TError = unknown, TContext = unkn
   TContext
 > => {
   const mutationOptions = getReviewItemsControllerMasterMutationOptions(options)
+
+  return useMutation(mutationOptions)
+}
+export type reviewItemsControllerGradeResponse200 = {
+  data: void
+  status: 200
+}
+
+export type reviewItemsControllerGradeResponseSuccess = reviewItemsControllerGradeResponse200 & {
+  headers: Headers
+}
+
+export type reviewItemsControllerGradeResponse = reviewItemsControllerGradeResponseSuccess
+
+export const getReviewItemsControllerGradeUrl = (id: string) => {
+  return `/api/v1/review-items/${id}/grade`
+}
+
+export const reviewItemsControllerGrade = async (
+  id: string,
+  gradeReviewItemDto: GradeReviewItemDto,
+  options?: RequestInit,
+): Promise<reviewItemsControllerGradeResponse> => {
+  return readionFetch<reviewItemsControllerGradeResponse>(getReviewItemsControllerGradeUrl(id), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(gradeReviewItemDto),
+  })
+}
+
+export const getReviewItemsControllerGradeMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reviewItemsControllerGrade>>,
+    TError,
+    { id: string; data: GradeReviewItemDto },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reviewItemsControllerGrade>>,
+  TError,
+  { id: string; data: GradeReviewItemDto },
+  TContext
+> => {
+  const mutationKey = ['reviewItemsControllerGrade']
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reviewItemsControllerGrade>>,
+    { id: string; data: GradeReviewItemDto }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return reviewItemsControllerGrade(id, data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type ReviewItemsControllerGradeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reviewItemsControllerGrade>>
+>
+export type ReviewItemsControllerGradeMutationBody = GradeReviewItemDto
+export type ReviewItemsControllerGradeMutationError = unknown
+
+export const useReviewItemsControllerGrade = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reviewItemsControllerGrade>>,
+    TError,
+    { id: string; data: GradeReviewItemDto },
+    TContext
+  >
+  request?: SecondParameter<typeof readionFetch>
+}): UseMutationReturnType<
+  Awaited<ReturnType<typeof reviewItemsControllerGrade>>,
+  TError,
+  { id: string; data: GradeReviewItemDto },
+  TContext
+> => {
+  const mutationOptions = getReviewItemsControllerGradeMutationOptions(options)
 
   return useMutation(mutationOptions)
 }

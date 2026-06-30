@@ -16,16 +16,15 @@ import type {
   SuppressDomainResponse,
   ValidationErrorItem,
 } from '@readion/shared'
-import {
-  gradeReviewItemRequestSchema,
-  reviewGrades,
-  suppressDomainRequestSchema,
-} from '@readion/shared'
+import { gradeReviewItemRequestSchema, suppressDomainRequestSchema } from '@readion/shared'
 import { CurrentUser, type CurrentUserPrincipal } from '../auth/auth.guards'
 import { ReviewService } from './review.service'
 
 class GradeReviewItemDto {
-  @ApiProperty({ enum: reviewGrades })
+  // Literal mirrors `reviewGrades` from @readion/shared; the imported const is undefined
+  // at decorator-eval time here (module-init order), so it cannot be referenced for swagger
+  // metadata. Runtime validation still uses the canonical `gradeReviewItemRequestSchema`.
+  @ApiProperty({ enum: ['again', 'hard', 'good', 'easy'] })
   grade!: ReviewGrade
 }
 
