@@ -1,8 +1,8 @@
+import type { RoleValue } from '@readion/shared'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed } from 'vue'
-import type { RoleValue } from '@readion/shared'
 import AppSidebar from '~/components/AppSidebar.vue'
 import type { EnrollmentCard } from '~/composables/useEnrollments'
 import { useEnrollments } from '~/composables/useEnrollments'
@@ -193,7 +193,9 @@ describe('AppSidebar footer user block', () => {
     expect(userBlock.text()).toContain('JA')
     expect(userBlock.text()).toContain('jamie.doe')
 
-    const toggle = userBlock.find('button[aria-label="Switch to light mode"], button[aria-label="Switch to dark mode"]')
+    const toggle = userBlock.find(
+      'button[aria-label="Switch to light mode"], button[aria-label="Switch to dark mode"]',
+    )
     expect(toggle.exists()).toBe(true)
   })
 })
