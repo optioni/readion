@@ -35,8 +35,8 @@
 
 ## 6. e2e + close the outer loop
 
-- [ ] 6.1 Add/extend the review-loop Playwright e2e: reveal → grade → advance → completion (endpoint mocked).
-- [ ] 6.2 Make the Section 0 acceptance test green.
+- [x] 6.1 Add/extend the review-loop Playwright e2e: reveal → grade → advance → completion (endpoint mocked).
+- [x] 6.2 Make the Section 0 acceptance test green.
 
 ## 7. Verification gates
 

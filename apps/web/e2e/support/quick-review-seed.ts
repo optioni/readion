@@ -376,6 +376,46 @@ export function mockReviewLoop(page: Page): void {
 }
 
 /**
+ * Installs the route-mock surface for the self-grade flashcard loop. Five items are due across two
+ * domains. Auth-bootstrap, certification detail, and review queue are mocked so the queue-entry
+ * scene renders correctly. The grade endpoint fulfils 200 so each card advances without a real API.
+ */
+export function mockReviewSelfGrade(page: Page): void {
+  const context = page.context()
+
+  mock(context, /\/api\/v1\//, async (route) => {
+    if (route.request().method() === 'GET') {
+      await fulfilJson(route, 200, { data: [], meta: { total: 0, page: 1, limit: 20 } })
+      return
+    }
+    await fulfilJson(route, 200, { data: {} })
+  })
+
+  mock(page, /\/api\/v1\/auth\/refresh$/, async (route) => {
+    await fulfilJson(route, 200, { data: { accessToken: 'mock-access-token' } })
+  })
+  mock(page, /\/api\/v1\/users\/me(\?|$)/, async (route) => {
+    await fulfilJson(route, 200, { data: PROFILE })
+  })
+  mock(page, new RegExp(`/api/v1/certifications/${certificationId}(\\?|$)`), async (route) => {
+    await fulfilJson(route, 200, { data: CERTIFICATION, relationships: {} })
+  })
+
+  mock(
+    page,
+    new RegExp(`/api/v1/user-certifications/${enrollmentId}/review(\\?|$)`),
+    async (route) => {
+      await fulfilJson(route, 200, REVIEW_QUEUE_RESPONSE)
+    },
+  )
+
+  // Grade endpoint — called once per item as the user taps a grade button.
+  mock(page, /\/api\/v1\/review-items\/[0-9a-f-]+\/grade$/, async (route) => {
+    await fulfilJson(route, 200, { data: {} })
+  })
+}
+
+/**
  * Installs the route-mock surface for the all-caught-up empty state. The review queue returns zero
  * due items, so the review page renders the `review-all-caught-up` empty state without a start CTA.
  */

@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { mockReviewAllCaughtUp, mockReviewLoop, REVIEW_IDS } from './support/quick-review-seed'
+import {
+  mockReviewAllCaughtUp,
+  mockReviewLoop,
+  mockReviewSelfGrade,
+  REVIEW_IDS,
+} from './support/quick-review-seed'
 import { gotoAuthenticated } from './support/session-view-seed'
 
 // ============================================================================
@@ -102,5 +107,44 @@ test.describe('web-progress — 5-minute review loop', () => {
     // No due items — the page shows the all-caught-up empty state and hides the start CTA.
     await expect(page.getByTestId('review-all-caught-up')).toBeVisible()
     await expect(page.getByTestId('start-review-button')).toHaveCount(0)
+  })
+
+  test('self-grade loop: reveal → grade → advance through all items → completion with counts', async ({
+    page,
+  }) => {
+    mockReviewSelfGrade(page)
+
+    await gotoAuthenticated(page, `/user-certifications/${REVIEW_IDS.enrollmentId}/review`)
+
+    // --- Queue-entry scene ---
+    await expect(page.getByTestId('review-queue-entry')).toBeVisible()
+
+    // --- Enter self-grade mode ---
+    await page.getByTestId('start-self-grade-button').click()
+
+    // --- Self-grade card loop: grade 5 items (good, again, hard, good, easy) ---
+    // Each iteration: card visible → reveal → tap grade → next card (or completion).
+    const gradeSequence = [
+      'grade-good',
+      'grade-again',
+      'grade-hard',
+      'grade-good',
+      'grade-easy',
+    ] as const
+
+    for (const gradeTestId of gradeSequence) {
+      await expect(page.getByTestId('self-grade-card')).toBeVisible()
+      await page.getByTestId('reveal-button').click()
+      await page.getByTestId(gradeTestId).click()
+    }
+
+    // --- Completion scene ---
+    await expect(page.getByTestId('self-grade-completion')).toBeVisible()
+
+    // Per-grade breakdown: good ×2, again ×1, hard ×1, easy ×1.
+    await expect(page.getByTestId('self-grade-count-good')).toContainText('2')
+    await expect(page.getByTestId('self-grade-count-again')).toContainText('1')
+    await expect(page.getByTestId('self-grade-count-hard')).toContainText('1')
+    await expect(page.getByTestId('self-grade-count-easy')).toContainText('1')
   })
 })
