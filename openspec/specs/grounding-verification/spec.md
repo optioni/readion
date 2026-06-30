@@ -127,24 +127,12 @@ The system SHALL define a shared `Provenance` value type — `sourceChunkIds`, `
 
 ### Requirement: Quarantine and cache eviction
 
-The system SHALL provide a quarantine operation that, given a generated item's cache key and its provenance, evicts the cached entry through the `llm-cache` eviction API and produces an immutable quarantine record (item reference, provenance, and reason) for admin surfacing. A quarantined item SHALL never be served from cache or reused. The operation SHALL be the single path invoked both by a user "report" and by an automatic flag; the user-facing report HTTP action itself is wired by the consuming feature (`quiz`/`mock-exam`).
+When the independent verifier rejects a generated item beyond the retry/substitution budget, the system SHALL quarantine it AND **persist a reviewable `QuarantinedItem` record** (verdict, reason, certification, domain, source-chunk provenance) in addition to evicting it from the verified cache and incrementing the quarantine metric. The quarantine metric and eviction behavior are unchanged; persistence makes quarantined items available to the admin review queue (`content-quarantine-review`). Approving a quarantined item SHALL re-instate it through the existing cache/knowledge-base path.
 
-#### Scenario: Reported item is evicted and recorded
+#### Scenario: Quarantine writes a durable record
 
-- **WHEN** an item is quarantined by its cache key and provenance with a reason
-- **THEN** the cached entry for that key is evicted
-- **AND** an immutable quarantine record carrying the provenance and reason is produced
-
-#### Scenario: A quarantined key is not served from cache
-
-- **WHEN** a read is issued for a cache key after its item was quarantined
-- **THEN** the read returns a miss
-- **AND** the next generation for that key must call the LLM again
-
-#### Scenario: Report and auto-flag share one quarantine path
-
-- **WHEN** a quarantine is triggered by a user report and, separately, by an automatic flag
-- **THEN** both go through the same quarantine operation producing an equivalent record and eviction
+- **WHEN** an item is quarantined after exhausting the retry/substitution budget
+- **THEN** it is evicted from the verified cache, the quarantine metric increments, AND a `QuarantinedItem` row (`status: pending`) is persisted with the verdict, reason, and provenance
 
 ### Requirement: Reading-block and agent grounding without a verifier gate
 

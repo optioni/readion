@@ -136,12 +136,12 @@ The Certifications area SHALL list certs flagged "due for re-verification" via `
 - **WHEN** the admin reviews the proposed metadata for a stale cert and confirms
 - **THEN** `POST /api/v1/admin/certifications/:id/reverify` is called with the confirmed source url, the format fields, and a `provenance` map
 
-### Requirement: Quarantine review queue placeholder
+### Requirement: Admin review queue
 
-The Review queue section SHALL be presented honestly against the contract: because no endpoint lists, reads, or resolves quarantined items (the quarantine path only evicts the LLM cache and increments a metric; only `POST /api/v1/quiz/:questionId/report` feeds it), the section SHALL render a clearly worded "not yet available" placeholder and SHALL NOT call any non-existent quarantine endpoint or display a fabricated review queue, verdict, or item count.
+The `web-admin` console's Review queue section SHALL render the real quarantined-item list from `GET /api/v1/admin/quarantine` (paginated, filterable by certification/status) with per-item verdict, reason, certification, domain, and provenance, and SHALL offer **Approve** and **Reject** actions wired to `POST /admin/quarantine/:id/approve` and `.../reject`. This replaces the honest placeholder shipped in the original `web-admin` change.
 
-#### Scenario: Review queue shows a placeholder, not fabricated data
+#### Scenario: Review queue lists and resolves items
 
-- **WHEN** the admin opens the Review queue section
-- **THEN** a placeholder explains that quarantined-item review is not yet available
-- **THEN** the page issues no request to any quarantine list/review/resolve endpoint and renders no fabricated items, verdicts, or badge count
+- **WHEN** an admin opens the Review queue
+- **THEN** pending quarantined items are listed with verdict/reason/provenance
+- **AND** Approve/Reject on an item calls the corresponding endpoint and removes it from the pending list on success
