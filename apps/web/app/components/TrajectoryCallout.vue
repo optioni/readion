@@ -17,7 +17,7 @@ const paceText = computed(() => {
 
 <template>
   <div
-    v-if="weeksToReady !== null && paceRate !== null"
+    v-if="paceText !== null"
     data-testid="trajectory-callout"
     class="flex items-start gap-3 rounded-lg border border-readion-primary/20 bg-readion-primary/10 px-4 py-3"
   >

@@ -14,7 +14,7 @@ export function formatPaceString({
   paceRate: number
   weeksToReady: number
 }): string {
-  const rate = Number(paceRate.toFixed(1))
+  const rate = paceRate.toFixed(1)
   const weekWord = weeksToReady === 1 ? 'week' : 'weeks'
   return `At your recent pace (${rate}% readiness/session avg.), you'll be exam-ready in approximately ${weeksToReady} ${weekWord}.`
 }
