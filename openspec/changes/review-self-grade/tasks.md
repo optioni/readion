@@ -1,9 +1,9 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-- [ ] 0.0 Inspect the current `ReviewModule` controller to decide: new `POST /review-items/:id/grade` vs. extending the existing review-answer action. Record the choice.
-- [ ] 0.1 Add a NestJS integration test (Supertest + Testcontainers) for the self-grade endpoint as the outer loop.
-- [ ] 0.2 Write failing scenarios: good promotes, again resets, hard keeps, easy/top-box masters + leaves queue, not-owned/not-due rejected, invalid grade → `422`.
-- [ ] 0.3 Confirm failure is "endpoint/grade not handled", not a harness error.
+- [x] 0.0 Inspect the current `ReviewModule` controller to decide: new `POST /review-items/:id/grade` vs. extending the existing review-answer action. Record the choice.
+- [x] 0.1 Add a NestJS integration test (Supertest + Testcontainers) for the self-grade endpoint as the outer loop.
+- [x] 0.2 Write failing scenarios: good promotes, again resets, hard keeps, easy/top-box masters + leaves queue, not-owned/not-due rejected, invalid grade → `422`.
+- [x] 0.3 Confirm failure is "endpoint/grade not handled", not a harness error.
 
 ## 1. Shared contract
 
