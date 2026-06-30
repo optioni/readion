@@ -7,7 +7,7 @@ const _colorMode = useReadionColorMode()
 <template>
   <button
     type="button"
-    class="rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100 text-sm"
+    class="rounded-md border border-slate-700 px-2 py-1 text-slate-400 text-xs transition-colors hover:text-slate-200"
     :aria-label="
       _colorMode.preference.value === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
     "
