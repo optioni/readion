@@ -11,9 +11,9 @@
 
 ## 2. Readiness line chart
 
-- [ ] 2.1 RED: component test — renders the series with points, axis ticks, and the current value %.
-- [ ] 2.2 GREEN: implement the chart per the artboard.
-- [ ] 2.3 REFACTOR: reuse chart primitives; handle the not-yet-calibrated state.
+- [x] 2.1 RED: component test — renders the series with points, axis ticks, and the current value %.
+- [x] 2.2 GREEN: implement the chart per the artboard.
+- [x] 2.3 REFACTOR: reuse chart primitives; handle the not-yet-calibrated state.
 
 ## 3. Pace callout
 
