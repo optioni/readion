@@ -21,26 +21,16 @@ function yScale(v: number): number {
   return PAD + (1 - v / 100) * (HEIGHT - PAD * 2)
 }
 
-const svgPoints = computed(() => {
-  if (props.points.length === 0) {
-    return ''
-  }
-
-  return props.points
-    .map((val, i) => {
-      const x = xScale(i, props.points.length)
-      const y = yScale(val)
-      return `${x.toFixed(1)},${y.toFixed(1)}`
-    })
-    .join(' ')
-})
-
 const pointCoords = computed(() =>
   props.points.map((val, i) => ({
     x: xScale(i, props.points.length),
     y: yScale(val),
     isLast: i === props.points.length - 1,
   })),
+)
+
+const svgPoints = computed(() =>
+  pointCoords.value.map(({ x, y }) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' '),
 )
 
 const currentValue = computed(() => props.points.at(-1) ?? null)
