@@ -19,9 +19,9 @@
 
 ## 3. Endpoint + guards
 
-- [ ] 3.1 RED: integration test — ownership (`403`/`404`), not-due (`409`), invalid grade (`422`); successful grade persists `box`/`dueAt`/`lastReviewedAt`/`state` and updates the due queue.
-- [ ] 3.2 GREEN: implement the controller action + DTO under auth, with swagger DTOs for Orval.
-- [ ] 3.3 REFACTOR: align with the existing review-answer handler conventions.
+- [x] 3.1 RED: integration test — ownership (`403`/`404`), not-due (`409`), invalid grade (`422`); successful grade persists `box`/`dueAt`/`lastReviewedAt`/`state` and updates the due queue.
+- [x] 3.2 GREEN: implement the controller action + DTO under auth, with swagger DTOs for Orval.
+- [x] 3.3 REFACTOR: align with the existing review-answer handler conventions.
 
 ## 4. Codegen + client
 

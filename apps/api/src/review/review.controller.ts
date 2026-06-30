@@ -7,17 +7,27 @@ import {
   Post,
   UnprocessableEntityException,
 } from '@nestjs/common'
-import { ApiParam, ApiResponse } from '@nestjs/swagger'
+import { ApiBody, ApiParam, ApiProperty, ApiResponse } from '@nestjs/swagger'
 import type {
+  ReviewGrade,
   ReviewItemResponse,
   ReviewQueueMeta,
   StartReviewResponse,
   SuppressDomainResponse,
   ValidationErrorItem,
 } from '@readion/shared'
-import { suppressDomainRequestSchema } from '@readion/shared'
+import {
+  gradeReviewItemRequestSchema,
+  reviewGrades,
+  suppressDomainRequestSchema,
+} from '@readion/shared'
 import { CurrentUser, type CurrentUserPrincipal } from '../auth/auth.guards'
 import { ReviewService } from './review.service'
+
+class GradeReviewItemDto {
+  @ApiProperty({ enum: reviewGrades })
+  grade!: ReviewGrade
+}
 
 @Controller('user-certifications')
 export class EnrollmentReviewController {
@@ -73,6 +83,21 @@ export class ReviewItemsController {
     @Param('id') id: string,
   ): Promise<{ data: ReviewItemResponse }> {
     const data = await this.service.masterItem(user.id, id)
+    return { data }
+  }
+
+  @Post(':id/grade')
+  @HttpCode(200)
+  @ApiParam({ name: 'id' })
+  @ApiBody({ type: GradeReviewItemDto })
+  @ApiResponse({ status: 200, description: 'Grade applied; box/state/dueAt updated' })
+  async grade(
+    @CurrentUser() user: CurrentUserPrincipal,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ): Promise<{ data: ReviewItemResponse }> {
+    const parsed = parseBody(gradeReviewItemRequestSchema, body)
+    const data = await this.service.gradeItem(user.id, id, parsed.grade)
     return { data }
   }
 }

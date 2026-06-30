@@ -1,16 +1,22 @@
 import { EntityManager } from '@mikro-orm/core'
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { ContentChunk, ReviewItem, UserCertification } from '@readion/db'
 import type {
+  ReviewGrade,
   ReviewItemResponse,
   ReviewItemState,
   ReviewQueueMeta,
   StartReviewResponse,
 } from '@readion/shared'
-import { REVIEW_SESSION_QUESTION_CAP_DEFAULT } from '@readion/shared'
+import {
+  LEITNER_EASY_PROMOTION_DEFAULT,
+  LEITNER_INTERVALS_DAYS_DEFAULT,
+  REVIEW_SESSION_QUESTION_CAP_DEFAULT,
+} from '@readion/shared'
 import type { EnvConfig } from '../config/env.schema'
 import { SessionsService } from '../sessions/sessions.service'
+import { applyGrade, nextDueAt } from './leitner'
 import { ReviewQueueService } from './review-queue.service'
 
 type ReviewQueueRow = {
@@ -89,6 +95,49 @@ export class ReviewService {
     }
   }
 
+  async gradeItem(
+    userId: string,
+    reviewItemId: string,
+    grade: ReviewGrade,
+  ): Promise<ReviewItemResponse> {
+    const em = this.em.fork()
+
+    const item = await em.findOne(
+      ReviewItem,
+      { id: reviewItemId, userCertification: { user: userId } },
+      { populate: ['userCertification'] },
+    )
+    if (item === null) {
+      throw new NotFoundException('Review item not found')
+    }
+
+    const now = new Date()
+    if (item.state !== 'active' || item.dueAt > now) {
+      throw new ConflictException('Review item is not due')
+    }
+
+    const outcome = applyGrade({ box: item.box }, grade, this.intervals(), this.easyPromotion())
+    item.box = outcome.box
+    item.state = outcome.state
+    item.lastReviewedAt = now
+    if (outcome.dueInDays !== null) {
+      item.dueAt = nextDueAt(now, outcome.dueInDays)
+    }
+    await em.flush()
+
+    const chunk = await em.findOne(ContentChunk, { id: item.anchorChunkId })
+    return {
+      id: item.id,
+      userCertificationId: item.userCertification.id,
+      anchorChunkId: item.anchorChunkId,
+      domain: chunk?.primaryDomain ?? '',
+      box: item.box,
+      state: item.state,
+      dueAt: item.dueAt.toISOString(),
+      lastReviewedAt: item.lastReviewedAt ? item.lastReviewedAt.toISOString() : null,
+    }
+  }
+
   async suppressDomain(
     userId: string,
     enrollmentId: string,
@@ -143,6 +192,14 @@ export class ReviewService {
     if (enrollment === null) {
       throw new NotFoundException('Enrollment not found')
     }
+  }
+
+  private intervals(): number[] {
+    return this.config.get('REVIEW_LEITNER_INTERVALS_DAYS') ?? [...LEITNER_INTERVALS_DAYS_DEFAULT]
+  }
+
+  private easyPromotion(): number {
+    return this.config.get('REVIEW_LEITNER_EASY_PROMOTION') ?? LEITNER_EASY_PROMOTION_DEFAULT
   }
 }
 
