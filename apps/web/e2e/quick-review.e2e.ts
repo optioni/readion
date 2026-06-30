@@ -1,10 +1,5 @@
 import { expect, test } from '@playwright/test'
-import {
-  mockReviewAllCaughtUp,
-  mockReviewLoop,
-  mockReviewSelfGrade,
-  REVIEW_IDS,
-} from './support/quick-review-seed'
+import { mockReviewAllCaughtUp, mockReviewLoop, REVIEW_IDS } from './support/quick-review-seed'
 import { gotoAuthenticated } from './support/session-view-seed'
 
 // ============================================================================
@@ -55,12 +50,16 @@ test.describe('web-progress — 5-minute review loop', () => {
     // Due count drives the "Start review" CTA label and urgency badge.
     await expect(page.getByTestId('review-due-count')).toContainText('5')
 
-    // Per-domain breakdown shows the two seeded domains (Secure: 3, Resilient: 2).
+    // Per-domain breakdown renders as CHIPS (pill: domain label + accent count), one chip per
+    // distinct domain — NOT a plain row-per-domain list. Two seeded domains (Secure: 3, Resilient: 2).
     await expect(page.getByTestId('review-domain-breakdown')).toBeVisible()
-    await expect(page.getByTestId('review-domain-breakdown')).toContainText(/Secure Architectures/i)
-    await expect(page.getByTestId('review-domain-breakdown')).toContainText(
-      /Resilient Architectures/i,
-    )
+    const domainChips = page.getByTestId('review-domain-chip')
+    await expect(domainChips).toHaveCount(2)
+    await expect(domainChips.filter({ hasText: /Secure Architectures/i })).toContainText('3')
+    await expect(domainChips.filter({ hasText: /Resilient Architectures/i })).toContainText('2')
+
+    // Single-entry model: there is NO separate self-grade entry button on the queue-entry scene.
+    await expect(page.getByTestId('start-self-grade-button')).toHaveCount(0)
 
     // --- Start review → quiz/confidence loop ---
     await page.getByTestId('start-review-button').click()
@@ -109,42 +108,31 @@ test.describe('web-progress — 5-minute review loop', () => {
     await expect(page.getByTestId('start-review-button')).toHaveCount(0)
   })
 
-  test('self-grade loop: reveal → grade → advance through all items → completion with counts', async ({
+  test('single-entry model: chips + one Start review, no separate self-grade entry button', async ({
     page,
   }) => {
-    mockReviewSelfGrade(page)
+    // The self-grade entry button (start-self-grade-button) is removed: the Again/Hard/Good/Easy
+    // self-grade rating is an in-flow revealed-card rating, NOT a parallel entry choice. The queue
+    // entry exposes a single primary "Start review" affordance that reaches the review flow.
+    mockReviewLoop(page)
 
     await gotoAuthenticated(page, `/user-certifications/${REVIEW_IDS.enrollmentId}/review`)
 
     // --- Queue-entry scene ---
     await expect(page.getByTestId('review-queue-entry')).toBeVisible()
 
-    // --- Enter self-grade mode ---
-    await page.getByTestId('start-self-grade-button').click()
+    // Per-domain breakdown renders as CHIPS — one chip per distinct domain, label + count.
+    const domainChips = page.getByTestId('review-domain-chip')
+    await expect(domainChips).toHaveCount(2)
+    await expect(domainChips.filter({ hasText: /Secure Architectures/i })).toContainText('3')
+    await expect(domainChips.filter({ hasText: /Resilient Architectures/i })).toContainText('2')
 
-    // --- Self-grade card loop: grade 5 items (good, again, hard, good, easy) ---
-    // Each iteration: card visible → reveal → tap grade → next card (or completion).
-    const gradeSequence = [
-      'grade-good',
-      'grade-again',
-      'grade-hard',
-      'grade-good',
-      'grade-easy',
-    ] as const
+    // No second "Self-grade flashcards" entry button — only the single primary "Start review".
+    await expect(page.getByTestId('start-self-grade-button')).toHaveCount(0)
+    await expect(page.getByTestId('start-review-button')).toHaveCount(1)
 
-    for (const gradeTestId of gradeSequence) {
-      await expect(page.getByTestId('self-grade-card')).toBeVisible()
-      await page.getByTestId('reveal-button').click()
-      await page.getByTestId(gradeTestId).click()
-    }
-
-    // --- Completion scene ---
-    await expect(page.getByTestId('self-grade-completion')).toBeVisible()
-
-    // Per-grade breakdown: good ×2, again ×1, hard ×1, easy ×1.
-    await expect(page.getByTestId('self-grade-count-good')).toContainText('2')
-    await expect(page.getByTestId('self-grade-count-again')).toContainText('1')
-    await expect(page.getByTestId('self-grade-count-hard')).toContainText('1')
-    await expect(page.getByTestId('self-grade-count-easy')).toContainText('1')
+    // The single Start review affordance reaches the review flow (quiz card appears).
+    await page.getByTestId('start-review-button').click()
+    await expect(page.getByTestId('quiz-card')).toBeVisible()
   })
 })

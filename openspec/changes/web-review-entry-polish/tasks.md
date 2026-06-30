@@ -1,7 +1,7 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-- [ ] 0.1 Update `apps/web/e2e/quick-review.e2e.ts`: entry renders domain chips and a single Start that reaches the review flow (self-grade rating in-flow), matching the design's single-entry model.
-- [ ] 0.2 Confirm it fails against the current plain-list + separate self-grade button.
+- [x] 0.1 Update `apps/web/e2e/quick-review.e2e.ts`: entry renders domain chips and a single Start that reaches the review flow (self-grade rating in-flow), matching the design's single-entry model.
+- [x] 0.2 Confirm it fails against the current plain-list + separate self-grade button.
 
 ## 1. Domain chips
 
