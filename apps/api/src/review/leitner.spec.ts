@@ -1,6 +1,6 @@
-import { LEITNER_INTERVALS_DAYS_DEFAULT } from '@readion/shared'
+import { LEITNER_EASY_PROMOTION_DEFAULT, LEITNER_INTERVALS_DAYS_DEFAULT } from '@readion/shared'
 import { describe, expect, it } from 'vitest'
-import { applyLeitner, nextDueAt } from './leitner'
+import { applyGrade, applyLeitner, nextDueAt } from './leitner'
 
 const INTERVALS = [...LEITNER_INTERVALS_DAYS_DEFAULT]
 
@@ -65,5 +65,32 @@ describe('nextDueAt', () => {
   it('adds the given days to the provided instant', () => {
     const now = new Date('2026-01-01T00:00:00.000Z')
     expect(nextDueAt(now, 3).toISOString()).toBe('2026-01-04T00:00:00.000Z')
+  })
+})
+
+// applyGrade is a pure mapping function; the caller (service layer) stamps lastReviewedAt at persist time.
+describe('applyGrade', () => {
+  const EASY = LEITNER_EASY_PROMOTION_DEFAULT
+
+  it.each([
+    { grade: 'good', box: 2, expected: { box: 3, state: 'active', dueInDays: 7 } },
+    { grade: 'again', box: 4, expected: { box: 1, state: 'active', dueInDays: 1 } },
+    { grade: 'hard', box: 3, expected: { box: 3, state: 'active', dueInDays: 7 } },
+    { grade: 'good', box: 5, expected: { box: 5, state: 'mastered', dueInDays: null } },
+    { grade: 'easy', box: 3, expected: { box: 5, state: 'active', dueInDays: 35 } },
+    { grade: 'easy', box: 4, expected: { box: 4, state: 'mastered', dueInDays: null } },
+    { grade: 'easy', box: 5, expected: { box: 5, state: 'mastered', dueInDays: null } },
+  ] as const)('$grade box $box → box $expected.box, dueInDays $expected.dueInDays', ({
+    grade,
+    box,
+    expected,
+  }) => {
+    expect(applyGrade({ box }, grade, INTERVALS, EASY)).toEqual(expected)
+  })
+
+  it('uses the provided intervals and easyPromotion rather than hardcoded values', () => {
+    const overridden = [2, 5, 10, 20, 40]
+    const outcome = applyGrade({ box: 1 }, 'easy', overridden, 3)
+    expect(outcome).toEqual({ box: 4, state: 'active', dueInDays: 20 })
   })
 })

@@ -13,9 +13,9 @@
 
 ## 2. Grade → Leitner mapping (pure logic)
 
-- [ ] 2.1 RED: table-driven unit test over the configured box intervals for every grade × box, including top-box mastery and `lastReviewedAt` update; assert no interval is hardcoded.
-- [ ] 2.2 GREEN: implement the mapping reusing the existing Leitner box-interval config + promotion/mastery helpers (no scheduler fork).
-- [ ] 2.3 REFACTOR: extract a single shared transition function used by both the self-grade and quiz+confidence paths if practical.
+- [x] 2.1 RED: table-driven unit test over the configured box intervals for every grade × box, including top-box mastery and `lastReviewedAt` update; assert no interval is hardcoded.
+- [x] 2.2 GREEN: implement the mapping reusing the existing Leitner box-interval config + promotion/mastery helpers (no scheduler fork).
+- [x] 2.3 REFACTOR: extract a single shared transition function used by both the self-grade and quiz+confidence paths if practical.
 
 ## 3. Endpoint + guards
 
