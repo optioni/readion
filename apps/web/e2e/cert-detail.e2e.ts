@@ -69,7 +69,15 @@ test.describe('web-cert-detail — tabbed enrollment detail (Overview, Sessions,
     await openCertDetail(page, seed)
 
     // Readiness + trajectory live in a stat row at the top of the Overview.
-    await expect(page.getByTestId('cert-detail-stat-row')).toBeVisible()
+    const statRow = page.getByTestId('cert-detail-stat-row')
+    await expect(statRow).toBeVisible()
+
+    // The stat row carries FOUR stats: a fourth questions-answered / accuracy stat sits alongside
+    // Readiness, Sessions, and Due Reviews. Its aggregate (summed questionsAnswered, averaged
+    // accuracy) is derived client-side from completed-session summaries, so its NUMBER is seed-
+    // dependent and may legitimately fall back to the 0 placeholder at e2e time. We therefore assert
+    // on the stable presence of the stat's "Questions" label, which today's 3-stat row lacks.
+    await expect(statRow).toContainText(/questions/i)
 
     // Per-domain breakdown — one row per certification domain (every domain, answered or not).
     const domainRows = page.getByTestId('domain-score-row')
@@ -95,6 +103,17 @@ test.describe('web-cert-detail — tabbed enrollment detail (Overview, Sessions,
     if (firstFocusDomain !== undefined) {
       await expect(nextFocus).toContainText(firstFocusDomain)
     }
+
+    // A weakest-domain side panel is paired with the domain breakdown. On the weak-area fallback
+    // (no session next-focus) it highlights the lowest-scoring weak-area domain AND surfaces that
+    // domain's score. The first seeded domain is deterministically the weakest with a non-zero
+    // score, so the panel must name it and render a percentage.
+    const weakestDomainPanel = page.getByTestId('weakest-domain-panel')
+    await expect(weakestDomainPanel).toBeVisible()
+    if (firstFocusDomain !== undefined) {
+      await expect(weakestDomainPanel).toContainText(firstFocusDomain)
+    }
+    await expect(weakestDomainPanel).toContainText(/\d+%/)
 
     // Recent sessions appear on the Overview.
     await expect(page.getByText(/recent sessions/i)).toBeVisible()

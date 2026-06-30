@@ -1,7 +1,7 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-- [ ] 0.1 Extend the CertDetail e2e: Overview shows 4 stats (incl. questions/accuracy) and a weakest-domain side panel.
-- [ ] 0.2 Confirm it fails against the current 3-stat / no-side-panel state.
+- [x] 0.1 Extend the CertDetail e2e: Overview shows 4 stats (incl. questions/accuracy) and a weakest-domain side panel.
+- [x] 0.2 Confirm it fails against the current 3-stat / no-side-panel state.
 
 ## 1. 4th overview stat
 
