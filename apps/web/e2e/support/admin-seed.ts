@@ -85,6 +85,16 @@ export interface AdminMockHandles {
   reverifyBodies: Array<{ id: string; body: Record<string, unknown> }>
   approvedQuarantineIds: string[]
   rejectedQuarantineIds: string[]
+  quarantineDetailRequestedIds: string[]
+}
+
+type QuarantinedItemDetailContent = {
+  question: string
+  options: string[]
+  answerKey: string
+  format: 'multiple_choice' | 'true_false' | 'scenario' | null
+  supportingSpans: string[]
+  sourceChunkIds: string[]
 }
 
 type QuarantinedItem = {
@@ -96,6 +106,7 @@ type QuarantinedItem = {
   status: 'pending' | 'approved' | 'rejected'
   provenance: { sourceChunkIds: string[]; supportingSpans: string[]; score: number }
   createdAt: string
+  content: QuarantinedItemDetailContent
 }
 
 async function fulfilJson(route: Route, status: number, body: unknown): Promise<void> {
@@ -374,6 +385,7 @@ export function mockAdmin(page: Page, options: { role?: Role } = {}): AdminMockH
     reverifyBodies: [],
     approvedQuarantineIds: [],
     rejectedQuarantineIds: [],
+    quarantineDetailRequestedIds: [],
   }
 
   const quarantineItems: QuarantinedItem[] = [
@@ -390,6 +402,14 @@ export function mockAdmin(page: Page, options: { role?: Role } = {}): AdminMockH
         score: 0.2,
       },
       createdAt: '2026-06-20T10:00:00.000Z',
+      content: {
+        question: 'Which AWS service provides scalable object storage?',
+        options: ['Amazon EC2', 'Amazon S3', 'Amazon RDS', 'Amazon VPC'],
+        answerKey: 'Amazon S3',
+        format: 'multiple_choice',
+        supportingSpans: ['Amazon EC2 provides scalable computing capacity'],
+        sourceChunkIds: ['chunk-1'],
+      },
     },
     {
       id: QUARANTINE_ITEM_B_ID,
@@ -404,6 +424,14 @@ export function mockAdmin(page: Page, options: { role?: Role } = {}): AdminMockH
         score: 0.4,
       },
       createdAt: '2026-06-21T10:00:00.000Z',
+      content: {
+        question: 'Which AWS service is a fully managed relational database?',
+        options: ['Amazon RDS', 'Amazon S3', 'AWS Lambda', 'Amazon CloudFront'],
+        answerKey: 'Amazon RDS',
+        format: 'multiple_choice',
+        supportingSpans: ['Amazon S3 stores objects durably'],
+        sourceChunkIds: ['chunk-2'],
+      },
     },
   ]
 
@@ -581,6 +609,16 @@ export function mockAdmin(page: Page, options: { role?: Role } = {}): AdminMockH
       target.status = 'rejected'
     }
     await fulfilJson(route, 200, { data: { id, status: 'rejected' } })
+  })
+  mock(page, new RegExp(`/api/v1/admin/quarantine/${UUID}$`), async (route) => {
+    const id = pathSegment(route, 5)
+    handles.quarantineDetailRequestedIds.push(id)
+    const target = quarantineItems.find((item) => item.id === id)
+    if (!target) {
+      await fulfilProblem(route, 404, 'Not Found', 'Quarantined item not found.')
+      return
+    }
+    await fulfilJson(route, 200, { data: target })
   })
   mock(page, /\/api\/v1\/admin\/quarantine(\?|$)/, async (route) => {
     const status = new URL(route.request().url()).searchParams.get('status')

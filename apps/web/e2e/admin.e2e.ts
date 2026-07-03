@@ -47,6 +47,7 @@ import { gotoAuthenticated } from './support/session-view-seed'
 //   POST /api/v1/admin/certifications                     (creates a DRAFT — no publish)
 //   POST /api/v1/admin/certifications/:id/reverify
 //   GET  /api/v1/admin/quarantine?status=                  ({ data: QuarantinedItemListItem[], meta })
+//   GET  /api/v1/admin/quarantine/:id                      ({ data: QuarantinedItemDetail }) — content: null | {...}
 //   POST /api/v1/admin/quarantine/:id/approve | :id/reject ({ data: { id, status } })
 //   GET  /api/v1/certifications/:id  &  :id/coverage       (read-only)
 //
@@ -71,10 +72,20 @@ import { gotoAuthenticated } from './support/session-view-seed'
 //                   cert-coverage (read-only); publish-cert-btn MUST be absent
 //   Re-verify     : admin-certifications-page, due-reverification-row (data-cert-id),
 //                   reverify-btn, reverify-diff, reverify-submit-btn
-//   Review queue  : admin-review-queue-page, review-queue-item (data-item-id),
-//                   review-queue-verdict, review-queue-reason, review-queue-provenance,
-//                   approve-item-btn, reject-item-btn, review-queue-empty;
+//   Review queue  : admin-review-queue-page, review-queue-item (data-item-id, selectable list row),
+//                   review-queue-empty (no pending items left);
 //                   review-queue-placeholder MUST be absent (queue is backed by the API)
+//   Review detail : two-pane master-detail — selecting a review-queue-item loads its detail via
+//                   GET /api/v1/admin/quarantine/:id and renders it in the right-hand pane.
+//                   review-queue-detail (loaded pane root), review-queue-detail-empty (no selection —
+//                   default state, and the state Approve/Reject return to on success),
+//                   review-queue-detail-loading (fetch in flight),
+//                   review-queue-detail-no-content (content: null graceful-degradation state),
+//                   review-queue-question, review-queue-option (data-answer-key="true" on the option
+//                   matching the stored answer key), review-queue-answer-key,
+//                   review-queue-verdict (HUMAN-FORMATTED pass/fail label + score % + reason — no raw
+//                   JSON anywhere in the DOM), review-queue-reason, review-queue-provenance,
+//                   approve-item-btn, reject-item-btn (both live in the detail pane, not the row)
 // ============================================================================
 
 test.describe('web-admin — admin console', () => {
@@ -251,7 +262,7 @@ test.describe('web-admin — admin console', () => {
     await expect.poll(() => handles.reverifyBodies.at(-1)?.id).toBe(CERT_ID)
   })
 
-  test('review queue: lists quarantined items, approves one and rejects another', async ({
+  test('review queue: two-pane master-detail — select an item, resolve it via Approve/Reject', async ({
     page,
   }) => {
     const handles = mockAdmin(page)
@@ -262,27 +273,63 @@ test.describe('web-admin — admin console', () => {
     await expect(page.getByTestId('review-queue-placeholder')).toHaveCount(0)
     await expect(page.getByTestId('review-queue-item')).toHaveCount(2)
 
+    // No item selected yet: the detail pane shows its empty prompt and no detail request is made.
+    await expect(page.getByTestId('review-queue-detail-empty')).toBeVisible()
+    await expect(page.getByTestId('review-queue-detail')).toHaveCount(0)
+    expect(handles.quarantineDetailRequestedIds).toHaveLength(0)
+
+    // Selecting item A loads its detail via GET /api/v1/admin/quarantine/:id.
     const rowA = page.locator(
       `[data-testid="review-queue-item"][data-item-id="${QUARANTINE_ITEM_A_ID}"]`,
     )
-    await expect(rowA.getByTestId('review-queue-reason')).toContainText(
+    await rowA.click()
+    await expect.poll(() => handles.quarantineDetailRequestedIds.at(-1)).toBe(QUARANTINE_ITEM_A_ID)
+
+    const detail = page.getByTestId('review-queue-detail')
+    await expect(detail).toBeVisible()
+    await expect(detail.getByTestId('review-queue-detail-empty')).toHaveCount(0)
+
+    // The question + options + marked answer key render — the stacked-card UI rendered none of this.
+    await expect(detail.getByTestId('review-queue-question')).toContainText(
+      'Which AWS service provides scalable object storage?',
+    )
+    await expect(detail.getByTestId('review-queue-option')).toHaveCount(4)
+    const markedOption = detail.locator(
+      '[data-testid="review-queue-option"][data-answer-key="true"]',
+    )
+    await expect(markedOption).toHaveCount(1)
+    await expect(markedOption).toContainText('Amazon S3')
+    await expect(detail.getByTestId('review-queue-answer-key')).toContainText('Amazon S3')
+
+    // The verdict is human-formatted (pass/fail label + score % + reason) — never raw JSON.
+    await expect(detail.getByTestId('review-queue-verdict')).toContainText(/fail/i)
+    await expect(detail.getByTestId('review-queue-verdict')).toContainText('20%')
+    await expect(detail.getByTestId('review-queue-verdict')).toContainText(
       'The answer key is incorrect',
     )
-    await expect(rowA.getByTestId('review-queue-verdict')).toBeVisible()
-    await expect(rowA.getByTestId('review-queue-provenance')).toContainText('chunk-1')
+    await expect(detail.getByTestId('review-queue-provenance')).toContainText('chunk-1')
+    await expect(page.locator('body')).not.toContainText('{"pass":false')
+    await expect(page.locator('body')).not.toContainText('"score":0.2')
 
-    // Approve item A — it leaves the pending queue on the refetch.
-    await rowA.getByTestId('approve-item-btn').click()
+    // Approve item A from the detail pane — it leaves the pending queue and the pane resets to empty.
+    await detail.getByTestId('approve-item-btn').click()
     await expect.poll(() => handles.approvedQuarantineIds.at(-1)).toBe(QUARANTINE_ITEM_A_ID)
     await expect(page.getByTestId('review-queue-item')).toHaveCount(1)
+    await expect(page.getByTestId('review-queue-detail-empty')).toBeVisible()
+    await expect(page.getByTestId('review-queue-detail')).toHaveCount(0)
 
-    // Reject item B — the queue then empties.
+    // Select and reject item B — the queue then empties.
     const rowB = page.locator(
       `[data-testid="review-queue-item"][data-item-id="${QUARANTINE_ITEM_B_ID}"]`,
     )
-    await rowB.getByTestId('reject-item-btn').click()
+    await rowB.click()
+    await expect.poll(() => handles.quarantineDetailRequestedIds.at(-1)).toBe(QUARANTINE_ITEM_B_ID)
+    await expect(page.getByTestId('review-queue-detail')).toBeVisible()
+
+    await page.getByTestId('reject-item-btn').click()
     await expect.poll(() => handles.rejectedQuarantineIds.at(-1)).toBe(QUARANTINE_ITEM_B_ID)
     await expect(page.getByTestId('review-queue-item')).toHaveCount(0)
     await expect(page.getByTestId('review-queue-empty')).toBeVisible()
+    await expect(page.getByTestId('review-queue-detail-empty')).toBeVisible()
   })
 })
