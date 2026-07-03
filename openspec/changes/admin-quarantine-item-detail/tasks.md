@@ -6,8 +6,8 @@
 ## 1. Shared item-detail contract
 
 - [x] 1.1 RED: unit test for the `@readion/shared` quarantined-item-detail schema (typed question/options/answer-key + verdict/provenance/status) and its TS type.
-- [ ] 1.2 GREEN: add the Zod schema + types; reuse existing quarantine list types where they overlap.
-- [ ] 1.3 REFACTOR: single source for the shared quarantine shapes.
+- [x] 1.2 GREEN: add the Zod schema + types; reuse existing quarantine list types where they overlap.
+- [x] 1.3 REFACTOR: single source for the shared quarantine shapes.
 
 ## 2. Service: generatedContent mapping
 
