@@ -184,6 +184,15 @@ describe('AdminReviewQueue render', () => {
     expect(wrapper.find('[data-testid="review-queue-empty"]').exists()).toBe(true)
     expect(wrapper.findAll('[data-testid="review-queue-item"]')).toHaveLength(0)
   })
+
+  it('keeps the detail pane mounted in its empty state alongside the empty queue message', () => {
+    stubQuarantine([])
+    stubQuarantineDetail()
+    const { wrapper } = mountQueue()
+
+    expect(wrapper.find('[data-testid="review-queue-empty"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="review-queue-detail-empty"]').exists()).toBe(true)
+  })
 })
 
 describe('AdminReviewQueue selection and detail', () => {
