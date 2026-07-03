@@ -23,7 +23,7 @@
 
 ## 4. Codegen + client
 
-- [ ] 4.1 Run `yarn codegen` (api running) and commit the regenerated Orval client containing the detail operation.
+- [x] 4.1 Run `yarn codegen` (api running) and commit the regenerated Orval client containing the detail operation.
 
 ## 5. Verification gates
 
