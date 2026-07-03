@@ -32,8 +32,6 @@ export function formatCertStatRow(input: {
     questionsAnswered: input.questionsAnswered,
     accuracyLabel: accuracyPercent === null ? null : `${accuracyPercent}%`,
     accuracyColorClass:
-      accuracyPercent === null
-        ? null
-        : statusTextColorClass(statusColorForScore(accuracyPercent)),
+      accuracyPercent === null ? null : statusTextColorClass(statusColorForScore(accuracyPercent)),
   }
 }

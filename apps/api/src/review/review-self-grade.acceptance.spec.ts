@@ -12,10 +12,7 @@
 // lastReviewedAt set to now on EVERY grade.
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import {
-  createReviewHarness,
-  type ReviewHarness,
-} from './test/review-acceptance-harness'
+import { createReviewHarness, type ReviewHarness } from './test/review-acceptance-harness'
 
 const LEITNER_INTERVALS = [1, 3, 7, 16, 35] as const
 const DAY_MS = 24 * 60 * 60 * 1000
