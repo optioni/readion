@@ -1,5 +1,7 @@
+import { z } from 'zod'
 import type { RoleValue } from '../auth'
 import type { Provenance } from '../grounding'
+import { type QuestionFormat, questionFormats } from '../quiz'
 
 export const AuditAction = {
   UserRolePromoted: 'user.role.promoted',
@@ -71,4 +73,26 @@ export interface QuarantinedItemListItem {
   status: QuarantinedItemStatus
   provenance: Provenance
   createdAt: string
+}
+
+export const quarantinedItemDetailContentSchema = z.object({
+  question: z.string().min(1),
+  options: z.array(z.string()),
+  answerKey: z.string(),
+  format: z.enum(questionFormats).nullable(),
+  supportingSpans: z.array(z.string()),
+  sourceChunkIds: z.array(z.string()),
+})
+
+export interface QuarantinedItemDetailContent {
+  question: string
+  options: string[]
+  answerKey: string
+  format: QuestionFormat | null
+  supportingSpans: string[]
+  sourceChunkIds: string[]
+}
+
+export interface QuarantinedItemDetail extends QuarantinedItemListItem {
+  content: QuarantinedItemDetailContent | null
 }
