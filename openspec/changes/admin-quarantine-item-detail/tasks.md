@@ -17,9 +17,9 @@
 
 ## 3. Controller route + guard
 
-- [ ] 3.1 RED: integration test — route is admin-guarded (`RolesGuard`), returns the resolved detail envelope, 404 for unknown id, no audit entry written (read-only).
-- [ ] 3.2 GREEN: add `GET /admin/quarantine/:id` returning the mapped detail via the response envelope.
-- [ ] 3.3 REFACTOR: align with the existing quarantine-admin controller conventions.
+- [x] 3.1 RED: integration test — route is admin-guarded (`RolesGuard`), returns the resolved detail envelope, 404 for unknown id, no audit entry written (read-only).
+- [x] 3.2 GREEN: add `GET /admin/quarantine/:id` returning the mapped detail via the response envelope.
+- [x] 3.3 REFACTOR: align with the existing quarantine-admin controller conventions.
 
 ## 4. Codegen + client
 
