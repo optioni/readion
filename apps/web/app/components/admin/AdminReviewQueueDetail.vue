@@ -15,6 +15,7 @@ const idRef = computed(() => props.id)
 const detailQuery = useAdminQuarantineDetail(idRef)
 
 const isLoading = computed(() => detailQuery.isLoading.value)
+const isError = computed(() => detailQuery.isError.value)
 const detail = computed<QuarantinedItemDetail | undefined>(() => detailQuery.data.value)
 
 function provenanceChunks(sourceChunkIds: string[]): string {
@@ -60,6 +61,14 @@ function isPending(id: string): boolean {
       class="flex h-full items-center justify-center text-center text-slate-400 text-sm"
     >
       Loading item detail…
+    </div>
+
+    <div
+      v-else-if="isError"
+      data-testid="review-queue-detail-error"
+      class="flex h-full items-center justify-center text-center text-red-400 text-sm"
+    >
+      Could not load this item's detail. Please try again.
     </div>
 
     <div v-else-if="detail && verdict" data-testid="review-queue-detail" class="flex flex-col gap-5">

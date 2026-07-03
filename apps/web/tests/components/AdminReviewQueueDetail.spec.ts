@@ -35,12 +35,12 @@ const DETAIL: QuarantinedItemDetail = {
 
 function stubDetail(
   data: QuarantinedItemDetail | undefined,
-  options: { isLoading?: boolean } = {},
+  options: { isLoading?: boolean; isError?: boolean } = {},
 ) {
   vi.mocked(useAdminQuarantineDetail).mockReturnValue({
     data: computed(() => data),
     isLoading: computed(() => options.isLoading ?? false),
-    isError: computed(() => false),
+    isError: computed(() => options.isError ?? false),
     // biome-ignore lint/suspicious/noExplicitAny: vue-query return shape narrowed in tests
   } as any)
 }
@@ -157,6 +157,16 @@ describe('AdminReviewQueueDetail loaded state', () => {
     const verdict = wrapper.find('[data-testid="review-queue-verdict"]')
     expect(verdict.text()).toContain('20%')
     expect(verdict.text()).toMatch(/fail/i)
+  })
+})
+
+describe('AdminReviewQueueDetail error state', () => {
+  it('shows an error state and no detail pane when the fetch fails', () => {
+    stubDetail(undefined, { isError: true })
+    const wrapper = mount(AdminReviewQueueDetail, { props: { id: ITEM_ID } })
+
+    expect(wrapper.find('[data-testid="review-queue-detail-error"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="review-queue-detail"]').exists()).toBe(false)
   })
 })
 
