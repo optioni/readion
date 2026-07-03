@@ -2,10 +2,10 @@ import { describe, expect, expectTypeOf, it } from 'vitest'
 import type { Provenance } from '../grounding'
 import type { QuestionFormat } from '../quiz'
 import {
-  quarantinedItemDetailContentSchema,
   type QuarantinedItemDetail,
   type QuarantinedItemDetailContent,
   type QuarantinedItemListItem,
+  quarantinedItemDetailContentSchema,
 } from './index'
 
 describe('quarantinedItemDetailContentSchema', () => {
@@ -92,7 +92,9 @@ describe('QuarantinedItemDetail type', () => {
     }
     expect(detail.id).toBe('item-1')
     expect(detail.content?.question).toBe('What is S3?')
-    expectTypeOf<QuarantinedItemDetail>().toMatchTypeOf<QuarantinedItemListItem & { content: QuarantinedItemDetailContent | null }>()
+    expectTypeOf<QuarantinedItemDetail>().toMatchTypeOf<
+      QuarantinedItemListItem & { content: QuarantinedItemDetailContent | null }
+    >()
   })
 
   it('accepts content: null', () => {

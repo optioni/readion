@@ -130,9 +130,7 @@ describe('admin quarantine item detail (acceptance)', () => {
     expect(list.status).toBe(200)
     const itemId = list.body.data[0].id as string
 
-    const anon = await supertest(app.getHttpServer()).get(
-      `/api/v1/admin/quarantine/${itemId}`,
-    )
+    const anon = await supertest(app.getHttpServer()).get(`/api/v1/admin/quarantine/${itemId}`)
 
     expect(anon.status).toBe(401)
   })
@@ -168,9 +166,7 @@ describe('admin quarantine item detail (acceptance)', () => {
       .set('Authorization', `Bearer ${adminToken}`)
     expect(auditLogs.status).toBe(200)
 
-    const entry = auditLogs.body.data.find(
-      (log: { targetId: string }) => log.targetId === itemId,
-    )
+    const entry = auditLogs.body.data.find((log: { targetId: string }) => log.targetId === itemId)
     expect(entry).toBeUndefined()
   })
 })
