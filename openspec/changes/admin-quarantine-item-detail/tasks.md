@@ -11,9 +11,9 @@
 
 ## 2. Service: generatedContent mapping
 
-- [ ] 2.1 RED: unit test mapping a `quarantined_items.generatedContent` JSONB row to the typed detail shape (question stem, options[], answer key); tolerate/handle malformed content explicitly.
-- [ ] 2.2 GREEN: implement the detail read + mapping in the quarantine-admin service.
-- [ ] 2.3 REFACTOR: keep the list query lean (no generatedContent); share narrowing helpers.
+- [x] 2.1 RED: unit test mapping a `quarantined_items.generatedContent` JSONB row to the typed detail shape (question stem, options[], answer key); tolerate/handle malformed content explicitly.
+- [x] 2.2 GREEN: implement the detail read + mapping in the quarantine-admin service.
+- [x] 2.3 REFACTOR: keep the list query lean (no generatedContent); share narrowing helpers.
 
 ## 3. Controller route + guard
 
