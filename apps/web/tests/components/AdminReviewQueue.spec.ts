@@ -1,4 +1,8 @@
-import type { CollectionMeta, QuarantinedItemDetail, QuarantinedItemListItem } from '@readion/shared'
+import type {
+  CollectionMeta,
+  QuarantinedItemDetail,
+  QuarantinedItemListItem,
+} from '@readion/shared'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -21,41 +25,42 @@ const ITEM_A_ID = '00000000-0000-0000-0000-0000000000a1'
 const ITEM_B_ID = '00000000-0000-0000-0000-0000000000b2'
 const CERT_ID = '00000000-0000-0000-0000-0000000000c3'
 
-const ITEMS: QuarantinedItemListItem[] = [
-  {
-    id: ITEM_A_ID,
-    certificationId: CERT_ID,
-    domain: 'Compute',
-    verdict: JSON.stringify({ pass: false, score: 0.2 }),
-    reason: 'The answer key is incorrect',
-    status: 'pending',
-    provenance: {
-      sourceChunkIds: ['chunk-1'],
-      supportingSpans: ['Amazon EC2 provides scalable computing capacity'],
-      verdict: { pass: false, score: 0.2, distractorFindings: [] },
-      score: 0.2,
-    },
-    createdAt: '2026-06-20T10:00:00.000Z',
+const ITEM_A: QuarantinedItemListItem = {
+  id: ITEM_A_ID,
+  certificationId: CERT_ID,
+  domain: 'Compute',
+  verdict: JSON.stringify({ pass: false, score: 0.2 }),
+  reason: 'The answer key is incorrect',
+  status: 'pending',
+  provenance: {
+    sourceChunkIds: ['chunk-1'],
+    supportingSpans: ['Amazon EC2 provides scalable computing capacity'],
+    verdict: { pass: false, score: 0.2, distractorFindings: [] },
+    score: 0.2,
   },
-  {
-    id: ITEM_B_ID,
-    certificationId: CERT_ID,
-    domain: 'Storage',
-    verdict: JSON.stringify({ pass: false, score: 0.4 }),
-    reason: 'Hallucinated distractor',
-    status: 'pending',
-    provenance: {
-      sourceChunkIds: ['chunk-2'],
-      supportingSpans: ['Amazon S3 stores objects'],
-      verdict: { pass: false, score: 0.4, distractorFindings: [] },
-      score: 0.4,
-    },
-    createdAt: '2026-06-21T10:00:00.000Z',
+  createdAt: '2026-06-20T10:00:00.000Z',
+}
+
+const ITEM_B: QuarantinedItemListItem = {
+  id: ITEM_B_ID,
+  certificationId: CERT_ID,
+  domain: 'Storage',
+  verdict: JSON.stringify({ pass: false, score: 0.4 }),
+  reason: 'Hallucinated distractor',
+  status: 'pending',
+  provenance: {
+    sourceChunkIds: ['chunk-2'],
+    supportingSpans: ['Amazon S3 stores objects'],
+    verdict: { pass: false, score: 0.4, distractorFindings: [] },
+    score: 0.4,
   },
-]
+  createdAt: '2026-06-21T10:00:00.000Z',
+}
+
+const ITEMS: QuarantinedItemListItem[] = [ITEM_A, ITEM_B]
 
 const DETAIL_A: QuarantinedItemDetail = {
-  ...ITEMS[0]!,
+  ...ITEM_A,
   content: {
     question: 'Which AWS service provides scalable object storage?',
     options: ['Amazon EC2', 'Amazon S3', 'Amazon RDS', 'Amazon VPC'],
@@ -67,7 +72,7 @@ const DETAIL_A: QuarantinedItemDetail = {
 }
 
 const DETAIL_B: QuarantinedItemDetail = {
-  ...ITEMS[1]!,
+  ...ITEM_B,
   content: {
     question: 'Which AWS service is a fully managed relational database?',
     options: ['Amazon RDS', 'Amazon S3', 'AWS Lambda', 'Amazon CloudFront'],
