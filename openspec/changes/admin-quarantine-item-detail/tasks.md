@@ -1,11 +1,11 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-- [ ] 0.1 NestJS integration test (Supertest + Testcontainers) for `GET /api/v1/admin/quarantine/:id`: admin-only (non-admin → 403, anon → 401); returns verdict/reason/provenance/status + mapped `generatedContent` (question, options, answer key); unknown id → 404 RFC 7807.
-- [ ] 0.2 Confirm it fails because the route doesn't exist yet.
+- [x] 0.1 NestJS integration test (Supertest + Testcontainers) for `GET /api/v1/admin/quarantine/:id`: admin-only (non-admin → 403, anon → 401); returns verdict/reason/provenance/status + mapped `generatedContent` (question, options, answer key); unknown id → 404 RFC 7807.
+- [x] 0.2 Confirm it fails because the route doesn't exist yet.
 
 ## 1. Shared item-detail contract
 
-- [ ] 1.1 RED: unit test for the `@readion/shared` quarantined-item-detail schema (typed question/options/answer-key + verdict/provenance/status) and its TS type.
+- [x] 1.1 RED: unit test for the `@readion/shared` quarantined-item-detail schema (typed question/options/answer-key + verdict/provenance/status) and its TS type.
 - [ ] 1.2 GREEN: add the Zod schema + types; reuse existing quarantine list types where they overlap.
 - [ ] 1.3 REFACTOR: single source for the shared quarantine shapes.
 
