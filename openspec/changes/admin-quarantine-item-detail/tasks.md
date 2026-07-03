@@ -27,4 +27,4 @@
 
 ## 5. Verification gates
 
-- [ ] 5.1 `yarn lint`, `yarn typecheck`, api integration/unit tests green; coverage ≥ 80%.
+- [x] 5.1 `yarn lint`, `yarn typecheck`, api integration/unit tests green; coverage ≥ 80%.
