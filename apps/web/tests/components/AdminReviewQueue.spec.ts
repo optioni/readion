@@ -253,6 +253,8 @@ describe('AdminReviewQueue reject', () => {
 
     expect(quarantineAdminControllerReject).toHaveBeenCalledWith(ITEM_B_ID)
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: adminQueryKeys.quarantine() })
+    expect(wrapper.find('[data-testid="review-queue-detail-empty"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="review-queue-detail"]').exists()).toBe(false)
   })
 
   it('surfaces a conflict message when an item was already resolved', async () => {
