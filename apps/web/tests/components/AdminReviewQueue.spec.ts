@@ -1,18 +1,20 @@
-import type { CollectionMeta, QuarantinedItemListItem } from '@readion/shared'
+import type { CollectionMeta, QuarantinedItemDetail, QuarantinedItemListItem } from '@readion/shared'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { computed } from 'vue'
+import { computed, toValue } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import AdminReviewQueue from '~/components/admin/AdminReviewQueue.vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import { useAdminQuarantine } from '~/composables/useAdminQuarantine'
+import { useAdminQuarantineDetail } from '~/composables/useAdminQuarantineDetail'
 import {
   quarantineAdminControllerApprove,
   quarantineAdminControllerReject,
 } from '~~/src/api/quarantine-admin/quarantine-admin'
 
 vi.mock('~/composables/useAdminQuarantine', () => ({ useAdminQuarantine: vi.fn() }))
+vi.mock('~/composables/useAdminQuarantineDetail', () => ({ useAdminQuarantineDetail: vi.fn() }))
 vi.mock('~~/src/api/quarantine-admin/quarantine-admin')
 
 const ITEM_A_ID = '00000000-0000-0000-0000-0000000000a1'
@@ -52,6 +54,30 @@ const ITEMS: QuarantinedItemListItem[] = [
   },
 ]
 
+const DETAIL_A: QuarantinedItemDetail = {
+  ...ITEMS[0]!,
+  content: {
+    question: 'Which AWS service provides scalable object storage?',
+    options: ['Amazon EC2', 'Amazon S3', 'Amazon RDS', 'Amazon VPC'],
+    answerKey: 'Amazon S3',
+    format: 'multiple_choice',
+    supportingSpans: ['Amazon EC2 provides scalable computing capacity'],
+    sourceChunkIds: ['chunk-1'],
+  },
+}
+
+const DETAIL_B: QuarantinedItemDetail = {
+  ...ITEMS[1]!,
+  content: {
+    question: 'Which AWS service is a fully managed relational database?',
+    options: ['Amazon RDS', 'Amazon S3', 'AWS Lambda', 'Amazon CloudFront'],
+    answerKey: 'Amazon RDS',
+    format: 'multiple_choice',
+    supportingSpans: ['Amazon S3 stores objects'],
+    sourceChunkIds: ['chunk-2'],
+  },
+}
+
 const META: CollectionMeta = { total: 2, page: 1, limit: 25 }
 
 function stubQuarantine(
@@ -65,6 +91,23 @@ function stubQuarantine(
     refetch: vi.fn(),
     // biome-ignore lint/suspicious/noExplicitAny: vue-query return shape narrowed in tests
   } as any)
+}
+
+function stubQuarantineDetail() {
+  vi.mocked(useAdminQuarantineDetail).mockImplementation(
+    (id) =>
+      ({
+        data: computed(() => {
+          const value = toValue(id)
+          if (value === ITEM_A_ID) return DETAIL_A
+          if (value === ITEM_B_ID) return DETAIL_B
+          return undefined
+        }),
+        isLoading: computed(() => false),
+        isError: computed(() => false),
+        // biome-ignore lint/suspicious/noExplicitAny: vue-query return shape narrowed in tests
+      }) as any,
+  )
 }
 
 function mountQueue() {
@@ -93,23 +136,18 @@ afterEach(() => {
 })
 
 describe('AdminReviewQueue render', () => {
-  it('renders the page root and one row per quarantined item with verdict, reason and provenance', () => {
+  it('renders the page root and one selectable row per quarantined item', () => {
     stubQuarantine()
+    stubQuarantineDetail()
     const { wrapper } = mountQueue()
 
     expect(wrapper.find('[data-testid="admin-review-queue-page"]').exists()).toBe(true)
     expect(wrapper.findAll('[data-testid="review-queue-item"]')).toHaveLength(2)
-
-    const rowA = rowFor(wrapper, ITEM_A_ID)
-    expect(rowA.find('[data-testid="review-queue-verdict"]').exists()).toBe(true)
-    expect(rowA.find('[data-testid="review-queue-reason"]').text()).toContain(
-      'The answer key is incorrect',
-    )
-    expect(rowA.find('[data-testid="review-queue-provenance"]').text()).toContain('chunk-1')
   })
 
   it('does not render the honest placeholder once the queue is backed by the API', () => {
     stubQuarantine()
+    stubQuarantineDetail()
     const { wrapper } = mountQueue()
 
     expect(wrapper.find('[data-testid="review-queue-placeholder"]').exists()).toBe(false)
@@ -117,6 +155,7 @@ describe('AdminReviewQueue render', () => {
 
   it('shows a loading state and no rows while the query is loading', () => {
     stubQuarantine([], { isLoading: true })
+    stubQuarantineDetail()
     const { wrapper } = mountQueue()
 
     expect(wrapper.find('[data-testid="admin-review-queue-loading"]').exists()).toBe(true)
@@ -125,6 +164,7 @@ describe('AdminReviewQueue render', () => {
 
   it('shows an error state when the query fails', () => {
     stubQuarantine([], { isError: true })
+    stubQuarantineDetail()
     const { wrapper } = mountQueue()
 
     expect(wrapper.find('[data-testid="admin-review-queue-error"]').exists()).toBe(true)
@@ -133,6 +173,7 @@ describe('AdminReviewQueue render', () => {
 
   it('shows an empty state when there are no pending items', () => {
     stubQuarantine([])
+    stubQuarantineDetail()
     const { wrapper } = mountQueue()
 
     expect(wrapper.find('[data-testid="review-queue-empty"]').exists()).toBe(true)
@@ -140,33 +181,69 @@ describe('AdminReviewQueue render', () => {
   })
 })
 
-describe('AdminReviewQueue approve', () => {
-  it('approves a pending item and invalidates the quarantine queue', async () => {
+describe('AdminReviewQueue selection and detail', () => {
+  it('shows the detail-empty state and no detail pane before any selection', () => {
     stubQuarantine()
+    stubQuarantineDetail()
+    const { wrapper } = mountQueue()
+
+    expect(wrapper.find('[data-testid="review-queue-detail-empty"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="review-queue-detail"]').exists()).toBe(false)
+  })
+
+  it('loads and renders the selected item detail on row click', async () => {
+    stubQuarantine()
+    stubQuarantineDetail()
+    const { wrapper } = mountQueue()
+
+    await rowFor(wrapper, ITEM_A_ID).trigger('click')
+    await flushPromises()
+
+    const detail = wrapper.find('[data-testid="review-queue-detail"]')
+    expect(detail.exists()).toBe(true)
+    expect(detail.find('[data-testid="review-queue-question"]').text()).toContain(
+      'Which AWS service provides scalable object storage?',
+    )
+  })
+})
+
+describe('AdminReviewQueue approve', () => {
+  it('approves the selected item, invalidates the queue, and resets to the empty detail state', async () => {
+    stubQuarantine()
+    stubQuarantineDetail()
     vi.mocked(quarantineAdminControllerApprove).mockResolvedValue(
       // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
       okResolution(ITEM_A_ID, 'approved') as any,
     )
     const { wrapper, invalidateSpy } = mountQueue()
 
-    await rowFor(wrapper, ITEM_A_ID).find('[data-testid="approve-item-btn"]').trigger('click')
+    await rowFor(wrapper, ITEM_A_ID).trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-testid="approve-item-btn"]').trigger('click')
     await flushPromises()
 
     expect(quarantineAdminControllerApprove).toHaveBeenCalledWith(ITEM_A_ID)
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: adminQueryKeys.quarantine() })
+    expect(wrapper.find('[data-testid="review-queue-detail-empty"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="review-queue-detail"]').exists()).toBe(false)
   })
 })
 
 describe('AdminReviewQueue reject', () => {
-  it('rejects a pending item and invalidates the quarantine queue', async () => {
+  it('rejects the selected item and invalidates the quarantine queue', async () => {
     stubQuarantine()
+    stubQuarantineDetail()
     vi.mocked(quarantineAdminControllerReject).mockResolvedValue(
       // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
       okResolution(ITEM_B_ID, 'rejected') as any,
     )
     const { wrapper, invalidateSpy } = mountQueue()
 
-    await rowFor(wrapper, ITEM_B_ID).find('[data-testid="reject-item-btn"]').trigger('click')
+    await rowFor(wrapper, ITEM_B_ID).trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-testid="reject-item-btn"]').trigger('click')
     await flushPromises()
 
     expect(quarantineAdminControllerReject).toHaveBeenCalledWith(ITEM_B_ID)
@@ -175,6 +252,7 @@ describe('AdminReviewQueue reject', () => {
 
   it('surfaces a conflict message when an item was already resolved', async () => {
     stubQuarantine()
+    stubQuarantineDetail()
     vi.mocked(quarantineAdminControllerReject).mockRejectedValue(
       new ReadionProblemDetailsError({
         title: 'Conflict',
@@ -184,7 +262,10 @@ describe('AdminReviewQueue reject', () => {
     )
     const { wrapper, invalidateSpy } = mountQueue()
 
-    await rowFor(wrapper, ITEM_B_ID).find('[data-testid="reject-item-btn"]').trigger('click')
+    await rowFor(wrapper, ITEM_B_ID).trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-testid="reject-item-btn"]').trigger('click')
     await flushPromises()
 
     const error = wrapper.find('[data-testid="review-queue-error-banner"]')

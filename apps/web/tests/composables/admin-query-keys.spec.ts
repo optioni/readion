@@ -35,6 +35,10 @@ describe('admin query keys', () => {
     expect(adminQueryKeys.extraction('job-1')).toEqual(['admin', 'extraction', 'job-1'])
   })
 
+  it('builds the quarantine detail key from an item id', () => {
+    expect(adminQueryKeys.quarantineDetail('item-1')).toEqual(['admin', 'quarantine', 'item-1'])
+  })
+
   it('namespaces every key under "admin"', () => {
     expect(adminQueryKeys.users()[0]).toBe('admin')
     expect(adminQueryKeys.auditLogs()[0]).toBe('admin')
@@ -44,6 +48,7 @@ describe('admin query keys', () => {
     expect(adminQueryKeys.coverage('c')[0]).toBe('admin')
     expect(adminQueryKeys.certification('c')[0]).toBe('admin')
     expect(adminQueryKeys.extraction('j')[0]).toBe('admin')
+    expect(adminQueryKeys.quarantineDetail('q')[0]).toBe('admin')
   })
 
   it('namespaces keys disjointly from dashboardQueryKeys', () => {

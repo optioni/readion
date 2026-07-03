@@ -6,6 +6,7 @@ import type {
   DueForReverificationItem,
   ExtractionStatusResponse,
   IngestionJobStatus,
+  QuarantinedItemDetail,
 } from '@readion/shared'
 import { describe, expect, it } from 'vitest'
 import {
@@ -17,6 +18,7 @@ import {
   readDueForReverificationEnvelope,
   readExtractionStatusEnvelope,
   readListEnvelope,
+  readQuarantineDetailEnvelope,
   readSourceJobsEnvelope,
   readUsersEnvelope,
 } from '~/composables/adminEnvelope'
@@ -149,5 +151,27 @@ describe('admin envelope narrowing helpers', () => {
     const response = { data: { data: payload } }
 
     expect(readCoverageEnvelope(response)).toEqual(payload)
+  })
+
+  it('readQuarantineDetailEnvelope narrows to a single quarantined item detail', () => {
+    const payload: QuarantinedItemDetail = {
+      id: 'q1',
+      certificationId: 'c1',
+      domain: 'Compute',
+      verdict: JSON.stringify({ pass: false, score: 0.2 }),
+      reason: 'The answer key is incorrect',
+      status: 'pending',
+      provenance: {
+        sourceChunkIds: ['chunk-1'],
+        supportingSpans: ['span'],
+        verdict: { pass: false, score: 0.2, distractorFindings: [] },
+        score: 0.2,
+      },
+      createdAt: '2026-01-01',
+      content: null,
+    }
+    const response = { data: { data: payload } }
+
+    expect(readQuarantineDetailEnvelope(response)).toEqual(payload)
   })
 })
