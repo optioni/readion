@@ -16,10 +16,11 @@ import type {
 } from '@tanstack/vue-query'
 import { useMutation, useQuery } from '@tanstack/vue-query'
 import type { MaybeRef } from 'vue'
-import { unref } from 'vue'
+import { computed, unref } from 'vue'
 import { readionFetch } from '../../../app/api/mutator'
 import type {
   QuarantineAdminControllerListParams,
+  QuarantinedItemDetailResponseDto,
   QuarantinedItemListResponseDto,
   QuarantineResolutionResponseDto,
 } from '.././model'
@@ -135,6 +136,115 @@ export function useQuarantineAdminControllerList<
   },
 ): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getQuarantineAdminControllerListQueryOptions(params, options)
+
+  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey }
+
+  query.queryKey = unref(queryOptions).queryKey as QueryKey
+
+  return query
+}
+
+export type quarantineAdminControllerDetailResponse200 = {
+  data: QuarantinedItemDetailResponseDto
+  status: 200
+}
+
+export type quarantineAdminControllerDetailResponse403 = {
+  data: void
+  status: 403
+}
+
+export type quarantineAdminControllerDetailResponse404 = {
+  data: void
+  status: 404
+}
+
+export type quarantineAdminControllerDetailResponseSuccess =
+  quarantineAdminControllerDetailResponse200 & {
+    headers: Headers
+  }
+export type quarantineAdminControllerDetailResponseError = (
+  | quarantineAdminControllerDetailResponse403
+  | quarantineAdminControllerDetailResponse404
+) & {
+  headers: Headers
+}
+
+export type quarantineAdminControllerDetailResponse =
+  | quarantineAdminControllerDetailResponseSuccess
+  | quarantineAdminControllerDetailResponseError
+
+export const getQuarantineAdminControllerDetailUrl = (id: string) => {
+  return `/api/v1/admin/quarantine/${id}`
+}
+
+export const quarantineAdminControllerDetail = async (
+  id: string,
+  options?: RequestInit,
+): Promise<quarantineAdminControllerDetailResponse> => {
+  return readionFetch<quarantineAdminControllerDetailResponse>(
+    getQuarantineAdminControllerDetailUrl(id),
+    {
+      ...options,
+      method: 'GET',
+    },
+  )
+}
+
+export const getQuarantineAdminControllerDetailQueryKey = (id?: MaybeRef<string>) => {
+  return ['api', 'v1', 'admin', 'quarantine', id] as const
+}
+
+export const getQuarantineAdminControllerDetailQueryOptions = <
+  TData = Awaited<ReturnType<typeof quarantineAdminControllerDetail>>,
+  TError = void,
+>(
+  id: MaybeRef<string>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof quarantineAdminControllerDetail>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = getQuarantineAdminControllerDetailQueryKey(id)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof quarantineAdminControllerDetail>>> = ({
+    signal,
+  }) => quarantineAdminControllerDetail(unref(id), { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: computed(() => !!unref(id)),
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof quarantineAdminControllerDetail>>, TError, TData>
+}
+
+export type QuarantineAdminControllerDetailQueryResult = NonNullable<
+  Awaited<ReturnType<typeof quarantineAdminControllerDetail>>
+>
+export type QuarantineAdminControllerDetailQueryError = void
+
+export function useQuarantineAdminControllerDetail<
+  TData = Awaited<ReturnType<typeof quarantineAdminControllerDetail>>,
+  TError = void,
+>(
+  id: MaybeRef<string>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof quarantineAdminControllerDetail>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getQuarantineAdminControllerDetailQueryOptions(id, options)
 
   const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey }
 
