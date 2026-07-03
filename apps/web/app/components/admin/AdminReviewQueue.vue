@@ -74,16 +74,15 @@ function reject(id: string) {
         {{ actionError }}
       </p>
 
-      <div
-        v-if="items.length === 0"
-        data-testid="review-queue-empty"
-        class="rounded-lg border border-readion-background-surface border-dashed bg-readion-background-surface/40 px-6 py-10 text-center text-slate-400 text-sm"
-      >
-        No quarantined items are awaiting review.
-      </div>
-
-      <div v-else class="flex overflow-hidden rounded-lg border border-readion-background-surface">
-        <AdminReviewQueueList :items="items" :selected-id="selectedId" @select="select" />
+      <div class="flex overflow-hidden rounded-lg border border-readion-background-surface">
+        <div
+          v-if="items.length === 0"
+          data-testid="review-queue-empty"
+          class="flex w-80 flex-shrink-0 items-center justify-center border-readion-background-surface border-r border-dashed bg-readion-background-surface/40 px-6 py-10 text-center text-slate-400 text-sm"
+        >
+          No quarantined items are awaiting review.
+        </div>
+        <AdminReviewQueueList v-else :items="items" :selected-id="selectedId" @select="select" />
         <AdminReviewQueueDetail
           :id="selectedId"
           :pending-id="pendingId"
