@@ -18,7 +18,19 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        app: [api, web, worker]
+        include:
+          - app: api
+            file: apps/api/Dockerfile
+          - app: web
+            file: apps/web/Dockerfile
+          - app: worker
+            file: apps/worker/Dockerfile
+          # Dedicated image for the db-migrate PreSync Job (k8s/base/migrations/job.yaml)
+          # — bundles compiled packages/db migrations + MikroORM config/CLI, which
+          # neither the api nor worker runner stage includes. Tagged with the same
+          # sha-* scheme so it's pinned to the same commit as the app rollout.
+          - app: migrations
+            file: packages/db/Dockerfile
     steps:
       - uses: actions/checkout@v4
 
@@ -45,7 +57,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: apps/${{ matrix.app }}/Dockerfile
+          file: ${{ matrix.file }}
           push: true
           build-args: |
             SENTRY_RELEASE=${{ github.sha }}
