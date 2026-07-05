@@ -18,9 +18,9 @@
 
 ## 3. `apps/web` workload (`kubernetes-deployment`)
 
-- [ ] 3.1 RED: Assertion that the web `Deployment` + `Service` + `Ingress` exist (Ingress terminates TLS and sets the public host), with only `NODE_ENV` + `NUXT_PUBLIC_API_BASE_URL` config. `SPEC.md` → Infrastructure, CORS.
-- [ ] 3.2 GREEN: Author `k8s/base/web/deployment.yaml` + `service.yaml` + `ingress.yaml` referencing the GHCR web image and a readiness HTTP probe.
-- [ ] 3.3 REFACTOR: Keep the Ingress controller-agnostic where possible; confirm schema validity.
+- [x] 3.1 RED: Assertion that the web `Deployment` + `Service` + `Ingress` exist (Ingress terminates TLS and sets the public host), with only `NODE_ENV` + `NUXT_PUBLIC_API_BASE_URL` config. `SPEC.md` → Infrastructure, CORS.
+- [x] 3.2 GREEN: Author `k8s/base/web/deployment.yaml` + `service.yaml` + `ingress.yaml` referencing the GHCR web image and a readiness HTTP probe.
+- [x] 3.3 REFACTOR: Keep the Ingress controller-agnostic where possible; confirm schema validity.
 
 ## 4. `apps/worker` workload + scrapper sidecar (`kubernetes-deployment`)
 
