@@ -214,6 +214,28 @@ for workload in api web worker; do
   assert "${workload} Deployment references the readion-secret Secret" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
 done
 
+log "(g) Config/Secret partition — sensitive keys excluded from ConfigMap, present in Secret"
+SENSITIVE_KEYS=(DATABASE_URL REDIS_URL JWT_SECRET SMTP_USERNAME SMTP_PASSWORD INTERNAL_API_SECRET SENTRY_DSN)
+NON_SENSITIVE_SAMPLE_KEYS=(NODE_ENV LOG_LEVEL)
+
+n=$(count_matches 'select(.kind == "ConfigMap" and .metadata.name == "readion-config")')
+assert "readion-config ConfigMap exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Secret" and .metadata.name == "readion-secret" and .type == "Opaque")')
+assert "readion-secret Opaque Secret exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+
+for key in "${NON_SENSITIVE_SAMPLE_KEYS[@]}"; do
+  n=$(count_matches "select(.kind == \"ConfigMap\" and .metadata.name == \"readion-config\") | .data.${key}")
+  assert "ConfigMap carries non-sensitive key ${key}" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+done
+
+for key in "${SENSITIVE_KEYS[@]}"; do
+  n=$(count_matches "select(.kind == \"ConfigMap\" and .metadata.name == \"readion-config\") | .data.${key}")
+  assert "ConfigMap does not carry sensitive key ${key}" "$([ "${n}" -eq 0 ] && echo 0 || echo 1)" "found in ConfigMap"
+
+  n=$(count_matches "select(.kind == \"Secret\" and .metadata.name == \"readion-secret\") | (.data.${key} // .stringData.${key})")
+  assert "Secret defines sensitive key ${key}" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+done
+
 # ---------------------------------------------------------------------------
 # Result
 # ---------------------------------------------------------------------------
