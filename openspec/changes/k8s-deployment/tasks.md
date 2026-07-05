@@ -48,8 +48,8 @@
 
 ## 8. Acceptance — Manifest validation GREEN
 
-- [ ] 8.1 Confirm every spec scenario passes: `kustomize build` + `kubeconform -strict` are clean and all group-0 invariant assertions hold (api ClusterIP; web Ingress; worker sidecar + no scrapper Service; no Postgres/Redis workload; migration Job PreSync; config/secret referenced).
-- [ ] 8.2 REFACTOR: Tidy the validation script and (optionally) add it as a CI step so manifests are gated on PRs.
+- [x] 8.1 Confirm every spec scenario passes: `kustomize build` + `kubeconform -strict` are clean and all group-0 invariant assertions hold (api ClusterIP; web Ingress; worker sidecar + no scrapper Service; no Postgres/Redis workload; migration Job PreSync; config/secret referenced).
+- [x] 8.2 REFACTOR: Tidy the validation script and (optionally) add it as a CI step so manifests are gated on PRs.
 
 ## 9. Docs & polish
 
