@@ -26,6 +26,12 @@ export default defineConfig({
             ...process.env,
             NUXT_PUBLIC_API_BASE_URL:
               process.env.NUXT_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:3001',
+            // Enable the tracker so the plugin injects it; e2e intercepts the script and installs a
+            // recording window.umami stub (see e2e/support/umami-e2e.ts).
+            NUXT_PUBLIC_UMAMI_HOST:
+              process.env.NUXT_PUBLIC_UMAMI_HOST ?? 'https://analytics.optioni.fi',
+            NUXT_PUBLIC_UMAMI_WEBSITE_ID:
+              process.env.NUXT_PUBLIC_UMAMI_WEBSITE_ID ?? 'e2e-website-id',
           },
           url: 'http://127.0.0.1:3000',
           reuseExistingServer: !process.env.CI,
