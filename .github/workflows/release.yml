@@ -1,0 +1,162 @@
+name: Release
+
+# Manual production-release workflow. Unlike main.yml (which publishes moving
+# sha-*/latest dev images on every push to `main`), this only runs when a
+# maintainer explicitly dispatches it with a version — a production release is
+# a deliberate, on-demand action: git tag + GitHub Release + immutable,
+# semver-tagged GHCR images for every app in the monorepo. Deployment itself is
+# out-of-band (GitOps pins the semver tag), so this workflow stops at publish.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 1.4.0 (a leading v is optional)"
+        required: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
+jobs:
+  tag:
+    name: Tag & GitHub Release
+    runs-on: ubuntu-latest
+    # contents:write to create/push the git tag and the GitHub Release.
+    permissions:
+      contents: write
+    # Shared with the build matrix below so every image is tagged with the same
+    # canonical version and built from the tagged commit.
+    outputs:
+      tag: ${{ steps.normalize.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Normalizes the input to a single canonical `v<version>` form — input
+      # `1.4.0` or a stray `v1.4.0` both become `v1.4.0`, used as the git tag
+      # and every GHCR image tag.
+      - name: Normalize version
+        id: normalize
+        env:
+          # Passed as an env var, not interpolated into the script, so a crafted
+          # dispatch input can't inject shell commands.
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "$VERSION" =~ ^v ]]; then
+            TAG="$VERSION"
+          else
+            TAG="v$VERSION"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push tag
+        run: |
+          git tag ${{ steps.normalize.outputs.tag }}
+          git push origin ${{ steps.normalize.outputs.tag }}
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create ${{ steps.normalize.outputs.tag }} --generate-notes
+
+  build-and-push:
+    name: Build ${{ matrix.app }}
+    needs: tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - app: api
+            file: apps/api/Dockerfile
+          - app: web
+            file: apps/web/Dockerfile
+          - app: worker
+            file: apps/worker/Dockerfile
+          # Dedicated image for the db-migrate PreSync Job (k8s/base/migrations/job.yaml)
+          # — bundles compiled packages/db migrations + MikroORM config/CLI, which
+          # neither the api nor worker runner stage includes.
+          - app: migrations
+            file: packages/db/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.tag.outputs.tag }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Tagged with the normalized version only, never `latest`: production pins
+      # the immutable semver tag/digest, while dev/beta keeps tracking the
+      # sha-*/latest images built by main.yml.
+      - name: Build and push ${{ matrix.app }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          push: true
+          build-args: |
+            SENTRY_RELEASE=${{ needs.tag.outputs.tag }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.app }}:${{ needs.tag.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  upload-sourcemaps:
+    name: Upload source maps to Sentry
+    runs-on: ubuntu-latest
+    needs: [tag, build-and-push]
+    env:
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+      SENTRY_AUTH_TOKEN_SET: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+      # Must match the SENTRY_RELEASE baked into the images above so runtime
+      # errors symbolicate against these maps.
+      RELEASE: ${{ needs.tag.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        with:
+          ref: ${{ needs.tag.outputs.tag }}
+
+      - uses: actions/setup-node@v4
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - run: corepack enable
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+      - run: yarn install --frozen-lockfile
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+      - run: yarn workspace @readion/api build
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+      - run: yarn workspace @readion/worker build
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+
+      - name: Create Sentry release
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        run: npx @sentry/cli@latest releases new "$RELEASE"
+
+      - name: Upload api source maps
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        run: npx @sentry/cli@latest releases files "$RELEASE" upload-sourcemaps apps/api/dist --url-prefix "~/"
+
+      - name: Upload worker source maps
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        run: npx @sentry/cli@latest releases files "$RELEASE" upload-sourcemaps apps/worker/dist --url-prefix "~/"
+
+      - name: Finalize Sentry release
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        run: npx @sentry/cli@latest releases finalize "$RELEASE"
