@@ -30,9 +30,9 @@
 
 ## 5. Migration Job (`db-migration-job`)
 
-- [ ] 5.1 RED: Assertion that a migration `Job` exists, runs `mikro-orm migration:up`, carries `argocd.argoproj.io/hook: PreSync` (+ a hook-delete policy), and uses an image that bundles `packages/db` compiled migrations + MikroORM config. `SPEC.md` → Database Migrations.
-- [ ] 5.2 GREEN: Resolve the migration image per `design.md` Decisions (dedicated `packages/db` migration image, or extend an app runner stage to include `packages/db` dist + MikroORM CLI/config) and add its build/push to CI; author `k8s/base/migrations/job.yaml` using the `DATABASE_URL` secret and pinned to the app `sha-*` digest. **This is the one task that touches outside `k8s/` (Dockerfile/CI) — keep it minimal and `packages/db`-code-free.**
-- [ ] 5.3 REFACTOR: Confirm the Job's `PreSync` ordering and failure-blocks-rollout semantics are expressed in the manifest; schema valid.
+- [x] 5.1 RED: Assertion that a migration `Job` exists, runs `mikro-orm migration:up`, carries `argocd.argoproj.io/hook: PreSync` (+ a hook-delete policy), and uses an image that bundles `packages/db` compiled migrations + MikroORM config. `SPEC.md` → Database Migrations.
+- [x] 5.2 GREEN: Resolve the migration image per `design.md` Decisions (dedicated `packages/db` migration image, or extend an app runner stage to include `packages/db` dist + MikroORM CLI/config) and add its build/push to CI; author `k8s/base/migrations/job.yaml` using the `DATABASE_URL` secret and pinned to the app `sha-*` digest. **This is the one task that touches outside `k8s/` (Dockerfile/CI) — keep it minimal and `packages/db`-code-free.**
+- [x] 5.3 REFACTOR: Confirm the Job's `PreSync` ordering and failure-blocks-rollout semantics are expressed in the manifest; schema valid.
 
 ## 6. GitOps — ArgoCD + Image Updater (`kubernetes-deployment`)
 
