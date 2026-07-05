@@ -53,6 +53,6 @@
 
 ## 9. Docs & polish
 
-- [ ] 9.1 **Replace** the stale `k8s/README.md` (its `base/postgres/` StatefulSet + `base/redis/` Deployment bullets contradict `SPEC.md`) with an accurate operator-facing description: real topology, managed-external Postgres/Redis, the sidecar, the migration Job, ArgoCD/Image Updater, and how secrets are supplied out-of-band. Durable — it's the canonical entry point for anyone deploying Readion.
-- [ ] 9.2 Run `yarn lint` / `yarn format` over any added script/TS in the harness and fix issues.
-- [ ] 9.3 Confirm the validation harness exits 0 end-to-end on a clean checkout with `kustomize` + `kubeconform` available.
+- [x] 9.1 **Replace** the stale `k8s/README.md` (its `base/postgres/` StatefulSet + `base/redis/` Deployment bullets contradict `SPEC.md`) with an accurate operator-facing description: real topology, managed-external Postgres/Redis, the sidecar, the migration Job, ArgoCD/Image Updater, and how secrets are supplied out-of-band. Durable — it's the canonical entry point for anyone deploying Readion.
+- [x] 9.2 Run `yarn lint` / `yarn format` over any added script/TS in the harness and fix issues.
+- [x] 9.3 Confirm the validation harness exits 0 end-to-end on a clean checkout with `kustomize` + `kubeconform` available.
