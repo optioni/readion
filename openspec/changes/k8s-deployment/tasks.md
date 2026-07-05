@@ -42,9 +42,9 @@
 
 ## 7. Kustomize assembly
 
-- [ ] 7.1 RED: Assertion that `kustomize build k8s/base` emits the full resource set with no duplicate/undefined references.
-- [ ] 7.2 GREEN: Author `k8s/base/kustomization.yaml` tying together config, api, web, worker, and migrations.
-- [ ] 7.3 REFACTOR: Optionally add a prod overlay; keep base-only acceptable for the first cut.
+- [x] 7.1 RED: Assertion that `kustomize build k8s/base` emits the full resource set with no duplicate/undefined references.
+- [x] 7.2 GREEN: Author `k8s/base/kustomization.yaml` tying together config, api, web, worker, and migrations.
+- [x] 7.3 REFACTOR: Optionally add a prod overlay; keep base-only acceptable for the first cut.
 
 ## 8. Acceptance — Manifest validation GREEN
 
