@@ -8,6 +8,7 @@ import {
   extractTextDelta,
   useAgentTurnStream,
 } from '~/composables/useAgentTurnStream'
+import { useTrack } from '~/composables/useTrack'
 
 function handleEvent(assistant: AgentPanelMessage, event: AgentStreamEvent): void {
   if (event.type === 'text-delta') {
@@ -27,6 +28,7 @@ export function useStandaloneAgentChat() {
   const messages = ref<AgentPanelMessage[]>([])
   const isStreaming = ref(false)
   const lastActivityAt = ref<string | null>(null)
+  const { track } = useTrack()
 
   async function initConversation(): Promise<void> {
     const created = await createStandaloneAgentConversation()
@@ -37,6 +39,7 @@ export function useStandaloneAgentChat() {
     const detail = await fetchAgentConversation(id)
     const raw = (detail.relationships?.messages?.data ?? []) as AgentMessageResponse[]
     messages.value = hydrateAgentMessages(raw)
+    track('agent_chat_opened', { standalone: true })
   }
 
   async function send(content: string): Promise<void> {
@@ -48,6 +51,7 @@ export function useStandaloneAgentChat() {
     const id = conversationId.value
     const { streamTurn } = useAgentTurnStream()
 
+    track('agent_message_sent', { inSession: false })
     messages.value.push({ role: 'user', content: trimmed, toolResults: [], error: null })
 
     const assistant = reactive<AgentPanelMessage>({
@@ -72,6 +76,7 @@ export function useStandaloneAgentChat() {
     conversationId.value = null
     messages.value = []
     lastActivityAt.value = null
+    track('agent_new_chat')
     await initConversation()
   }
 

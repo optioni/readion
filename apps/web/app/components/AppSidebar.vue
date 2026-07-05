@@ -139,6 +139,7 @@ import { getCsrfTokenFromCookie } from '~/api/mutator'
 import ColorModeToggle from '~/components/ColorModeToggle.vue'
 import { emailInitials } from '~/composables/emailInitials'
 import { useEnrollments } from '~/composables/useEnrollments'
+import { useTrack } from '~/composables/useTrack'
 import { useAuthStore } from '~/stores/auth'
 
 interface NavItem {
@@ -155,6 +156,7 @@ const emit = defineEmits<{ close: [] }>()
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
+const { track } = useTrack()
 const runtimeConfig = useRuntimeConfig()
 const apiBase = (runtimeConfig.public.apiBaseUrl as string).replace(/\/$/, '')
 
@@ -242,6 +244,7 @@ async function handleLogout() {
   } catch {
     // Best-effort — always clear local state
   } finally {
+    track('log_out')
     auth.clear()
     router.push('/login')
   }

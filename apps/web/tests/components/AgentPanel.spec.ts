@@ -6,6 +6,7 @@ import {
   fetchAgentConversation,
 } from '~/composables/sessionViewApi'
 import type { AgentStreamEvent } from '~/composables/useAgentTurnStream'
+import { clearUmamiRecorder, installUmamiRecorder } from '../support/umami-recorder'
 
 const { streamTurnMock } = vi.hoisted(() => ({ streamTurnMock: vi.fn() }))
 
@@ -171,5 +172,44 @@ describe('AgentPanel error handling', () => {
 
     expect(streamTurnMock).toHaveBeenCalledTimes(2)
     expect(wrapper.text()).toContain('Second answer.')
+  })
+})
+
+describe('AgentPanel analytics', () => {
+  let recorder: ReturnType<typeof installUmamiRecorder>
+
+  beforeEach(() => {
+    recorder = installUmamiRecorder()
+  })
+
+  afterEach(() => {
+    clearUmamiRecorder()
+  })
+
+  it('emits agent_chat_opened { standalone: false } when the in-session conversation opens', async () => {
+    await mountPanel()
+
+    expect(recorder.track).toHaveBeenCalledWith('agent_chat_opened', { standalone: false })
+  })
+
+  it('emits agent_message_sent { inSession: true } for a non-empty message', async () => {
+    const wrapper = await mountPanel()
+    recorder.events.length = 0
+
+    await wrapper.find('[data-testid="agent-input"]').setValue('Why an SCP?')
+    await wrapper.find('[data-testid="agent-send-button"]').trigger('click')
+    await flushPromises()
+
+    expect(recorder.track).toHaveBeenCalledWith('agent_message_sent', { inSession: true })
+  })
+
+  it('does not emit for an empty message', async () => {
+    const wrapper = await mountPanel()
+    recorder.events.length = 0
+
+    await wrapper.find('[data-testid="agent-send-button"]').trigger('click')
+    await flushPromises()
+
+    expect(recorder.events.map((e) => e.event)).not.toContain('agent_message_sent')
   })
 })

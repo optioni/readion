@@ -60,6 +60,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { getCsrfTokenFromCookie } from '~/api/mutator'
+import { useTrack } from '~/composables/useTrack'
 import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({ layout: 'auth' })
@@ -67,6 +68,7 @@ definePageMeta({ layout: 'auth' })
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+const { track } = useTrack()
 const isAuthenticated = computed(() => auth.isAuthenticated)
 
 type State = 'loading' | 'success' | 'error'
@@ -100,6 +102,7 @@ onMounted(async () => {
 
     if (res.ok) {
       state.value = 'success'
+      track('email_verified')
       router.push('/')
     } else {
       state.value = 'error'

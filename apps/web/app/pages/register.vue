@@ -94,6 +94,7 @@
 import { ref } from 'vue'
 import { createReadionFetch, ReadionProblemDetailsError } from '~/api/mutator'
 import { useCredentialForm } from '~/composables/useCredentialForm'
+import { useTrack } from '~/composables/useTrack'
 import type { AuthUser } from '~/stores/auth'
 import { useAuthStore } from '~/stores/auth'
 
@@ -102,6 +103,7 @@ definePageMeta({ layout: 'auth' })
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
+const { track } = useTrack()
 
 const {
   email,
@@ -152,6 +154,8 @@ async function handleSubmit() {
     if (meRes.data?.data) {
       auth.setUser(meRes.data.data)
     }
+
+    track('sign_up')
 
     const redirect = (route.query?.redirect as string) || '/'
     router.push(redirect)

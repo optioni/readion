@@ -94,6 +94,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { createReadionFetch, ReadionProblemDetailsError } from '~/api/mutator'
+import { useTrack } from '~/composables/useTrack'
 import type { AuthUser } from '~/stores/auth'
 import { useAuthStore } from '~/stores/auth'
 
@@ -102,6 +103,7 @@ definePageMeta({ layout: 'auth' })
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
+const { track } = useTrack()
 
 const email = ref('')
 const password = ref('')
@@ -136,6 +138,8 @@ async function handleSubmit() {
     if (meRes.data?.data) {
       auth.setUser(meRes.data.data)
     }
+
+    track('log_in')
 
     const redirect = (route.query?.redirect as string) || '/'
     router.push(redirect)

@@ -1,5 +1,5 @@
 import type { CreateSessionRequest, SubmitAnswerRequest } from '@readion/shared'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   completeSessionItem,
   createSession,
@@ -39,6 +39,7 @@ import {
   sessionsControllerEnd,
   sessionsControllerGoDeeper,
 } from '~~/src/api/sessions/sessions'
+import { clearUmamiRecorder, installUmamiRecorder } from '../support/umami-recorder'
 
 vi.mock('~~/src/api/enrollment-sessions/enrollment-sessions', () => ({
   enrollmentSessionsControllerCreate: vi.fn(),
@@ -282,5 +283,75 @@ describe('fetchAgentConversation', () => {
 
     expect(agentControllerDetail).toHaveBeenCalledWith('conv-1', { include: 'messages' })
     expect(result.data.id).toBe('conv-1')
+  })
+})
+
+describe('session analytics events', () => {
+  let recorder: ReturnType<typeof installUmamiRecorder>
+
+  beforeEach(() => {
+    recorder = installUmamiRecorder()
+  })
+
+  afterEach(() => {
+    clearUmamiRecorder()
+  })
+
+  it('session_started reports resumed=false on 201 (new) and true on 200 (resume)', async () => {
+    vi.mocked(enrollmentSessionsControllerCreate).mockResolvedValueOnce(
+      ok(sessionDetail('sess-1'), 201),
+    )
+    await createSession('enr-1')
+    expect(recorder.track).toHaveBeenCalledWith('session_started', {
+      enrollmentId: 'enr-1',
+      resumed: false,
+    })
+
+    vi.mocked(enrollmentSessionsControllerCreate).mockResolvedValueOnce(
+      ok(sessionDetail('sess-1'), 200),
+    )
+    await createSession('enr-1')
+    expect(recorder.track).toHaveBeenCalledWith('session_started', {
+      enrollmentId: 'enr-1',
+      resumed: true,
+    })
+  })
+
+  it('quiz_answer_submitted carries the correctness', async () => {
+    vi.mocked(quizControllerSubmitAnswer).mockResolvedValue(
+      ok({ data: { id: 'r', correct: false, answer: 'A', confidence: 3, timeTakenMs: 100 } }),
+    )
+    await submitQuizAnswer('q-1', {
+      userCertificationId: 'enr-1',
+      answer: 'A',
+      confidence: 3,
+      timeTakenMs: 100,
+    })
+    expect(recorder.track).toHaveBeenCalledWith('quiz_answer_submitted', { correct: false })
+  })
+
+  it('emits go_deeper_used, quiz_explanation_generated, quiz_question_reported, session_ended, drill_started', async () => {
+    vi.mocked(sessionsControllerGoDeeper).mockResolvedValue(ok({ expandedContent: 'x' }))
+    vi.mocked(quizControllerGenerateExplanation).mockResolvedValue(
+      ok({ data: { explanation: 'e', citations: [] } }),
+    )
+    vi.mocked(quizControllerReportQuestion).mockResolvedValue(ok(undefined, 204))
+    vi.mocked(sessionsControllerEnd).mockResolvedValue(ok(sessionDetail('sess-1')))
+    vi.mocked(sessionSummaryControllerDrill).mockResolvedValue(ok({ data: { status: 'started' } }))
+
+    await goDeeperOnItem('sess-1', 0)
+    await generateQuizExplanation('q-1', { userCertificationId: 'enr-1' })
+    await reportQuizQuestion('q-1', { userCertificationId: 'enr-1', reason: 'wrong' })
+    await endSession('sess-1')
+    await drillSession('sess-1')
+
+    const names = recorder.events.map((e) => e.event)
+    expect(names).toEqual([
+      'go_deeper_used',
+      'quiz_explanation_generated',
+      'quiz_question_reported',
+      'session_ended',
+      'drill_started',
+    ])
   })
 })

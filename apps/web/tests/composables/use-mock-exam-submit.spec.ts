@@ -4,6 +4,7 @@ import { ReadionProblemDetailsError } from '~/api/mutator'
 import { submitMockExam } from '~/composables/mockExamApi'
 import { mockExamQueryKeys } from '~/composables/mockExamQueryKeys'
 import { useMockExamSubmit } from '~/composables/useMockExamSubmit'
+import { clearUmamiRecorder, installUmamiRecorder } from '../support/umami-recorder'
 import { renderComposable } from '../support/vue-query-harness'
 
 vi.mock('~/composables/mockExamApi', () => ({ submitMockExam: vi.fn() }))
@@ -125,5 +126,50 @@ describe('useMockExamSubmit', () => {
     await expect(result.confirmSubmit()).rejects.toThrow()
 
     wrapper.unmount()
+  })
+
+  describe('analytics events', () => {
+    let recorder: ReturnType<typeof installUmamiRecorder>
+
+    beforeEach(() => {
+      recorder = installUmamiRecorder()
+    })
+
+    afterEach(() => {
+      clearUmamiRecorder()
+    })
+
+    it('emits mock_exam_submitted { auto: false } for a manual confirm', async () => {
+      vi.mocked(submitMockExam).mockResolvedValue(terminalExam('submitted'))
+
+      const { result, wrapper } = renderComposable(() => useMockExamSubmit(EXAM_ID))
+      result.requestSubmit()
+      await result.confirmSubmit()
+
+      expect(recorder.track).toHaveBeenCalledWith('mock_exam_submitted', { auto: false })
+      wrapper.unmount()
+    })
+
+    it('emits mock_exam_submitted { auto: true } for a timer expiry', async () => {
+      vi.mocked(submitMockExam).mockResolvedValue(terminalExam('expired'))
+
+      const { result, wrapper } = renderComposable(() => useMockExamSubmit(EXAM_ID))
+      await result.autoSubmit()
+
+      expect(recorder.track).toHaveBeenCalledWith('mock_exam_submitted', { auto: true })
+      wrapper.unmount()
+    })
+
+    it('does not emit when a terminal conflict short-circuits the submit', async () => {
+      vi.mocked(submitMockExam).mockRejectedValue(
+        new ReadionProblemDetailsError({ title: 'Conflict', status: 409 }),
+      )
+
+      const { result, wrapper } = renderComposable(() => useMockExamSubmit(EXAM_ID))
+      await result.autoSubmit()
+
+      expect(recorder.track).not.toHaveBeenCalled()
+      wrapper.unmount()
+    })
   })
 })

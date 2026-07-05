@@ -57,9 +57,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useTrack } from '~/composables/useTrack'
 
 definePageMeta({ layout: 'auth' })
 
+const { track } = useTrack()
 const email = ref('')
 const loading = ref(false)
 const sent = ref(false)
@@ -83,6 +85,7 @@ async function handleSubmit() {
     // Intentionally ignore errors — always show neutral confirmation
   } finally {
     sent.value = true
+    track('password_reset_requested')
     loading.value = false
   }
 }

@@ -10,9 +10,12 @@ import ReadinessTrend from '~/components/ReadinessTrend.vue'
 import TrajectoryCallout from '~/components/TrajectoryCallout.vue'
 import { useActivityStats } from '~/composables/useActivityStats'
 import { useProgressData } from '~/composables/useProgressData'
+import { useTrack } from '~/composables/useTrack'
 
 const route = useRoute()
 const enrollmentId = computed(() => String(route.params.id))
+
+useTrack().track('progress_viewed', { enrollmentId: enrollmentId.value })
 
 const {
   notFound,

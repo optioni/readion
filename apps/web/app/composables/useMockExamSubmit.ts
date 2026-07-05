@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import { submitMockExam } from '~/composables/mockExamApi'
 import { mockExamQueryKeys } from '~/composables/mockExamQueryKeys'
+import { useTrack } from '~/composables/useTrack'
 
 const CONFLICT_STATUS = 409
 
@@ -21,6 +22,7 @@ function isTerminalConflict(value: unknown): boolean {
 
 export function useMockExamSubmit(examId: string) {
   const queryClient = useQueryClient()
+  const { track } = useTrack()
 
   const confirmOpen = ref(false)
   const isSubmitting = ref(false)
@@ -39,7 +41,7 @@ export function useMockExamSubmit(examId: string) {
     await queryClient.invalidateQueries({ queryKey: mockExamQueryKeys.detail(examId) })
   }
 
-  async function runSubmit(): Promise<void> {
+  async function runSubmit(auto: boolean): Promise<void> {
     if (isSubmitting.value) {
       return
     }
@@ -51,6 +53,7 @@ export function useMockExamSubmit(examId: string) {
         return
       }
       queryClient.setQueryData(mockExamQueryKeys.detail(examId), terminal)
+      track('mock_exam_submitted', { auto })
     } catch (error) {
       if (isTerminalConflict(error)) {
         await refetchTerminal()
@@ -64,11 +67,11 @@ export function useMockExamSubmit(examId: string) {
 
   async function confirmSubmit(): Promise<void> {
     confirmOpen.value = false
-    await runSubmit()
+    await runSubmit(false)
   }
 
   async function autoSubmit(): Promise<void> {
-    await runSubmit()
+    await runSubmit(true)
   }
 
   return {

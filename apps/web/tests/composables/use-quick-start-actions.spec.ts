@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useQuickStartActions } from '~/composables/useQuickStartActions'
 import { enrollmentMockExamControllerCreate } from '~~/src/api/enrollment-mock-exam/enrollment-mock-exam'
 import { enrollmentSessionsControllerCreate } from '~~/src/api/enrollment-sessions/enrollment-sessions'
+import { clearUmamiRecorder, installUmamiRecorder } from '../support/umami-recorder'
 
 vi.mock('~~/src/api/enrollment-sessions/enrollment-sessions', () => ({
   enrollmentSessionsControllerCreate: vi.fn(),
@@ -112,5 +113,38 @@ describe('useQuickStartActions startMockExam', () => {
     expect(isStartingMockExam.value).toBe(true)
     await pending
     expect(isStartingMockExam.value).toBe(false)
+  })
+})
+
+describe('useQuickStartActions analytics events', () => {
+  let recorder: ReturnType<typeof installUmamiRecorder>
+
+  beforeEach(() => {
+    recorder = installUmamiRecorder()
+  })
+
+  afterEach(() => {
+    clearUmamiRecorder()
+  })
+
+  it('emits session_started (resumed=false on 201) with the enrollmentId', async () => {
+    stubSession('sess-9')
+    const { startSession } = useQuickStartActions('enr-1')
+
+    await startSession()
+
+    expect(recorder.track).toHaveBeenCalledWith('session_started', {
+      enrollmentId: 'enr-1',
+      resumed: false,
+    })
+  })
+
+  it('emits mock_exam_started with the enrollmentId', async () => {
+    stubMockExam('mock-7')
+    const { startMockExam } = useQuickStartActions('enr-1')
+
+    await startMockExam()
+
+    expect(recorder.track).toHaveBeenCalledWith('mock_exam_started', { enrollmentId: 'enr-1' })
   })
 })

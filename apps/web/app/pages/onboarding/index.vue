@@ -8,11 +8,13 @@ import OnboardingSessionPrefs from '~/components/OnboardingSessionPrefs.vue'
 import { ADMIN_CERT_SETUP_ROUTE } from '~/composables/onboardingRoutes'
 import { useOnboardingActions } from '~/composables/useOnboardingActions'
 import { useOnboardingGate } from '~/composables/useOnboardingGate'
+import { useTrack } from '~/composables/useTrack'
 
 definePageMeta({ layout: 'minimal' })
 
 const { decision, isLoading } = useOnboardingGate()
 const { saveDefaultsAndEnroll } = useOnboardingActions()
+const { track } = useTrack()
 
 type Step = 'cert' | 'prefs' | 'offer'
 
@@ -30,6 +32,18 @@ const isOnboarding = computed(
   () => decision.value?.kind === 'onboarding' || hasStartedEnrollment.value,
 )
 const isNoCerts = computed(() => decision.value?.kind === 'no-certs')
+
+const onboardingStartTracked = ref(false)
+watch(
+  isOnboarding,
+  (active) => {
+    if (active && !onboardingStartTracked.value) {
+      onboardingStartTracked.value = true
+      track('onboarding_started')
+    }
+  },
+  { immediate: true },
+)
 
 watch(
   decision,

@@ -12,10 +12,12 @@ import {
   extractTextDelta,
   useAgentTurnStream,
 } from '~/composables/useAgentTurnStream'
+import { useTrack } from '~/composables/useTrack'
 
 const props = defineProps<{ sessionId: string }>()
 
 const { streamTurn } = useAgentTurnStream()
+const { track } = useTrack()
 
 const messages = ref<AgentPanelMessage[]>([])
 const input = ref('')
@@ -36,6 +38,7 @@ async function ensureConversation(): Promise<string> {
   const detail = await fetchAgentConversation(id)
   const raw = (detail.relationships?.messages?.data ?? []) as AgentMessageResponse[]
   messages.value = hydrateAgentMessages(raw)
+  track('agent_chat_opened', { standalone: false })
   return id
 }
 
@@ -71,6 +74,7 @@ async function send(): Promise<void> {
   }
 
   const id = await ensureConversation()
+  track('agent_message_sent', { inSession: true })
   messages.value.push({ role: 'user', content, toolResults: [], error: null })
   input.value = ''
 

@@ -6,6 +6,7 @@ import type {
   SubmitAnswerRequest,
   SubmitAnswerResponse,
 } from '@readion/shared'
+import { useTrack } from '~/composables/useTrack'
 import { agentControllerDetail } from '~~/src/api/agent/agent'
 import { enrollmentSessionsControllerCreate } from '~~/src/api/enrollment-sessions/enrollment-sessions'
 import type {
@@ -53,6 +54,10 @@ export async function createSession(
     enrollmentId,
     overrides ? jsonBody(overrides) : undefined,
   )
+  // The generated client narrows `status` to the documented 201; at runtime a resumed session
+  // comes back as 200, so read the actual status to distinguish new from resumed.
+  const resumed = (response.status as number) === 200
+  useTrack().track('session_started', { enrollmentId, resumed })
   return response.data
 }
 
@@ -74,11 +79,13 @@ export async function goDeeperOnItem(
   index: number,
 ): Promise<GoDeeperResponseDto> {
   const response = await sessionsControllerGoDeeper(sessionId, String(index))
+  useTrack().track('go_deeper_used')
   return response.data
 }
 
 export async function endSession(sessionId: string): Promise<SessionDetailResponseDto> {
   const response = await sessionsControllerEnd(sessionId)
+  useTrack().track('session_ended')
   return response.data
 }
 
@@ -87,7 +94,9 @@ export async function submitQuizAnswer(
   body: SubmitAnswerRequest,
 ): Promise<SubmitAnswerResponse> {
   const response = await quizControllerSubmitAnswer(questionId, jsonBody(body))
-  return unwrapEnvelope<SubmitAnswerResponse>(response)
+  const result = unwrapEnvelope<SubmitAnswerResponse>(response)
+  useTrack().track('quiz_answer_submitted', { correct: result.correct })
+  return result
 }
 
 export async function generateQuizExplanation(
@@ -95,11 +104,13 @@ export async function generateQuizExplanation(
   body: ExplanationRequest,
 ): Promise<ExplanationResponse> {
   const response = await quizControllerGenerateExplanation(questionId, jsonBody(body))
+  useTrack().track('quiz_explanation_generated')
   return unwrapEnvelope<ExplanationResponse>(response)
 }
 
 export async function reportQuizQuestion(questionId: string, body: ReportRequest): Promise<void> {
   await quizControllerReportQuestion(questionId, jsonBody(body))
+  useTrack().track('quiz_question_reported')
 }
 
 export async function fetchSessionSummary(sessionId: string): Promise<SessionSummaryResponseDto> {
@@ -109,6 +120,7 @@ export async function fetchSessionSummary(sessionId: string): Promise<SessionSum
 
 export async function drillSession(sessionId: string): Promise<DrillResultResponseDto> {
   const response = await sessionSummaryControllerDrill(sessionId)
+  useTrack().track('drill_started')
   return unwrapEnvelope<DrillResultResponseDto>(response)
 }
 

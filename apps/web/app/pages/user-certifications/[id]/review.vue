@@ -20,12 +20,15 @@ import {
   fetchSessionDetail,
   fetchSessionSummary,
 } from '~/composables/sessionViewApi'
+import { useTrack } from '~/composables/useTrack'
 import type { SessionItemResponseDto } from '~~/src/api/model'
 
 definePageMeta({ layout: 'minimal' })
 
 const route = useRoute()
 const enrollmentId = computed(() => String(route.params.id))
+
+useTrack().track('review_started', { enrollmentId: enrollmentId.value })
 
 type Scene = 'queue' | 'loop' | 'completion' | 'self-grade' | 'self-grade-completion'
 const scene = ref<Scene>('queue')

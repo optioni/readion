@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { dashboardQueryKeys } from '~/composables/dashboardQueryKeys'
 import { onboardingQueryKeys } from '~/composables/onboardingQueryKeys'
 import { onboardingMockExamRunPath } from '~/composables/onboardingRoutes'
+import { useTrack } from '~/composables/useTrack'
 import {
   diagnosticControllerCreate,
   diagnosticControllerDismissOffer,
@@ -23,6 +24,7 @@ export type EnrollOutcome = { ok: true; enrollmentId: string } | { ok: false; er
 
 export function useOnboardingActions() {
   const queryClient = useQueryClient()
+  const { track } = useTrack()
 
   async function saveDefaultsAndEnroll(input: {
     certificationId: string
@@ -44,6 +46,8 @@ export function useOnboardingActions() {
       return { ok: false, error }
     }
 
+    track('cert_enrolled', { certId: input.certificationId })
+
     await queryClient.invalidateQueries({ queryKey: dashboardQueryKeys.enrollments() })
     await queryClient.invalidateQueries({ queryKey: onboardingQueryKeys.enrollments() })
 
@@ -52,11 +56,13 @@ export function useOnboardingActions() {
 
   async function takeDiagnostic(enrollmentId: string) {
     const response = await diagnosticControllerCreate(enrollmentId)
+    track('diagnostic_started', { enrollmentId })
     await navigateTo(onboardingMockExamRunPath(readEnvelopeId(response)))
   }
 
   async function skipDiagnostic(enrollmentId: string) {
     await diagnosticControllerDismissOffer(enrollmentId)
+    track('diagnostic_skipped', { enrollmentId })
     await navigateTo(DASHBOARD_ROUTE)
   }
 

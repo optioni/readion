@@ -102,11 +102,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useCredentialForm } from '~/composables/useCredentialForm'
+import { useTrack } from '~/composables/useTrack'
 
 definePageMeta({ layout: 'auth' })
 
 const route = useRoute()
 const router = useRouter()
+const { track } = useTrack()
 
 const { password, showPassword, loading, passwordStrength, strengthLabel, strengthColor } =
   useCredentialForm()
@@ -148,6 +150,7 @@ async function handleSubmit() {
     })
 
     if (res.ok) {
+      track('password_reset_completed')
       router.push({ path: '/login', query: { reset: 'success' } })
     }
   } catch {

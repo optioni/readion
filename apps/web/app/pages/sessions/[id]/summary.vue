@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import type { SessionSummaryResponse } from '@readion/shared'
 import { useQuery } from '@tanstack/vue-query'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import SessionSummaryBody from '~/components/SessionSummaryBody.vue'
 import { sessionRunPath } from '~/composables/runnerRoutes'
 import { toSummary } from '~/composables/sessionSummaryMapper'
 import { drillSession, fetchSessionDetail, fetchSessionSummary } from '~/composables/sessionViewApi'
 import { sessionViewQueryKeys } from '~/composables/sessionViewQueryKeys'
+import { useTrack } from '~/composables/useTrack'
 
 definePageMeta({ layout: 'default' })
 
@@ -30,6 +31,19 @@ const summary = computed<SessionSummaryResponse | null>(() => {
   const dto = summaryQuery.data.value
   return dto ? toSummary(dto) : null
 })
+
+const { track } = useTrack()
+const completedTracked = ref(false)
+watch(
+  summary,
+  (value) => {
+    if (value && !completedTracked.value) {
+      completedTracked.value = true
+      track('session_completed', { itemCount: value.questionsAnswered })
+    }
+  },
+  { immediate: true },
+)
 
 const timeLabel = computed<string | null>(() => {
   const session = sessionQuery.data.value?.data

@@ -9,6 +9,7 @@ import {
 } from '~~/src/api/diagnostic/diagnostic'
 import { userCertificationsControllerEnroll } from '~~/src/api/user-certifications/user-certifications'
 import { usersControllerUpdateMe } from '~~/src/api/users/users'
+import { clearUmamiRecorder, installUmamiRecorder } from '../support/umami-recorder'
 import { renderComposable } from '../support/vue-query-harness'
 
 vi.mock('~~/src/api/users/users')
@@ -162,5 +163,64 @@ describe('useOnboardingActions skipDiagnostic', () => {
 
     expect(diagnosticControllerDismissOffer).toHaveBeenCalledWith('enr-1')
     expect(navigated).toBe('/')
+  })
+})
+
+describe('useOnboardingActions analytics events', () => {
+  let recorder: ReturnType<typeof installUmamiRecorder>
+
+  beforeEach(() => {
+    recorder = installUmamiRecorder()
+  })
+
+  afterEach(() => {
+    clearUmamiRecorder()
+  })
+
+  it('emits cert_enrolled with the certId only on success', async () => {
+    vi.mocked(usersControllerUpdateMe).mockResolvedValue(
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      envelope({ id: 'user-1' }) as any,
+    )
+    vi.mocked(userCertificationsControllerEnroll).mockResolvedValue(
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      envelope({ id: 'enr-1' }, 201) as any,
+    )
+
+    const { result } = renderComposable(() => useOnboardingActions())
+    await result.saveDefaultsAndEnroll({ certificationId: 'cert-abc', sessionDefaults })
+
+    expect(recorder.track).toHaveBeenCalledWith('cert_enrolled', { certId: 'cert-abc' })
+  })
+
+  it('does not emit cert_enrolled when the enrollment fails', async () => {
+    vi.mocked(usersControllerUpdateMe).mockResolvedValue(
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      envelope({ id: 'user-1' }) as any,
+    )
+    vi.mocked(userCertificationsControllerEnroll).mockRejectedValue(new Error('boom'))
+
+    const { result } = renderComposable(() => useOnboardingActions())
+    await result.saveDefaultsAndEnroll({ certificationId: 'cert-abc', sessionDefaults })
+
+    expect(recorder.track).not.toHaveBeenCalled()
+  })
+
+  it('emits diagnostic_started and diagnostic_skipped with the enrollmentId', async () => {
+    vi.mocked(diagnosticControllerCreate).mockResolvedValue(
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      envelope({ id: 'attempt-9' }, 201) as any,
+    )
+    vi.mocked(diagnosticControllerDismissOffer).mockResolvedValue(
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      envelope(undefined) as any,
+    )
+
+    const { result } = renderComposable(() => useOnboardingActions())
+    await result.takeDiagnostic('enr-1')
+    await result.skipDiagnostic('enr-2')
+
+    expect(recorder.track).toHaveBeenCalledWith('diagnostic_started', { enrollmentId: 'enr-1' })
+    expect(recorder.track).toHaveBeenCalledWith('diagnostic_skipped', { enrollmentId: 'enr-2' })
   })
 })
