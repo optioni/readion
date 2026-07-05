@@ -211,8 +211,11 @@ n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "worker")'
 assert "worker Deployment exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "worker") | .spec.template.spec.containers[] | select(.image != null and (.image | test("amerkurev/scrapper")))')
 assert "worker pod has an amerkurev/scrapper sidecar container" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
-n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "worker") | .spec.template.spec.containers | length')
-assert "worker pod has at least two containers (worker + sidecar)" "$([ "${n}" -ge 2 ] 2>/dev/null && echo 0 || echo 1)"
+# .containers | length yields a single scalar line, not one line per match —
+# count_matches (built for counting matching documents) can't read it, so
+# read the value directly instead of comparing a match-count against 2.
+n=$(yq_all 'select(.kind == "Deployment" and .metadata.name == "worker") | .spec.template.spec.containers | length' | head -1)
+assert "worker pod has at least two containers (worker + sidecar)" "$([ "${n:-0}" -ge 2 ] 2>/dev/null && echo 0 || echo 1)"
 n=$(count_matches 'select(.kind == "Service" and (.metadata.name | test("scrapper"; "i")))')
 assert "no scrapper Service exists" "$([ "${n}" -eq 0 ] && echo 0 || echo 1)" "found ${n}"
 n=$(count_matches 'select(.kind == "Deployment" and (.metadata.name | test("scrapper"; "i")))')

@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  labels:
+    app: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "9091"
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: worker
+          # OWNER/REPO placeholder — pinned to a real ghcr.io/<repo>/worker digest
+          # by Image Updater (see k8s/argocd/application.yaml, group 6).
+          image: ghcr.io/OWNER/REPO/worker:latest
+          ports:
+            - name: metrics
+              containerPort: 9091
+          envFrom:
+            - configMapRef:
+                name: readion-config
+            - secretRef:
+                name: readion-secret
+          env:
+            # Container env overrides envFrom — readion-config's base
+            # SERVICE_NAME must be readion-worker for this workload.
+            - name: SERVICE_NAME
+              value: readion-worker
+          # No HTTP server in apps/worker (SPEC.md → Infrastructure) — a
+          # fabricated HTTP probe would misrepresent liveness. Process
+          # existence is the honest signal available here.
+          livenessProbe:
+            exec:
+              command:
+                - pgrep
+                - -f
+                - apps/worker/dist/main.js
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+        - name: scrapper
+          # Sidecar, not a standalone Deployment/Service (SPEC.md → Scrapper
+          # Sidecar) — the worker reaches it over localhost, so its
+          # containerPort must agree with readion-config's SCRAPPER_URL.
+          image: amerkurev/scrapper:latest
+          ports:
+            - name: scrapper
+              containerPort: 3000
+          env:
+            - name: BROWSER_DISABLE_DEV_SHM
+              value: "true"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
