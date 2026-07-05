@@ -14,6 +14,9 @@ RUN yarn install --frozen-lockfile
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# @readion/shared resolves via its `main` (dist/index.js), so it must be
+# compiled before Nuxt's bundler can resolve the package entry.
+RUN yarn workspace @readion/shared build
 RUN yarn workspace @readion/web build
 
 FROM node:24-slim AS runner
