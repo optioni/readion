@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+  labels:
+    app: db-migrate
+  annotations:
+    # ArgoCD PreSync hook: this Job runs to completion BEFORE the api/worker
+    # Deployments are synced to the new revision, so schema changes land
+    # ahead of the application code that depends on them. A non-zero exit
+    # here fails the sync at the pre-sync phase — ArgoCD does not proceed to
+    # sync the app Deployments, so a failed migration blocks the rollout and
+    # the previous healthy version keeps running.
+    argocd.argoproj.io/hook: PreSync
+    # Deletes any leftover Job from a prior sync before creating this one, so
+    # a completed/failed Job object never blocks a subsequent PreSync run.
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: db-migrate
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: db-migrate
+          # OWNER/REPO placeholder — pinned to the same ghcr.io/<repo>/migrations
+          # sha-* digest as the api/worker rollout by Image Updater (see
+          # k8s/argocd/application.yaml, group 6), so schema and app code
+          # built from the same commit move together.
+          #
+          # This image is a dedicated packages/db build (packages/db/Dockerfile)
+          # bundling the compiled migrations + MikroORM config — neither the
+          # api nor worker runner images include packages/db/dist.
+          image: ghcr.io/OWNER/REPO/migrations:latest
+          command: ["/app/node_modules/.bin/mikro-orm"]
+          args: ["migration:up"]
+          envFrom:
+            - configMapRef:
+                name: readion-config
+            # packages/db connects via discrete DB_HOST/DB_PORT/DB_USER/
+            # DB_PASSWORD/DB_NAME vars (see mikro-orm.config.ts), not
+            # DATABASE_URL — DATABASE_URL is also present in readion-secret
+            # (required by the api env schema) but is not read for the
+            # actual DB connection. All of these live in readion-secret.
+            - secretRef:
+                name: readion-secret
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
