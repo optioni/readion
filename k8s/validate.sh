@@ -191,6 +191,20 @@ n=$(count_matches 'select(.kind == "Service" and .metadata.name == "web")')
 assert "web Service exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
 n=$(count_matches 'select(.kind == "Ingress" and .metadata.name == "web")')
 assert "web Ingress exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Ingress" and .metadata.name == "web") | .spec.tls[]?.secretName')
+assert "web Ingress declares a TLS secretName" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Ingress" and .metadata.name == "web") | .spec.tls[]?.hosts[]?')
+assert "web Ingress TLS block lists a host" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Ingress" and .metadata.name == "web") | .spec.rules[]? | select(.host != null) | .http.paths[]? | select(.backend.service.name == "web")')
+assert "web Ingress routes a host rule to the web Service" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Ingress" and .metadata.name == "web") | .spec.rules[]?.http.paths[]? | select(.backend.service.port.number == 3000 or .backend.service.port.name == "http")')
+assert "web Ingress backend targets the web Service port 3000/http" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "web") | .spec.template.spec.containers[].env[]? | select(.name == "NODE_ENV" and .valueFrom.configMapKeyRef.name == "readion-config")')
+assert "web Deployment sources NODE_ENV from readion-config" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "web") | .spec.template.spec.containers[].env[]? | select(.name == "NUXT_PUBLIC_API_BASE_URL" and .valueFrom.configMapKeyRef.name == "readion-config")')
+assert "web Deployment sources NUXT_PUBLIC_API_BASE_URL from readion-config" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "web") | .spec.template.spec.containers[].envFrom[]? | select(.secretRef.name == "readion-secret")')
+assert "web Deployment does not reference readion-secret (needs no secret)" "$([ "${n}" -eq 0 ] && echo 0 || echo 1)" "found ${n}"
 
 log "(c) apps/worker: Deployment with scrapper sidecar, no scrapper Service"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "worker")')
@@ -214,8 +228,13 @@ assert "db-migrate Job exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
 n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate" and .metadata.annotations["argocd.argoproj.io/hook"] == "PreSync")')
 assert "db-migrate Job carries argocd.argoproj.io/hook: PreSync" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
 
-log "(f) Every workload references the ConfigMap + Secret"
-for workload in api web worker; do
+log "(f) Every workload that needs secrets references the ConfigMap + Secret"
+# web is intentionally excluded from this loop: per design.md it needs only
+# NODE_ENV + NUXT_PUBLIC_API_BASE_URL (both non-secret) and sources them via
+# per-key configMapKeyRef rather than envFrom — asserted separately in (b)
+# above, alongside an explicit assertion that web does NOT reference
+# readion-secret (it has no secret-backed config at all).
+for workload in api worker; do
   n=$(count_matches "select(.kind == \"Deployment\" and .metadata.name == \"${workload}\") | .spec.template.spec.containers[].envFrom[]? | select(.configMapRef.name == \"readion-config\")")
   assert "${workload} Deployment references the readion-config ConfigMap" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
   n=$(count_matches "select(.kind == \"Deployment\" and .metadata.name == \"${workload}\") | .spec.template.spec.containers[].envFrom[]? | select(.secretRef.name == \"readion-secret\")")
