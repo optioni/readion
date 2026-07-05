@@ -42,10 +42,9 @@ spec:
             - configMapRef:
                 name: readion-config
             # packages/db connects via discrete DB_HOST/DB_PORT/DB_USER/
-            # DB_PASSWORD/DB_NAME vars (see mikro-orm.config.ts), not
-            # DATABASE_URL — DATABASE_URL is also present in readion-secret
-            # (required by the api env schema) but is not read for the
-            # actual DB connection. All of these live in readion-secret.
+            # DB_PASSWORD/DB_NAME vars (see mikro-orm.config.ts) — there is
+            # no DATABASE_URL. The api/worker env schemas require these DB_*
+            # vars in production, so all of them live in readion-secret.
             - secretRef:
                 name: readion-secret
           resources:
