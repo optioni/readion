@@ -24,9 +24,9 @@
 
 ## 4. `apps/worker` workload + scrapper sidecar (`kubernetes-deployment`)
 
-- [ ] 4.1 RED: Assertion that the worker `Deployment` has **two containers** (worker + `amerkurev/scrapper`), **no** `Service`/`Ingress`, **no** standalone scrapper `Deployment`, and `SCRAPPER_URL` pointing at `localhost`. `SPEC.md` → Scrapper Sidecar, Infrastructure.
-- [ ] 4.2 GREEN: Author `k8s/base/worker/deployment.yaml` with the worker container (GHCR worker image, ConfigMap+Secret, `/metrics` port, process/exec liveness — no HTTP server) and the scrapper sidecar container.
-- [ ] 4.3 REFACTOR: Confirm the sidecar port and worker `SCRAPPER_URL` agree; schema valid.
+- [x] 4.1 RED: Assertion that the worker `Deployment` has **two containers** (worker + `amerkurev/scrapper`), **no** `Service`/`Ingress`, **no** standalone scrapper `Deployment`, and `SCRAPPER_URL` pointing at `localhost`. `SPEC.md` → Scrapper Sidecar, Infrastructure.
+- [x] 4.2 GREEN: Author `k8s/base/worker/deployment.yaml` with the worker container (GHCR worker image, ConfigMap+Secret, `/metrics` port, process/exec liveness — no HTTP server) and the scrapper sidecar container.
+- [x] 4.3 REFACTOR: Confirm the sidecar port and worker `SCRAPPER_URL` agree; schema valid.
 
 ## 5. Migration Job (`db-migration-job`)
 
