@@ -32,4 +32,4 @@ ENV SENTRY_RELEASE=$SENTRY_RELEASE
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/apps/worker/dist ./apps/worker/dist
 COPY apps/worker/package.json ./apps/worker/
-CMD ["node", "apps/worker/dist/main.js"]
+CMD ["node", "apps/worker/dist/src/main.js"]
