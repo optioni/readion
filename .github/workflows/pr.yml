@@ -32,6 +32,35 @@ jobs:
       - run: yarn lint
       - run: yarn format
 
+  manifests:
+    name: Validate Kubernetes Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Self-contained: installs its own tooling rather than relying on
+      # whatever happens to be preinstalled on the runner image, so this job
+      # doesn't drift out from under k8s/validate.sh's documented versions.
+      - name: Install kubectl (provides `kubectl kustomize`)
+        run: |
+          KUBECTL_VERSION="$(curl -L -s https://dl.k8s.io/release/stable.txt)"
+          curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/kubectl
+
+      - name: Install kubeconform
+        run: |
+          curl -sL "https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz" | tar xz kubeconform
+          sudo mv kubeconform /usr/local/bin/kubeconform
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64"
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Run manifest validation harness
+        run: bash k8s/validate.sh
+
   test:
     name: Test (Vitest + Testcontainers)
     runs-on: ubuntu-latest
