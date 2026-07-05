@@ -6,9 +6,9 @@
 
 ## 1. Config & secrets (`kubernetes-deployment`)
 
-- [ ] 1.1 RED: Assertion that a `ConfigMap` carries the non-secret keys and a `Secret` carries the sensitive keys, partitioned per `design.md` (sourced from each app's `.env.example`); no sensitive key (`DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, SMTP creds, `INTERNAL_API_SECRET`, `SENTRY_DSN`) appears in the `ConfigMap`. `SPEC.md` → Configuration.
-- [ ] 1.2 GREEN: Author `k8s/base/config/configmap.yaml` and `k8s/base/config/secret.example.yaml` (placeholder values only — real secrets supplied out-of-band). Postgres/Redis reachability is via the `DATABASE_URL`/`REDIS_URL` secret entries only.
-- [ ] 1.3 REFACTOR: De-duplicate shared keys; confirm no real secret material is committed.
+- [x] 1.1 RED: Assertion that a `ConfigMap` carries the non-secret keys and a `Secret` carries the sensitive keys, partitioned per `design.md` (sourced from each app's `.env.example`); no sensitive key (`DATABASE_URL`, `REDIS_URL`, `JWT_SECRET`, SMTP creds, `INTERNAL_API_SECRET`, `SENTRY_DSN`) appears in the `ConfigMap`. `SPEC.md` → Configuration.
+- [x] 1.2 GREEN: Author `k8s/base/config/configmap.yaml` and `k8s/base/config/secret.example.yaml` (placeholder values only — real secrets supplied out-of-band). Postgres/Redis reachability is via the `DATABASE_URL`/`REDIS_URL` secret entries only.
+- [x] 1.3 REFACTOR: De-duplicate shared keys; confirm no real secret material is committed.
 
 ## 2. `apps/api` workload (`kubernetes-deployment`)
 
