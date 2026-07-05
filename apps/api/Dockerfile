@@ -17,6 +17,7 @@ COPY package.json .yarnrc.yml yarn.lock* ./
 COPY tsconfig.base.json ./
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
+RUN yarn workspace @readion/shared build && yarn workspace @readion/db build
 RUN yarn workspace @readion/api build
 
 FROM node:24-slim AS runner
@@ -26,6 +27,7 @@ ENV NODE_ENV=production
 ENV SENTRY_RELEASE=$SENTRY_RELEASE
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/apps/api/dist ./apps/api/dist
+COPY --from=build /app/packages ./packages
 COPY apps/api/package.json ./apps/api/
 EXPOSE 3001
 CMD ["node", "apps/api/dist/src/main.js"]

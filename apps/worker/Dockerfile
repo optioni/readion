@@ -17,6 +17,7 @@ COPY package.json .yarnrc.yml yarn.lock* ./
 COPY tsconfig.base.json ./
 COPY packages/ ./packages/
 COPY apps/worker/ ./apps/worker/
+RUN yarn workspace @readion/shared build && yarn workspace @readion/db build
 # `yarn workspace @readion/worker build` fails here: Yarn's per-workspace bin
 # shimming omits `nest` for this workspace in the Docker build stage (unclear
 # why — reproducible even though @nestjs/cli resolves correctly per `yarn why`
@@ -31,5 +32,6 @@ ENV NODE_ENV=production
 ENV SENTRY_RELEASE=$SENTRY_RELEASE
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/apps/worker/dist ./apps/worker/dist
+COPY --from=build /app/packages ./packages
 COPY apps/worker/package.json ./apps/worker/
 CMD ["node", "apps/worker/dist/src/main.js"]
