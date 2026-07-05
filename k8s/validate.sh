@@ -175,6 +175,14 @@ n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "api")')
 assert "api Deployment exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
 n=$(count_matches 'select(.kind == "Service" and .metadata.name == "api" and (.spec.type == "ClusterIP" or .spec.type == null))')
 assert "api ClusterIP Service exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "api") | .spec.template.spec.containers[] | select(.image != null and (.image | test("ghcr.io.*api")))')
+assert "api container references the GHCR api image" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "api") | .spec.template.spec.imagePullSecrets[]?')
+assert "api pod references a registry pull secret" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "api") | .spec.template.spec.containers[] | select(.livenessProbe.httpGet.path == "/health")')
+assert "api liveness probe targets GET /health" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "api") | .spec.template.spec.containers[] | select(.readinessProbe.httpGet.path == "/health")')
+assert "api readiness probe targets GET /health" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
 
 log "(b) apps/web: Deployment + Service + Ingress"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "web")')
