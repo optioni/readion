@@ -13,6 +13,7 @@ RUN yarn install --frozen-lockfile
 
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
+COPY package.json .yarnrc.yml yarn.lock* ./
 COPY tsconfig.base.json ./
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
