@@ -36,9 +36,9 @@
 
 ## 6. GitOps — ArgoCD + Image Updater (`kubernetes-deployment`)
 
-- [ ] 6.1 RED: Assertion that an ArgoCD `Application` tracks `k8s/base` and carries Image Updater annotations referencing the three GHCR images, watching the `latest`/`sha-*` tags. `SPEC.md` → CI/CD, GitOps.
-- [ ] 6.2 GREEN: Author `k8s/argocd/application.yaml` with the Image Updater annotations and the chosen write-back strategy; wire the GHCR pull secret reference.
-- [ ] 6.3 REFACTOR: Confirm the image refs match `main.yml`'s `ghcr.io/<repo>/{api,web,worker}` output.
+- [x] 6.1 RED: Assertion that an ArgoCD `Application` tracks `k8s/base` and carries Image Updater annotations referencing the three GHCR images, watching the `latest`/`sha-*` tags. `SPEC.md` → CI/CD, GitOps.
+- [x] 6.2 GREEN: Author `k8s/argocd/application.yaml` with the Image Updater annotations and the chosen write-back strategy; wire the GHCR pull secret reference.
+- [x] 6.3 REFACTOR: Confirm the image refs match `main.yml`'s `ghcr.io/<repo>/{api,web,worker}` output.
 
 ## 7. Kustomize assembly
 
