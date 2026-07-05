@@ -1,5 +1,15 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
+# Matches k8s/argocd/application.yaml's spec.destination.namespace so a
+# local `kustomize build k8s/base` reproduces exactly what ArgoCD applies.
+namespace: readion
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: readion
+    includeSelectors: false
+
 resources:
   - config/configmap.yaml
   - config/secret.example.yaml
