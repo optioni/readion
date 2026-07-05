@@ -295,7 +295,60 @@ for key in "${SENSITIVE_KEYS[@]}"; do
 done
 
 # ---------------------------------------------------------------------------
-# 5. GitOps: ArgoCD Application (k8s/argocd/application.yaml)
+# 5. Kustomize assembly completeness (task group 7) — the built manifest set
+#    must contain EXACTLY the 9 expected (kind,name) resources: no resource
+#    missing, none duplicated, and no undefined extra resource sneaking in
+#    from a stray `resources:` entry. Each expected pair is asserted to occur
+#    exactly once (catches missing OR duplicated), and the total resource
+#    count is asserted to equal 9 (catches an extra, unlisted resource that
+#    wouldn't trip any single per-pair assertion).
+# ---------------------------------------------------------------------------
+section "Kustomize assembly completeness (exact resource set, no duplicates)"
+
+EXPECTED_ASSEMBLY_RESOURCES=(
+  "ConfigMap|readion-config"
+  "Secret|readion-secret"
+  "Deployment|api"
+  "Service|api"
+  "Deployment|web"
+  "Service|web"
+  "Ingress|web"
+  "Deployment|worker"
+  "Job|db-migrate"
+)
+
+# count_matches (built for leaf/scalar selections) counts LINES of yq output,
+# so selecting a whole multi-key document would overcount; count_docs instead
+# projects each matching document down to its (single-line) .kind field, then
+# strips the "---" document separators eval-all emits between matches before
+# counting lines, so the result reflects document occurrences, not the
+# document's line length. (Piping a bare literal like `| 1` instead of a real
+# field looks equivalent but is NOT — yq eval-all emits it once per INPUT
+# document regardless of whether select matched, silently defeating the count.)
+count_docs() {
+  local expr="$1"
+  local result
+  # `grep -c` exits 1 when it counts zero lines, which — combined with the
+  # script-wide `set -o pipefail` — makes the pipeline itself report failure
+  # and fire a `|| echo 0` fallback IN ADDITION to grep's own correct "0"
+  # output, corrupting the count (e.g. "00"). Disable pipefail just for this
+  # subshell so a legitimate zero-match count comes through as a single "0".
+  result=$(set +o pipefail; yq_all "${expr} | .kind" | grep -v '^---$' | grep -c -v '^null$' 2>/dev/null)
+  printf '%s' "${result:-0}"
+}
+
+for pair in "${EXPECTED_ASSEMBLY_RESOURCES[@]}"; do
+  kind="${pair%%|*}"
+  name="${pair##*|}"
+  n=$(count_docs "select(.kind == \"${kind}\" and .metadata.name == \"${name}\")")
+  assert "exactly one ${kind}/${name} in the built assembly" "$([ "${n:-0}" -eq 1 ] && echo 0 || echo 1)" "found ${n}"
+done
+
+TOTAL_BUILT_RESOURCES=$(count_docs 'select(.kind != null and .metadata.name != null)')
+assert "built assembly contains exactly 9 resources total (no undefined extras)" "$([ "${TOTAL_BUILT_RESOURCES:-0}" -eq 9 ] && echo 0 || echo 1)" "found ${TOTAL_BUILT_RESOURCES}"
+
+# ---------------------------------------------------------------------------
+# 6. GitOps: ArgoCD Application (k8s/argocd/application.yaml)
 #    This is a SEPARATE file from k8s/base — the ArgoCD `Application` is a
 #    CRD (argoproj.io/v1alpha1) that kubeconform has no bundled schema for,
 #    so it is never added to k8s/base/kustomization.yaml (that would break
