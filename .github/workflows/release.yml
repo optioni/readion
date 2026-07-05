@@ -63,7 +63,8 @@ jobs:
   build-and-push:
     name: Build ${{ matrix.app }}
     needs: tag
-    runs-on: ubuntu-latest
+    runs-on:
+        group: arm-runners
     permissions:
       contents: read
       packages: write
