@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 import {
-  databaseUrlFragment,
+  dbConnectionEnvFragment,
   redisUrlFragment,
   zodCoerceBoolean,
   zodCoerceNumber,
@@ -94,11 +94,27 @@ describe('zodCoerceBoolean', () => {
 })
 
 describe('shared env fragments', () => {
-  it('databaseUrlFragment composes and parses DATABASE_URL', () => {
-    const schema = z.object({ ...databaseUrlFragment })
-    const result = schema.safeParse({ DATABASE_URL: 'postgres://localhost:5432/readion' })
+  it('dbConnectionEnvFragment composes and parses DB_* vars', () => {
+    const schema = z.object({ ...dbConnectionEnvFragment })
+    const result = schema.safeParse({
+      DB_HOST: 'db.internal',
+      DB_PORT: '5432',
+      DB_USER: 'readion',
+      DB_PASSWORD: 'secret',
+      DB_NAME: 'readion',
+    })
     expect(result.success).toBe(true)
-    if (result.success) expect(result.data.DATABASE_URL).toBe('postgres://localhost:5432/readion')
+    if (result.success) {
+      expect(result.data.DB_HOST).toBe('db.internal')
+      expect(result.data.DB_PORT).toBe(5432)
+    }
+  })
+
+  it('dbConnectionEnvFragment is optional — an empty object still parses', () => {
+    const schema = z.object({ ...dbConnectionEnvFragment })
+    const result = schema.safeParse({})
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data.DB_HOST).toBeUndefined()
   })
 
   it('redisUrlFragment composes and parses REDIS_URL', () => {
@@ -109,22 +125,12 @@ describe('shared env fragments', () => {
   })
 
   it('composing DB+Redis fragments parses a valid combined object', () => {
-    const schema = z.object({ ...databaseUrlFragment, ...redisUrlFragment })
+    const schema = z.object({ ...dbConnectionEnvFragment, ...redisUrlFragment })
     const result = schema.safeParse({
-      DATABASE_URL: 'postgres://localhost:5432/readion',
+      DB_HOST: 'db.internal',
       REDIS_URL: 'redis://localhost:6379',
     })
     expect(result.success).toBe(true)
-  })
-
-  it('missing DATABASE_URL names the var in the error', () => {
-    const schema = z.object({ ...databaseUrlFragment })
-    const result = schema.safeParse({})
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      const fields = result.error.issues.map((i) => i.path[0])
-      expect(fields).toContain('DATABASE_URL')
-    }
   })
 
   it('missing REDIS_URL names the var in the error', () => {
@@ -133,17 +139,6 @@ describe('shared env fragments', () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       const fields = result.error.issues.map((i) => i.path[0])
-      expect(fields).toContain('REDIS_URL')
-    }
-  })
-
-  it('reports all offenders when both DATABASE_URL and REDIS_URL are missing', () => {
-    const schema = z.object({ ...databaseUrlFragment, ...redisUrlFragment })
-    const result = schema.safeParse({})
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      const fields = result.error.issues.map((i) => i.path[0])
-      expect(fields).toContain('DATABASE_URL')
       expect(fields).toContain('REDIS_URL')
     }
   })

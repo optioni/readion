@@ -4,7 +4,7 @@ import {
   DEFAULT_DISPLAY_TIMEZONE,
   DEFAULT_MIN_CHUNKS_PER_DOMAIN,
   DEFAULT_TOTAL_CHUNK_MULTIPLE,
-  databaseUrlFragment,
+  dbConnectionEnvFragment,
   groundingEnvFragment,
   isSupportedTimeZone,
   LEITNER_EASY_PROMOTION_DEFAULT,
@@ -51,10 +51,11 @@ function emptyStringToUndefined(value: unknown) {
 const optionalNonEmptyString = z.preprocess(emptyStringToUndefined, z.string().min(1).optional())
 const optionalSmtpPort = z.preprocess(emptyStringToUndefined, zodCoerceNumber().optional())
 const smtpFields = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USERNAME', 'SMTP_PASSWORD'] as const
+const dbConnectionFields = ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'] as const
 
 const envSchema = z
   .object({
-    ...databaseUrlFragment,
+    ...dbConnectionEnvFragment,
     ...redisUrlFragment,
     ...observabilityEnvFragment,
     ...aiEnvFragment,
@@ -158,6 +159,16 @@ const envSchema = z
     }
 
     for (const field of smtpFields) {
+      if (env[field] === undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Required in production',
+          path: [field],
+        })
+      }
+    }
+
+    for (const field of dbConnectionFields) {
       if (env[field] === undefined) {
         ctx.addIssue({
           code: 'custom',

@@ -17,8 +17,14 @@ export const zodCoerceBoolean = () =>
     .union([z.boolean(), z.enum(['true', 'false', '1', '0'])])
     .transform((v) => v === true || v === 'true' || v === '1')
 
-export const databaseUrlFragment = {
-  DATABASE_URL: zodRequiredUrl(),
+// packages/db connects via these discrete vars (see mikro-orm.config.ts), not a DATABASE_URL —
+// each app's env schema decides whether they're required (e.g. only in production).
+export const dbConnectionEnvFragment = {
+  DB_HOST: z.string().min(1).optional(),
+  DB_PORT: zodCoerceNumber().optional(),
+  DB_USER: z.string().min(1).optional(),
+  DB_PASSWORD: z.string().min(1).optional(),
+  DB_NAME: z.string().min(1).optional(),
 }
 
 export const redisUrlFragment = {

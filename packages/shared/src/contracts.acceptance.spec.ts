@@ -7,7 +7,7 @@ import type {
   ValidationErrorItem,
 } from './index'
 import {
-  databaseUrlFragment,
+  dbConnectionEnvFragment,
   ERROR_TYPES,
   PAGE_SIZE_DEFAULT,
   PAGE_SIZE_MAX,
@@ -155,31 +155,20 @@ describe('shared-contracts acceptance', () => {
     })
 
     it('composed DB+Redis fragments parse valid object', () => {
-      const schema = z.object({ ...databaseUrlFragment, ...redisUrlFragment })
+      const schema = z.object({ ...dbConnectionEnvFragment, ...redisUrlFragment })
       const result = schema.safeParse({
-        DATABASE_URL: 'postgres://localhost:5432/readion',
+        DB_HOST: 'localhost',
         REDIS_URL: 'redis://localhost:6379',
       })
       expect(result.success).toBe(true)
     })
 
-    it('missing DATABASE_URL is reported', () => {
-      const schema = z.object({ ...databaseUrlFragment })
+    it('missing REDIS_URL is reported', () => {
+      const schema = z.object({ ...redisUrlFragment })
       const result = schema.safeParse({})
       expect(result.success).toBe(false)
       if (!result.success) {
         const fields = result.error.issues.map((i) => i.path[0])
-        expect(fields).toContain('DATABASE_URL')
-      }
-    })
-
-    it('both missing DATABASE_URL and REDIS_URL are reported', () => {
-      const schema = z.object({ ...databaseUrlFragment, ...redisUrlFragment })
-      const result = schema.safeParse({})
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        const fields = result.error.issues.map((i) => i.path[0])
-        expect(fields).toContain('DATABASE_URL')
         expect(fields).toContain('REDIS_URL')
       }
     })

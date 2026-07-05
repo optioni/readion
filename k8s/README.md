@@ -28,18 +28,17 @@ there is nothing to deploy for them in this repo.
 
 The app and the migration CLI connect to Postgres via **discrete**
 `DB_HOST` / `DB_PORT` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` keys, which is
-what `packages/db`'s MikroORM config reads — **not** `DATABASE_URL`.
+what `packages/db`'s MikroORM config reads — there is no `DATABASE_URL`.
 
-`DATABASE_URL` is still **required**: the `apps/api` env schema validates
-its presence at startup and the app will fail fast without it. But it is
-not what's used to actually open the database connection. If you deploy a
-real Secret with a real `DATABASE_URL` but placeholder `DB_*` values, the
-app and the `db-migrate` Job will silently fall back to the MikroORM
-localhost dev defaults in production — this has bitten people before.
+The `apps/api` and `apps/worker` env schemas require all five `DB_*` keys to
+be explicitly set whenever `NODE_ENV=production`, and fail fast at boot
+naming whichever are missing. This closes a prior gap where a deploy could
+carry only placeholder `DB_*` values and the app/`db-migrate` Job would
+silently fall back to the MikroORM localhost dev defaults instead of
+refusing to start.
 
-**When provisioning the real Secret, set real values for both:** `DATABASE_URL`
-(to satisfy the schema check) and all five `DB_*` keys (for the actual
-connection), plus `REDIS_URL`. The committed `k8s/base/config/secret.example.yaml`
+**When provisioning the real Secret, set real values for** all five `DB_*`
+keys plus `REDIS_URL`. The committed `k8s/base/config/secret.example.yaml`
 holds only placeholders (`"replace-me"`) — never fill it in and commit it as-is.
 
 ## Config vs Secret
@@ -49,7 +48,7 @@ holds only placeholders (`"replace-me"`) — never fill it in and commit it as-i
   URLs, log level, etc.
 - **Sensitive** config → `readion-secret` Secret
   (`k8s/base/config/secret.example.yaml` is the committed template only):
-  `DATABASE_URL`, `DB_*`, `REDIS_URL`, `JWT_SECRET`, SMTP credentials,
+  `DB_*`, `REDIS_URL`, `JWT_SECRET`, SMTP credentials,
   `INTERNAL_API_SECRET`, `SENTRY_DSN`.
 
 The real Secret is **never committed**. Supply it out-of-band via

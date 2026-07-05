@@ -14,7 +14,6 @@ const VALID_AI_ENV = {
 
 const VALID_ENV = {
   ...VALID_AI_ENV,
-  DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
   REDIS_URL: 'redis://localhost:6379',
   PORT: '3001',
   NODE_ENV: 'development',
@@ -52,9 +51,24 @@ describe('env schema', () => {
     expect(result.PORT).toBe(3001)
   })
 
-  it('throws when DATABASE_URL is missing', () => {
-    const { DATABASE_URL: _, ...rest } = VALID_ENV
-    expect(() => parseEnv(rest)).toThrow(/DATABASE_URL/)
+  it('DB_* connection vars are optional in development', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.DB_HOST).toBeUndefined()
+    expect(result.DB_PORT).toBeUndefined()
+  })
+
+  it('accepts DB_* connection var overrides', () => {
+    const result = parseEnv({ ...VALID_ENV, DB_HOST: 'db.internal', DB_PORT: '5432' })
+    expect(result.DB_HOST).toBe('db.internal')
+    expect(result.DB_PORT).toBe(5432)
+  })
+
+  it('throws naming each DB_* var missing in production', () => {
+    for (const key of ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'] as const) {
+      expect(() => parseEnv({ ...VALID_ENV, NODE_ENV: 'production', [key]: undefined })).toThrow(
+        new RegExp(key),
+      )
+    }
   })
 
   it('throws when REDIS_URL is missing', () => {
@@ -169,7 +183,6 @@ describe('env schema — email group', () => {
   it('allows credential-free development to use the capturing transport', () => {
     const result = parseEnv({
       ...VALID_AI_ENV,
-      DATABASE_URL: VALID_ENV.DATABASE_URL,
       REDIS_URL: VALID_ENV.REDIS_URL,
       NODE_ENV: 'development',
       MAIL_FROM: VALID_ENV.MAIL_FROM,

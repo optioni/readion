@@ -311,7 +311,7 @@ for workload in api worker; do
 done
 
 log "(g) Config/Secret partition — sensitive keys excluded from ConfigMap, present in Secret"
-SENSITIVE_KEYS=(DATABASE_URL REDIS_URL JWT_SECRET SMTP_USERNAME SMTP_PASSWORD INTERNAL_API_SECRET SENTRY_DSN DB_PASSWORD)
+SENSITIVE_KEYS=(REDIS_URL JWT_SECRET SMTP_USERNAME SMTP_PASSWORD INTERNAL_API_SECRET SENTRY_DSN DB_HOST DB_USER DB_PASSWORD DB_NAME)
 NON_SENSITIVE_SAMPLE_KEYS=(NODE_ENV LOG_LEVEL)
 
 n=$(count_matches 'select(.kind == "ConfigMap" and .metadata.name == "readion-config")')

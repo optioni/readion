@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { parseEnv } from './env.schema'
 
 const VALID_ENV = {
-  DATABASE_URL: 'postgresql://readion:readion@localhost:5432/readion',
   REDIS_URL: 'redis://localhost:6379',
   SCRAPPER_URL: 'http://localhost:3001',
   NODE_ENV: 'development',
@@ -13,7 +12,6 @@ const VALID_ENV = {
 describe('worker env schema', () => {
   it('Valid config exposes typed values', () => {
     const result = parseEnv(VALID_ENV)
-    expect(result.DATABASE_URL).toBe(VALID_ENV.DATABASE_URL)
     expect(result.REDIS_URL).toBe(VALID_ENV.REDIS_URL)
     expect(result.SCRAPPER_URL).toBe(VALID_ENV.SCRAPPER_URL)
     expect(result.NODE_ENV).toBe('development')
@@ -40,9 +38,23 @@ describe('worker env schema', () => {
     expect(() => parseEnv(rest)).toThrow(/REDIS_URL/)
   })
 
-  it('Boot fails when DATABASE_URL is missing', () => {
-    const { DATABASE_URL: _, ...rest } = VALID_ENV
-    expect(() => parseEnv(rest)).toThrow(/DATABASE_URL/)
+  it('DB_* connection vars are optional in development', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.DB_HOST).toBeUndefined()
+  })
+
+  it('accepts DB_* connection var overrides', () => {
+    const result = parseEnv({ ...VALID_ENV, DB_HOST: 'db.internal', DB_PORT: '5432' })
+    expect(result.DB_HOST).toBe('db.internal')
+    expect(result.DB_PORT).toBe(5432)
+  })
+
+  it('throws naming each DB_* var missing in production', () => {
+    for (const key of ['DB_HOST', 'DB_PORT', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'] as const) {
+      expect(() => parseEnv({ ...VALID_ENV, NODE_ENV: 'production', [key]: undefined })).toThrow(
+        new RegExp(key),
+      )
+    }
   })
 
   it('Boot fails when a URL variable is malformed (SCRAPPER_URL)', () => {

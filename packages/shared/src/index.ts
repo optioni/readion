@@ -131,7 +131,7 @@ export {
   AI_MAX_TOKENS_DEFAULTS,
   type AiProvider,
   aiEnvFragment,
-  databaseUrlFragment,
+  dbConnectionEnvFragment,
   GROUNDING_MAX_REGEN_ATTEMPTS_DEFAULT,
   GROUNDING_VERBATIM_CAP_DEFAULT,
   groundingEnvFragment,

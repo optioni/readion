@@ -5,7 +5,7 @@ export {
   groundingEnvFragment,
 } from './grounding'
 export {
-  databaseUrlFragment,
+  dbConnectionEnvFragment,
   redisUrlFragment,
   zodCoerceBoolean,
   zodCoerceNumber,
