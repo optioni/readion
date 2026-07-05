@@ -39,7 +39,37 @@
 #                 Local (macOS):  brew install yq
 #                 CI (linux):     sudo wget -qO /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64" && sudo chmod +x /usr/local/bin/yq
 #
+# Deliberately -u and pipefail, NOT -e: most of this script's control flow is
+# "run a command that is EXPECTED to fail sometimes (missing tool, zero
+# matches, non-strict-zero counts) and branch on it explicitly" — an `-e`
+# would abort the script the first time e.g. `grep -c` legitimately reports
+# zero matches, long before we get to report that as a normal [FAIL] line.
 set -uo pipefail
+
+if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+  cat <<'USAGE'
+Usage: k8s/validate.sh [--help]
+
+Manifest validation harness for the `k8s-deployment` change. Builds
+k8s/base with kustomize, schema-validates the output with
+`kubeconform -strict`, and asserts the structural invariants required by:
+  - openspec/changes/k8s-deployment/specs/kubernetes-deployment/spec.md
+  - openspec/changes/k8s-deployment/specs/db-migration-job/spec.md
+
+Also validates k8s/argocd/application.yaml (a separate file — the ArgoCD
+`Application` CRD is not part of the k8s/base kustomize build).
+
+Required tooling: kustomize (or kubectl), kubeconform, yq.
+See the header comment in this file for install instructions.
+
+Exit codes:
+  0  all checks passed
+  1  build failed, schema invalid, or a structural assertion failed
+  2  required tooling is missing (checked BEFORE attempting a build, so
+     this is never confused with "manifests don't exist yet")
+USAGE
+  exit 0
+fi
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${BASE_DIR}/.." && pwd)"
@@ -53,6 +83,14 @@ trap cleanup EXIT
 
 log() { printf '%s\n' "$1"; }
 section() { printf '\n== %s ==\n' "$1"; }
+
+# Turn a numeric match count into the 0 (pass) / 1 (fail) result `assert`
+# expects, so the same ternary isn't repeated at every one of the ~50 call
+# sites below. `2>/dev/null` swallows the non-numeric-input case (an empty
+# count that a helper's `|| echo 0` fallback failed to normalize) as a fail
+# rather than a script-ending `[: integer expression expected` error.
+ge() { [ "$1" -ge "$2" ] 2>/dev/null && echo 0 || echo 1; }
+eq() { [ "$1" -eq "$2" ] 2>/dev/null && echo 0 || echo 1; }
 
 FAILED_ASSERTIONS=0
 TOTAL_ASSERTIONS=0
@@ -186,78 +224,78 @@ section "Structural invariant assertions"
 
 log "(a) apps/api: Deployment + ClusterIP Service"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "api")')
-assert "api Deployment exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "api Deployment exists" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Service" and .metadata.name == "api" and (.spec.type == "ClusterIP" or .spec.type == null))')
-assert "api ClusterIP Service exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "api ClusterIP Service exists" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "api") | .spec.template.spec.containers[] | select(.image != null and (.image | test("ghcr.io.*api")))')
-assert "api container references the GHCR api image" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "api container references the GHCR api image" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "api") | .spec.template.spec.imagePullSecrets[]?')
-assert "api pod references a registry pull secret" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "api pod references a registry pull secret" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "api") | .spec.template.spec.containers[] | select(.livenessProbe.httpGet.path == "/health")')
-assert "api liveness probe targets GET /health" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "api liveness probe targets GET /health" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "api") | .spec.template.spec.containers[] | select(.readinessProbe.httpGet.path == "/health")')
-assert "api readiness probe targets GET /health" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "api readiness probe targets GET /health" "$(ge "${n}" 1)"
 
 log "(b) apps/web: Deployment + Service + Ingress"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "web")')
-assert "web Deployment exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "web Deployment exists" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Service" and .metadata.name == "web")')
-assert "web Service exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "web Service exists" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Ingress" and .metadata.name == "web")')
-assert "web Ingress exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "web Ingress exists" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Ingress" and .metadata.name == "web") | .spec.tls[]?.secretName')
-assert "web Ingress declares a TLS secretName" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "web Ingress declares a TLS secretName" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Ingress" and .metadata.name == "web") | .spec.tls[]?.hosts[]?')
-assert "web Ingress TLS block lists a host" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "web Ingress TLS block lists a host" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Ingress" and .metadata.name == "web") | .spec.rules[]? | select(.host != null) | .http.paths[]? | select(.backend.service.name == "web")')
-assert "web Ingress routes a host rule to the web Service" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "web Ingress routes a host rule to the web Service" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Ingress" and .metadata.name == "web") | .spec.rules[]?.http.paths[]? | select(.backend.service.port.number == 3000 or .backend.service.port.name == "http")')
-assert "web Ingress backend targets the web Service port 3000/http" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "web Ingress backend targets the web Service port 3000/http" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "web") | .spec.template.spec.containers[].env[]? | select(.name == "NODE_ENV" and .valueFrom.configMapKeyRef.name == "readion-config")')
-assert "web Deployment sources NODE_ENV from readion-config" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "web Deployment sources NODE_ENV from readion-config" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "web") | .spec.template.spec.containers[].env[]? | select(.name == "NUXT_PUBLIC_API_BASE_URL" and .valueFrom.configMapKeyRef.name == "readion-config")')
-assert "web Deployment sources NUXT_PUBLIC_API_BASE_URL from readion-config" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "web Deployment sources NUXT_PUBLIC_API_BASE_URL from readion-config" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "web") | .spec.template.spec.containers[].envFrom[]? | select(.secretRef.name == "readion-secret")')
-assert "web Deployment does not reference readion-secret (needs no secret)" "$([ "${n}" -eq 0 ] && echo 0 || echo 1)" "found ${n}"
+assert "web Deployment does not reference readion-secret (needs no secret)" "$(eq "${n}" 0)" "found ${n}"
 
 log "(c) apps/worker: Deployment with scrapper sidecar, no scrapper Service"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "worker")')
-assert "worker Deployment exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "worker Deployment exists" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "worker") | .spec.template.spec.containers[] | select(.image != null and (.image | test("amerkurev/scrapper")))')
-assert "worker pod has an amerkurev/scrapper sidecar container" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "worker pod has an amerkurev/scrapper sidecar container" "$(ge "${n}" 1)"
 # .containers | length yields a single scalar line, not one line per match —
 # count_matches (built for counting matching documents) can't read it, so
 # read the value directly instead of comparing a match-count against 2.
 n=$(yq_all 'select(.kind == "Deployment" and .metadata.name == "worker") | .spec.template.spec.containers | length' | head -1)
-assert "worker pod has at least two containers (worker + sidecar)" "$([ "${n:-0}" -ge 2 ] 2>/dev/null && echo 0 || echo 1)"
+assert "worker pod has at least two containers (worker + sidecar)" "$(ge "${n:-0}" 2)"
 n=$(count_matches 'select(.kind == "Service" and (.metadata.name | test("scrapper"; "i")))')
-assert "no scrapper Service exists" "$([ "${n}" -eq 0 ] && echo 0 || echo 1)" "found ${n}"
+assert "no scrapper Service exists" "$(eq "${n}" 0)" "found ${n}"
 n=$(count_matches 'select(.kind == "Deployment" and (.metadata.name | test("scrapper"; "i")))')
-assert "no standalone scrapper Deployment exists" "$([ "${n}" -eq 0 ] && echo 0 || echo 1)" "found ${n}"
+assert "no standalone scrapper Deployment exists" "$(eq "${n}" 0)" "found ${n}"
 n=$(count_matches 'select(.kind == "ConfigMap" and .metadata.name == "readion-config") | select(.data.SCRAPPER_URL == "http://localhost:3000")')
-assert "readion-config SCRAPPER_URL points at localhost:3000" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "readion-config SCRAPPER_URL points at localhost:3000" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "worker") | .spec.template.spec.containers[] | select((.image // "") | test("amerkurev/scrapper")) | .ports[]? | select(.containerPort == 3000)')
-assert "scrapper sidecar exposes containerPort 3000 (agrees with SCRAPPER_URL)" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "scrapper sidecar exposes containerPort 3000 (agrees with SCRAPPER_URL)" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "worker") | .spec.template.spec.containers[] | select(.name == "worker") | .env[]? | select(.name == "SERVICE_NAME" and .value == "readion-worker")')
-assert "worker container overrides SERVICE_NAME to readion-worker" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "worker container overrides SERVICE_NAME to readion-worker" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "worker") | .spec.template.spec.containers[] | select(.name == "worker") | select(.livenessProbe.httpGet != null or .readinessProbe.httpGet != null)')
-assert "worker container defines no HTTP liveness/readiness probe" "$([ "${n}" -eq 0 ] && echo 0 || echo 1)" "found ${n}"
+assert "worker container defines no HTTP liveness/readiness probe" "$(eq "${n}" 0)" "found ${n}"
 
 log "(d) No Postgres/Redis StatefulSet/Deployment"
 n=$(count_matches 'select((.kind == "StatefulSet" or .kind == "Deployment") and (.metadata.name | test("postgres|redis"; "i")))')
-assert "no Postgres/Redis StatefulSet or Deployment exists" "$([ "${n}" -eq 0 ] && echo 0 || echo 1)" "found ${n}"
+assert "no Postgres/Redis StatefulSet or Deployment exists" "$(eq "${n}" 0)" "found ${n}"
 
 log "(e) Migration Job with ArgoCD PreSync hook"
 n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate")')
-assert "db-migrate Job exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "db-migrate Job exists" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate" and .metadata.annotations["argocd.argoproj.io/hook"] == "PreSync")')
-assert "db-migrate Job carries argocd.argoproj.io/hook: PreSync" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "db-migrate Job carries argocd.argoproj.io/hook: PreSync" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate" and .metadata.annotations["argocd.argoproj.io/hook-delete-policy"] != null)')
-assert "db-migrate Job carries a hook-delete-policy" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "db-migrate Job carries a hook-delete-policy" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate") | .spec.template.spec.containers[] | select((((.command // []) + (.args // [])) | join(" ")) | test("migration:up"))')
-assert "db-migrate Job runs mikro-orm migration:up" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "db-migrate Job runs mikro-orm migration:up" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate") | .spec.template.spec.containers[] | select(.image != null and (.image | test("ghcr.io.*migrat")))')
-assert "db-migrate Job uses a GHCR migration image bundling packages/db" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "db-migrate Job uses a GHCR migration image bundling packages/db" "$(ge "${n}" 1)"
 
 log "(f) Every workload that needs secrets references the ConfigMap + Secret"
 # web is intentionally excluded from this loop: per design.md it needs only
@@ -267,9 +305,9 @@ log "(f) Every workload that needs secrets references the ConfigMap + Secret"
 # readion-secret (it has no secret-backed config at all).
 for workload in api worker; do
   n=$(count_matches "select(.kind == \"Deployment\" and .metadata.name == \"${workload}\") | .spec.template.spec.containers[].envFrom[]? | select(.configMapRef.name == \"readion-config\")")
-  assert "${workload} Deployment references the readion-config ConfigMap" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "${workload} Deployment references the readion-config ConfigMap" "$(ge "${n}" 1)"
   n=$(count_matches "select(.kind == \"Deployment\" and .metadata.name == \"${workload}\") | .spec.template.spec.containers[].envFrom[]? | select(.secretRef.name == \"readion-secret\")")
-  assert "${workload} Deployment references the readion-secret Secret" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "${workload} Deployment references the readion-secret Secret" "$(ge "${n}" 1)"
 done
 
 log "(g) Config/Secret partition — sensitive keys excluded from ConfigMap, present in Secret"
@@ -277,21 +315,21 @@ SENSITIVE_KEYS=(DATABASE_URL REDIS_URL JWT_SECRET SMTP_USERNAME SMTP_PASSWORD IN
 NON_SENSITIVE_SAMPLE_KEYS=(NODE_ENV LOG_LEVEL)
 
 n=$(count_matches 'select(.kind == "ConfigMap" and .metadata.name == "readion-config")')
-assert "readion-config ConfigMap exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "readion-config ConfigMap exists" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Secret" and .metadata.name == "readion-secret" and .type == "Opaque")')
-assert "readion-secret Opaque Secret exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+assert "readion-secret Opaque Secret exists" "$(ge "${n}" 1)"
 
 for key in "${NON_SENSITIVE_SAMPLE_KEYS[@]}"; do
   n=$(count_matches "select(.kind == \"ConfigMap\" and .metadata.name == \"readion-config\") | .data.${key}")
-  assert "ConfigMap carries non-sensitive key ${key}" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "ConfigMap carries non-sensitive key ${key}" "$(ge "${n}" 1)"
 done
 
 for key in "${SENSITIVE_KEYS[@]}"; do
   n=$(count_matches "select(.kind == \"ConfigMap\" and .metadata.name == \"readion-config\") | .data.${key}")
-  assert "ConfigMap does not carry sensitive key ${key}" "$([ "${n}" -eq 0 ] && echo 0 || echo 1)" "found in ConfigMap"
+  assert "ConfigMap does not carry sensitive key ${key}" "$(eq "${n}" 0)" "found in ConfigMap"
 
   n=$(count_matches "select(.kind == \"Secret\" and .metadata.name == \"readion-secret\") | (.data.${key} // .stringData.${key})")
-  assert "Secret defines sensitive key ${key}" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "Secret defines sensitive key ${key}" "$(ge "${n}" 1)"
 done
 
 # Spec scenario "No real secrets are committed" (kubernetes-deployment spec):
@@ -307,7 +345,7 @@ count_non_placeholder_secret_values() {
   printf '%s' "${result:-0}"
 }
 n=$(count_non_placeholder_secret_values)
-assert "readion-secret stringData holds only placeholder values (no live-looking credentials)" "$([ "${n:-0}" -eq 0 ] && echo 0 || echo 1)" "found ${n} non-placeholder value(s)"
+assert "readion-secret stringData holds only placeholder values (no live-looking credentials)" "$(eq "${n:-0}" 0)" "found ${n} non-placeholder value(s)"
 
 # ---------------------------------------------------------------------------
 # 5. Kustomize assembly completeness (task group 7) — the built manifest set
@@ -356,11 +394,11 @@ for pair in "${EXPECTED_ASSEMBLY_RESOURCES[@]}"; do
   kind="${pair%%|*}"
   name="${pair##*|}"
   n=$(count_docs "select(.kind == \"${kind}\" and .metadata.name == \"${name}\")")
-  assert "exactly one ${kind}/${name} in the built assembly" "$([ "${n:-0}" -eq 1 ] && echo 0 || echo 1)" "found ${n}"
+  assert "exactly one ${kind}/${name} in the built assembly" "$(eq "${n:-0}" 1)" "found ${n}"
 done
 
 TOTAL_BUILT_RESOURCES=$(count_docs 'select(.kind != null and .metadata.name != null)')
-assert "built assembly contains exactly 9 resources total (no undefined extras)" "$([ "${TOTAL_BUILT_RESOURCES:-0}" -eq 9 ] && echo 0 || echo 1)" "found ${TOTAL_BUILT_RESOURCES}"
+assert "built assembly contains exactly 9 resources total (no undefined extras)" "$(eq "${TOTAL_BUILT_RESOURCES:-0}" 9)" "found ${TOTAL_BUILT_RESOURCES}"
 
 # ---------------------------------------------------------------------------
 # 6. GitOps: ArgoCD Application (k8s/argocd/application.yaml)
@@ -386,34 +424,34 @@ else
   fi
 
   n=$(count_argocd_matches 'select(.kind == "Application")')
-  assert "Application kind is Application" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "Application kind is Application" "$(ge "${n}" 1)"
   n=$(count_argocd_matches 'select(.apiVersion != null and (.apiVersion | test("^argoproj.io/")))')
-  assert "Application apiVersion is under argoproj.io" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "Application apiVersion is under argoproj.io" "$(ge "${n}" 1)"
 
   n=$(yq_argocd '(.spec.source.path // "") + " " + ([.spec.sources[]?.path] | join(" "))' | grep -c 'k8s/base' || echo 0)
-  assert "Application source path targets k8s/base" "$([ "${n:-0}" -ge 1 ] && echo 0 || echo 1)"
+  assert "Application source path targets k8s/base" "$(ge "${n:-0}" 1)"
   n=$(count_argocd_matches '.spec.source.repoURL, .spec.sources[]?.repoURL')
-  assert "Application source declares a repoURL" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "Application source declares a repoURL" "$(ge "${n}" 1)"
 
   n=$(count_argocd_matches '.metadata.annotations["argocd-image-updater.argoproj.io/image-list"] | select(test("ghcr.io.*/api"))')
-  assert "Image Updater image-list references the GHCR api image" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "Image Updater image-list references the GHCR api image" "$(ge "${n}" 1)"
   n=$(count_argocd_matches '.metadata.annotations["argocd-image-updater.argoproj.io/image-list"] | select(test("ghcr.io.*/web"))')
-  assert "Image Updater image-list references the GHCR web image" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "Image Updater image-list references the GHCR web image" "$(ge "${n}" 1)"
   n=$(count_argocd_matches '.metadata.annotations["argocd-image-updater.argoproj.io/image-list"] | select(test("ghcr.io.*/worker"))')
-  assert "Image Updater image-list references the GHCR worker image" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "Image Updater image-list references the GHCR worker image" "$(ge "${n}" 1)"
   n=$(count_argocd_matches '.metadata.annotations["argocd-image-updater.argoproj.io/image-list"] | select(test("ghcr.io.*/migrations"))')
-  assert "Image Updater image-list references the GHCR migrations image" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "Image Updater image-list references the GHCR migrations image" "$(ge "${n}" 1)"
 
   n=$(count_argocd_matches '.metadata.annotations | to_entries[] | select(.key | test("update-strategy$")) | select(.value == "digest")')
-  assert "Image Updater tracks digest changes (update-strategy: digest)" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "Image Updater tracks digest changes (update-strategy: digest)" "$(ge "${n}" 1)"
   n=$(count_argocd_matches '.metadata.annotations | to_entries[] | select(.key | test("allow-tags$")) | select(.value | test("latest|sha-"))')
-  assert "Image Updater watches the latest/sha-* tags" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "Image Updater watches the latest/sha-* tags" "$(ge "${n}" 1)"
 
   n=$(count_argocd_matches '.metadata.annotations["argocd-image-updater.argoproj.io/write-back-method"]')
-  assert "Image Updater write-back method is set" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "Image Updater write-back method is set" "$(ge "${n}" 1)"
 
   n=$(count_argocd_matches '.metadata.annotations | to_entries[] | select(.key | test("pull-secret$")) | select(.value | test("ghcr-pull-secret"))')
-  assert "Image Updater references the ghcr-pull-secret" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  assert "Image Updater references the ghcr-pull-secret" "$(ge "${n}" 1)"
 fi
 
 # ---------------------------------------------------------------------------
