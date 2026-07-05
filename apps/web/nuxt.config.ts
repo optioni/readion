@@ -12,6 +12,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL ?? '',
+      umamiHost: process.env.NUXT_PUBLIC_UMAMI_HOST ?? '',
+      umamiWebsiteId: process.env.NUXT_PUBLIC_UMAMI_WEBSITE_ID ?? '',
     },
   },
   app: {
