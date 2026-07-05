@@ -1,0 +1,72 @@
+# ArgoCD Application — GitOps entrypoint for the Readion deployment.
+#
+# NOT part of k8s/base's kustomization (kubeconform has no bundled schema
+# for the argoproj.io/v1alpha1 Application CRD, and folding it into the
+# strict k8s/base build would break `kubeconform -strict`). Validated
+# separately by k8s/validate.sh section "(f) GitOps: ArgoCD Application"
+# via `kubeconform -ignore-missing-schemas` plus targeted yq assertions.
+#
+# Image Updater write-back strategy: git (not argocd/patch-live).
+# Chosen because it is GitOps-native — the resolved digest is committed
+# back to this repo, so `git log`/`git blame` on k8s/base stays the single
+# source of truth for what's actually running, and a `kustomize build`
+# of a checked-out commit reproduces the live state without depending on
+# ArgoCD's live-manifest cache. The tradeoff (an extra commit per digest
+# roll, and write access to this repo for the Image Updater controller)
+# is acceptable for a single-cluster deployment at this stage.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: readion
+  namespace: argocd
+  annotations:
+    # Image Updater watches these GHCR images for new digests on the
+    # latest/sha-* tags .github/workflows/main.yml pushes on every push to
+    # main. `migrations` is included (not just api/web/worker) so the
+    # db-migrate PreSync Job's image moves in lockstep with the app
+    # rollout — see design.md: "Pin the Job to the same sha-* digest as
+    # the app rollout so schema and code move together."
+    argocd-image-updater.argoproj.io/image-list: "api=ghcr.io/OWNER/REPO/api,web=ghcr.io/OWNER/REPO/web,worker=ghcr.io/OWNER/REPO/worker,migrations=ghcr.io/OWNER/REPO/migrations"
+    # `digest` strategy watches a mutable tag (latest) for digest changes,
+    # rather than requiring semver — matches main.yml's tag scheme, which
+    # only ever emits `latest` + `sha-<short-sha>`, never a version tag.
+    argocd-image-updater.argoproj.io/api.update-strategy: digest
+    argocd-image-updater.argoproj.io/web.update-strategy: digest
+    argocd-image-updater.argoproj.io/worker.update-strategy: digest
+    argocd-image-updater.argoproj.io/migrations.update-strategy: digest
+    # Restrict which tags Image Updater is allowed to consider, so it
+    # never picks up a stray/experimental tag pushed by hand.
+    argocd-image-updater.argoproj.io/api.allow-tags: "regexp:^(latest|sha-.+)$"
+    argocd-image-updater.argoproj.io/web.allow-tags: "regexp:^(latest|sha-.+)$"
+    argocd-image-updater.argoproj.io/worker.allow-tags: "regexp:^(latest|sha-.+)$"
+    argocd-image-updater.argoproj.io/migrations.allow-tags: "regexp:^(latest|sha-.+)$"
+    # GHCR is private — Image Updater needs the same pull secret the
+    # workloads already reference (k8s/base/{api,web,worker,migrations}).
+    argocd-image-updater.argoproj.io/pull-secret: pullsecret:readion/ghcr-pull-secret
+    # Resolved digests are committed back to this repo (see header comment
+    # for the git-vs-argocd tradeoff). Target branch/path match this
+    # Application's own source below.
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: main
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/OWNER/REPO
+    targetRevision: main
+    path: k8s/base
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: readion
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
