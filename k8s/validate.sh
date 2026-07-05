@@ -44,6 +44,7 @@ set -uo pipefail
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${BASE_DIR}/.." && pwd)"
 K8S_BASE="${REPO_ROOT}/k8s/base"
+ARGOCD_APPLICATION="${REPO_ROOT}/k8s/argocd/application.yaml"
 
 BUILT_MANIFEST="$(mktemp -t k8s-validate-build.XXXXXX)"
 BUILD_STDERR="$(mktemp -t k8s-validate-build-err.XXXXXX)"
@@ -82,6 +83,19 @@ yq_all() {
 count_matches() {
   local expr="$1"
   yq_all "${expr}" | grep -c -v '^null$' 2>/dev/null | tr -d '[:space:]' || echo 0
+}
+
+# yq over the standalone ArgoCD Application manifest (NOT part of
+# k8s/base — it's a CRD kubeconform has no bundled schema for, so it is
+# validated separately with -ignore-missing-schemas rather than -strict).
+yq_argocd() {
+  local expr="$1"
+  yq eval "${expr}" "${ARGOCD_APPLICATION}" 2>/dev/null
+}
+
+count_argocd_matches() {
+  local expr="$1"
+  yq_argocd "${expr}" | grep -c -v '^null$' 2>/dev/null | tr -d '[:space:]' || echo 0
 }
 
 # ---------------------------------------------------------------------------
@@ -279,6 +293,60 @@ for key in "${SENSITIVE_KEYS[@]}"; do
   n=$(count_matches "select(.kind == \"Secret\" and .metadata.name == \"readion-secret\") | (.data.${key} // .stringData.${key})")
   assert "Secret defines sensitive key ${key}" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
 done
+
+# ---------------------------------------------------------------------------
+# 5. GitOps: ArgoCD Application (k8s/argocd/application.yaml)
+#    This is a SEPARATE file from k8s/base — the ArgoCD `Application` is a
+#    CRD (argoproj.io/v1alpha1) that kubeconform has no bundled schema for,
+#    so it is never added to k8s/base/kustomization.yaml (that would break
+#    the strict k8s/base build) and is validated on its own here.
+# ---------------------------------------------------------------------------
+section "(f) GitOps: ArgoCD Application"
+
+if [ ! -f "${ARGOCD_APPLICATION}" ]; then
+  log "ArgoCD Application manifest not found at ${ARGOCD_APPLICATION}."
+  assert "k8s/argocd/application.yaml exists" 1
+else
+  assert "k8s/argocd/application.yaml exists" 0
+
+  if command -v kubeconform >/dev/null 2>&1; then
+    if kubeconform -ignore-missing-schemas -summary "${ARGOCD_APPLICATION}" >/dev/null 2>&1; then
+      assert "kubeconform -ignore-missing-schemas is clean on the ArgoCD Application" 0
+    else
+      assert "kubeconform -ignore-missing-schemas is clean on the ArgoCD Application" 1
+    fi
+  fi
+
+  n=$(count_argocd_matches 'select(.kind == "Application")')
+  assert "Application kind is Application" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  n=$(count_argocd_matches 'select(.apiVersion != null and (.apiVersion | test("^argoproj.io/")))')
+  assert "Application apiVersion is under argoproj.io" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+
+  n=$(yq_argocd '(.spec.source.path // "") + " " + ([.spec.sources[]?.path] | join(" "))' | grep -c 'k8s/base' || echo 0)
+  assert "Application source path targets k8s/base" "$([ "${n:-0}" -ge 1 ] && echo 0 || echo 1)"
+  n=$(count_argocd_matches '.spec.source.repoURL, .spec.sources[]?.repoURL')
+  assert "Application source declares a repoURL" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+
+  n=$(count_argocd_matches '.metadata.annotations["argocd-image-updater.argoproj.io/image-list"] | select(test("ghcr.io.*/api"))')
+  assert "Image Updater image-list references the GHCR api image" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  n=$(count_argocd_matches '.metadata.annotations["argocd-image-updater.argoproj.io/image-list"] | select(test("ghcr.io.*/web"))')
+  assert "Image Updater image-list references the GHCR web image" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  n=$(count_argocd_matches '.metadata.annotations["argocd-image-updater.argoproj.io/image-list"] | select(test("ghcr.io.*/worker"))')
+  assert "Image Updater image-list references the GHCR worker image" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  n=$(count_argocd_matches '.metadata.annotations["argocd-image-updater.argoproj.io/image-list"] | select(test("ghcr.io.*/migrations"))')
+  assert "Image Updater image-list references the GHCR migrations image" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+
+  n=$(count_argocd_matches '.metadata.annotations | to_entries[] | select(.key | test("update-strategy$")) | select(.value == "digest")')
+  assert "Image Updater tracks digest changes (update-strategy: digest)" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+  n=$(count_argocd_matches '.metadata.annotations | to_entries[] | select(.key | test("allow-tags$")) | select(.value | test("latest|sha-"))')
+  assert "Image Updater watches the latest/sha-* tags" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+
+  n=$(count_argocd_matches '.metadata.annotations["argocd-image-updater.argoproj.io/write-back-method"]')
+  assert "Image Updater write-back method is set" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+
+  n=$(count_argocd_matches '.metadata.annotations | to_entries[] | select(.key | test("pull-secret$")) | select(.value | test("ghcr-pull-secret"))')
+  assert "Image Updater references the ghcr-pull-secret" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+fi
 
 # ---------------------------------------------------------------------------
 # Result
