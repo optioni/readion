@@ -294,6 +294,21 @@ for key in "${SENSITIVE_KEYS[@]}"; do
   assert "Secret defines sensitive key ${key}" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
 done
 
+# Spec scenario "No real secrets are committed" (kubernetes-deployment spec):
+# the committed readion-secret manifest must hold only placeholder values,
+# never live-looking credential material. This can't be proven for certain
+# from text alone, but every value the repo's secret.example.yaml commits is
+# either the literal placeholder "replace-me" or a plain non-secret number
+# (e.g. DB_PORT) or blank — so flag anything that is neither as a likely
+# accidental real value.
+count_non_placeholder_secret_values() {
+  local result
+  result=$(set +o pipefail; yq_all 'select(.kind == "Secret" and .metadata.name == "readion-secret") | .stringData[]?' | grep -Ev '^(replace-me|[0-9]*)$' | grep -c .)
+  printf '%s' "${result:-0}"
+}
+n=$(count_non_placeholder_secret_values)
+assert "readion-secret stringData holds only placeholder values (no live-looking credentials)" "$([ "${n:-0}" -eq 0 ] && echo 0 || echo 1)" "found ${n} non-placeholder value(s)"
+
 # ---------------------------------------------------------------------------
 # 5. Kustomize assembly completeness (task group 7) — the built manifest set
 #    must contain EXACTLY the 9 expected (kind,name) resources: no resource
