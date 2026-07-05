@@ -238,6 +238,12 @@ n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate")')
 assert "db-migrate Job exists" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
 n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate" and .metadata.annotations["argocd.argoproj.io/hook"] == "PreSync")')
 assert "db-migrate Job carries argocd.argoproj.io/hook: PreSync" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate" and .metadata.annotations["argocd.argoproj.io/hook-delete-policy"] != null)')
+assert "db-migrate Job carries a hook-delete-policy" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate") | .spec.template.spec.containers[] | select((((.command // []) + (.args // [])) | join(" ")) | test("migration:up"))')
+assert "db-migrate Job runs mikro-orm migration:up" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate") | .spec.template.spec.containers[] | select(.image != null and (.image | test("ghcr.io.*migrat")))')
+assert "db-migrate Job uses a GHCR migration image bundling packages/db" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
 
 log "(f) Every workload that needs secrets references the ConfigMap + Secret"
 # web is intentionally excluded from this loop: per design.md it needs only
@@ -253,7 +259,7 @@ for workload in api worker; do
 done
 
 log "(g) Config/Secret partition — sensitive keys excluded from ConfigMap, present in Secret"
-SENSITIVE_KEYS=(DATABASE_URL REDIS_URL JWT_SECRET SMTP_USERNAME SMTP_PASSWORD INTERNAL_API_SECRET SENTRY_DSN)
+SENSITIVE_KEYS=(DATABASE_URL REDIS_URL JWT_SECRET SMTP_USERNAME SMTP_PASSWORD INTERNAL_API_SECRET SENTRY_DSN DB_PASSWORD)
 NON_SENSITIVE_SAMPLE_KEYS=(NODE_ENV LOG_LEVEL)
 
 n=$(count_matches 'select(.kind == "ConfigMap" and .metadata.name == "readion-config")')
