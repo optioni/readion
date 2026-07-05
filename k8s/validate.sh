@@ -217,6 +217,14 @@ n=$(count_matches 'select(.kind == "Service" and (.metadata.name | test("scrappe
 assert "no scrapper Service exists" "$([ "${n}" -eq 0 ] && echo 0 || echo 1)" "found ${n}"
 n=$(count_matches 'select(.kind == "Deployment" and (.metadata.name | test("scrapper"; "i")))')
 assert "no standalone scrapper Deployment exists" "$([ "${n}" -eq 0 ] && echo 0 || echo 1)" "found ${n}"
+n=$(count_matches 'select(.kind == "ConfigMap" and .metadata.name == "readion-config") | select(.data.SCRAPPER_URL == "http://localhost:3000")')
+assert "readion-config SCRAPPER_URL points at localhost:3000" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "worker") | .spec.template.spec.containers[] | select((.image // "") | test("amerkurev/scrapper")) | .ports[]? | select(.containerPort == 3000)')
+assert "scrapper sidecar exposes containerPort 3000 (agrees with SCRAPPER_URL)" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "worker") | .spec.template.spec.containers[] | select(.name == "worker") | .env[]? | select(.name == "SERVICE_NAME" and .value == "readion-worker")')
+assert "worker container overrides SERVICE_NAME to readion-worker" "$([ "${n}" -ge 1 ] && echo 0 || echo 1)"
+n=$(count_matches 'select(.kind == "Deployment" and .metadata.name == "worker") | .spec.template.spec.containers[] | select(.name == "worker") | select(.livenessProbe.httpGet != null or .readinessProbe.httpGet != null)')
+assert "worker container defines no HTTP liveness/readiness probe" "$([ "${n}" -eq 0 ] && echo 0 || echo 1)" "found ${n}"
 
 log "(d) No Postgres/Redis StatefulSet/Deployment"
 n=$(count_matches 'select((.kind == "StatefulSet" or .kind == "Deployment") and (.metadata.name | test("postgres|redis"; "i")))')
