@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: readion-config
+data:
+  # Shared
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+
+  # apps/api
+  PORT: "3001"
+  # Per-app default; api/worker Deployments override via a literal container
+  # env entry (which takes precedence over envFrom) since each needs a
+  # different value.
+  SERVICE_NAME: "readion-api"
+  CORS_ORIGIN: "https://app.readion.example"
+  WEB_BASE_URL: "https://app.readion.example"
+  PUBLIC_API_URL: "https://api.readion.example"
+  MAIL_FROM: "Readion <no-reply@readion.app>"
+  SMTP_HOST: "smtp.readion.example"
+  SMTP_PORT: "587"
+  JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS: "900"
+  JWT_REFRESH_TOKEN_EXPIRES_IN_SECONDS: "604800"
+  BCRYPT_COST: "12"
+  CERT_COVERAGE_MIN_CHUNKS_PER_DOMAIN: "20"
+  CERT_COVERAGE_TOTAL_CHUNK_MULTIPLE: "3"
+  READINESS_CALIBRATION_MIN_ANSWERS: "10"
+  DIAGNOSTIC_QUESTION_COUNT: "12"
+  DIAGNOSTIC_REPROMPT_AFTER_SESSIONS: "1"
+  DIGEST_SEND_WEEKDAY: "1"
+  DIGEST_SEND_HOUR: "13"
+  EXAM_READY_THRESHOLD: "80"
+  NUDGE_ACTIVITY_LULL_DAYS: "7"
+  NUDGE_FOLLOWUP_DELAY_DAYS: "3"
+  NUDGE_MAX_FOLLOWUPS: "1"
+  ANALYTICS_ACTIVE_WINDOW_DAYS: "14"
+  ANALYTICS_ACTIVE_MIN_SESSIONS: "2"
+  ANALYTICS_NORTHSTAR_WINDOW_DAYS: "28"
+  ANALYTICS_COST_QUIZ: "0.01"
+  ANALYTICS_COST_MOCK_QUESTION: "0.02"
+  ANALYTICS_COST_SESSION_ITEM: "0.03"
+  ANALYTICS_COST_AGENT_MESSAGE: "0.02"
+  ANALYTICS_TARGET_NORTHSTAR_GAIN: "15"
+  ANALYTICS_TARGET_SESSIONS_PER_WEEK: "2"
+  ANALYTICS_TARGET_W4_RETENTION: "0.40"
+  ANALYTICS_TARGET_COMPLETION_RATE: "0.75"
+  ANALYTICS_TARGET_AGENT_ENGAGEMENT: "0.50"
+  ANALYTICS_LLM_COST_BUDGET: "5"
+
+  # apps/worker
+  SCRAPPER_URL: "http://localhost:3000"
+  INTERNAL_API_BASE_URL: "https://api.readion.example"
+  PROMETHEUS_PORT: "9091"
+
+  # apps/web
+  NUXT_PUBLIC_API_BASE_URL: "https://api.readion.example"
