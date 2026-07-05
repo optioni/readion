@@ -12,9 +12,9 @@
 
 ## 2. `apps/api` workload (`kubernetes-deployment`)
 
-- [ ] 2.1 RED: Assertion that the api `Deployment` + `ClusterIP Service` exist, mount the ConfigMap+Secret, and set liveness/readiness probes to `GET /health`. `SPEC.md` → Infrastructure (Kubernetes), Health Checks.
-- [ ] 2.2 GREEN: Author `k8s/base/api/deployment.yaml` + `service.yaml` referencing the GHCR api image, the GHCR pull secret, `/health` probes, and `/metrics` port.
-- [ ] 2.3 REFACTOR: Confirm `kubeconform -strict` passes for the api manifests.
+- [x] 2.1 RED: Assertion that the api `Deployment` + `ClusterIP Service` exist, mount the ConfigMap+Secret, and set liveness/readiness probes to `GET /health`. `SPEC.md` → Infrastructure (Kubernetes), Health Checks.
+- [x] 2.2 GREEN: Author `k8s/base/api/deployment.yaml` + `service.yaml` referencing the GHCR api image, the GHCR pull secret, `/health` probes, and `/metrics` port.
+- [x] 2.3 REFACTOR: Confirm `kubeconform -strict` passes for the api manifests.
 
 ## 3. `apps/web` workload (`kubernetes-deployment`)
 
