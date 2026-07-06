@@ -189,6 +189,27 @@ describe('auth acceptance', () => {
     expect(wrongPassword.body.detail).toBe(unknownEmail.body.detail)
   })
 
+  it('lets a user log in and register when a stale refresh_token cookie without a matching csrf token lingers', async () => {
+    const register = await registerUser(app, 'locked@example.com', 'correcthorse')
+    expect(register.status).toBe(201)
+
+    const login = await supertest(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .set('Cookie', 'refresh_token=staleleftover')
+      .send({ email: 'locked@example.com', password: 'correcthorse' })
+
+    expect(login.status).toBe(200)
+    expect(login.body.data.accessToken).toEqual(expect.any(String))
+    expectRefreshCookie(login.headers['set-cookie'])
+
+    const reRegister = await supertest(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .set('Cookie', 'refresh_token=staleleftover')
+      .send({ email: 'locked-2@example.com', password: 'correcthorse' })
+
+    expect(reRegister.status).toBe(201)
+  })
+
   it('rotates refresh tokens, rejects replay, and logout invalidates the current session', async () => {
     const register = await registerUser(app, 'refresh@example.com', 'correcthorse')
     expect(register.status).toBe(201)

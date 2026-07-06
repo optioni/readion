@@ -1,9 +1,13 @@
 import { type ExecutionContext, ForbiddenException } from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
 import { buildCsrfCookie, buildRefreshCookie, CsrfGuard, createCsrfToken } from './csrf.guard'
+
+const guardWith = (exempt = false) =>
+  new CsrfGuard({ getAllAndOverride: () => exempt } as unknown as Reflector)
 
 describe('CsrfGuard', () => {
   it('rejects cookie-authenticated state changes without a matching double-submit token', () => {
-    const guard = new CsrfGuard()
+    const guard = guardWith()
 
     expect(() =>
       guard.canActivate(
@@ -27,10 +31,20 @@ describe('CsrfGuard', () => {
   })
 
   it('allows safe methods and state changes without refresh-cookie authentication', () => {
-    const guard = new CsrfGuard()
+    const guard = guardWith()
 
     expect(guard.canActivate(contextFor({ method: 'GET', cookies: {}, headers: {} }))).toBe(true)
     expect(guard.canActivate(contextFor({ method: 'POST', cookies: {}, headers: {} }))).toBe(true)
+  })
+
+  it('allows exempt handlers even when a refresh cookie is present without a csrf token', () => {
+    const guard = guardWith(true)
+
+    expect(
+      guard.canActivate(
+        contextFor({ method: 'POST', cookies: { refresh_token: 'stale' }, headers: {} }),
+      ),
+    ).toBe(true)
   })
 
   it('creates non-empty CSRF token values for cookie issuance', () => {
@@ -65,8 +79,10 @@ function contextFor(input: {
   headers: Record<string, string | undefined>
 }): ExecutionContext {
   return {
+    getHandler: () => undefined,
+    getClass: () => undefined,
     switchToHttp: () => ({
       getRequest: () => input,
     }),
-  } as ExecutionContext
+  } as unknown as ExecutionContext
 }

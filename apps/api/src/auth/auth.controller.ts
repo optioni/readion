@@ -27,6 +27,7 @@ import {
   buildCsrfCookie,
   buildRefreshCookie,
   CSRF_COOKIE_NAME,
+  CsrfExempt,
   createCsrfToken,
   REFRESH_COOKIE_NAME,
 } from './csrf.guard'
@@ -41,6 +42,7 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Public()
+  @CsrfExempt()
   @AuthThrottle()
   @Post('register')
   async register(@Body() body: unknown, @Res({ passthrough: true }) response: CookieResponse) {
@@ -50,6 +52,7 @@ export class AuthController {
   }
 
   @Public()
+  @CsrfExempt()
   @AuthThrottle()
   @HttpCode(200)
   @Post('login')

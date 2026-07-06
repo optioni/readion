@@ -4,7 +4,9 @@ import {
   type ExecutionContext,
   ForbiddenException,
   Injectable,
+  SetMetadata,
 } from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
 
 export type AuthCookieOptions = {
   httpOnly?: boolean
@@ -24,6 +26,13 @@ type CsrfRequest = {
 }
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
+
+const CSRF_EXEMPT_KEY = 'auth:csrf-exempt'
+
+// Session-establishing endpoints authenticate via body credentials, not ambient cookies, so the
+// double-submit check is meaningless there. Gating them also creates an unrecoverable lockout: a
+// lingering refresh_token cookie without a matching csrf_token cookie would permanently block login.
+export const CsrfExempt = () => SetMetadata(CSRF_EXEMPT_KEY, true)
 
 export function createCsrfToken() {
   return randomBytes(32).toString('base64url')
@@ -57,7 +66,13 @@ export function buildCsrfCookie(value: string) {
 
 @Injectable()
 export class CsrfGuard implements CanActivate {
+  constructor(private readonly reflector: Reflector) {}
+
   canActivate(context: ExecutionContext) {
+    if (this.isExempt(context)) {
+      return true
+    }
+
     const request = context.switchToHttp().getRequest<CsrfRequest>()
 
     if (SAFE_METHODS.has(request.method.toUpperCase()) || !this.hasRefreshCookie(request)) {
@@ -73,6 +88,15 @@ export class CsrfGuard implements CanActivate {
     }
 
     return true
+  }
+
+  private isExempt(context: ExecutionContext) {
+    return (
+      this.reflector.getAllAndOverride<boolean>(CSRF_EXEMPT_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]) === true
+    )
   }
 
   private hasRefreshCookie(request: CsrfRequest) {
