@@ -3,13 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "postinstall": "nuxt prepare",
     "dev": "nuxt dev",
     "build": "nuxt build",
     "typecheck": "nuxt prepare && nuxt typecheck",
-    "test": "vitest run",
+    "test": "nuxt prepare && vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "nuxt prepare && vitest run --coverage",
     "test:e2e": "playwright test"
   },
   "dependencies": {

@@ -13,7 +13,10 @@
     "format": "biome format .",
     "format:fix": "biome format --write .",
     "typecheck": "yarn workspaces foreach --all --exclude . run typecheck",
+    "build:packages": "yarn workspace @readion/shared build && yarn workspace @readion/db build",
     "test": "vitest run && yarn workspaces foreach --all --exclude . --parallel run test",
+    "test:unit": "vitest run && yarn workspaces foreach --all --include '@readion/shared' --include '@readion/web' --parallel run test",
+    "test:integration": "yarn workspaces foreach --all --include '@readion/api' --include '@readion/worker' --include '@readion/db' --parallel run test",
     "test:coverage": "yarn workspaces foreach --all --exclude . --parallel run test:coverage",
     "codegen": "orval"
   },
