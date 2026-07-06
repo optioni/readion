@@ -93,6 +93,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { createReadionFetch, ReadionProblemDetailsError } from '~/api/mutator'
+import { registerErrorMessage } from '~/composables/registerErrorMessage'
 import { useCredentialForm } from '~/composables/useCredentialForm'
 import { useTrack } from '~/composables/useTrack'
 import type { AuthUser } from '~/stores/auth'
@@ -160,12 +161,10 @@ async function handleSubmit() {
     const redirect = (route.query?.redirect as string) || '/'
     router.push(redirect)
   } catch (err) {
-    if (err instanceof ReadionProblemDetailsError) {
-      if (err.status === 422) {
-        parseFieldErrors(err)
-      } else if (err.status === 409) {
-        globalError.value = 'An account with this email already registered.'
-      }
+    if (err instanceof ReadionProblemDetailsError && err.status === 422) {
+      parseFieldErrors(err)
+    } else {
+      globalError.value = registerErrorMessage(err)
     }
   } finally {
     loading.value = false
