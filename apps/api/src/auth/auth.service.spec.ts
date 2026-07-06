@@ -1,7 +1,23 @@
 import { UnauthorizedException } from '@nestjs/common'
 import { User } from '@readion/db'
 import { describe, expect, it, vi } from 'vitest'
-import { AuthService } from './auth.service'
+import { AuthService, isRegistrationAllowed } from './auth.service'
+
+describe('isRegistrationAllowed', () => {
+  it('allows registration when signups are enabled', () => {
+    expect(isRegistrationAllowed(true, 5)).toBe(true)
+    expect(isRegistrationAllowed(true, 0)).toBe(true)
+  })
+
+  it('blocks registration when signups are disabled and users already exist', () => {
+    expect(isRegistrationAllowed(false, 1)).toBe(false)
+    expect(isRegistrationAllowed(false, 42)).toBe(false)
+  })
+
+  it('allows the bootstrap first user even when signups are disabled', () => {
+    expect(isRegistrationAllowed(false, 0)).toBe(true)
+  })
+})
 
 function buildService(user: User | null) {
   const em = {

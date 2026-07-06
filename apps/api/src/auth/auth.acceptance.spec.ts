@@ -1,5 +1,6 @@
 import { EntityManager } from '@mikro-orm/core'
 import { type INestApplication, Logger } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import { User } from '@readion/db'
 import supertest from 'supertest'
 import { MAIL_TRANSPORT, type MailTransport } from '../mail/transport'
@@ -122,6 +123,37 @@ describe('auth acceptance', () => {
     expect(first.body.data.user.role).toBe('admin')
     expect(second.status).toBe(201)
     expect(second.body.data.user.role).toBe('user')
+  })
+
+  it('refuses registration with 403 signups-disabled when signups are disabled and a user exists', async () => {
+    const first = await registerUser(app, 'owner@example.com', 'correcthorse')
+    expect(first.status).toBe(201)
+    expect(linkMessages(harness)).toHaveLength(1)
+
+    const restore = disableSignups(harness)
+    try {
+      const blocked = await registerUser(app, 'blocked@example.com', 'correcthorse')
+
+      expect(blocked.status).toBe(403)
+      expect(blocked.body.type).toBe('/errors/signups-disabled')
+      expect(await em.count(User, { email: 'blocked@example.com' })).toBe(0)
+      expect(linkMessages(harness)).toHaveLength(1)
+    } finally {
+      restore()
+    }
+  })
+
+  it('allows the bootstrap first user even when signups are disabled', async () => {
+    const restore = disableSignups(harness)
+    try {
+      const first = await registerUser(app, 'bootstrap@example.com', 'correcthorse')
+
+      expect(first.status).toBe(201)
+      expect(first.body.data.user.role).toBe('admin')
+      expect(linkMessages(harness)).toHaveLength(1)
+    } finally {
+      restore()
+    }
   })
 
   it('allows a soft-deleted email to be re-registered as a new active account', async () => {
@@ -373,6 +405,17 @@ describe('auth acceptance', () => {
 
 function registerUser(app: INestApplication, email: string, password: string) {
   return supertest(app.getHttpServer()).post('/api/v1/auth/register').send({ email, password })
+}
+
+function disableSignups(harness: AuthAcceptanceHarness) {
+  const config = harness.moduleRef.get(ConfigService)
+  const original = config.get.bind(config) as (key: string, ...rest: unknown[]) => unknown
+  const spy = vi
+    .spyOn(config, 'get')
+    .mockImplementation((key: string, ...rest: unknown[]) =>
+      key === 'SIGNUPS_ENABLED' ? false : original(key, ...rest),
+    )
+  return () => spy.mockRestore()
 }
 
 function isWelcomeMessage(message: { subject: string }) {

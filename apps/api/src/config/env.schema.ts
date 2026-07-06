@@ -18,6 +18,7 @@ import {
   SIMILARITY_THRESHOLD_DEFAULT,
   SUMMARY_DRILL_MAX_QUESTIONS,
   SUMMARY_UNSURE_CONFIDENCE_THRESHOLD,
+  zodCoerceBoolean,
   zodCoerceNumber,
   zodRequiredUrl,
 } from '@readion/shared'
@@ -152,6 +153,7 @@ const envSchema = z
     AGENT_SEMANTIC_SEARCH_LIMIT: zodCoerceNumber()
       .refine((n) => Number.isInteger(n) && n > 0, { message: 'Must be a positive integer' })
       .default(AGENT_SEMANTIC_SEARCH_LIMIT_DEFAULT),
+    SIGNUPS_ENABLED: zodCoerceBoolean().default(true),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== 'production') {

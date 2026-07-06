@@ -2,6 +2,7 @@ import { EntityManager } from '@mikro-orm/core'
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   Logger,
@@ -9,7 +10,7 @@ import {
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { User, UserRole } from '@readion/db'
-import type { AuthSessionResponse, AuthUser, RoleValue } from '@readion/shared'
+import { type AuthSessionResponse, type AuthUser, ERROR_TYPES, type RoleValue } from '@readion/shared'
 import { InjectMetric } from '@willsoto/nestjs-prometheus'
 import type { Counter } from 'prom-client'
 import type { EnvConfig } from '../config/env.schema'
@@ -27,6 +28,12 @@ type IssuedSession = AuthSessionResponse & {
 
 const INVALID_CREDENTIALS_MESSAGE = 'Invalid email or password'
 const PRODUCT_NAME = 'Readion'
+
+// The bootstrap first user (empty table) may always register so a fresh
+// instance can create its admin even when public signups are closed.
+export function isRegistrationAllowed(signupsEnabled: boolean, existingUserCount: number): boolean {
+  return signupsEnabled || existingUserCount === 0
+}
 
 @Injectable()
 export class AuthService {
@@ -55,6 +62,15 @@ export class AuthService {
     }
 
     const userCount = await em.count(User, { deletedAt: null })
+    const signupsEnabled = this.config.get('SIGNUPS_ENABLED') ?? true
+
+    if (!isRegistrationAllowed(signupsEnabled, userCount)) {
+      throw new ForbiddenException({
+        message: 'Registration is currently disabled',
+        type: ERROR_TYPES.SIGNUPS_DISABLED,
+      })
+    }
+
     const user = em.create(User, {
       email: input.email,
       passwordHash: await this.passwords.hash(input.password),

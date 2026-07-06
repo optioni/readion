@@ -51,6 +51,25 @@ describe('env schema', () => {
     expect(result.PORT).toBe(3001)
   })
 
+  it('defaults SIGNUPS_ENABLED to true (fail-open) when omitted', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.SIGNUPS_ENABLED).toBe(true)
+  })
+
+  it('coerces SIGNUPS_ENABLED="false" to boolean false', () => {
+    const result = parseEnv({ ...VALID_ENV, SIGNUPS_ENABLED: 'false' })
+    expect(result.SIGNUPS_ENABLED).toBe(false)
+  })
+
+  it('coerces SIGNUPS_ENABLED="true" to boolean true', () => {
+    const result = parseEnv({ ...VALID_ENV, SIGNUPS_ENABLED: 'true' })
+    expect(result.SIGNUPS_ENABLED).toBe(true)
+  })
+
+  it('throws when SIGNUPS_ENABLED is a malformed value', () => {
+    expect(() => parseEnv({ ...VALID_ENV, SIGNUPS_ENABLED: 'maybe' })).toThrow(/SIGNUPS_ENABLED/)
+  })
+
   it('DB_* connection vars are optional in development', () => {
     const result = parseEnv(VALID_ENV)
     expect(result.DB_HOST).toBeUndefined()
