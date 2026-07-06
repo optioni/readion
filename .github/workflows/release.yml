@@ -118,15 +118,16 @@ jobs:
         with:
           ref: ${{ needs.tag.outputs.tag }}
 
+      - run: corepack enable
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+
       - uses: actions/setup-node@v4
         if: env.SENTRY_AUTH_TOKEN_SET == 'true'
         with:
           node-version-file: .nvmrc
           cache: yarn
 
-      - run: corepack enable
-        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --immutable
         if: env.SENTRY_AUTH_TOKEN_SET == 'true'
       - run: yarn workspace @readion/api build
         if: env.SENTRY_AUTH_TOKEN_SET == 'true'
