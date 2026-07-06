@@ -83,47 +83,21 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Tagged with the normalized version only, never `latest`: production pins
-      # the immutable semver tag/digest, while dev/beta keeps tracking the
-      # sha-*/latest images built by main.yml. One metadata call per image
-      # generates the bake override merged onto docker-bake.hcl.
-      - name: Metadata (api)
-        id: meta-api
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/api
-          tags: type=raw,value=${{ needs.tag.outputs.tag }}
-          bake-target: api
-
-      - name: Metadata (worker)
-        id: meta-worker
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/worker
-          tags: type=raw,value=${{ needs.tag.outputs.tag }}
-          bake-target: worker
-
-      - name: Metadata (web)
-        id: meta-web
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/web
-          tags: type=raw,value=${{ needs.tag.outputs.tag }}
-          bake-target: web
-
+      # Tagged with the normalized version only, never `latest` (PUSH_LATEST
+      # defaults to false): production pins the immutable semver tag/digest,
+      # while dev/beta keeps tracking the sha-*/latest images built by main.yml.
       # Builds api/worker/web in one invocation so base/deps/packages-build
-      # compile once and are shared across targets.
+      # compile once and are shared across targets. bake reads TAG/etc. from the
+      # env below (each matches a `variable` in docker-bake.hcl).
       - name: Build & push all images
         uses: docker/bake-action@v6
         with:
-          files: |
-            ./docker-bake.hcl
-            ${{ steps.meta-api.outputs.bake-file }}
-            ${{ steps.meta-worker.outputs.bake-file }}
-            ${{ steps.meta-web.outputs.bake-file }}
+          files: ./docker-bake.hcl
           push: true
         env:
+          REGISTRY: ${{ env.REGISTRY }}
           IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          TAG: ${{ needs.tag.outputs.tag }}
           SENTRY_RELEASE: ${{ needs.tag.outputs.tag }}
 
   upload-sourcemaps:
