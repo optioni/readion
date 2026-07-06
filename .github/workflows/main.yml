@@ -31,11 +31,11 @@ jobs:
 
       - name: Compute image tag
         id: imgtag
-        run: echo "tag=sha-${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
+        run: echo "tag=${GITHUB_REF_NAME//\//-}" >> "$GITHUB_OUTPUT"
 
       # Builds api/worker/web in one invocation so base/deps/packages-build
       # compile once and are shared across targets; per-image registry cache
-      # (:buildcache) persists layers across runs. bake reads TAG/PUSH_LATEST/
+      # (:buildcache) persists layers across runs. bake reads TAG/REGISTRY/
       # etc. from the env below (each matches a `variable` in docker-bake.hcl).
       - name: Build & push all images
         uses: docker/bake-action@v6
@@ -46,7 +46,6 @@ jobs:
           REGISTRY: ${{ env.REGISTRY }}
           IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
           TAG: ${{ steps.imgtag.outputs.tag }}
-          PUSH_LATEST: 'true'
           SENTRY_RELEASE: ${{ github.sha }}
 
   upload-sourcemaps:
