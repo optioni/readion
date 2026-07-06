@@ -10,6 +10,7 @@ import {
   UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
 import type { ValidationErrorItem } from '@readion/shared'
 import {
   changePasswordRequestSchema,
@@ -19,6 +20,7 @@ import {
   registerRequestSchema,
 } from '@readion/shared'
 import type { z } from 'zod'
+import type { EnvConfig } from '../config/env.schema'
 import { AuthThrottle } from '../throttler/throttler.decorators'
 import { CurrentUser, type CurrentUserPrincipal, Public } from './auth.guards'
 import { AuthService } from './auth.service'
@@ -39,7 +41,10 @@ type CookieResponse = {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly config: ConfigService<EnvConfig>,
+  ) {}
 
   @Public()
   @CsrfExempt()
@@ -138,7 +143,7 @@ export class AuthController {
 
   private setSessionCookies(response: CookieResponse, refreshToken: string) {
     const refresh = buildRefreshCookie(refreshToken)
-    const csrf = buildCsrfCookie(createCsrfToken())
+    const csrf = buildCsrfCookie(createCsrfToken(), this.cookieDomain())
     response.cookie(refresh.name, refresh.value, refresh.options)
     response.cookie(csrf.name, csrf.value, csrf.options)
   }
@@ -154,7 +159,12 @@ export class AuthController {
       path: '/',
       secure: true,
       sameSite: 'lax',
+      ...(this.cookieDomain() ? { domain: this.cookieDomain() } : {}),
     })
+  }
+
+  private cookieDomain() {
+    return this.config.get('AUTH_COOKIE_DOMAIN', { infer: true })
   }
 }
 

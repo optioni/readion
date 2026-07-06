@@ -16,6 +16,10 @@ data:
   CORS_ORIGIN: "https://app.readion.example"
   WEB_BASE_URL: "https://app.readion.example"
   PUBLIC_API_URL: "https://api.readion.example"
+  # Parent domain shared by the web app and API subdomains, so the CSRF cookie
+  # set by the API is readable by the web app's JS (double-submit). Must be the
+  # registrable parent of CORS_ORIGIN and PUBLIC_API_URL.
+  AUTH_COOKIE_DOMAIN: "readion.example"
   MAIL_FROM: "Readion <no-reply@readion.app>"
   SMTP_HOST: "smtp.readion.example"
   SMTP_PORT: "587"

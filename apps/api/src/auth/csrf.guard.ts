@@ -13,6 +13,7 @@ export type AuthCookieOptions = {
   secure: boolean
   sameSite: 'lax'
   path: string
+  domain?: string
 }
 
 export const REFRESH_COOKIE_NAME = 'refresh_token'
@@ -51,7 +52,7 @@ export function buildRefreshCookie(value: string) {
   }
 }
 
-export function buildCsrfCookie(value: string) {
+export function buildCsrfCookie(value: string, domain?: string) {
   return {
     name: CSRF_COOKIE_NAME,
     value,
@@ -60,6 +61,7 @@ export function buildCsrfCookie(value: string) {
       secure: true,
       sameSite: 'lax',
       path: '/',
+      ...(domain ? { domain } : {}),
     } satisfies AuthCookieOptions,
   }
 }

@@ -71,6 +71,19 @@ describe('CsrfGuard', () => {
       },
     })
   })
+
+  it('omits the domain from the CSRF cookie when none is configured', () => {
+    expect(buildCsrfCookie('csrf-token').options).not.toHaveProperty('domain')
+  })
+
+  it('scopes the CSRF cookie to a parent domain so cross-subdomain JS can read it', () => {
+    expect(buildCsrfCookie('csrf-token', 'readion.app').options).toMatchObject({
+      domain: 'readion.app',
+      httpOnly: false,
+      secure: true,
+      sameSite: 'lax',
+    })
+  })
 })
 
 function contextFor(input: {

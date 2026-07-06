@@ -39,6 +39,21 @@ describe('env schema', () => {
     expect(result.CORS_ORIGIN).toBe('http://localhost:3000')
   })
 
+  it('leaves AUTH_COOKIE_DOMAIN undefined when omitted (host-only cookies)', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.AUTH_COOKIE_DOMAIN).toBeUndefined()
+  })
+
+  it('parses AUTH_COOKIE_DOMAIN for cross-subdomain cookie scoping', () => {
+    const result = parseEnv({ ...VALID_ENV, AUTH_COOKIE_DOMAIN: 'readion.app' })
+    expect(result.AUTH_COOKIE_DOMAIN).toBe('readion.app')
+  })
+
+  it('treats a blank AUTH_COOKIE_DOMAIN as undefined', () => {
+    const result = parseEnv({ ...VALID_ENV, AUTH_COOKIE_DOMAIN: '' })
+    expect(result.AUTH_COOKIE_DOMAIN).toBeUndefined()
+  })
+
   it('resolves CORS default when CORS_ORIGIN is omitted', () => {
     const { CORS_ORIGIN: _, ...rest } = VALID_ENV
     const result = parseEnv(rest)

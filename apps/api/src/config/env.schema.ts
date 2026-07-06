@@ -74,6 +74,11 @@ const envSchema = z
     PORT: zodCoerceNumber().default(3001),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     CORS_ORIGIN: zodRequiredUrl().default('http://localhost:3000'),
+    // Parent domain for auth cookies when the web app and API live on different subdomains
+    // (e.g. readion.app + api.readion.app). Unset means host-only cookies, correct for local dev
+    // where both run on localhost. The CSRF cookie must be readable by the web app's JS, so it
+    // has to be scoped to the shared parent, not left host-only to the API subdomain.
+    AUTH_COOKIE_DOMAIN: optionalNonEmptyString,
     JWT_SECRET: z.string().min(1),
     JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS: zodCoerceNumber().default(
       JWT_ACCESS_TOKEN_EXPIRES_IN_SECONDS_DEFAULT,
