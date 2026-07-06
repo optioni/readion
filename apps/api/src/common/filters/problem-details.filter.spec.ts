@@ -84,4 +84,17 @@ describe('ProblemDetailsFilter', () => {
     const { headers } = captureResponse(exception)
     expect(headers['Retry-After']).toBe('120')
   })
+
+  it('honors a custom type on the exception response payload', () => {
+    const exception = new HttpException(
+      { message: 'Registration is currently disabled', type: '/errors/signups-disabled' },
+      403,
+    )
+    const { status, body } = captureResponse(exception)
+    expect(status).toBe(403)
+    const b = body as { type: string; title: string; detail: string }
+    expect(b.type).toBe('/errors/signups-disabled')
+    expect(b.title).toBe('Forbidden')
+    expect(b.detail).toBe('Registration is currently disabled')
+  })
 })

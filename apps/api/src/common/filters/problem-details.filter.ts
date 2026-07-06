@@ -44,6 +44,15 @@ function extractDetail(exception: HttpException): string {
   return exception.message
 }
 
+function extractType(exception: HttpException): string | undefined {
+  const res = exception.getResponse()
+  if (typeof res === 'object' && res !== null && 'type' in res) {
+    const type = (res as { type: unknown }).type
+    return typeof type === 'string' ? type : undefined
+  }
+  return undefined
+}
+
 function extractErrors(exception: HttpException): ValidationErrorItem[] | undefined {
   const res = exception.getResponse()
   if (typeof res === 'object' && res !== null && 'errors' in res) {
@@ -64,17 +73,19 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     let status = 500
     let detail = 'An unexpected error occurred'
     let errors: ValidationErrorItem[] | undefined
+    let type: string | undefined
 
     if (exception instanceof HttpException) {
       status = exception.getStatus()
       detail = extractDetail(exception)
       errors = extractErrors(exception)
+      type = extractType(exception)
     } else if (process.env.SENTRY_DSN) {
       Sentry.captureException(exception)
     }
 
     const body: ProblemDetails = {
-      type: statusToType(status),
+      type: type ?? statusToType(status),
       title: statusToTitle(status),
       status,
       detail,
