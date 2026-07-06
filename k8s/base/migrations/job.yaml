@@ -43,6 +43,13 @@ spec:
           env:
             - name: MIKRO_ORM_CLI_CONFIG
               value: /app/packages/db/dist/mikro-orm.config.js
+            # The CLI resolves @mikro-orm/cli from the cwd's package.json. Here cwd
+            # is /app (the monorepo root), whose package.json does not list it — the
+            # dependency lives in packages/db. The binary is present in the hoisted
+            # /app/node_modules, so allow the CLI to run without that local-manifest
+            # check instead of failing with "needs to be installed as a local dependency".
+            - name: MIKRO_ORM_ALLOW_GLOBAL_CLI
+              value: "1"
           command: ["/app/node_modules/.bin/mikro-orm"]
           args: ["migration:up"]
           envFrom:
