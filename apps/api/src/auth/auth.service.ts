@@ -10,7 +10,12 @@ import {
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { User, UserRole } from '@readion/db'
-import { type AuthSessionResponse, type AuthUser, ERROR_TYPES, type RoleValue } from '@readion/shared'
+import {
+  type AuthSessionResponse,
+  type AuthUser,
+  ERROR_TYPES,
+  type RoleValue,
+} from '@readion/shared'
 import { InjectMetric } from '@willsoto/nestjs-prometheus'
 import type { Counter } from 'prom-client'
 import type { EnvConfig } from '../config/env.schema'
