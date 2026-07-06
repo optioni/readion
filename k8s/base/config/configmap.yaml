@@ -47,6 +47,23 @@ data:
   ANALYTICS_TARGET_AGENT_ENGAGEMENT: "0.50"
   ANALYTICS_LLM_COST_BUDGET: "5"
 
+  # AI / LLM (shared by api + worker; api requires these at boot with no
+  # defaults, so they must be set here). Model IDs are tiered per AGENTS.md:
+  # utility (fast/cheap) → mid → thinking. AI_API_KEY lives in the Secret.
+  AI_PROVIDER: "anthropic"
+  AI_MODEL_QUIZ_GENERATION: "claude-haiku-4-5-20251001"
+  AI_MODEL_DOMAIN_TAGGING: "claude-haiku-4-5-20251001"
+  AI_MODEL_ANSWER_VERIFICATION: "claude-sonnet-5"
+  AI_MODEL_AGENT_QA: "claude-sonnet-5"
+  AI_MODEL_MATERIAL_GENERATION: "claude-sonnet-5"
+  AI_MODEL_CERTIFICATION_PREFILL: "claude-sonnet-5"
+  AI_MODEL_SESSION_FILL: "claude-sonnet-5"
+  AI_MODEL_COMPLEX_REASONING: "claude-opus-4-8"
+  # Embeddings stay on OpenAI — Anthropic has no embedding model. This provider
+  # differs from AI_PROVIDER, so AI_EMBEDDING_API_KEY must be set in the Secret.
+  AI_EMBEDDING_PROVIDER: "openai"
+  AI_EMBEDDING_MODEL: "text-embedding-3-small"
+
   # apps/worker
   SCRAPPER_URL: "http://localhost:3000"
   INTERNAL_API_BASE_URL: "https://api.readion.example"
@@ -54,3 +71,7 @@ data:
 
   # apps/web
   NUXT_PUBLIC_API_BASE_URL: "https://api.readion.example"
+  # Umami analytics — empty disables it. NOTE: web uses explicit env: entries
+  # (not envFrom), so these two must also be wired into web/deployment.yaml.
+  NUXT_PUBLIC_UMAMI_HOST: ""
+  NUXT_PUBLIC_UMAMI_WEBSITE_ID: ""
