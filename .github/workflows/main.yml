@@ -10,28 +10,12 @@ env:
 
 jobs:
   build-and-push:
-    name: Build ${{ matrix.app }}
+    name: Build & Push Images
     runs-on:
         group: arm-runners
     permissions:
       contents: read
       packages: write
-    strategy:
-      fail-fast: true
-      matrix:
-        include:
-          - app: api
-            file: apps/api/Dockerfile
-          - app: web
-            file: apps/web/Dockerfile
-          - app: worker
-            file: apps/worker/Dockerfile
-          # Dedicated image for the db-migrate PreSync Job (k8s/base/migrations/job.yaml)
-          # — bundles compiled packages/db migrations + MikroORM config/CLI, which
-          # neither the api nor worker runner stage includes. Tagged with the same
-          # sha-* scheme so it's pinned to the same commit as the app rollout.
-          - app: migrations
-            file: packages/db/Dockerfile
     steps:
       - uses: actions/checkout@v4
 
@@ -42,30 +26,56 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.app }}
-          tags: |
-            type=sha,prefix=sha-
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push ${{ matrix.app }}
-        uses: docker/build-push-action@v6
+      # One metadata call per image generates a bake override file carrying that
+      # image's tags/labels, merged onto docker-bake.hcl at build time.
+      - name: Metadata (api)
+        id: meta-api
+        uses: docker/metadata-action@v5
         with:
-          context: .
-          file: ${{ matrix.file }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/api
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+          bake-target: api
+
+      - name: Metadata (worker)
+        id: meta-worker
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/worker
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+          bake-target: worker
+
+      - name: Metadata (web)
+        id: meta-web
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/web
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+          bake-target: web
+
+      # Builds api/worker/web in one invocation so base/deps/packages-build
+      # compile once and are shared across targets; per-image registry cache
+      # (:buildcache) persists layers across runs.
+      - name: Build & push all images
+        uses: docker/bake-action@v6
+        with:
+          files: |
+            ./docker-bake.hcl
+            ${{ steps.meta-api.outputs.bake-file }}
+            ${{ steps.meta-worker.outputs.bake-file }}
+            ${{ steps.meta-web.outputs.bake-file }}
           push: true
-          build-args: |
-            SENTRY_RELEASE=${{ github.sha }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        env:
+          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          SENTRY_RELEASE: ${{ github.sha }}
 
   upload-sourcemaps:
     name: Upload source maps to Sentry

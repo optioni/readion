@@ -69,13 +69,13 @@ never blocks the next one. Because it's a PreSync hook, it completes
 failed migration fails the sync at pre-sync and blocks the rollout, leaving
 the previously-running version in place.
 
-It runs a **dedicated migration image** built from `packages/db/Dockerfile`
-(`ghcr.io/<repo>/migrations`), which bundles the compiled `packages/db`
-migrations and MikroORM config — neither the `api` nor `worker` runner
-images include `packages/db/dist`. This image is built and pushed by
-`.github/workflows/main.yml` alongside `api`/`web`/`worker`, and is pinned
-to the same `sha-*` digest as the rest of the rollout by the ArgoCD Image
-Updater, so schema and application code always move together.
+It **reuses the `api` image** (`ghcr.io/<repo>/api`): the api runner stage
+already ships `node_modules` (including the `mikro-orm` CLI) and
+`packages/db/dist` (compiled migrations + MikroORM config), so no dedicated
+migration image is needed. Because the Job and the api Deployment reference
+the same image, the ArgoCD Image Updater's single `api` alias pins both to
+the same digest — schema and application code from the same commit move
+together by construction.
 
 ## GitOps
 
@@ -85,7 +85,7 @@ of the `k8s/base` kustomization — `kubeconform` has no bundled schema for
 the `argoproj.io/v1alpha1` Application CRD, so it's validated separately
 (see [Validating](#validating) below).
 
-Image Updater annotations watch `ghcr.io/<repo>/{api,web,worker,migrations}`
+Image Updater annotations watch `ghcr.io/<repo>/{api,web,worker}`
 on the `latest`/`sha-*` tags (`allow-tags`, `update-strategy: digest`). A
 new digest triggers a rollout. The write-back method is **git**: the
 resolved digest is committed back to this repo, so `k8s/base` (and

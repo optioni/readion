@@ -22,24 +22,21 @@ metadata:
   annotations:
     # Image Updater watches these GHCR images for new digests on the
     # latest/sha-* tags .github/workflows/main.yml pushes on every push to
-    # main. `migrations` is included (not just api/web/worker) so the
-    # db-migrate PreSync Job's image moves in lockstep with the app
-    # rollout — see design.md: "Pin the Job to the same sha-* digest as
-    # the app rollout so schema and code move together."
-    argocd-image-updater.argoproj.io/image-list: "api=ghcr.io/OWNER/REPO/api,web=ghcr.io/OWNER/REPO/web,worker=ghcr.io/OWNER/REPO/worker,migrations=ghcr.io/OWNER/REPO/migrations"
+    # main. The db-migrate PreSync Job reuses the api image, so the single
+    # `api` alias pins both the api Deployment and the Job to the same digest —
+    # schema and code from the same commit move together by construction.
+    argocd-image-updater.argoproj.io/image-list: "api=ghcr.io/OWNER/REPO/api,web=ghcr.io/OWNER/REPO/web,worker=ghcr.io/OWNER/REPO/worker"
     # `digest` strategy watches a mutable tag (latest) for digest changes,
     # rather than requiring semver — matches main.yml's tag scheme, which
     # only ever emits `latest` + `sha-<short-sha>`, never a version tag.
     argocd-image-updater.argoproj.io/api.update-strategy: digest
     argocd-image-updater.argoproj.io/web.update-strategy: digest
     argocd-image-updater.argoproj.io/worker.update-strategy: digest
-    argocd-image-updater.argoproj.io/migrations.update-strategy: digest
     # Restrict which tags Image Updater is allowed to consider, so it
     # never picks up a stray/experimental tag pushed by hand.
     argocd-image-updater.argoproj.io/api.allow-tags: "regexp:^(latest|sha-.+)$"
     argocd-image-updater.argoproj.io/web.allow-tags: "regexp:^(latest|sha-.+)$"
     argocd-image-updater.argoproj.io/worker.allow-tags: "regexp:^(latest|sha-.+)$"
-    argocd-image-updater.argoproj.io/migrations.allow-tags: "regexp:^(latest|sha-.+)$"
     # GHCR is private — Image Updater needs the same pull secret the
     # workloads already reference (k8s/base/{api,web,worker,migrations}).
     argocd-image-updater.argoproj.io/pull-secret: pullsecret:readion/ghcr-pull-secret

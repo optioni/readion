@@ -27,15 +27,22 @@ spec:
         - name: ghcr-pull-secret
       containers:
         - name: db-migrate
-          # OWNER/REPO placeholder — pinned to the same ghcr.io/<repo>/migrations
-          # sha-* digest as the api/worker rollout by Image Updater (see
-          # k8s/argocd/application.yaml, group 6), so schema and app code
-          # built from the same commit move together.
-          #
-          # This image is a dedicated packages/db build (packages/db/Dockerfile)
-          # bundling the compiled migrations + MikroORM config — neither the
-          # api nor worker runner images include packages/db/dist.
-          image: ghcr.io/OWNER/REPO/migrations:latest
+          # Reuses the api image: its runner stage already ships node_modules
+          # (incl. the mikro-orm CLI) and packages/db/dist (compiled migrations +
+          # MikroORM config), so no dedicated migrations image is needed. Because
+          # this Job and the api Deployment reference the same image, Image
+          # Updater's single `api` alias pins both to the same digest — schema
+          # and app code from the same commit move together by construction.
+          # OWNER/REPO placeholder — pinned to a real digest by Image Updater
+          # (see k8s/argocd/application.yaml).
+          image: ghcr.io/OWNER/REPO/api:latest
+          workingDir: /app
+          # The mikro-orm config uses useTsNode + a src/*.ts configPath for local
+          # dev; this image ships only compiled JS, so point the CLI at the
+          # compiled config to skip ts-node entirely.
+          env:
+            - name: MIKRO_ORM_CLI_CONFIG
+              value: /app/packages/db/dist/mikro-orm.config.js
           command: ["/app/node_modules/.bin/mikro-orm"]
           args: ["migration:up"]
           envFrom:

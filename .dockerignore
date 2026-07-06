@@ -1,0 +1,19 @@
+# Keeps the build context small and stops unrelated files from busting layer
+# caches. Everything the build needs is source + manifests + configs.
+**/node_modules
+**/dist
+**/.output
+**/.nuxt
+**/.turbo
+**/coverage
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.github
+**/*.log
+**/.DS_Store
+# Tests aren't needed to build the images; keeping them out avoids rebuilds on
+# test-only changes.
+**/*.spec.ts
+apps/web/e2e

@@ -294,8 +294,8 @@ n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate" and 
 assert "db-migrate Job carries a hook-delete-policy" "$(ge "${n}" 1)"
 n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate") | .spec.template.spec.containers[] | select((((.command // []) + (.args // [])) | join(" ")) | test("migration:up"))')
 assert "db-migrate Job runs mikro-orm migration:up" "$(ge "${n}" 1)"
-n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate") | .spec.template.spec.containers[] | select(.image != null and (.image | test("ghcr.io.*migrat")))')
-assert "db-migrate Job uses a GHCR migration image bundling packages/db" "$(ge "${n}" 1)"
+n=$(count_matches 'select(.kind == "Job" and .metadata.name == "db-migrate") | .spec.template.spec.containers[] | select(.image != null and (.image | test("ghcr.io.*/api")))')
+assert "db-migrate Job reuses the GHCR api image (ships packages/db + mikro-orm CLI)" "$(ge "${n}" 1)"
 
 log "(f) Every workload that needs secrets references the ConfigMap + Secret"
 # web is intentionally excluded from this loop: per design.md it needs only
@@ -439,8 +439,6 @@ else
   assert "Image Updater image-list references the GHCR web image" "$(ge "${n}" 1)"
   n=$(count_argocd_matches '.metadata.annotations["argocd-image-updater.argoproj.io/image-list"] | select(test("ghcr.io.*/worker"))')
   assert "Image Updater image-list references the GHCR worker image" "$(ge "${n}" 1)"
-  n=$(count_argocd_matches '.metadata.annotations["argocd-image-updater.argoproj.io/image-list"] | select(test("ghcr.io.*/migrations"))')
-  assert "Image Updater image-list references the GHCR migrations image" "$(ge "${n}" 1)"
 
   n=$(count_argocd_matches '.metadata.annotations | to_entries[] | select(.key | test("update-strategy$")) | select(.value == "digest")')
   assert "Image Updater tracks digest changes (update-strategy: digest)" "$(ge "${n}" 1)"

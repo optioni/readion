@@ -61,28 +61,13 @@ jobs:
         run: gh release create ${{ steps.normalize.outputs.tag }} --generate-notes
 
   build-and-push:
-    name: Build ${{ matrix.app }}
+    name: Build & Push Images
     needs: tag
     runs-on:
         group: arm-runners
     permissions:
       contents: read
       packages: write
-    strategy:
-      fail-fast: true
-      matrix:
-        include:
-          - app: api
-            file: apps/api/Dockerfile
-          - app: web
-            file: apps/web/Dockerfile
-          - app: worker
-            file: apps/worker/Dockerfile
-          # Dedicated image for the db-migrate PreSync Job (k8s/base/migrations/job.yaml)
-          # — bundles compiled packages/db migrations + MikroORM config/CLI, which
-          # neither the api nor worker runner stage includes.
-          - app: migrations
-            file: packages/db/Dockerfile
     steps:
       - uses: actions/checkout@v4
         with:
@@ -100,18 +85,46 @@ jobs:
 
       # Tagged with the normalized version only, never `latest`: production pins
       # the immutable semver tag/digest, while dev/beta keeps tracking the
-      # sha-*/latest images built by main.yml.
-      - name: Build and push ${{ matrix.app }}
-        uses: docker/build-push-action@v6
+      # sha-*/latest images built by main.yml. One metadata call per image
+      # generates the bake override merged onto docker-bake.hcl.
+      - name: Metadata (api)
+        id: meta-api
+        uses: docker/metadata-action@v5
         with:
-          context: .
-          file: ${{ matrix.file }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/api
+          tags: type=raw,value=${{ needs.tag.outputs.tag }}
+          bake-target: api
+
+      - name: Metadata (worker)
+        id: meta-worker
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/worker
+          tags: type=raw,value=${{ needs.tag.outputs.tag }}
+          bake-target: worker
+
+      - name: Metadata (web)
+        id: meta-web
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/web
+          tags: type=raw,value=${{ needs.tag.outputs.tag }}
+          bake-target: web
+
+      # Builds api/worker/web in one invocation so base/deps/packages-build
+      # compile once and are shared across targets.
+      - name: Build & push all images
+        uses: docker/bake-action@v6
+        with:
+          files: |
+            ./docker-bake.hcl
+            ${{ steps.meta-api.outputs.bake-file }}
+            ${{ steps.meta-worker.outputs.bake-file }}
+            ${{ steps.meta-web.outputs.bake-file }}
           push: true
-          build-args: |
-            SENTRY_RELEASE=${{ needs.tag.outputs.tag }}
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.app }}:${{ needs.tag.outputs.tag }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        env:
+          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          SENTRY_RELEASE: ${{ needs.tag.outputs.tag }}
 
   upload-sourcemaps:
     name: Upload source maps to Sentry
