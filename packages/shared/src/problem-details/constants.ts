@@ -5,4 +5,5 @@ export const ERROR_TYPES = {
   FORBIDDEN: '/errors/forbidden',
   CONFLICT: '/errors/conflict',
   INTERNAL: '/errors/internal-server-error',
+  SIGNUPS_DISABLED: '/errors/signups-disabled',
 } as const
