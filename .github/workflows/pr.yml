@@ -4,18 +4,24 @@ on:
   pull_request:
     branches: [main]
 
+# Supersede in-flight runs when a PR is pushed again, so a new commit doesn't
+# leave the previous (now-stale) multi-minute Testcontainers run burning a slot.
+concurrency:
+  group: pr-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   typecheck:
     name: Typecheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: yarn
-      - run: corepack enable
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --immutable
       - run: yarn typecheck
 
   lint:
@@ -23,12 +29,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: yarn
-      - run: corepack enable
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --immutable
       - run: yarn lint
       - run: yarn format
 
@@ -61,22 +67,45 @@ jobs:
       - name: Run manifest validation harness
         run: bash k8s/validate.sh
 
-  test:
-    name: Test (Vitest + Testcontainers)
+  # Fast lane: pure-logic (shared) + happy-dom (web) + root smoke tests. No
+  # containers, so it finishes in ~1 min and acts as the gate for the slow
+  # Testcontainers lane below. Building @readion/shared + @readion/db first
+  # generates the `dist` that web's bundler resolves via each package's `main`.
+  test-unit:
+    name: Test (unit)
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - run: yarn install --immutable
+      - run: yarn build:packages
+      - run: yarn test:unit
+
+  # Slow lane: api/worker/db integration + acceptance tests, each spinning up
+  # Postgres + Redis via Testcontainers. Gated behind the cheap checks so a
+  # type error or broken unit test fails the PR in ~1 min instead of after the
+  # full multi-minute container run.
+  test-integration:
+    name: Test (integration + acceptance)
+    runs-on: ubuntu-latest
+    needs: [typecheck, lint, test-unit]
     services:
       docker:
         image: docker:dind
         options: --privileged
     steps:
       - uses: actions/checkout@v4
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: yarn
-      - run: corepack enable
-      - run: yarn install --frozen-lockfile
-      - run: yarn test --reporter=verbose
+      - run: yarn install --immutable
+      - run: yarn test:integration
         env:
           TESTCONTAINERS_RYUK_DISABLED: 'true'
 
@@ -85,10 +114,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: corepack enable
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: yarn
-      - run: corepack enable
-      - run: yarn install --frozen-lockfile
+      - run: yarn install --immutable
       - run: yarn build

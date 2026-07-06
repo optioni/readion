@@ -29,7 +29,9 @@ test.describe('signups disabled — registration is closed', () => {
     await page.getByLabel('Password', { exact: true }).fill('correcthorse')
     await page.getByRole('button', { name: 'Create account' }).click()
 
-    await expect(page.getByTestId('register-error')).toContainText('Registration is currently closed')
+    await expect(page.getByTestId('register-error')).toContainText(
+      'Registration is currently closed',
+    )
 
     // Still on the register page, unauthenticated — no redirect to the app.
     await expect(page).toHaveURL(/\/register$/)

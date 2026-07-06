@@ -15,14 +15,9 @@ variable "IMAGE_PREFIX" {
   default = "readion/readion"
 }
 
-# Primary image tag, e.g. `sha-1a2b3c4` (main) or `v1.4.0` (release).
+# Primary image tag, e.g. `main` (branch push) or `v1.4.0` (release).
 variable "TAG" {
   default = "latest"
-}
-
-# When "true", also tag/push :latest alongside TAG (main branch only).
-variable "PUSH_LATEST" {
-  default = "false"
 }
 
 variable "SENTRY_RELEASE" {
@@ -31,10 +26,7 @@ variable "SENTRY_RELEASE" {
 
 function "tags" {
   params = [name]
-  result = PUSH_LATEST == "true" ? [
-    "${REGISTRY}/${IMAGE_PREFIX}/${name}:${TAG}",
-    "${REGISTRY}/${IMAGE_PREFIX}/${name}:latest",
-    ] : [
+  result = [
     "${REGISTRY}/${IMAGE_PREFIX}/${name}:${TAG}",
   ]
 }
