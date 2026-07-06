@@ -205,6 +205,23 @@ describe('API Acceptance', () => {
       expect(over.body.type).toBe('/errors/too-many-requests')
       expect(over.headers['retry-after']).toBeDefined()
     })
+
+    // Probe/scrape endpoints must be exempt from every named tier — the auth
+    // tier (10/15min) would otherwise 429 k8s liveness probes and crash-loop
+    // the pod. A bare @SkipThrottle() does not cover named tiers.
+    it('GET /health is never throttled past the auth-tier ceiling', async () => {
+      for (let i = 0; i < 15; i++) {
+        const r = await supertest(app.getHttpServer()).get('/health')
+        expect(r.status).toBe(200)
+      }
+    })
+
+    it('GET /metrics is never throttled past the auth-tier ceiling', async () => {
+      for (let i = 0; i < 15; i++) {
+        const r = await supertest(app.getHttpServer()).get('/metrics')
+        expect(r.status).toBe(200)
+      }
+    })
   })
 
   describe('security-middleware', () => {

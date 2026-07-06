@@ -1,13 +1,17 @@
 import { Controller, Get } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { DiskHealthIndicator, HealthCheck, HealthCheckService } from '@nestjs/terminus'
+import { SkipThrottle } from '@nestjs/throttler'
 import { Public } from '../auth/auth.guards'
 import { SkipEnvelope } from '../common/interceptors/response.interceptor'
 import type { EnvConfig } from '../config/env.schema'
 import { PostgresHealthIndicator } from './postgres-health.indicator'
 import { RedisHealthIndicator } from './redis-health.indicator'
 
+// The tiers are named (auth/agent/general) with no `default`, so a bare
+// SkipThrottle() would be a no-op — every named tier must be skipped by name.
 @Controller('health')
+@SkipThrottle({ auth: true, agent: true, general: true })
 @SkipEnvelope()
 @Public()
 export class HealthController {
