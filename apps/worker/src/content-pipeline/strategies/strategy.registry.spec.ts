@@ -10,8 +10,18 @@ import { StrategyRegistry } from './strategy.registry'
 import { WebFetchStrategy } from './web.strategy'
 import { YouTubeFetchStrategy } from './youtube.strategy'
 
+const REAL_STRATEGIES = [
+  WebFetchStrategy,
+  PdfFetchStrategy,
+  YouTubeFetchStrategy,
+  RedditFetchStrategy,
+  GitHubFetchStrategy,
+  PodcastFetchStrategy,
+  AnkiFetchStrategy,
+]
+
 describe('StrategyRegistry', () => {
-  it('resolves every offered content source type to a non-stub strategy', () => {
+  it('resolves every offered content source type to a known real strategy', () => {
     const scrapper = new ScrapperClient('http://127.0.0.1:1')
     const registry = new StrategyRegistry(
       new WebFetchStrategy(scrapper),
@@ -26,9 +36,9 @@ describe('StrategyRegistry', () => {
     for (const type of contentSourceTypes) {
       const strategy = registry.get(type)
       expect(
-        (strategy as unknown as { isStub?: boolean }).isStub,
-        `expected strategy for offered type "${type}" to not be a build-time no-op stub`,
-      ).not.toBe(true)
+        REAL_STRATEGIES.some((StrategyClass) => strategy instanceof StrategyClass),
+        `expected strategy for offered type "${type}" to be one of the known real strategies, got ${strategy.constructor.name}`,
+      ).toBe(true)
     }
   })
 })
