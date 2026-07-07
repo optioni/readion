@@ -111,3 +111,117 @@ describe('auth bootstrap', () => {
     expect(readyResolved).toHaveBeenCalled()
   })
 })
+
+describe('auth bootstrap (server)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  const userBody = () =>
+    new Response(
+      JSON.stringify({
+        data: {
+          id: '1',
+          email: 'a@b.com',
+          emailVerified: true,
+          displayTimezone: 'UTC',
+          createdAt: '',
+          role: 'admin',
+        },
+      }),
+      { status: 200 },
+    )
+
+  async function runServerBootstrap(
+    auth: ReturnType<typeof useAuthStore>,
+    options: {
+      cookieHeader: string | undefined
+      forwardSetCookie?: (cookies: string[]) => void
+    },
+  ) {
+    const { runAuthBootstrapServer } = await import('~/composables/useAuthBootstrap')
+    await runAuthBootstrapServer(auth, {
+      apiBase: 'http://localhost:3001',
+      cookieHeader: options.cookieHeader,
+      forwardSetCookie: options.forwardSetCookie ?? (() => {}),
+    })
+  }
+
+  it('forwards the request cookie and CSRF header to refresh, then hydrates the session', async () => {
+    const rotated = new Headers()
+    rotated.append('set-cookie', 'refresh_token=R2; Path=/; HttpOnly; Secure; SameSite=Lax')
+    rotated.append('set-cookie', 'csrf_token=C2; Path=/; Domain=readion.app; Secure; SameSite=Lax')
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: { accessToken: 'ssr-tok' } }), {
+          status: 200,
+          headers: rotated,
+        }),
+      )
+      .mockResolvedValueOnce(userBody())
+
+    const auth = useAuthStore()
+    await runServerBootstrap(auth, { cookieHeader: 'refresh_token=R1; csrf_token=C1' })
+
+    const refreshInit = fetchMock.mock.calls[0]?.[1] as RequestInit
+    const refreshHeaders = new Headers(refreshInit.headers)
+    expect(refreshHeaders.get('cookie')).toBe('refresh_token=R1; csrf_token=C1')
+    expect(refreshHeaders.get('x-csrf-token')).toBe('C1')
+    expect(auth.accessToken).toBe('ssr-tok')
+    expect(auth.user?.email).toBe('a@b.com')
+  })
+
+  it('propagates the rotated Set-Cookie headers back to the browser response', async () => {
+    const rotatedCookies = [
+      'refresh_token=R2; Path=/; HttpOnly',
+      'csrf_token=C2; Path=/; Domain=readion.app',
+    ]
+    const refreshResponse = {
+      ok: true,
+      status: 200,
+      headers: { getSetCookie: () => rotatedCookies },
+      json: async () => ({ data: { accessToken: 'ssr-tok' } }),
+    } as unknown as Response
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(refreshResponse)
+      .mockResolvedValueOnce(userBody())
+
+    const forwarded: string[] = []
+    const auth = useAuthStore()
+    await runServerBootstrap(auth, {
+      cookieHeader: 'refresh_token=R1; csrf_token=C1',
+      forwardSetCookie: (cookies) => forwarded.push(...cookies),
+    })
+
+    expect(forwarded).toEqual([
+      'refresh_token=R2; Path=/; HttpOnly',
+      'csrf_token=C2; Path=/; Domain=readion.app',
+    ])
+  })
+
+  it('does not hit the network when no refresh cookie is present', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+    const auth = useAuthStore()
+
+    await runServerBootstrap(auth, { cookieHeader: 'unrelated=1' })
+
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(auth.isAuthenticated).toBe(false)
+  })
+
+  it('stays unauthenticated when the forwarded refresh is rejected', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ title: 'Forbidden', status: 403 }), { status: 403 }),
+    )
+    const auth = useAuthStore()
+
+    await runServerBootstrap(auth, { cookieHeader: 'refresh_token=R1; csrf_token=C1' })
+
+    expect(auth.isAuthenticated).toBe(false)
+  })
+})

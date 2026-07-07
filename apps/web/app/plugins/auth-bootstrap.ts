@@ -1,9 +1,31 @@
-import { runAuthBootstrap } from '~/composables/useAuthBootstrap'
+import { runAuthBootstrap, runAuthBootstrapServer } from '~/composables/useAuthBootstrap'
 import { useAuthStore } from '~/stores/auth'
 
 export default defineNuxtPlugin(() => {
-  if (import.meta.server) return
-
   const auth = useAuthStore()
+  const apiBase = useRuntimeConfig().public.apiBaseUrl
+
+  if (import.meta.server) {
+    const event = useRequestEvent()
+    const cookieHeader = useRequestHeaders(['cookie']).cookie
+    return runAuthBootstrapServer(auth, {
+      apiBase,
+      cookieHeader,
+      forwardSetCookie: (cookies) => {
+        if (!event) return
+        for (const cookie of cookies) {
+          appendResponseHeader(event, 'set-cookie', cookie)
+        }
+      },
+    })
+  }
+
+  // The session was already refreshed on the server and hydrated from the payload —
+  // re-running refresh here would rotate the single-use token a second time for nothing.
+  if (auth.isAuthenticated) {
+    auth.markReady()
+    return
+  }
+
   return runAuthBootstrap(auth)
 })
