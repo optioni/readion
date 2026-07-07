@@ -3,6 +3,8 @@ import type { FetchedContent, FetchStrategy } from './fetch-strategy.interface'
 
 @Injectable()
 export class AnkiFetchStrategy implements FetchStrategy {
+  readonly isStub = true
+
   async fetch(_url: string): Promise<FetchedContent[]> {
     return []
   }
