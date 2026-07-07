@@ -50,6 +50,7 @@ describe('cert-setup acceptance', () => {
 
   it('discovers ranked candidate sources, vendor-domain first, persisting nothing', async () => {
     const adminAuth = await asAdmin()
+    harness.searchReturnsVendorRanked()
 
     const res = await req()
       .post(DISCOVER)
@@ -63,6 +64,34 @@ describe('cert-setup acceptance', () => {
     expect(res.body.data.suggestedContentSources).toBeDefined()
 
     expect(await harness.countCertifications()).toBe(0)
+  })
+
+  it('drops model-proposed candidates that search never surfaced (grounding guard)', async () => {
+    const adminAuth = await asAdmin()
+    harness.searchReturnsVendorOnly()
+
+    const res = await req()
+      .post(DISCOVER)
+      .set('Authorization', adminAuth)
+      .send({ name: 'AWS Certified Cloud Practitioner', code: 'CLF-C02' })
+
+    expect(res.status).toBe(200)
+    const candidates = res.body.data.candidates as Array<{ url: string }>
+    expect(candidates.map((c) => c.url)).toEqual([VENDOR_DOMAIN_URL])
+    expect(candidates.map((c) => c.url)).not.toContain(THIRD_PARTY_URL)
+  })
+
+  it('returns 200 with empty candidates when the search provider is unavailable', async () => {
+    const adminAuth = await asAdmin()
+    harness.searchThrows()
+
+    const res = await req()
+      .post(DISCOVER)
+      .set('Authorization', adminAuth)
+      .send({ name: 'AWS Certified Cloud Practitioner', code: 'CLF-C02' })
+
+    expect(res.status).toBe(200)
+    expect(res.body.data.candidates).toEqual([])
   })
 
   it('enqueues exactly one cert-extraction job carrying the confirmed source', async () => {

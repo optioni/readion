@@ -48,6 +48,7 @@ describe('CertSetupController routes', () => {
 
   it('POST /discover-sources returns 200 with a single-resource envelope, persisting nothing', async () => {
     const adminAuth = await asAdmin()
+    harness.searchReturnsVendorRanked()
 
     const res = await req()
       .post(DISCOVER)

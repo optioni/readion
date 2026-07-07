@@ -171,6 +171,7 @@ export type CertSetupAcceptanceHarness = {
     result: CertExtractionResult,
   ) => Promise<string>
   searchReturnsVendorRanked: () => void
+  searchReturnsVendorOnly: () => void
   searchThrows: () => void
 }
 
@@ -291,6 +292,9 @@ export async function createCertSetupAcceptanceHarness(): Promise<CertSetupAccep
     },
     searchReturnsVendorRanked: () => {
       searchImpl = async () => [THIRD_PARTY_SEARCH_RESULT, VENDOR_SEARCH_RESULT]
+    },
+    searchReturnsVendorOnly: () => {
+      searchImpl = async () => [VENDOR_SEARCH_RESULT]
     },
     searchThrows: () => {
       searchImpl = async () => {
