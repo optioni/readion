@@ -69,12 +69,29 @@ export function rankDiscoveryCandidates(
     } catch {
       return false
     }
-    return vendorDomains.some((domain) => host === domain || host.endsWith(`.${domain}`))
+    return isVendorHost(host, vendorDomains)
   }
   return candidates
     .map((candidate, index) => ({ candidate, index, vendor: isVendor(candidate) }))
     .sort((a, b) => (a.vendor === b.vendor ? a.index - b.index : a.vendor ? -1 : 1))
     .map((entry) => entry.candidate)
+}
+
+// Known documentation/certification hosts for the major cert vendors covered
+// by this tool. The CertSearchPort adapter uses this to flag `official` on
+// search results; `deriveVendorDomains` then feeds those hosts back into
+// `rankDiscoveryCandidates` above so vendor pages rank first.
+export const CERT_VENDOR_DOMAINS = [
+  'aws.amazon.com',
+  'learn.microsoft.com',
+  'docs.microsoft.com',
+  'cloud.google.com',
+  'kubernetes.io',
+  'training.linuxfoundation.org',
+] as const
+
+export function isVendorHost(host: string, domains: readonly string[]): boolean {
+  return domains.some((domain) => host === domain || host.endsWith(`.${domain}`))
 }
 
 export const discoverSourcesRequestSchema = z.object({
