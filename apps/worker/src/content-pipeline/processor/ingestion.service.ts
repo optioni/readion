@@ -45,8 +45,7 @@ export class IngestionService {
     const fetchedItems = await strategy.fetch(source.url)
     if (fetchedItems.length === 0) {
       this.logger.warn(`No content fetched for source ${sourceId}`)
-      await this.sourceRepo.updateLastFetchedAt(sourceId, new Date())
-      return
+      throw new Error(`No content fetched for source ${sourceId} (${source.type}: ${source.url})`)
     }
 
     const allFetchedHashes: string[] = []
