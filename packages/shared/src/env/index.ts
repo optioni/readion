@@ -1,5 +1,10 @@
 export { AI_MAX_TOKENS_DEFAULTS, type AiProvider, aiEnvFragment } from './ai'
 export {
+  CERT_SEARCH_MAX_RESULTS_DEFAULT,
+  certSearchEnvFragment,
+  type CertSearchProvider,
+} from './cert-search'
+export {
   GROUNDING_MAX_REGEN_ATTEMPTS_DEFAULT,
   GROUNDING_VERBATIM_CAP_DEFAULT,
   groundingEnvFragment,

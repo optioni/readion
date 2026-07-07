@@ -1,6 +1,7 @@
 import {
   aiEnvFragment,
   CERT_REVERIFICATION_INTERVAL_DAYS_DEFAULT,
+  certSearchEnvFragment,
   DEFAULT_DISPLAY_TIMEZONE,
   DEFAULT_MIN_CHUNKS_PER_DOMAIN,
   DEFAULT_TOTAL_CHUNK_MULTIPLE,
@@ -61,6 +62,7 @@ const envSchema = z
     ...observabilityEnvFragment,
     ...aiEnvFragment,
     ...groundingEnvFragment,
+    ...certSearchEnvFragment,
     ...lifecycleEmailApiEnvFragment,
     ...productAnalyticsEnvFragment,
     SMTP_HOST: optionalNonEmptyString,
