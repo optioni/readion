@@ -1,5 +1,8 @@
 import type { FetchedContent } from './fetch-strategy.interface'
 
+// Requires explicit Front:/Back: markers rather than a loose heuristic, so an
+// AnkiWeb markup change yields [] (a loud, visible non-success upstream)
+// instead of silently emitting garbage chunks from unrelated page text.
 const CARD_PATTERN = /Front:\s*(.+?)\s*\n\s*Back:\s*(.+?)(?=\n\s*Front:|\s*$)/gis
 
 export function parseAnkiDeck(content: string, url: string): FetchedContent[] {
