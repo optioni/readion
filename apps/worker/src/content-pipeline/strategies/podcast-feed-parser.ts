@@ -1,5 +1,15 @@
 import Parser from 'rss-parser'
-import type { FetchedContent } from './fetch-strategy.interface'
+
+export interface PodcastEpisode {
+  url: string
+  transcriptUrl?: string
+  fallbackText?: string
+}
+
+interface PodcastTranscriptAttributes {
+  url?: string
+  type?: string
+}
 
 interface PodcastFeedItem {
   title?: string
@@ -8,7 +18,7 @@ interface PodcastFeedItem {
   content?: string
   contentSnippet?: string
   itunesSummary?: string
-  transcript?: string | { _?: string }
+  transcript?: string | { _?: string; $?: PodcastTranscriptAttributes }
 }
 
 const podcastFeedParser = new Parser<Record<string, never>, PodcastFeedItem>({
@@ -32,7 +42,13 @@ function extractText(value: string | { _?: string } | undefined): string | undef
   return undefined
 }
 
-function resolveEpisodeText(item: PodcastFeedItem): string | undefined {
+function resolveTranscriptUrl(item: PodcastFeedItem): string | undefined {
+  if (typeof item.transcript === 'string' || !item.transcript) return undefined
+  const url = item.transcript.$?.url
+  return url && url.trim().length > 0 ? url : undefined
+}
+
+function resolveFallbackText(item: PodcastFeedItem): string | undefined {
   return (
     extractText(item.transcript) ??
     extractText(item.itunesSummary) ??
@@ -45,14 +61,12 @@ function resolveEpisodeUrl(item: PodcastFeedItem, feedUrl: string): string {
   return item.link ?? item.guid ?? feedUrl
 }
 
-export async function parsePodcastFeed(xml: string, feedUrl: string): Promise<FetchedContent[]> {
+export async function parsePodcastFeed(xml: string, feedUrl: string): Promise<PodcastEpisode[]> {
   const feed = await podcastFeedParser.parseString(xml)
 
-  const results: FetchedContent[] = []
-  for (const item of feed.items) {
-    const text = resolveEpisodeText(item)
-    if (!text) continue
-    results.push({ text, url: resolveEpisodeUrl(item, feedUrl) })
-  }
-  return results
+  return feed.items.map((item) => ({
+    url: resolveEpisodeUrl(item, feedUrl),
+    transcriptUrl: resolveTranscriptUrl(item),
+    fallbackText: resolveFallbackText(item),
+  }))
 }
