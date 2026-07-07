@@ -589,6 +589,21 @@ describe('env schema — cert search provider', () => {
     })
     expect(result.TAVILY_API_KEY).toBeUndefined()
   })
+
+  it('boots with a blank TAVILY_API_KEY — the shipped .env.example / k8s secret default is inert, not an error', () => {
+    const result = parseEnv({
+      ...VALID_ENV,
+      NODE_ENV: 'production',
+      DB_HOST: 'db.internal',
+      DB_PORT: '5432',
+      DB_USER: 'readion',
+      DB_PASSWORD: 'secret',
+      DB_NAME: 'readion',
+      AI_API_KEY: 'test-ai-key',
+      TAVILY_API_KEY: '',
+    })
+    expect(result.TAVILY_API_KEY).toBeUndefined()
+  })
 })
 
 describe('env schema — product analytics', () => {

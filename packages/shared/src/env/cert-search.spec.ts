@@ -36,6 +36,11 @@ describe('certSearchEnvFragment', () => {
     expect(result.TAVILY_API_KEY).toBeUndefined()
   })
 
+  it('treats a blank TAVILY_API_KEY as undefined — the shipped inert default must not error', () => {
+    const result = parse({ TAVILY_API_KEY: '' })
+    expect(result.TAVILY_API_KEY).toBeUndefined()
+  })
+
   it('rejects an unsupported CERT_SEARCH_PROVIDER naming the var', () => {
     expect(() => parse({ CERT_SEARCH_PROVIDER: 'bing' })).toThrow(/CERT_SEARCH_PROVIDER/)
   })
