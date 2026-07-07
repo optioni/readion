@@ -209,9 +209,10 @@ describe('Content Pipeline — Acceptance Test (Outer Loop)', () => {
         content_source_id: string
         certification_id: string
       }[]
-    >('SELECT content_source_id, certification_id FROM content_chunks WHERE content_source_id = ?', [
-      source.id,
-    ])
+    >(
+      'SELECT content_source_id, certification_id FROM content_chunks WHERE content_source_id = ?',
+      [source.id],
+    )
 
     expect(chunks.length).toBeGreaterThan(0)
     expect(metricsService.increment).toHaveBeenCalledWith('podcast', expect.any(Number))

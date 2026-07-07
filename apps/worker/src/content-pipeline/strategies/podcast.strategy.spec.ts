@@ -33,7 +33,10 @@ describe('PodcastFetchStrategy', () => {
   })
 
   it('parses an RSS feed and yields per-episode content, preferring the transcript', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve(RSS_FIXTURE) }))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve(RSS_FIXTURE) }),
+    )
     strategy = new PodcastFetchStrategy()
 
     const results = await strategy.fetch('https://example.com/podcast/feed.xml')
@@ -46,7 +49,10 @@ describe('PodcastFetchStrategy', () => {
   })
 
   it('falls back to itunes:summary show notes when no transcript is advertised', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve(RSS_FIXTURE) }))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve(RSS_FIXTURE) }),
+    )
     strategy = new PodcastFetchStrategy()
 
     const results = await strategy.fetch('https://example.com/podcast/feed.xml')

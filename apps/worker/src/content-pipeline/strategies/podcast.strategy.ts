@@ -9,7 +9,10 @@ export class PodcastFetchStrategy implements FetchStrategy {
     try {
       await throttleForDomain(extractDomain(url))
       const response = await globalThis.fetch(url, {
-        headers: { 'User-Agent': USER_AGENT, Accept: 'application/rss+xml, application/xml, text/xml' },
+        headers: {
+          'User-Agent': USER_AGENT,
+          Accept: 'application/rss+xml, application/xml, text/xml',
+        },
         signal: AbortSignal.timeout(15_000),
       })
       if (!response.ok) return []
