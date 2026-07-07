@@ -1,4 +1,5 @@
 import 'reflect-metadata'
+import type { LanguageModelV3FinishReason, LanguageModelV3StreamPart } from '@ai-sdk/provider'
 import { EntityManager } from '@mikro-orm/core'
 import { getQueueToken } from '@nestjs/bullmq'
 import type { INestApplication } from '@nestjs/common'
@@ -10,16 +11,21 @@ import {
   type CertExtractionResult,
   type CertificationDomain,
   type CertificationProvenance,
-  type DiscoverSourcesResponse,
 } from '@readion/shared'
+import { MockLanguageModelV3 } from 'ai/test'
 import { type Job, Queue, Worker } from 'bullmq'
 import type Redis from 'ioredis'
 import supertest from 'supertest'
 import type { StartedTestContainer } from 'testcontainers'
 import { AppModule } from '../../app.module'
 import { bootstrapApp } from '../../bootstrap'
+import { ProviderAdapter } from '../../llm/provider-adapter'
 import { REDIS_CLIENT } from '../../redis/redis.module'
-import { CertDiscoveryService } from '../cert-discovery.service'
+import {
+  CERT_SEARCH_PORT,
+  type CertSearchPort,
+  type CertSearchResult,
+} from '../cert-discovery.types'
 
 export const VENDOR_DOMAIN_URL =
   'https://aws.amazon.com/certification/certified-cloud-practitioner/'
@@ -32,24 +38,68 @@ export type ExtractionJobData = {
   confirmedSourceUrl: string
 }
 
-// CertDiscoveryService's grounding/ranking is covered by cert-discovery.service.spec.
-// The acceptance suite fakes the service to return an already-ranked response
-// (vendor first) so it deterministically asserts the controller/authz/persistence
-// contract without driving the LLM tool loop.
-export const DISCOVERY_CANDIDATES: DiscoverSourcesResponse = {
-  candidates: [
-    {
-      url: VENDOR_DOMAIN_URL,
-      title: 'AWS Certified Cloud Practitioner',
-      snippet: 'Official exam guide and overview.',
-    },
-    {
-      url: THIRD_PARTY_URL,
-      title: 'AWS Certified Cloud Practitioner practice exams',
-      snippet: 'Community-contributed practice questions.',
-    },
-  ],
+const VENDOR_SEARCH_RESULT: CertSearchResult = {
+  url: VENDOR_DOMAIN_URL,
+  title: 'AWS Certified Cloud Practitioner',
+  snippet: 'Official exam guide and overview.',
+  official: true,
+}
+const THIRD_PARTY_SEARCH_RESULT: CertSearchResult = {
+  url: THIRD_PARTY_URL,
+  title: 'AWS Certified Cloud Practitioner practice exams',
+  snippet: 'Community-contributed practice questions.',
+  official: false,
+}
+
+// The mock model always proposes both URLs; CertDiscoveryService's own grounding
+// guard is what determines which of them survive into the response, based on
+// whatever CERT_SEARCH_PORT actually returned. That lets the harness drive the
+// real service end-to-end while keeping the LLM call deterministic and offline.
+const MODEL_CANDIDATE_REPLY = JSON.stringify({
+  candidates: [{ url: VENDOR_DOMAIN_URL }, { url: THIRD_PARTY_URL }],
   suggestedContentSources: [{ url: VENDOR_DOMAIN_URL, type: 'web' }],
+})
+
+const FINISH_REASON_STOP: LanguageModelV3FinishReason = { unified: 'stop', raw: 'stop' }
+const FINISH_REASON_TOOL_CALLS: LanguageModelV3FinishReason = {
+  unified: 'tool-calls',
+  raw: 'tool_calls',
+}
+const STREAM_USAGE = {
+  inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 },
+  outputTokens: { total: 20, text: 20, reasoning: 0 },
+} as const
+
+function streamFromParts(parts: LanguageModelV3StreamPart[]) {
+  return new ReadableStream<LanguageModelV3StreamPart>({
+    start(controller) {
+      for (const part of parts) {
+        controller.enqueue(part)
+      }
+      controller.close()
+    },
+  })
+}
+
+function textReplyParts(text: string): LanguageModelV3StreamPart[] {
+  return [
+    { type: 'stream-start', warnings: [] },
+    { type: 'text-start', id: 'txt-1' },
+    { type: 'text-delta', id: 'txt-1', delta: text },
+    { type: 'text-end', id: 'txt-1' },
+    { type: 'finish', finishReason: FINISH_REASON_STOP, usage: STREAM_USAGE },
+  ]
+}
+
+function toolCallParts(toolName: string, input: string): LanguageModelV3StreamPart[] {
+  return [
+    { type: 'stream-start', warnings: [] },
+    { type: 'tool-input-start', id: 'call-1', toolName },
+    { type: 'tool-input-delta', id: 'call-1', delta: input },
+    { type: 'tool-input-end', id: 'call-1' },
+    { type: 'tool-call', toolCallId: 'call-1', toolName, input },
+    { type: 'finish', finishReason: FINISH_REASON_TOOL_CALLS, usage: STREAM_USAGE },
+  ]
 }
 
 const EXTRACTED_DOMAINS: CertificationDomain[] = [
@@ -120,6 +170,8 @@ export type CertSetupAcceptanceHarness = {
     data: ExtractionJobData,
     result: CertExtractionResult,
   ) => Promise<string>
+  searchReturnsVendorRanked: () => void
+  searchThrows: () => void
 }
 
 export async function createCertSetupAcceptanceHarness(): Promise<CertSetupAcceptanceHarness> {
@@ -132,13 +184,40 @@ export async function createCertSetupAcceptanceHarness(): Promise<CertSetupAccep
 
   await acquireIsolatedDatabase()
 
+  // Defaults to the same behavior as the real (placeholder) CERT_SEARCH_PORT
+  // binding — no results — so the discovery acceptance test exercises the
+  // genuine CertDiscoveryService end-to-end without ever calling a live model
+  // or search provider. Tests that need different search behavior switch modes
+  // via searchReturnsVendorRanked()/searchThrows() below.
+  let searchImpl: (query: string) => Promise<CertSearchResult[]> = async () => []
+  const searchFake: CertSearchPort = { search: (query) => searchImpl(query) }
+
+  const langModel = new MockLanguageModelV3({
+    doStream: async ({ prompt }: { prompt: Array<{ role: string }> }) => {
+      const hasToolResult = prompt.some((message) => message.role === 'tool')
+      if (!hasToolResult) {
+        return {
+          stream: streamFromParts(
+            toolCallParts('webSearch', JSON.stringify({ query: 'cert exam guide' })),
+          ),
+        }
+      }
+      return { stream: streamFromParts(textReplyParts(MODEL_CANDIDATE_REPLY)) }
+    },
+  })
+
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule],
   })
-    .overrideProvider(CertDiscoveryService)
+    .overrideProvider(ProviderAdapter)
     .useValue({
-      discoverSources: async (): Promise<DiscoverSourcesResponse> => DISCOVERY_CANDIDATES,
+      getChatModel: () => langModel,
+      getEmbeddingModel: () => {
+        throw new Error('unused in cert-setup acceptance tests')
+      },
     })
+    .overrideProvider(CERT_SEARCH_PORT)
+    .useValue(searchFake)
     .compile()
 
   const app = moduleRef.createNestApplication()
@@ -158,6 +237,7 @@ export async function createCertSetupAcceptanceHarness(): Promise<CertSetupAccep
     moduleRef,
     certExtractionQueue,
     resetState: async () => {
+      searchImpl = async () => []
       await redis.flushdb()
       await truncateDomainTables(em)
     },
@@ -208,6 +288,14 @@ export async function createCertSetupAcceptanceHarness(): Promise<CertSetupAccep
       })
       await worker.close()
       return String(job.id)
+    },
+    searchReturnsVendorRanked: () => {
+      searchImpl = async () => [THIRD_PARTY_SEARCH_RESULT, VENDOR_SEARCH_RESULT]
+    },
+    searchThrows: () => {
+      searchImpl = async () => {
+        throw new Error('search provider unavailable')
+      }
     },
   }
 }

@@ -56,6 +56,7 @@ describe('CertSetupController routes', () => {
 
     expect(res.status).toBe(200)
     const candidates = res.body.data.candidates as Array<{ url: string }>
+    expect(candidates.length).toBeGreaterThan(0)
     expect(candidates.map((c) => c.url)).toEqual([VENDOR_DOMAIN_URL, THIRD_PARTY_URL])
     expect(res.body.data.suggestedContentSources).toBeDefined()
     expect(res.body.relationships).toBeDefined()
