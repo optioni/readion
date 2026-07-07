@@ -1,4 +1,3 @@
-import type { INestApplication } from '@nestjs/common'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   type CertSetupAcceptanceHarness,
@@ -29,11 +28,9 @@ const DRAFT_PAYLOAD = {
 
 describe('cert-setup acceptance', () => {
   let harness: CertSetupAcceptanceHarness
-  let app: INestApplication
 
   beforeAll(async () => {
     harness = await createCertSetupAcceptanceHarness()
-    app = harness.app
   }, 120_000)
 
   beforeEach(async () => {
