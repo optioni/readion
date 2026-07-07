@@ -1,8 +1,8 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import {
-  contentSourceTypes,
   type ContentSourceResponse,
   type ContentSourceType,
+  contentSourceTypes,
   type EnqueuedJobResponse,
   type IngestionJobStatus,
   ingestionQueueName,
