@@ -31,7 +31,7 @@ const RSS_FIXTURE = `<?xml version="1.0" encoding="UTF-8"?>
 
 function stubFetchRouting(routes: {
   feed?: { ok: boolean; body?: string }
-  transcript?: { ok: boolean; body?: string; reject?: boolean }
+  transcript?: { ok?: boolean; body?: string; reject?: boolean }
 }) {
   return vi.fn().mockImplementation((url: string) => {
     if (url === TRANSCRIPT_URL) {
