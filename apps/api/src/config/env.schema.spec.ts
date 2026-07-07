@@ -552,6 +552,45 @@ describe('env schema — lifecycle email', () => {
   })
 })
 
+describe('env schema — cert search provider', () => {
+  it('parses CERT_SEARCH_PROVIDER, TAVILY_API_KEY, and CERT_SEARCH_MAX_RESULTS when present', () => {
+    const result = parseEnv({
+      ...VALID_ENV,
+      CERT_SEARCH_PROVIDER: 'tavily',
+      TAVILY_API_KEY: 'tvly-test-key',
+      CERT_SEARCH_MAX_RESULTS: '5',
+    })
+    expect(result.CERT_SEARCH_PROVIDER).toBe('tavily')
+    expect(result.TAVILY_API_KEY).toBe('tvly-test-key')
+    expect(result.CERT_SEARCH_MAX_RESULTS).toBe(5)
+  })
+
+  it('defaults CERT_SEARCH_PROVIDER to tavily and CERT_SEARCH_MAX_RESULTS to 8 when omitted', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.CERT_SEARCH_PROVIDER).toBe('tavily')
+    expect(result.CERT_SEARCH_MAX_RESULTS).toBe(8)
+  })
+
+  it('boots with no CERT_SEARCH_*/TAVILY_API_KEY vars at all — discovery stays inert but healthy', () => {
+    const result = parseEnv(VALID_ENV)
+    expect(result.TAVILY_API_KEY).toBeUndefined()
+  })
+
+  it('boots in production without TAVILY_API_KEY — the search provider is optional everywhere', () => {
+    const result = parseEnv({
+      ...VALID_ENV,
+      NODE_ENV: 'production',
+      DB_HOST: 'db.internal',
+      DB_PORT: '5432',
+      DB_USER: 'readion',
+      DB_PASSWORD: 'secret',
+      DB_NAME: 'readion',
+      AI_API_KEY: 'test-ai-key',
+    })
+    expect(result.TAVILY_API_KEY).toBeUndefined()
+  })
+})
+
 describe('env schema — product analytics', () => {
   it('exposes window/population defaults when overrides are absent', () => {
     const result = parseEnv(VALID_ENV)
