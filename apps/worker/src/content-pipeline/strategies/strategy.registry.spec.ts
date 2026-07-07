@@ -21,7 +21,7 @@ describe('StrategyRegistry', () => {
       new RedditFetchStrategy(),
       new GitHubFetchStrategy(),
       new PodcastFetchStrategy(),
-      new AnkiFetchStrategy(),
+      new AnkiFetchStrategy(scrapper),
       new QuizletFetchStrategy(),
     )
 

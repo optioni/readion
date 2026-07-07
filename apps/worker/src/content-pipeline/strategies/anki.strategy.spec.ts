@@ -55,7 +55,10 @@ describe('AnkiFetchStrategy', () => {
   })
 
   it('returns an empty array when the scrapper content does not look like a deck, rather than emitting garbage', async () => {
-    scrapper.fetch.mockResolvedValue({ content: '<html><body>unexpected markup</body></html>', url: DECK_URL })
+    scrapper.fetch.mockResolvedValue({
+      content: '<html><body>unexpected markup</body></html>',
+      url: DECK_URL,
+    })
 
     const result = await strategy.fetch(DECK_URL)
 
