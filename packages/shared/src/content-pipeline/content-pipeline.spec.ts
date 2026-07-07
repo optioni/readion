@@ -1,5 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import {
+  contentSourceTypes,
   type ContentSourceResponse,
   type ContentSourceType,
   type EnqueuedJobResponse,
@@ -7,6 +8,12 @@ import {
   ingestionQueueName,
   registerSourceRequestSchema,
 } from './index'
+
+describe('contentSourceTypes', () => {
+  it('does not offer quizlet as a source type', () => {
+    expect(contentSourceTypes).not.toContain('quizlet')
+  })
+})
 
 describe('ingestionQueueName', () => {
   it('prefixes the source type with ingestion-', () => {
@@ -43,6 +50,14 @@ describe('registerSourceRequestSchema', () => {
     const result = registerSourceRequestSchema.safeParse({
       ...validRequest,
       type: 'rss',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects quizlet as a source type', () => {
+    const result = registerSourceRequestSchema.safeParse({
+      ...validRequest,
+      type: 'quizlet',
     })
     expect(result.success).toBe(false)
   })

@@ -83,6 +83,17 @@ describe('CertSetupSourcesStep suggested sources', () => {
 })
 
 describe('CertSetupSourcesStep manual add', () => {
+  it('does not offer quizlet as a source type option', () => {
+    const { wrapper } = mountStep()
+
+    const values = wrapper
+      .find('[data-testid="cert-source-type-select"]')
+      .findAll('option')
+      .map((option) => option.element.value)
+
+    expect(values).not.toContain('quizlet')
+  })
+
   it('registers a manually entered url and invalidates coverage', async () => {
     vi.mocked(contentControllerRegister).mockResolvedValue(registered())
     const { wrapper, invalidateSpy } = mountStep()
