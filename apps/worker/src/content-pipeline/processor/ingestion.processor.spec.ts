@@ -119,7 +119,7 @@ describe('IngestionService (integration)', () => {
     ).resolves.toBeUndefined()
   })
 
-  it('updates lastFetchedAt and returns when fetch returns no content', async () => {
+  it('throws and does not record a successful fetch when fetch returns no content', async () => {
     mockStrategyRegistry.get.mockReturnValueOnce({
       fetch: vi.fn().mockResolvedValue([]),
     })
@@ -131,9 +131,18 @@ describe('IngestionService (integration)', () => {
       recheckIntervalMinutes: SOURCE_RECHECK_INTERVALS.web,
     })
 
-    await service.ingest(source.id, [])
+    await expect(service.ingest(source.id, [])).rejects.toThrow(/no content fetched/i)
 
     const updatedSource = await sourceRepo.findById(source.id)
-    expect(updatedSource?.lastFetchedAt).not.toBeNull()
+    expect(updatedSource?.lastFetchedAt).toBeNull()
+
+    const em = service['chunkRepo']['em']
+    const count = await em
+      .getConnection()
+      .execute<{ count: string }[]>(
+        'SELECT COUNT(*) as count FROM content_chunks WHERE content_source_id = ?',
+        [source.id],
+      )
+    expect(Number(count[0]?.count)).toBe(0)
   })
 })
