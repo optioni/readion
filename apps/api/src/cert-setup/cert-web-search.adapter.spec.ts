@@ -132,4 +132,21 @@ describe('CertWebSearchAdapter', () => {
     expect(counter.inc).toHaveBeenCalledTimes(1)
     expect(counter.inc).toHaveBeenCalledWith({ reason: 'error' })
   })
+
+  it('does not increment the unavailable counter when a configured provider genuinely returns no results', async () => {
+    vi.mocked(client.search).mockResolvedValue([])
+    const config = configWith({
+      CERT_SEARCH_PROVIDER: 'tavily',
+      TAVILY_API_KEY: 'tvly-test-key',
+      CERT_SEARCH_MAX_RESULTS: 8,
+    })
+    // biome-ignore lint/suspicious/noExplicitAny: counter is a fake Prometheus Counter for this unit test
+    const adapter = new CertWebSearchAdapter(client, config, counter as any)
+
+    const results = await adapter.search('totally unknown certification')
+
+    expect(results).toEqual([])
+    expect(client.search).toHaveBeenCalled()
+    expect(counter.inc).not.toHaveBeenCalled()
+  })
 })
