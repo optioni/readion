@@ -11,7 +11,6 @@ export const contentSourceTypes = [
   'github',
   'podcast',
   'anki',
-  'quizlet',
 ] as const
 
 export type ContentSourceType = (typeof contentSourceTypes)[number]
@@ -40,7 +39,6 @@ export const SOURCE_RECHECK_INTERVALS: Record<ContentSourceType, number> = {
   github: 20_160,
   podcast: 10_080,
   anki: 43_200,
-  quizlet: 43_200,
 }
 
 export function ingestionQueueName(type: string): string {

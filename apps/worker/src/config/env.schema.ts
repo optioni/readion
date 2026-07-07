@@ -66,7 +66,6 @@ const envSchema = z
     CONTENT_RECHECK_GITHUB_MINUTES: zodCoerceNumber().default(SOURCE_RECHECK_INTERVALS.github),
     CONTENT_RECHECK_PODCAST_MINUTES: zodCoerceNumber().default(SOURCE_RECHECK_INTERVALS.podcast),
     CONTENT_RECHECK_ANKI_MINUTES: zodCoerceNumber().default(SOURCE_RECHECK_INTERVALS.anki),
-    CONTENT_RECHECK_QUIZLET_MINUTES: zodCoerceNumber().default(SOURCE_RECHECK_INTERVALS.quizlet),
 
     // Session abandonment
     SESSION_ABANDONMENT_THRESHOLD_HOURS: zodCoerceNumber().default(

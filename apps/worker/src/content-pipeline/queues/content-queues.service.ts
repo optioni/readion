@@ -18,7 +18,6 @@ export class ContentQueuesService {
     @InjectQueue(ingestionQueueName('github')) githubQueue: Queue,
     @InjectQueue(ingestionQueueName('podcast')) podcastQueue: Queue,
     @InjectQueue(ingestionQueueName('anki')) ankiQueue: Queue,
-    @InjectQueue(ingestionQueueName('quizlet')) quizletQueue: Queue,
   ) {
     const queueList: Queue[] = [
       webQueue,
@@ -28,7 +27,6 @@ export class ContentQueuesService {
       githubQueue,
       podcastQueue,
       ankiQueue,
-      quizletQueue,
     ]
     contentSourceTypes.forEach((type, i) => {
       this.queues.set(type, queueList[i]!)

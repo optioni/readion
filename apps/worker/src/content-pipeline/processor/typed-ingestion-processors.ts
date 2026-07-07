@@ -52,13 +52,6 @@ export class AnkiIngestionProcessor extends IngestionProcessor {
   }
 }
 
-@Processor(ingestionQueueName('quizlet'))
-export class QuizletIngestionProcessor extends IngestionProcessor {
-  constructor(ingestionService: IngestionService) {
-    super('quizlet', ingestionService)
-  }
-}
-
 export const INGESTION_PROCESSORS = [
   WebIngestionProcessor,
   PdfIngestionProcessor,
@@ -67,5 +60,4 @@ export const INGESTION_PROCESSORS = [
   GitHubIngestionProcessor,
   PodcastIngestionProcessor,
   AnkiIngestionProcessor,
-  QuizletIngestionProcessor,
 ] as const

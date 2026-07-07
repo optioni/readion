@@ -58,7 +58,6 @@ export class ContentSourceService {
     @InjectQueue(ingestionQueueName('github')) githubQueue: Queue,
     @InjectQueue(ingestionQueueName('podcast')) podcastQueue: Queue,
     @InjectQueue(ingestionQueueName('anki')) ankiQueue: Queue,
-    @InjectQueue(ingestionQueueName('quizlet')) quizletQueue: Queue,
   ) {
     this.queues.set('web', webQueue)
     this.queues.set('pdf', pdfQueue)
@@ -67,7 +66,6 @@ export class ContentSourceService {
     this.queues.set('github', githubQueue)
     this.queues.set('podcast', podcastQueue)
     this.queues.set('anki', ankiQueue)
-    this.queues.set('quizlet', quizletQueue)
   }
 
   async register(

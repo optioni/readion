@@ -17,7 +17,6 @@ describe('ContentQueuesService', () => {
       makeQueue() as any,
       makeQueue() as any,
       makeQueue() as any,
-      makeQueue() as any,
     )
 
     await service.enqueue('source-id', 'web', ['Security'])
@@ -33,7 +32,6 @@ describe('ContentQueuesService', () => {
     const webQueue = makeQueue()
     const service = new ContentQueuesService(
       webQueue as any,
-      makeQueue() as any,
       makeQueue() as any,
       makeQueue() as any,
       makeQueue() as any,
@@ -56,7 +54,6 @@ describe('ContentQueuesService', () => {
       makeQueue() as any,
       makeQueue() as any,
       makeQueue() as any,
-      makeQueue() as any,
     )
 
     expect(service.getQueue('web')).toBe(webQueue)
@@ -65,7 +62,6 @@ describe('ContentQueuesService', () => {
 
   it('throws when enqueueing to an unknown source type', async () => {
     const service = new ContentQueuesService(
-      makeQueue() as any,
       makeQueue() as any,
       makeQueue() as any,
       makeQueue() as any,

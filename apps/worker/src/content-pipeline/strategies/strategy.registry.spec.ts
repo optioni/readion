@@ -5,7 +5,6 @@ import { AnkiFetchStrategy } from './anki.strategy'
 import { GitHubFetchStrategy } from './github.strategy'
 import { PdfFetchStrategy } from './pdf.strategy'
 import { PodcastFetchStrategy } from './podcast.strategy'
-import { QuizletFetchStrategy } from './quizlet.strategy'
 import { RedditFetchStrategy } from './reddit.strategy'
 import { StrategyRegistry } from './strategy.registry'
 import { WebFetchStrategy } from './web.strategy'
@@ -22,7 +21,6 @@ describe('StrategyRegistry', () => {
       new GitHubFetchStrategy(),
       new PodcastFetchStrategy(),
       new AnkiFetchStrategy(scrapper),
-      new QuizletFetchStrategy(),
     )
 
     for (const type of contentSourceTypes) {

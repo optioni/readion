@@ -27,7 +27,6 @@ import { AnkiFetchStrategy } from './strategies/anki.strategy'
 import { GitHubFetchStrategy } from './strategies/github.strategy'
 import { PdfFetchStrategy } from './strategies/pdf.strategy'
 import { PodcastFetchStrategy } from './strategies/podcast.strategy'
-import { QuizletFetchStrategy } from './strategies/quizlet.strategy'
 import { RedditFetchStrategy } from './strategies/reddit.strategy'
 import { StrategyRegistry } from './strategies/strategy.registry'
 import { WebFetchStrategy } from './strategies/web.strategy'
@@ -46,7 +45,6 @@ import { ChunkSupersessionService } from './supersession/chunk-supersession.serv
     GitHubFetchStrategy,
     PodcastFetchStrategy,
     AnkiFetchStrategy,
-    QuizletFetchStrategy,
     StrategyRegistry,
     DomainTaggerService,
     EmbedderService,
