@@ -49,7 +49,9 @@ holds only placeholders (`"replace-me"`) — never fill it in and commit it as-i
 - **Sensitive** config → `readion-secret` Secret
   (`k8s/base/config/secret.example.yaml` is the committed template only):
   `DB_*`, `REDIS_URL`, `JWT_SECRET`, SMTP credentials,
-  `INTERNAL_API_SECRET`, `SENTRY_DSN`.
+  `INTERNAL_API_SECRET`, `SENTRY_DSN`. The optional `TAVILY_API_KEY` also
+  lives here — leaving it unset keeps admin source discovery inert but healthy;
+  set it to turn discovery live in that environment.
 
 The real Secret is **never committed**. Supply it out-of-band via
 sealed-secrets, external-secrets, or your cloud provider's secret store,
