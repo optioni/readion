@@ -11,6 +11,7 @@ import {
   buildProvenanceMap,
   CERT_EXTRACTION_QUEUE,
   CERT_REVERIFICATION_INTERVAL_DAYS_DEFAULT,
+  CERT_VENDOR_DOMAINS,
   type CertExtractionFields,
   type CertExtractionResult,
   type CreateCertificationRequest,
@@ -22,6 +23,7 @@ import {
   dueForReverification,
   type ExtractRequest,
   extractRequestSchema,
+  isVendorHost,
   type ReverifyCertificationRequest,
   rankDiscoveryCandidates,
   reverifyCertificationRequestSchema,
@@ -382,5 +384,23 @@ describe('rankDiscoveryCandidates', () => {
     const broken: DiscoveryCandidate = { url: 'not a url', title: 'Broken' }
     const ranked = rankDiscoveryCandidates([broken, vendor], ['amazon.com'])
     expect(ranked.map((c) => c.url)).toEqual([vendor.url, broken.url])
+  })
+})
+
+describe('isVendorHost', () => {
+  it('matches an exact vendor domain', () => {
+    expect(isVendorHost('aws.amazon.com', CERT_VENDOR_DOMAINS)).toBe(true)
+  })
+
+  it('matches a subdomain of a vendor domain', () => {
+    expect(isVendorHost('docs.aws.amazon.com', ['aws.amazon.com'])).toBe(true)
+  })
+
+  it('does not match an unrelated host', () => {
+    expect(isVendorHost('examtopics.com', CERT_VENDOR_DOMAINS)).toBe(false)
+  })
+
+  it('does not match a host that merely contains the domain as a suffix without a dot boundary', () => {
+    expect(isVendorHost('notaws.amazon.com.evil.com', ['aws.amazon.com'])).toBe(false)
   })
 })
