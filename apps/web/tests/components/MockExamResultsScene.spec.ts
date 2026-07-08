@@ -31,7 +31,7 @@ function buildExam(overrides: Partial<MockExamResponse> = {}): MockExamResponse 
     startedAt: '2026-06-29T10:00:00.000Z',
     deadline: '2026-06-29T11:47:23.000Z',
     remainingSeconds: 0,
-    score: 73,
+    score: 0.73,
     passed: true,
     domainBreakdown: DOMAIN_BREAKDOWN,
     questions: [],
@@ -96,15 +96,35 @@ describe('MockExamResultsScene score hero', () => {
   })
 
   it('shows a FAIL badge when passed is false', () => {
-    const wrapper = mountScene(buildExam({ score: 58, passed: false }))
+    const wrapper = mountScene(buildExam({ score: 0.58, passed: false }))
     expect(wrapper.find('[data-testid="exam-score-value"]').text()).toContain('58')
     expect(wrapper.find('[data-testid="exam-pass-badge"]').text()).toMatch(/fail/i)
   })
 
   it('omits the badge entirely when passed is null (diagnostic-type)', () => {
-    const wrapper = mountScene(buildExam({ passed: null, score: 66 }))
+    const wrapper = mountScene(buildExam({ passed: null, score: 0.66 }))
     expect(wrapper.find('[data-testid="exam-pass-badge"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="exam-score-value"]').text()).toContain('66')
+  })
+
+  it('renders the score as round(score x 100)% for a fractional score', () => {
+    const wrapper = mountScene(buildExam({ score: 0.7 }))
+    expect(wrapper.find('[data-testid="exam-score-value"]').text()).toContain('70%')
+  })
+
+  it('rounds a fractional score using standard rounding (0.735 -> 74%)', () => {
+    const wrapper = mountScene(buildExam({ score: 0.735 }))
+    expect(wrapper.find('[data-testid="exam-score-value"]').text()).toContain('74%')
+  })
+
+  it('renders 100% for a perfect score', () => {
+    const wrapper = mountScene(buildExam({ score: 1 }))
+    expect(wrapper.find('[data-testid="exam-score-value"]').text()).toContain('100%')
+  })
+
+  it('renders 0% for a zero score', () => {
+    const wrapper = mountScene(buildExam({ score: 0 }))
+    expect(wrapper.find('[data-testid="exam-score-value"]').text()).toContain('0%')
   })
 
   it('does not fabricate a passing-score number or threshold line', () => {
