@@ -4,10 +4,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import SettingsTabs from '~/components/SettingsTabs.vue'
 
-const mainCss = readFileSync(
-  resolve(__dirname, '../../app/assets/css/main.css'),
-  'utf-8',
-)
+const mainCss = readFileSync(resolve(__dirname, '../../app/assets/css/main.css'), 'utf-8')
 
 describe('SettingsTabs active-tab underline', () => {
   it('applies the accent-label underline class to the active tab only', () => {
@@ -30,6 +27,6 @@ describe('SettingsTabs active-tab underline', () => {
     const match = mainCss.match(/--color-readion-accent-label:\s*(#[0-9a-fA-F]{6})/)
 
     expect(match).not.toBeNull()
-    expect(match?.[1].toLowerCase()).toBe('#818cf8')
+    expect(match?.[1]?.toLowerCase()).toBe('#818cf8')
   })
 })
