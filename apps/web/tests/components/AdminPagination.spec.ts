@@ -2,18 +2,18 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import AdminPagination from '~/components/admin/AdminPagination.vue'
 
-function mountPagination(props: {
-  page: number
-  limit: number
-  total: number
-  testid: string
-}) {
+function mountPagination(props: { page: number; limit: number; total: number; testid: string }) {
   return mount(AdminPagination, { props })
 }
 
 describe('AdminPagination', () => {
   it('does not render when the total fits within a single page', () => {
-    const wrapper = mountPagination({ page: 1, limit: 20, total: 3, testid: 'admin-users-pagination' })
+    const wrapper = mountPagination({
+      page: 1,
+      limit: 20,
+      total: 3,
+      testid: 'admin-users-pagination',
+    })
 
     expect(wrapper.find('[data-testid="admin-users-pagination"]').exists()).toBe(false)
   })

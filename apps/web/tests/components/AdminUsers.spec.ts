@@ -162,8 +162,8 @@ describe('AdminUsers pagination', () => {
     await wrapper.find('[data-testid="admin-users-pagination-next"]').trigger('click')
     await flushPromises()
 
-    const [pageArg] = vi.mocked(useAdminUsers).mock.calls[0]
-    expect(toValue(pageArg)).toBe(2)
+    const pageArg = vi.mocked(useAdminUsers).mock.calls[0]?.[0]
+    expect(toValue(pageArg ?? 1)).toBe(2)
   })
 })
 
