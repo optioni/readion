@@ -1,24 +1,29 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import CertHeaderBar from '~/components/CertHeaderBar.vue'
 import ExamHistoryTab from '~/components/ExamHistoryTab.vue'
 import OverviewTab from '~/components/OverviewTab.vue'
 import SessionsTab from '~/components/SessionsTab.vue'
 import { progressPath } from '~/composables/runnerRoutes'
 import { useCertDetail } from '~/composables/useCertDetail'
+import { useQuickStartActions } from '~/composables/useQuickStartActions'
 
 type TabId = 'overview' | 'sessions' | 'exam-history'
 
 const route = useRoute()
 const enrollmentId = computed(() => String(route.params.id))
 
-const { name, provider, certificationId, domains, isLoading, isError, notFound } = useCertDetail(
+const { name, provider, code, certificationId, domains, isLoading, isError, notFound } =
+  useCertDetail(enrollmentId.value)
+
+const { startSession, startMockExam, isStartingSession, isStartingMockExam } = useQuickStartActions(
   enrollmentId.value,
 )
 
 const tabs: { id: TabId; label: string; panelTestId: string }[] = [
   { id: 'overview', label: 'Overview', panelTestId: 'cert-detail-tab-overview' },
   { id: 'sessions', label: 'Sessions', panelTestId: 'cert-detail-tab-sessions' },
-  { id: 'exam-history', label: 'Exam History', panelTestId: 'cert-detail-tab-exam-history' },
+  { id: 'exam-history', label: 'Exam history', panelTestId: 'cert-detail-tab-exam-history' },
 ]
 
 const activeTab = ref<TabId>('overview')
@@ -28,7 +33,7 @@ function selectTab(id: TabId) {
 </script>
 
 <template>
-  <section data-testid="cert-detail-page" class="mx-auto max-w-[720px]">
+  <section data-testid="cert-detail-page" class="w-full">
     <div
       v-if="notFound"
       data-testid="cert-detail-not-found"
@@ -41,35 +46,42 @@ function selectTab(id: TabId) {
     </div>
 
     <template v-else>
-      <header class="mb-6">
-        <p class="mb-1 font-medium text-[11px] text-slate-400 uppercase tracking-wider">
-          Certification
-        </p>
-        <div v-if="isLoading" data-testid="cert-detail-loading" class="space-y-2">
-          <div class="h-7 w-64 animate-pulse rounded bg-readion-background-surface" />
-          <div class="h-4 w-32 animate-pulse rounded bg-readion-background-surface" />
-        </div>
-        <template v-else>
-          <h1 data-testid="cert-detail-name" class="font-semibold text-2xl text-slate-100">
-            {{ name }}
-          </h1>
-          <p data-testid="cert-detail-provider" class="text-slate-400 text-sm">{{ provider }}</p>
-          <NuxtLink
-            data-testid="view-progress-link"
-            :to="progressPath(enrollmentId)"
-            class="mt-2 inline-flex items-center text-sm text-readion-primary hover:underline"
-          >
-            View progress
-          </NuxtLink>
-        </template>
-        <p
-          v-if="isError"
-          data-testid="cert-detail-error"
-          class="mt-3 rounded-lg border border-readion-status-warning/30 bg-readion-status-warning/10 px-4 py-3 text-readion-status-warning text-sm"
+      <div
+        v-if="isLoading"
+        data-testid="cert-detail-loading"
+        class="-mx-4 -mt-8 space-y-2 border-readion-background-surface border-b px-4 py-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10"
+      >
+        <div class="h-7 w-64 animate-pulse rounded bg-readion-background-surface" />
+        <div class="h-4 w-32 animate-pulse rounded bg-readion-background-surface" />
+      </div>
+      <CertHeaderBar
+        v-else
+        :name="name"
+        :provider="provider"
+        :code="code"
+        :is-starting-session="isStartingSession"
+        :is-starting-mock-exam="isStartingMockExam"
+        @start-session="startSession"
+        @start-mock-exam="startMockExam"
+      />
+
+      <p
+        v-if="isError"
+        data-testid="cert-detail-error"
+        class="mt-3 rounded-lg border border-readion-status-warning/30 bg-readion-status-warning/10 px-4 py-3 text-readion-status-warning text-sm"
+      >
+        Some details could not be loaded. Showing what we have.
+      </p>
+
+      <div class="mt-3 flex justify-end">
+        <NuxtLink
+          data-testid="view-progress-link"
+          :to="progressPath(enrollmentId)"
+          class="inline-flex items-center text-readion-primary text-xs hover:underline"
         >
-          Some details could not be loaded. Showing what we have.
-        </p>
-      </header>
+          View progress
+        </NuxtLink>
+      </div>
 
       <div
         role="tablist"

@@ -135,7 +135,10 @@ describe('useOverviewSessions', () => {
       weakAreaDeltas: [{ domain: 'Networking', delta: 7 }],
     })
     expect(result.sessionFocusAreas.value).toEqual([
-      { startedAt: '2026-06-20T00:00:00Z', focusArea: { mode: 'domains', domains: ['Networking'] } },
+      {
+        startedAt: '2026-06-20T00:00:00Z',
+        focusArea: { mode: 'domains', domains: ['Networking'] },
+      },
       { startedAt: '2026-06-19T00:00:00Z', focusArea: 'auto' },
     ])
   })

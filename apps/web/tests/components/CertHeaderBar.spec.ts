@@ -35,9 +35,7 @@ describe('CertHeaderBar', () => {
     expect(wrapper.find('[data-testid="cert-detail-name"]').text()).toBe(
       'Solutions Architect – Associate',
     )
-    expect(wrapper.find('[data-testid="cert-detail-provider"]').text()).toBe(
-      'Amazon Web Services',
-    )
+    expect(wrapper.find('[data-testid="cert-detail-provider"]').text()).toBe('Amazon Web Services')
   })
 
   it('renders Mock exam and Start session actions', () => {
