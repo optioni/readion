@@ -66,10 +66,13 @@ import { gotoAuthenticated } from './support/session-view-seed'
 //                   fallback, NOT a raw UUID), audit-target (targetLabel), audit-change (scalar
 //                   `before → after` diff, NOT JSON.stringify), audit-action;
 //                   audit-export-btn / audit-edit-btn MUST be absent
-//   Sources       : admin-sources-page, source-row (data-source-id), source-status-pill,
-//                   register-source-url-input, register-source-type-select, register-source-submit,
-//                   source-reingest-btn, source-disable-btn; source-chunk-count / source-cancel-btn /
-//                   source-upload-input MUST be absent
+//   Sources       : admin-sources-page, source-cert-pill (data-cert-id, aria-pressed), source-row
+//                   (data-source-id), source-enabled-toggle (aria-checked), source-last-ingested,
+//                   source-chunk-count, source-status-pill, add-source-toggle (dashed affordance
+//                   revealing the form), register-source-url-input, register-source-type-select,
+//                   register-source-submit, source-reingest-btn, source-disable-btn,
+//                   sources-empty-state (no certification selected); source-cert-select /
+//                   source-cancel-btn / source-upload-input MUST be absent
 //   Cert setup    : admin-cert-setup-page, discover-name-input, discover-code-input,
 //                   discover-submit-btn, source-candidate (data-url), manual-url-input,
 //                   confirm-source-btn, extraction-field-passingScore (grounded value + citation),
@@ -173,19 +176,47 @@ test.describe('web-admin — admin console', () => {
     await expect(page.getByTestId('audit-edit-btn')).toHaveCount(0)
   })
 
-  test('sources: list per cert, register by URL, re-ingest, disable', async ({ page }) => {
+  test('sources: no cert selected shows empty state, no floating headers', async ({ page }) => {
+    mockAdmin(page)
+
+    await gotoAuthenticated(page, '/admin/sources')
+
+    await expect(page.getByTestId('admin-sources-page')).toBeVisible()
+    await expect(page.getByTestId('sources-empty-state')).toContainText(
+      'Select a certification to view its sources',
+    )
+    await expect(page.locator('table')).toHaveCount(0)
+    // Certification pills still render so the user can pick one — not a <select>.
+    await expect(page.getByTestId('source-cert-select')).toHaveCount(0)
+    await expect(page.getByTestId('source-cert-pill').first()).toBeVisible()
+  })
+
+  test('sources: cert pills, add-source affordance, re-ingest, Enabled toggle disable', async ({
+    page,
+  }) => {
     const handles = mockAdmin(page)
 
     await gotoAuthenticated(page, `/admin/sources?certificationId=${CERT_ID}`)
 
     await expect(page.getByTestId('admin-sources-page')).toBeVisible()
+    // Certification selection is a pill, not a <select>; the active cert's pill is pressed.
+    await expect(page.getByTestId('source-cert-select')).toHaveCount(0)
+    const activeCertPill = page.locator(
+      `[data-testid="source-cert-pill"][data-cert-id="${CERT_ID}"]`,
+    )
+    await expect(activeCertPill).toHaveAttribute('aria-pressed', 'true')
+
     await expect(page.getByTestId('source-row').first()).toBeVisible()
     await expect(page.getByTestId('source-status-pill').first()).toBeVisible()
-    // No chunk count, no cancel, no upload — URL registration only.
-    await expect(page.getByTestId('source-chunk-count')).toHaveCount(0)
+    // Real chunk counts and last-ingested dates render; no cancel, no upload — URL registration only.
+    await expect(page.getByTestId('source-chunk-count').first()).toBeVisible()
+    await expect(page.getByTestId('source-last-ingested').first()).toBeVisible()
     await expect(page.getByTestId('source-cancel-btn')).toHaveCount(0)
     await expect(page.getByTestId('source-upload-input')).toHaveCount(0)
 
+    // Registration sits behind the dashed "Add source" affordance until activated.
+    await expect(page.getByTestId('register-source-url-input')).toHaveCount(0)
+    await page.getByTestId('add-source-toggle').click()
     await page.getByTestId('register-source-url-input').fill('https://example.com/study-guide')
     await page.getByTestId('register-source-type-select').selectOption('web')
     await page.getByTestId('register-source-submit').click()
@@ -202,6 +233,14 @@ test.describe('web-admin — admin console', () => {
     )
     await enabledRow.getByTestId('source-reingest-btn').click()
     await expect.poll(() => handles.reingestSourceIds.at(-1)).toBe(SOURCE_ENABLED_ID)
+
+    // The Enabled toggle reflects `enabled` and disabling via it maps to POST :id/disable.
+    await expect(enabledRow.getByTestId('source-enabled-toggle')).toHaveAttribute(
+      'aria-checked',
+      'true',
+    )
+    await enabledRow.getByTestId('source-enabled-toggle').click()
+    await expect.poll(() => handles.disabledSourceIds.at(-1)).toBe(SOURCE_ENABLED_ID)
 
     await enabledRow.getByTestId('source-disable-btn').click()
     await expect.poll(() => handles.disabledSourceIds.at(-1)).toBe(SOURCE_ENABLED_ID)

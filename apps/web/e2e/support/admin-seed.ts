@@ -72,6 +72,7 @@ type ContentSource = {
   lastFetchedAt: string | null
   recheckIntervalMinutes: number
   createdAt: string
+  chunkCount: number
 }
 
 // Captured request payloads + counts the acceptance test asserts against. Populated by the route
@@ -370,6 +371,7 @@ export function mockAdmin(page: Page, options: { role?: Role; manyPages?: boolea
       lastFetchedAt: '2026-06-25T08:00:00.000Z',
       recheckIntervalMinutes: 1440,
       createdAt: '2026-01-10T00:00:00.000Z',
+      chunkCount: 142,
     },
     {
       id: SOURCE_DISABLED_ID,
@@ -380,6 +382,7 @@ export function mockAdmin(page: Page, options: { role?: Role; manyPages?: boolea
       lastFetchedAt: null,
       recheckIntervalMinutes: 1440,
       createdAt: '2026-01-12T00:00:00.000Z',
+      chunkCount: 0,
     },
   ]
   // Extraction polling: first poll is still running, the second resolves with grounded + unverified
@@ -561,6 +564,7 @@ export function mockAdmin(page: Page, options: { role?: Role; manyPages?: boolea
         lastFetchedAt: null,
         recheckIntervalMinutes: 1440,
         createdAt: '2026-06-28T00:00:00.000Z',
+        chunkCount: 0,
       }
       sources.push(created)
       await fulfilJson(route, 201, { data: created })
@@ -643,6 +647,11 @@ export function mockAdmin(page: Page, options: { role?: Role; manyPages?: boolea
   })
 
   // --- Certifications (read) ---
+  // The Sources page's certification pills are populated from this plain list endpoint (no id
+  // segment) — distinct from the /:id and /:id/coverage reads below.
+  mock(page, /\/api\/v1\/certifications(\?|$)/, async (route) => {
+    await fulfilJson(route, 200, { data: [CERTIFICATION], meta: { total: 1, page: 1, limit: 20 } })
+  })
   mock(page, new RegExp(`/api/v1/certifications/${UUID}/coverage$`), async (route) => {
     await fulfilJson(route, 200, { data: COVERAGE })
   })

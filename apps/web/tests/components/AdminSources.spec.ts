@@ -230,9 +230,7 @@ describe('AdminSources render', () => {
     expect(rowFor(wrapper, ENABLED_ID).find('[data-testid="source-chunk-count"]').text()).toBe(
       '142',
     )
-    expect(rowFor(wrapper, DISABLED_ID).find('[data-testid="source-chunk-count"]').text()).toBe(
-      '0',
-    )
+    expect(rowFor(wrapper, DISABLED_ID).find('[data-testid="source-chunk-count"]').text()).toBe('0')
     expect(
       rowFor(wrapper, ENABLED_ID).find('[data-testid="source-last-ingested"]').text(),
     ).toContain('Jun 25, 2026')
@@ -312,7 +310,9 @@ describe('AdminSources certification pills', () => {
     const pills = wrapper.findAll('[data-testid="source-cert-pill"]')
     expect(pills).toHaveLength(2)
 
-    const activePill = wrapper.find('[data-testid="source-cert-pill"][data-cert-id="' + CERT_ID + '"]')
+    const activePill = wrapper.find(
+      '[data-testid="source-cert-pill"][data-cert-id="' + CERT_ID + '"]',
+    )
     expect(activePill.attributes('aria-pressed')).toBe('true')
 
     const inactivePill = wrapper.find(
@@ -483,14 +483,14 @@ describe('AdminSources row actions', () => {
     const { wrapper } = mountSources()
 
     expect(
-      rowFor(wrapper, ENABLED_ID).find('[data-testid="source-enabled-toggle"]').attributes(
-        'aria-checked',
-      ),
+      rowFor(wrapper, ENABLED_ID)
+        .find('[data-testid="source-enabled-toggle"]')
+        .attributes('aria-checked'),
     ).toBe('true')
     expect(
-      rowFor(wrapper, DISABLED_ID).find('[data-testid="source-enabled-toggle"]').attributes(
-        'aria-checked',
-      ),
+      rowFor(wrapper, DISABLED_ID)
+        .find('[data-testid="source-enabled-toggle"]')
+        .attributes('aria-checked'),
     ).toBe('false')
   })
 
@@ -503,9 +503,7 @@ describe('AdminSources row actions', () => {
     )
     const { wrapper } = mountSources()
 
-    await rowFor(wrapper, ENABLED_ID)
-      .find('[data-testid="source-enabled-toggle"]')
-      .trigger('click')
+    await rowFor(wrapper, ENABLED_ID).find('[data-testid="source-enabled-toggle"]').trigger('click')
     await flushPromises()
 
     expect(contentControllerDisable).toHaveBeenCalledWith(ENABLED_ID, expect.anything())

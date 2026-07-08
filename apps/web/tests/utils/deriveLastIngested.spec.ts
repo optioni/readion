@@ -27,9 +27,12 @@ describe('lastIngestedTimestamp', () => {
   })
 
   it('falls back to the latest completed job finishedOn when lastFetchedAt is null', () => {
-    expect(lastIngestedTimestamp({ lastFetchedAt: null }, job({ state: 'completed', finishedOn: 1751000000000 }))).toBe(
-      1751000000000,
-    )
+    expect(
+      lastIngestedTimestamp(
+        { lastFetchedAt: null },
+        job({ state: 'completed', finishedOn: 1751000000000 }),
+      ),
+    ).toBe(1751000000000)
   })
 
   it('returns null when lastFetchedAt is null and there is no completed job', () => {
