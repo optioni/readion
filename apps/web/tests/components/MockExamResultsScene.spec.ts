@@ -1,14 +1,19 @@
-import type { MockExamResponse } from '@readion/shared'
+import type { MockExamQuestionResponse, MockExamResponse } from '@readion/shared'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import MockExamResultsScene from '~/components/MockExamResultsScene.vue'
 import { drillMockExam, fetchMockExamSummary } from '~/composables/mockExamApi'
+import { certificationsControllerDetail } from '~~/src/api/certifications/certifications'
+import { userCertificationsControllerDetail } from '~~/src/api/user-certifications/user-certifications'
 
 vi.mock('~/composables/mockExamApi', () => ({
   fetchMockExamSummary: vi.fn(),
   drillMockExam: vi.fn(),
 }))
+
+vi.mock('~~/src/api/user-certifications/user-certifications')
+vi.mock('~~/src/api/certifications/certifications')
 
 vi.stubGlobal('definePageMeta', vi.fn())
 const mockNavigate = vi.fn()
@@ -19,6 +24,22 @@ const DOMAIN_BREAKDOWN = {
   'Secure Architectures': { correct: 11, total: 16, accuracy: 0.69 },
   'High-Performing Architectures': { correct: 12, total: 16, accuracy: 0.75 },
   'Cost-Optimized Architectures': { correct: 9, total: 15, accuracy: 0.6 },
+}
+
+function buildQuestions(): MockExamQuestionResponse[] {
+  const questions: MockExamQuestionResponse[] = []
+  for (let i = 0; i < 65; i += 1) {
+    const isUnanswered = i >= 61
+    const isWrong = i === 0
+    questions.push({
+      id: `q-${i}`,
+      question: `Question ${i}`,
+      options: ['a', 'b'],
+      domain: 'Resilient Architectures',
+      userAnswer: isUnanswered ? null : isWrong ? 'wrong' : 'a',
+    })
+  }
+  return questions
 }
 
 function buildExam(overrides: Partial<MockExamResponse> = {}): MockExamResponse {
@@ -34,9 +55,55 @@ function buildExam(overrides: Partial<MockExamResponse> = {}): MockExamResponse 
     score: 0.73,
     passed: true,
     domainBreakdown: DOMAIN_BREAKDOWN,
-    questions: [],
+    questions: buildQuestions(),
     ...overrides,
   }
+}
+
+const enrollmentEnvelope = (certificationId: string) => ({
+  data: {
+    data: {
+      id: 'enr-1',
+      certificationId,
+      status: 'active',
+      enrolledAt: '2026-06-01T00:00:00Z',
+      sessionDefaults: {},
+      readinessScore: 72,
+    },
+    relationships: { weakAreas: { href: '/x', data: [] } },
+  },
+  status: 200,
+  headers: new Headers(),
+})
+
+const certificationEnvelope = () => ({
+  data: {
+    data: {
+      id: 'cert-1',
+      name: 'AWS Solutions Architect',
+      provider: 'AWS',
+      code: 'SAA-C03',
+      domains: [{ name: 'Resilient Architectures', weight: 25 }],
+      questionCount: 65,
+      passingScore: 72,
+      timeLimitMinutes: 130,
+      state: 'ready',
+    },
+    relationships: {},
+  },
+  status: 200,
+  headers: new Headers(),
+})
+
+function stubCertification() {
+  vi.mocked(userCertificationsControllerDetail).mockResolvedValue(
+    // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
+    enrollmentEnvelope('cert-1') as any,
+  )
+  vi.mocked(certificationsControllerDetail).mockResolvedValue(
+    // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
+    certificationEnvelope() as any,
+  )
 }
 
 function summaryDto(overrides: Record<string, unknown> = {}) {
@@ -77,6 +144,7 @@ function mountScene(exam: MockExamResponse = buildExam()) {
 beforeEach(() => {
   vi.clearAllMocks()
   stubSummary()
+  stubCertification()
 })
 
 afterEach(() => {
@@ -127,11 +195,28 @@ describe('MockExamResultsScene score hero', () => {
     expect(wrapper.find('[data-testid="exam-score-value"]').text()).toContain('0%')
   })
 
-  it('does not fabricate a passing-score number or threshold line', () => {
+  it('renders the passing-score reference derived from the certification', async () => {
     const wrapper = mountScene()
-    const text = wrapper.text().toLowerCase()
-    expect(text).not.toContain('passing score')
-    expect(text).not.toContain('threshold')
+    await flushPromises()
+    expect(wrapper.find('[data-testid="exam-passing-score"]').text()).toMatch(
+      /passing score: 72%/i,
+    )
+  })
+
+  it('omits the passing-score line when the certification is unavailable', async () => {
+    vi.mocked(userCertificationsControllerDetail).mockRejectedValue(new Error('boom'))
+    const wrapper = mountScene()
+    await flushPromises()
+    expect(wrapper.find('[data-testid="exam-passing-score"]').exists()).toBe(false)
+  })
+
+  it('renders correct/incorrect/unanswered counts derived from the attempt', async () => {
+    const wrapper = mountScene()
+    await flushPromises()
+    const text = wrapper.find('[data-testid="exam-counts"]').text()
+    expect(text).toMatch(/46 correct/i)
+    expect(text).toMatch(/15 incorrect/i)
+    expect(text).toMatch(/4 unanswered/i)
   })
 
   it('emits review when the review-all-answers button is clicked', async () => {
