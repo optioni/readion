@@ -94,9 +94,27 @@ describe('AdminUsers table render', () => {
 
     const caseyRow = rowFor(wrapper, PROMOTE_USER_ID)
     expect(caseyRow.find('[data-testid="user-email"]').text()).toContain('casey@org.io')
-    expect(caseyRow.find('[data-testid="user-role"]').text()).toContain('user')
+    expect(caseyRow.find('[data-testid="user-role"]').text()).toContain('User')
     expect(caseyRow.find('[data-testid="user-joined"]').text().length).toBeGreaterThan(0)
     expect(caseyRow.find('[data-testid="user-enrollments"]').text()).toContain('3')
+  })
+
+  it('renders a Certs column header instead of Enrollments', () => {
+    stubUsers()
+    const { wrapper } = mountUsers()
+
+    const headers = wrapper.findAll('th').map((th) => th.text())
+    expect(headers).toContain('Certs')
+    expect(headers).not.toContain('Enrollments')
+  })
+
+  it('renders a Name and Last active column with a graceful placeholder', () => {
+    stubUsers()
+    const { wrapper } = mountUsers()
+
+    const caseyRow = rowFor(wrapper, PROMOTE_USER_ID)
+    expect(caseyRow.find('[data-testid="user-name"]').text()).toBe('—')
+    expect(caseyRow.find('[data-testid="user-last-active"]').text()).toBe('—')
   })
 
   it('derives the avatar initials from the email local part', () => {
@@ -108,24 +126,51 @@ describe('AdminUsers table render', () => {
     expect(avatar.text()).toBe('CA')
   })
 
-  it('renders the admin row with an admin role badge', () => {
+  it('renders the admin row with a capitalized Admin role badge', () => {
     stubUsers()
     const { wrapper } = mountUsers()
 
     expect(rowFor(wrapper, ADMIN_USER_ID).find('[data-testid="user-role"]').text()).toContain(
-      'admin',
+      'Admin',
     )
   })
 
-  it('exposes no name, search, invite, delete or last-active controls', () => {
+  it('exposes a header-utility row with a search field, a disabled invite button, and a users/admins summary', () => {
     stubUsers()
     const { wrapper } = mountUsers()
 
-    expect(wrapper.find('[data-testid="user-search"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="user-invite-btn"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="user-delete-btn"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="user-last-active"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="user-name"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="user-search"]').exists()).toBe(true)
+
+    const inviteBtn = wrapper.find('[data-testid="user-invite-btn"]')
+    expect(inviteBtn.exists()).toBe(true)
+    expect(inviteBtn.attributes('disabled')).toBeDefined()
+
+    expect(wrapper.find('[data-testid="user-summary"]').text()).toBe('3 users · 1 admin')
+  })
+
+  it('exposes a Name and Last active column and a disabled Remove action per row', () => {
+    stubUsers()
+    const { wrapper } = mountUsers()
+
+    expect(wrapper.find('[data-testid="user-name"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="user-last-active"]').exists()).toBe(true)
+
+    const removeBtn = rowFor(wrapper, PROMOTE_USER_ID).find('[data-testid="user-remove-btn"]')
+    expect(removeBtn.exists()).toBe(true)
+    expect(removeBtn.attributes('disabled')).toBeDefined()
+  })
+
+  it('renders only a single contextual role-toggle per row: promote for a user, demote for an admin', () => {
+    stubUsers()
+    const { wrapper } = mountUsers()
+
+    const userRow = rowFor(wrapper, PROMOTE_USER_ID)
+    expect(userRow.find('[data-testid="promote-user-btn"]').exists()).toBe(true)
+    expect(userRow.find('[data-testid="demote-user-btn"]').exists()).toBe(false)
+
+    const adminRow = rowFor(wrapper, ADMIN_USER_ID)
+    expect(adminRow.find('[data-testid="demote-user-btn"]').exists()).toBe(true)
+    expect(adminRow.find('[data-testid="promote-user-btn"]').exists()).toBe(false)
   })
 
   it('shows a loading state and no rows while the query is loading', () => {
@@ -220,7 +265,7 @@ describe('AdminUsers demote', () => {
     expect(error.exists()).toBe(true)
     expect(error.text()).toContain('last active admin')
     expect(rowFor(wrapper, ADMIN_USER_ID).find('[data-testid="user-role"]').text()).toContain(
-      'admin',
+      'Admin',
     )
     expect(invalidateSpy).not.toHaveBeenCalled()
   })
