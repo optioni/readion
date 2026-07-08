@@ -285,6 +285,41 @@ describe('Agent chat empty state and suggestions', () => {
   })
 })
 
+describe('Agent chat suggestion chip layout', () => {
+  it('stacks suggestion chips vertically as full-width rows with a trailing arrow, and still sends on click', async () => {
+    emitEvents([{ type: 'text-delta', textDelta: 'TCP vs UDP answer' }])
+
+    const wrapper = await mountPage()
+    const emptyState = wrapper.find('[data-testid="agent-empty-state"]')
+    const list = emptyState.find('[data-testid="agent-suggestion-list"]')
+    expect(list.exists()).toBe(true)
+    expect(list.classes()).toContain('flex-col')
+    expect(list.classes()).not.toContain('flex-wrap')
+
+    const chips = wrapper.findAll('[data-testid="agent-suggestion"]')
+    expect(chips).toHaveLength(4)
+
+    for (const chip of chips) {
+      expect(chip.classes()).toContain('w-full')
+      expect(chip.classes()).toContain('justify-between')
+
+      const arrow = chip.find('[data-testid="agent-suggestion-arrow"]')
+      expect(arrow.exists()).toBe(true)
+      const path = arrow.find('path')
+      expect(path.attributes('d')).toBe('M5 12h14M12 5l7 7-7 7')
+    }
+
+    await chips[0]!.trigger('click')
+    await flushPromises()
+
+    expect(streamTurnMock).toHaveBeenCalledWith(
+      'conv-standalone-1',
+      "What's the difference between TCP and UDP?",
+      expect.any(Function),
+    )
+  })
+})
+
 describe('Agent chat new-chat reset', () => {
   it('clicking new-chat-button clears messages, fires a second create call, and returns to empty state', async () => {
     emitEvents([{ type: 'text-delta', textDelta: 'Answer' }])
