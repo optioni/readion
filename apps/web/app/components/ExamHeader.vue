@@ -66,9 +66,9 @@ const flagged = ref(false)
       data-testid="exam-question-counter"
       class="font-mono text-[13px] text-readion-text-secondary"
     >
-      Question
+      Q
       <span class="font-medium text-readion-text-primary">{{ questionNumber }}</span>
-      of {{ totalQuestions }}
+      / {{ totalQuestions }}
     </span>
 
     <span
