@@ -4,6 +4,7 @@ import {
   mockReviewLoop,
   mockReviewSelfGrade,
   REVIEW_IDS,
+  REVIEW_REFERENCE_NOW,
 } from './support/quick-review-seed'
 import { gotoAuthenticated } from './support/session-view-seed'
 
@@ -33,6 +34,10 @@ import { gotoAuthenticated } from './support/session-view-seed'
 //   Completion     : session-summary-page (reused), summary-accuracy (reused),
 //                    drill-button (reused), summary-back-button
 //   Empty state    : review-all-caught-up
+//   Review header  : review-header, review-header-cert-chip, review-header-progress,
+//                    review-header-timer (fix-review-page-fidelity, GREEN groups 1-3)
+//   Queue entry    : review-all-button (secondary "Review all N"), review-overdue-note
+//                    (fix-review-page-fidelity, GREEN groups 1-3)
 // ============================================================================
 
 test.describe('web-progress — 5-minute review loop', () => {
@@ -157,5 +162,44 @@ test.describe('web-progress — 5-minute review loop', () => {
     // --- Drill my misses → drill session starts ---
     await page.getByTestId('drill-button').click()
     await expect(page.getByTestId('quiz-card')).toBeVisible()
+  })
+
+  test('ReviewHeader renders cert chip/progress/timer, and the queue entry shows the secondary Review all action plus the overdue note', async ({
+    page,
+  }) => {
+    // fix-review-page-fidelity (design-fidelity, no bug): today no ReviewHeader component exists
+    // anywhere in apps/web, and ReviewQueueEntry has only the single primary "Start review" CTA —
+    // no secondary "Review all N" action and no overdue note. This test targets those two gaps.
+    mockReviewSelfGrade(page)
+
+    // Pin the browser clock to REVIEW_REFERENCE_NOW BEFORE the app boots, so the overdue-by-days
+    // math (dueAt vs "now", floored to whole days) is deterministic. See quick-review-seed.ts for
+    // how the seeded dueAt values line up: 3 of the 5 due items are exactly 2 days overdue.
+    await page.clock.setFixedTime(new Date(REVIEW_REFERENCE_NOW))
+
+    await gotoAuthenticated(page, `/user-certifications/${REVIEW_IDS.enrollmentId}/review`)
+
+    // --- ReviewHeader: cert-code chip + "Quick review" label + progress bar + 5:00 timer ---
+    const header = page.getByTestId('review-header')
+    await expect(header).toBeVisible()
+    await expect(header).toContainText(/Quick review/i)
+    await expect(page.getByTestId('review-header-cert-chip')).toContainText('SAA-C03')
+    await expect(page.getByTestId('review-header-progress')).toBeVisible()
+    await expect(page.getByTestId('review-header-timer')).toContainText('5:00')
+
+    // The `minimal` layout's generic "Readion / Back to dashboard" app nav bar must not remain
+    // stacked above ReviewHeader.
+    await expect(page.getByText('Back to dashboard')).toHaveCount(0)
+
+    // --- Queue entry: primary "Start review →" + secondary "Review all N" + overdue note ---
+    await expect(page.getByTestId('review-queue-entry')).toBeVisible()
+    await expect(page.getByTestId('start-review-button')).toContainText('Start review')
+    await expect(page.getByTestId('review-all-button')).toContainText('Review all 5')
+    await expect(page.getByTestId('review-overdue-note')).toContainText('3 items overdue by 2 days')
+
+    // "Review all N" is a secondary action wired to the same startReview flow over the full due
+    // set as the primary CTA — it reaches the self-grade flow just like "Start review →".
+    await page.getByTestId('review-all-button').click()
+    await expect(page.getByTestId('self-grade-card')).toBeVisible()
   })
 })

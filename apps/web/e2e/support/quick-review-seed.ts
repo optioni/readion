@@ -25,6 +25,12 @@ const CORS_HEADERS: Record<string, string> = {
   'access-control-allow-headers': 'authorization,content-type,x-csrf-token',
 }
 
+// Reference "now" for the deterministic overdue-note math (fix-review-page-fidelity). The e2e
+// pins the browser clock to this instant via `page.clock.setFixedTime()` before navigating, so the
+// GREEN ReviewHeader/ReviewQueueEntry's client-side `dueAt` vs "now" overdue calculation is stable
+// across runs. See REVIEW_QUEUE_RESPONSE below for how the seeded `dueAt` values line up against it.
+export const REVIEW_REFERENCE_NOW = '2026-07-01T09:00:00.000Z'
+
 export const REVIEW_IDS = {
   userId: '77777777-7777-7777-7777-777777777777',
   enrollmentId: 'a0a0a0a0-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -74,6 +80,13 @@ const CERTIFICATION: CertificationResponseDto = {
 
 // Five due review items across two domains (Secure: 3, Resilient: 2). Drives the queue-entry
 // scene: review-due-count = "5" and two domain rows in review-domain-breakdown.
+//
+// Overdue math (fix-review-page-fidelity): against REVIEW_REFERENCE_NOW (2026-07-01T09:00:00Z),
+// items 1/2/5 are dueAt 2026-06-29T00:00:00Z — 57h earlier, floor(57/24) = 2 whole days overdue.
+// Items 3/4 are dueAt 2026-07-01T00:00:00Z — only 9h earlier, floor(9/24) = 0 days, i.e. NOT
+// overdue (< 1 day). So 3 of the 5 items are overdue by exactly 2 days, matching the spec
+// scenario's "some overdue by 2 days" and producing the deterministic note
+// "3 items overdue by 2 days".
 const REVIEW_QUEUE_RESPONSE = {
   items: [
     {
@@ -103,7 +116,7 @@ const REVIEW_QUEUE_RESPONSE = {
       domain: 'Secure Architectures',
       box: 1,
       state: 'due',
-      dueAt: '2026-06-29T00:00:00.000Z',
+      dueAt: '2026-07-01T00:00:00.000Z',
       lastReviewedAt: null,
     },
     {
@@ -113,7 +126,7 @@ const REVIEW_QUEUE_RESPONSE = {
       domain: 'Resilient Architectures',
       box: 1,
       state: 'due',
-      dueAt: '2026-06-29T00:00:00.000Z',
+      dueAt: '2026-07-01T00:00:00.000Z',
       lastReviewedAt: null,
     },
     {
@@ -128,6 +141,18 @@ const REVIEW_QUEUE_RESPONSE = {
     },
   ],
   meta: { dueCount: 5, total: 8 },
+}
+
+// Enrollment detail — needed by the GREEN ReviewHeader to resolve enrollmentId → certificationId
+// so it can fetch /api/v1/certifications/:certificationId for the cert-code chip ("SAA-C03").
+const ENROLLMENT_DETAIL = {
+  id: REVIEW_IDS.enrollmentId,
+  userId: REVIEW_IDS.userId,
+  certificationId: REVIEW_IDS.certificationId,
+  targetDate: null,
+  readinessScore: 62,
+  status: 'active',
+  createdAt: '2026-01-01T00:00:00.000Z',
 }
 
 // The single quiz item in the review session. One item keeps the test loop minimal: answer once,
@@ -276,6 +301,11 @@ export function mockReviewLoop(page: Page): void {
     await fulfilJson(route, 200, { data: CERTIFICATION, relationships: {} })
   })
 
+  // --- Enrollment detail (cert-code chip resolution: enrollmentId → certificationId) ---
+  mock(page, new RegExp(`/api/v1/user-certifications/${enrollmentId}(\\?|$)`), async (route) => {
+    await fulfilJson(route, 200, { data: ENROLLMENT_DETAIL, relationships: {} })
+  })
+
   // --- Review queue (drives queue-entry scene: due count + per-domain breakdown) ---
   mock(
     page,
@@ -399,6 +429,11 @@ export function mockReviewSelfGrade(page: Page): void {
   })
   mock(page, new RegExp(`/api/v1/certifications/${certificationId}(\\?|$)`), async (route) => {
     await fulfilJson(route, 200, { data: CERTIFICATION, relationships: {} })
+  })
+
+  // --- Enrollment detail (cert-code chip resolution: enrollmentId → certificationId) ---
+  mock(page, new RegExp(`/api/v1/user-certifications/${enrollmentId}(\\?|$)`), async (route) => {
+    await fulfilJson(route, 200, { data: ENROLLMENT_DETAIL, relationships: {} })
   })
 
   mock(
