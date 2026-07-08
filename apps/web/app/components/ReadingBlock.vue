@@ -19,7 +19,10 @@ const tldr = computed(() =>
   parsed.value.kind === 'reading' ? parsed.value.markdown : props.item.content,
 )
 
-const citations = computed(() => [...props.item.sourceChunkIds, ...props.item.supportingSpans])
+const citations = computed(() => [
+  ...props.item.sourceChunkIds.map(() => 'Source'),
+  ...props.item.supportingSpans,
+])
 
 const expandedContent = ref<string | null>(null)
 const isLoading = ref(false)
