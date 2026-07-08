@@ -16,9 +16,11 @@ const ENTRIES = [
   {
     id: 'audit-1',
     userId: ADMIN_USER_ID,
+    actorEmail: 'root@readion.io',
     action: 'user.promote',
     targetType: 'user',
     targetId: TARGET_USER_ID,
+    targetLabel: 'casey@org.io',
     before: { role: 'user' },
     after: { role: 'admin' },
     createdAt: '2026-06-20T10:00:00.000Z',
@@ -26,9 +28,11 @@ const ENTRIES = [
   {
     id: 'audit-2',
     userId: null,
+    actorEmail: null,
     action: 'content-source.reingest',
     targetType: 'content-source',
     targetId: TARGET_SOURCE_ID,
+    targetLabel: 'AWS Certified Solutions Architect — Associate',
     before: null,
     after: null,
     createdAt: '2026-06-21T12:30:00.000Z',
@@ -76,21 +80,20 @@ describe('AdminAuditLog table render', () => {
     expect(wrapper.findAll('[data-testid="audit-log-row"]')).toHaveLength(2)
   })
 
-  it('renders action, target, before/after snapshot, timestamp and the userId actor', () => {
+  it('renders action, target label, a scalar before/after diff, timestamp and actorEmail', () => {
     stubAuditLogs()
     const wrapper = mountAuditLog()
 
     const row = rowFor(wrapper, 'audit-1')
     expect(row.find('[data-testid="audit-action"]').text()).toContain('user.promote')
-    expect(row.find('[data-testid="audit-target"]').text()).toContain('user')
-    expect(row.find('[data-testid="audit-target"]').text()).toContain(TARGET_USER_ID)
-    expect(row.find('[data-testid="audit-before"]').text()).toContain('user')
-    expect(row.find('[data-testid="audit-after"]').text()).toContain('admin')
+    expect(row.find('[data-testid="audit-target"]').text()).toBe('casey@org.io')
+    expect(row.find('[data-testid="audit-before"]').text()).toBe('user')
+    expect(row.find('[data-testid="audit-after"]').text()).toBe('admin')
     expect(row.find('[data-testid="audit-timestamp"]').text().length).toBeGreaterThan(0)
-    expect(row.find('[data-testid="audit-actor"]').text()).toContain(ADMIN_USER_ID)
+    expect(row.find('[data-testid="audit-actor"]').text()).toBe('root@readion.io')
   })
 
-  it('tolerates a null actor and null before/after without crashing or fabricating an email', () => {
+  it('renders a System/— fallback for a null actor, — for a null diff, and the target label', () => {
     stubAuditLogs()
     const wrapper = mountAuditLog()
 
@@ -99,8 +102,23 @@ describe('AdminAuditLog table render', () => {
     const actor = row.find('[data-testid="audit-actor"]')
     expect(actor.exists()).toBe(true)
     expect(actor.text()).not.toContain('@')
-    expect(row.find('[data-testid="audit-before"]').exists()).toBe(true)
-    expect(row.find('[data-testid="audit-after"]').exists()).toBe(true)
+    expect(['System', '—']).toContain(actor.text())
+    expect(row.find('[data-testid="audit-before"]').text()).toBe('—')
+    expect(row.find('[data-testid="audit-after"]').text()).toBe('—')
+    expect(row.find('[data-testid="audit-target"]').text()).toBe(
+      'AWS Certified Solutions Architect — Associate',
+    )
+  })
+
+  it('never renders raw JSON braces or raw UUIDs in a row', () => {
+    stubAuditLogs()
+    const wrapper = mountAuditLog()
+
+    const row = rowFor(wrapper, 'audit-1')
+    expect(row.text()).not.toContain('{')
+    expect(row.text()).not.toContain('}')
+    expect(row.text()).not.toContain(ADMIN_USER_ID)
+    expect(row.text()).not.toContain(TARGET_USER_ID)
   })
 
   it('exposes no edit, delete or CSV export controls', () => {
