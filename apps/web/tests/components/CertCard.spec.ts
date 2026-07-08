@@ -103,7 +103,15 @@ beforeEach(() => {
     weakArea({ domain: 'Networking', score: 70 }),
   ])
   stubRecentSessions(
-    [{ id: 's1', date: '2026-06-20T00:00:00Z', label: 'Security', accuracy: 0.82, durationMinutes: 20 }],
+    [
+      {
+        id: 's1',
+        date: '2026-06-20T00:00:00Z',
+        label: 'Security',
+        accuracy: 0.82,
+        durationMinutes: 20,
+      },
+    ],
     3,
   )
   stubDueReviews(0)
@@ -230,7 +238,15 @@ describe('CertCard action row placement', () => {
 describe('CertCard recent sessions', () => {
   it('renders a completed session as domain label plus accuracy', () => {
     stubRecentSessions(
-      [{ id: 's1', date: '2026-06-20T00:00:00Z', label: 'Security', accuracy: 0.82, durationMinutes: 20 }],
+      [
+        {
+          id: 's1',
+          date: '2026-06-20T00:00:00Z',
+          label: 'Security',
+          accuracy: 0.82,
+          durationMinutes: 20,
+        },
+      ],
       3,
     )
     const wrapper = mountCard()
@@ -242,7 +258,15 @@ describe('CertCard recent sessions', () => {
 
   it('falls back to date plus focus area with no accuracy when a session has no summary', () => {
     stubRecentSessions(
-      [{ id: 's2', date: '2026-06-19T00:00:00Z', label: 'Storage', accuracy: null, durationMinutes: null }],
+      [
+        {
+          id: 's2',
+          date: '2026-06-19T00:00:00Z',
+          label: 'Storage',
+          accuracy: null,
+          durationMinutes: null,
+        },
+      ],
       null,
     )
     const wrapper = mountCard()
