@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref, watch } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import FormActions from '~/components/FormActions.vue'
+import SettingsFieldRow from '~/components/SettingsFieldRow.vue'
 import { emailInitials } from '~/composables/emailInitials'
 import { settingsQueryKeys } from '~/composables/settingsQueryKeys'
 import { useSettingsProfile } from '~/composables/useSettingsProfile'
@@ -152,123 +153,111 @@ async function confirmDeleteAccount() {
 
 <template>
   <div class="flex flex-col gap-8">
-    <section class="flex flex-col gap-5">
-      <h2 class="font-medium text-slate-100 text-sm">Profile</h2>
+    <section class="flex flex-col gap-1">
+      <h2 class="mb-3 font-medium text-slate-100 text-sm">Profile</h2>
 
-      <div class="flex items-center gap-4">
+      <SettingsFieldRow label="Avatar">
         <div
           data-testid="account-avatar"
           class="flex size-12 items-center justify-center rounded-full bg-readion-primary font-medium text-sm text-white"
         >
           {{ initials }}
         </div>
-        <div class="flex flex-col gap-1">
-          <span class="font-mono text-slate-400 text-xs uppercase tracking-wide">Email</span>
-          <span data-testid="account-email" class="text-slate-100 text-sm">{{ email }}</span>
-        </div>
-      </div>
+      </SettingsFieldRow>
 
-      <div class="flex flex-col gap-2">
-        <label
-          for="timezone-select"
-          class="font-mono text-slate-400 text-xs uppercase tracking-wide"
-        >
-          Display timezone
-        </label>
-        <select
-          id="timezone-select"
-          v-model="selectedTimezone"
-          data-testid="timezone-select"
-          class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
-        >
-          <option v-for="zone in timeZones" :key="zone" :value="zone">{{ zone }}</option>
-        </select>
+      <SettingsFieldRow label="Email" hint="Used for login and notifications">
+        <span data-testid="account-email" class="text-slate-100 text-sm">{{ email }}</span>
+      </SettingsFieldRow>
 
-        <p v-if="errorMessage" data-testid="timezone-error" class="text-red-400 text-sm">
-          {{ errorMessage }}
-        </p>
-
-        <FormActions>
-          <button
-            type="button"
-            data-testid="save-timezone-btn"
-            :disabled="saving"
-            class="rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
-            @click="saveTimezone"
+      <SettingsFieldRow label="Display timezone" for="timezone-select">
+        <div class="flex flex-col gap-2">
+          <select
+            id="timezone-select"
+            v-model="selectedTimezone"
+            data-testid="timezone-select"
+            class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
           >
-            Save
-          </button>
-        </FormActions>
-      </div>
+            <option v-for="zone in timeZones" :key="zone" :value="zone">{{ zone }}</option>
+          </select>
+
+          <p v-if="errorMessage" data-testid="timezone-error" class="text-red-400 text-sm">
+            {{ errorMessage }}
+          </p>
+        </div>
+      </SettingsFieldRow>
+
+      <FormActions>
+        <button
+          type="button"
+          data-testid="save-timezone-btn"
+          :disabled="saving"
+          class="rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
+          @click="saveTimezone"
+        >
+          Save
+        </button>
+      </FormActions>
     </section>
 
-    <section class="flex flex-col gap-3">
-      <h2 class="font-medium text-slate-100 text-sm">Password</h2>
+    <section class="flex flex-col gap-1">
+      <h2 class="mb-3 font-medium text-slate-100 text-sm">Password</h2>
 
-      <div class="flex flex-col gap-2">
-        <label
-          for="current-password"
-          class="font-mono text-slate-400 text-xs uppercase tracking-wide"
-        >
-          Current password
-        </label>
-        <input
-          id="current-password"
-          v-model="currentPassword"
-          type="password"
-          data-testid="current-password-input"
-          class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
-        />
-        <p
-          v-if="currentPasswordError"
-          data-testid="current-password-error"
-          class="text-red-400 text-sm"
-        >
-          {{ currentPasswordError }}
-        </p>
-      </div>
+      <SettingsFieldRow label="Current password" for="current-password">
+        <div class="flex flex-col gap-2">
+          <input
+            id="current-password"
+            v-model="currentPassword"
+            type="password"
+            data-testid="current-password-input"
+            class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
+          />
+          <p
+            v-if="currentPasswordError"
+            data-testid="current-password-error"
+            class="text-red-400 text-sm"
+          >
+            {{ currentPasswordError }}
+          </p>
+        </div>
+      </SettingsFieldRow>
 
-      <div class="flex flex-col gap-2">
-        <label
-          for="new-password"
-          class="font-mono text-slate-400 text-xs uppercase tracking-wide"
-        >
-          New password
-        </label>
-        <input
-          id="new-password"
-          v-model="newPassword"
-          type="password"
-          data-testid="new-password-input"
-          class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
-        />
-        <p v-if="newPasswordError" data-testid="new-password-error" class="text-red-400 text-sm">
-          {{ newPasswordError }}
-        </p>
-      </div>
+      <SettingsFieldRow label="New password" for="new-password">
+        <div class="flex flex-col gap-2">
+          <input
+            id="new-password"
+            v-model="newPassword"
+            type="password"
+            data-testid="new-password-input"
+            class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
+          />
+          <p
+            v-if="newPasswordError"
+            data-testid="new-password-error"
+            class="text-red-400 text-sm"
+          >
+            {{ newPasswordError }}
+          </p>
+        </div>
+      </SettingsFieldRow>
 
-      <div class="flex flex-col gap-2">
-        <label
-          for="confirm-password"
-          class="font-mono text-slate-400 text-xs uppercase tracking-wide"
-        >
-          Confirm new password
-        </label>
-        <input
-          id="confirm-password"
-          v-model="confirmPassword"
-          type="password"
-          data-testid="confirm-password-input"
-          class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
-        />
-        <p
-          v-if="confirmPasswordError"
-          data-testid="confirm-password-error"
-          class="text-red-400 text-sm"
-        >
-          {{ confirmPasswordError }}
-        </p>
-      </div>
+      <SettingsFieldRow label="Confirm new password" for="confirm-password">
+        <div class="flex flex-col gap-2">
+          <input
+            id="confirm-password"
+            v-model="confirmPassword"
+            type="password"
+            data-testid="confirm-password-input"
+            class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
+          />
+          <p
+            v-if="confirmPasswordError"
+            data-testid="confirm-password-error"
+            class="text-red-400 text-sm"
+          >
+            {{ confirmPasswordError }}
+          </p>
+        </div>
+      </SettingsFieldRow>
 
       <p
         v-if="passwordChanged"
@@ -332,25 +321,21 @@ async function confirmDeleteAccount() {
           This action is permanent. Enter your current password to confirm.
         </p>
 
-        <div class="mt-5 flex flex-col gap-2">
-          <label
-            for="delete-password"
-            class="font-mono text-slate-400 text-xs uppercase tracking-wide"
-          >
-            Current password
-          </label>
-          <input
-            id="delete-password"
-            v-model="deletePassword"
-            type="password"
-            data-testid="delete-password-input"
-            class="rounded-lg border border-readion-background-surface bg-readion-background-overlay px-3 py-2 text-slate-100 text-sm"
-          />
+        <SettingsFieldRow class="mt-5" label="Current password" for="delete-password">
+          <div class="flex flex-col gap-2">
+            <input
+              id="delete-password"
+              v-model="deletePassword"
+              type="password"
+              data-testid="delete-password-input"
+              class="rounded-lg border border-readion-background-surface bg-readion-background-overlay px-3 py-2 text-slate-100 text-sm"
+            />
 
-          <p v-if="deleteError" data-testid="delete-account-error" class="text-red-400 text-sm">
-            {{ deleteError }}
-          </p>
-        </div>
+            <p v-if="deleteError" data-testid="delete-account-error" class="text-red-400 text-sm">
+              {{ deleteError }}
+            </p>
+          </div>
+        </SettingsFieldRow>
 
         <div class="mt-6 flex justify-end gap-3">
           <button
