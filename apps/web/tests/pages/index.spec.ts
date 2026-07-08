@@ -70,10 +70,19 @@ beforeEach(() => {
 })
 
 describe('Dashboard list', () => {
-  it('renders the "My certifications" section label', () => {
+  it('renders the shared PageHeader with the DASHBOARD eyebrow and "Your certifications" h1', () => {
     stubEnrollments({ cards: [card({ name: 'A', readinessScore: 50 })] })
     const wrapper = mountPage()
-    expect(wrapper.text().toLowerCase()).toContain('my certifications')
+    expect(wrapper.find('h1').text()).toBe('Your certifications')
+    expect(wrapper.text()).toContain('DASHBOARD')
+  })
+
+  it('renders a right-aligned "N active" indicator matching the enrollment count', () => {
+    stubEnrollments({
+      cards: [card({ name: 'A', readinessScore: 50 }), card({ name: 'B', readinessScore: 60 })],
+    })
+    const wrapper = mountPage()
+    expect(wrapper.text()).toContain('2 active')
   })
 
   it('renders one card per active enrollment plus the add-certification entry', () => {
@@ -177,6 +186,14 @@ describe('Dashboard loading and error degradation', () => {
 })
 
 describe('Dashboard add-certification entry', () => {
+  it('shows the "Track another exam alongside this one" subtitle', () => {
+    stubEnrollments({ cards: [card({ name: 'A', readinessScore: 50 })] })
+    const wrapper = mountPage()
+    expect(wrapper.find('[data-testid="add-cert"]').text()).toContain(
+      'Track another exam alongside this one',
+    )
+  })
+
   it('opens the add-certification seam when the entry is activated', async () => {
     stubEnrollments({ cards: [card({ name: 'A', readinessScore: 50 })] })
     const wrapper = mountPage()
