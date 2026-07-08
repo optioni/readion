@@ -40,6 +40,12 @@ spec:
                 configMapKeyRef:
                   name: readion-config
                   key: NUXT_PUBLIC_API_BASE_URL
+            # Server-only in-cluster API address for SSR (see configmap note).
+            - name: NUXT_INTERNAL_API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: readion-config
+                  key: NUXT_INTERNAL_API_BASE_URL
           livenessProbe:
             httpGet:
               path: /

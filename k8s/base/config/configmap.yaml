@@ -81,7 +81,11 @@ data:
 
   # apps/web
   NUXT_PUBLIC_API_BASE_URL: "https://api.readion.example"
+  # Server-only (SSR) API address. The public host above hairpins out through the ingress and back,
+  # so the web pod's server-side auth bootstrap + data fetches use the in-cluster service instead.
+  # Without it, SSR can't see the session on a hard reload and renders the login layout.
+  NUXT_INTERNAL_API_BASE_URL: "http://readion-api.readion.svc.cluster.local"
   # Umami analytics — empty disables it. NOTE: web uses explicit env: entries
-  # (not envFrom), so these two must also be wired into web/deployment.yaml.
+  # (not envFrom), so these must also be wired into web/deployment.yaml.
   NUXT_PUBLIC_UMAMI_HOST: ""
   NUXT_PUBLIC_UMAMI_WEBSITE_ID: ""

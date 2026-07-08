@@ -10,6 +10,10 @@ export default defineNuxtConfig({
     storageKey: 'readion-color-mode',
   },
   runtimeConfig: {
+    // Server-only in-cluster API address for SSR (auth bootstrap + data fetches). Empty by default
+    // (local dev reaches the API at the public URL); overridden at runtime via
+    // NUXT_INTERNAL_API_BASE_URL in the cluster. See resolveApiBaseUrl.
+    internalApiBaseUrl: '',
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL ?? '',
       umamiHost: process.env.NUXT_PUBLIC_UMAMI_HOST ?? '',

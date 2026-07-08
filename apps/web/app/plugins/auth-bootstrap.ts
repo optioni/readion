@@ -1,9 +1,10 @@
 import { runAuthBootstrap, runAuthBootstrapServer } from '~/composables/useAuthBootstrap'
+import { resolveApiBaseUrl } from '~/config/api-base-url'
 import { useAuthStore } from '~/stores/auth'
 
 export default defineNuxtPlugin(() => {
   const auth = useAuthStore()
-  const apiBase = useRuntimeConfig().public.apiBaseUrl
+  const apiBase = resolveApiBaseUrl(useRuntimeConfig())
 
   if (import.meta.server) {
     const event = useRequestEvent()

@@ -161,10 +161,11 @@ export const readionFetch = async <TResponse>(
 ): Promise<TResponse> => {
   const runtimeConfig = useRuntimeConfig()
   const { useAuthStore } = await import('~/stores/auth')
+  const { resolveApiBaseUrl } = await import('~/config/api-base-url')
   const auth = useAuthStore()
 
   return createReadionFetch({
-    apiBaseUrl: runtimeConfig.public.apiBaseUrl,
+    apiBaseUrl: resolveApiBaseUrl(runtimeConfig),
     getAccessToken: () => auth.accessToken,
     getCsrfToken: getCsrfTokenFromCookie,
     onRefreshToken: (token) => auth.setSession(token, auth.user),
