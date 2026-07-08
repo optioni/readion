@@ -1,13 +1,13 @@
 import type { ReviewItemResponse } from '@readion/shared'
 import { mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ReviewQueueEntry from '~/components/ReviewQueueEntry.vue'
 
 vi.mock('~/composables/runnerRoutes', () => ({
   sessionStartPath: (id: string) => `/user-certifications/${id}/session/start`,
 }))
 
-function dueItem(domain: string, id = domain): ReviewItemResponse {
+function dueItem(domain: string, id = domain, dueAt = '2026-06-29T00:00:00.000Z'): ReviewItemResponse {
   return {
     id,
     userCertificationId: 'enr-1',
@@ -15,7 +15,7 @@ function dueItem(domain: string, id = domain): ReviewItemResponse {
     domain,
     box: 1,
     state: 'active',
-    dueAt: '2026-06-29T00:00:00.000Z',
+    dueAt,
     lastReviewedAt: null,
   }
 }
@@ -132,6 +132,74 @@ describe('ReviewQueueEntry — with due items', () => {
     await wrapper.find('[data-testid="start-review-button"]').trigger('click')
     expect(wrapper.emitted('start')).toHaveLength(1)
     expect(wrapper.emitted('start-self-grade')).toBeUndefined()
+  })
+})
+
+describe('ReviewQueueEntry — secondary "Review all" action and overdue note', () => {
+  const NOW = new Date('2026-07-01T09:00:00.000Z')
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(NOW)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('renders the review-all-button reading "Review all N" beside the primary CTA', () => {
+    const wrapper = mountEntry({
+      items: [
+        dueItem('Secure Architectures', 'i1', '2026-06-29T00:00:00.000Z'),
+        dueItem('Secure Architectures', 'i2', '2026-06-29T00:00:00.000Z'),
+        dueItem('Secure Architectures', 'i3', '2026-07-01T00:00:00.000Z'),
+        dueItem('Resilient Architectures', 'i4', '2026-07-01T00:00:00.000Z'),
+        dueItem('Resilient Architectures', 'i5', '2026-06-29T00:00:00.000Z'),
+      ],
+      dueCount: 5,
+    })
+    const reviewAll = wrapper.find('[data-testid="review-all-button"]')
+    expect(reviewAll.exists()).toBe(true)
+    expect(reviewAll.text()).toContain('Review all 5')
+  })
+
+  it('emits start when review-all-button is clicked', async () => {
+    const wrapper = mountEntry({
+      items: [dueItem('Security', 'i1')],
+      dueCount: 1,
+    })
+    await wrapper.find('[data-testid="review-all-button"]').trigger('click')
+    expect(wrapper.emitted('start')).toHaveLength(1)
+  })
+
+  it('renders the overdue note with the count and max days when items are overdue', () => {
+    const wrapper = mountEntry({
+      items: [
+        dueItem('Secure Architectures', 'i1', '2026-06-29T00:00:00.000Z'),
+        dueItem('Secure Architectures', 'i2', '2026-06-29T00:00:00.000Z'),
+        dueItem('Secure Architectures', 'i3', '2026-07-01T00:00:00.000Z'),
+        dueItem('Resilient Architectures', 'i4', '2026-07-01T00:00:00.000Z'),
+        dueItem('Resilient Architectures', 'i5', '2026-06-29T00:00:00.000Z'),
+      ],
+      dueCount: 5,
+    })
+    const note = wrapper.find('[data-testid="review-overdue-note"]')
+    expect(note.exists()).toBe(true)
+    expect(note.text()).toContain('3 items overdue by 2 days')
+  })
+
+  it('does not render the overdue note when no item is overdue by a whole day', () => {
+    const wrapper = mountEntry({
+      items: [dueItem('Security', 'i1', '2026-07-01T00:00:00.000Z')],
+      dueCount: 1,
+    })
+    expect(wrapper.find('[data-testid="review-overdue-note"]').exists()).toBe(false)
+  })
+
+  it('does not render review-all-button or review-overdue-note in the all-caught-up state', () => {
+    const wrapper = mountEntry({ items: [], dueCount: 0 })
+    expect(wrapper.find('[data-testid="review-all-button"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="review-overdue-note"]').exists()).toBe(false)
   })
 })
 
