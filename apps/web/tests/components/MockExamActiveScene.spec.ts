@@ -109,7 +109,7 @@ describe('MockExamActiveScene', () => {
   it('shows the 1-based question counter for a zero-based position', () => {
     const wrapper = mountScene(examWith65())
     expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
-      /Question\s+1\s+of\s+65/,
+      /Q\s+1\s+\/\s+65/,
     )
   })
 
@@ -161,17 +161,17 @@ describe('MockExamActiveScene', () => {
 
     await wrapper.find('[data-testid="exam-next-button"]').trigger('click')
     expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
-      /Question\s+2\s+of/,
+      /Q\s+2\s+\//,
     )
 
     await wrapper.find('[data-testid="exam-skip-button"]').trigger('click')
     expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
-      /Question\s+3\s+of/,
+      /Q\s+3\s+\//,
     )
 
     await wrapper.find('[data-testid="exam-prev-button"]').trigger('click')
     expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
-      /Question\s+2\s+of/,
+      /Q\s+2\s+\//,
     )
   })
 
@@ -179,7 +179,7 @@ describe('MockExamActiveScene', () => {
     const wrapper = mountScene(examWith65())
     await wrapper.find('[data-testid="exam-prev-button"]').trigger('click')
     expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
-      /Question\s+1\s+of/,
+      /Q\s+1\s+\//,
     )
   })
 
@@ -187,7 +187,7 @@ describe('MockExamActiveScene', () => {
     const wrapper = mountScene(examWith65())
     await wrapper.findAll('[data-testid="exam-nav-square"]')[3]!.trigger('click')
     expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
-      /Question\s+4\s+of/,
+      /Q\s+4\s+\//,
     )
   })
 
@@ -241,7 +241,7 @@ describe('MockExamActiveScene', () => {
       const wrapper = mountScene(buildExam(questions))
 
       expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
-        /Question\s+6\s+of\s+7/,
+        /Q\s+6\s+\/\s+7/,
       )
       const squares = wrapper.findAll('[data-testid="exam-nav-square"]')
       for (let index = 0; index < 5; index += 1) {
@@ -253,7 +253,7 @@ describe('MockExamActiveScene', () => {
       const questions = [question(0, Q0_OPTIONS[1]), question(1, 'Option B for Q2')]
       const wrapper = mountScene(buildExam(questions))
       expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(
-        /Question\s+1\s+of\s+2/,
+        /Q\s+1\s+\/\s+2/,
       )
     })
   })
