@@ -9,6 +9,7 @@ import ProgressStatCard from '~/components/ProgressStatCard.vue'
 import ReadinessTrend from '~/components/ReadinessTrend.vue'
 import TrajectoryCallout from '~/components/TrajectoryCallout.vue'
 import { useActivityStats } from '~/composables/useActivityStats'
+import { pluralizeUnit } from '~/composables/paceFormatter'
 import { useProgressData } from '~/composables/useProgressData'
 import { useTrack } from '~/composables/useTrack'
 
@@ -34,6 +35,7 @@ const {
 } = useProgressData(enrollmentId.value)
 
 const activityStats = computed(() => useActivityStats(sessions.value, summariesMap.value))
+const streakUnit = computed(() => pluralizeUnit(activityStats.value.currentStreakDays, 'day'))
 </script>
 
 <template>
@@ -82,7 +84,7 @@ const activityStats = computed(() => useActivityStats(sessions.value, summariesM
         <ProgressStatCard
           label="Current streak"
           :value="String(activityStats.currentStreakDays)"
-          unit="days"
+          :unit="streakUnit"
         />
       </div>
 
