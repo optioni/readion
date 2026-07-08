@@ -71,6 +71,20 @@ describe('DiagnosticRePromptNudge visibility', () => {
     expect(wrapper.find('[data-testid="diagnostic-reprompt-skip"]').exists()).toBe(true)
   })
 
+  it('renders as an accent-tinted callout with a shield icon, not plain text', async () => {
+    vi.mocked(diagnosticControllerGetOffer).mockResolvedValue(
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      offerEnvelope('re-prompt') as any,
+    )
+
+    const { wrapper } = mountNudge()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="diagnostic-reprompt-icon"]').exists()).toBe(true)
+    const nudge = wrapper.find('[data-testid="diagnostic-reprompt"]')
+    expect(nudge.classes().join(' ')).toContain('readion-primary')
+  })
+
   it('renders nothing when the offer is onboarding', async () => {
     vi.mocked(diagnosticControllerGetOffer).mockResolvedValue(
       // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
