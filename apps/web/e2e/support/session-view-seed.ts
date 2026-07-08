@@ -154,7 +154,12 @@ function buildItems(): SessionItemResponseDto[] {
 function buildSessionDetail(
   id: string,
   items: SessionItemResponseDto[],
-  overrides: { status?: string; lastItemIndex?: number; endedAt?: string | null } = {},
+  overrides: {
+    status?: string
+    lastItemIndex?: number
+    startedAt?: string
+    endedAt?: string | null
+  } = {},
 ): SessionDetailResponseDto {
   // Orval generates `{ [key: string]: unknown }` for the nullable/enum scalar columns
   // (kind/status/focusArea/endedAt), so the runtime fixture literal is cast to the DTO once.
@@ -169,7 +174,7 @@ function buildSessionDetail(
     focusArea: 'auto',
     learningStyle: 'weak-area-focus',
     lastItemIndex: overrides.lastItemIndex ?? 0,
-    startedAt: '2026-06-28T09:00:00.000Z',
+    startedAt: overrides.startedAt ?? '2026-06-28T09:00:00.000Z',
     endedAt: overrides.endedAt ?? null,
     items,
   } as unknown as SessionResponseDto
@@ -294,6 +299,149 @@ function mock(target: Target, pattern: RegExp, handler: Handler): void {
 
 const { enrollmentId, certificationId, sessionId, drillSessionId, questionId, conversationId } =
   SESSION_IDS
+
+// Shared by the lifecycle/citation/zero-state fixtures below: authenticates the client and installs
+// a context-level catch-all so any unmocked /api/v1 read (e.g. the header's cert/enrollment lookups)
+// degrades to empty data instead of hitting the absent backend.
+function installBaseMocks(page: Page): void {
+  mock(page.context(), /\/api\/v1\//, async (route) => {
+    if (route.request().method() === 'GET') {
+      await fulfilJson(route, 200, { data: [], meta: { total: 0, page: 1, limit: 20 } })
+      return
+    }
+    await fulfilJson(route, 200, { data: {} })
+  })
+  mock(page, /\/api\/v1\/auth\/refresh$/, async (route) => {
+    await fulfilJson(route, 200, { data: { accessToken: 'mock-access-token' } })
+  })
+  mock(page, /\/api\/v1\/users\/me(\?|$)/, async (route) => {
+    await fulfilJson(route, 200, { data: PROFILE })
+  })
+}
+
+/**
+ * Installs the route surface for opening a session that has already ENDED (`status: "completed"`)
+ * at `/sessions/:id`: `startedAt` is ~49h before now and `endedAt` is 20 minutes later, reproducing
+ * the "2910:42" free-running-timer repro from proposal.md while giving the correct frozen value
+ * (~"20:00"). `POST /sessions/:id/end` is stubbed but its call count is exposed so the acceptance
+ * test can assert it is never invoked for an already-ended session.
+ */
+export function mockCompletedSessionView(
+  page: Page,
+  options: { id?: string } = {},
+): { startedAt: string; endedAt: string; endCallCount: () => number } {
+  const id = options.id ?? sessionId
+  const startedAt = new Date(Date.now() - 49 * 60 * 60 * 1000).toISOString()
+  const endedAt = new Date(new Date(startedAt).getTime() + 20 * 60 * 1000).toISOString()
+  const items = buildItems()
+  let endCalls = 0
+
+  installBaseMocks(page)
+
+  mock(page, /\/api\/v1\/sessions\/[0-9a-f-]{36}(\?|$)/, async (route) => {
+    await fulfilJson(
+      route,
+      200,
+      buildSessionDetail(id, items, {
+        status: 'completed',
+        startedAt,
+        endedAt,
+        lastItemIndex: items.length,
+      }),
+    )
+  })
+  mock(page, /\/api\/v1\/sessions\/[0-9a-f-]{36}\/end$/, async (route) => {
+    endCalls += 1
+    await fulfilJson(
+      route,
+      200,
+      buildSessionDetail(id, items, {
+        status: 'completed',
+        startedAt,
+        endedAt,
+        lastItemIndex: items.length,
+      }),
+    )
+  })
+  mock(page, /\/api\/v1\/sessions\/[0-9a-f-]{36}\/summary$/, async (route) => {
+    await fulfilJson(route, 200, SUMMARY)
+  })
+
+  return { startedAt, endedAt, endCallCount: () => endCalls }
+}
+
+/**
+ * Installs the route surface for an ACTIVE session whose sole reading item carries a raw
+ * content-chunk UUID in `sourceChunkIds` (plus a human `supportingSpans` entry) and a `domain`,
+ * exercising the citation-label and reading-block-domain fidelity fixes independently of the
+ * ended-session lifecycle branch (an ended session would not render the reading block at all).
+ */
+export function mockActiveSessionWithCitationFixture(page: Page): {
+  id: string
+  citationId: string
+  domain: string
+} {
+  const id = sessionId
+  const domain = 'IAM & Security'
+  const citationId = 'bb9dd4b7-e3e5-44e6-b006-1b6fd247e14b'
+  const items = [
+    {
+      index: 0,
+      type: 'reading',
+      content:
+        '## Service Control Policies\n\n**TL;DR** — SCPs set the maximum available permissions for accounts in an AWS Organization.',
+      completed: false,
+      sourceChunkIds: [citationId],
+      supportingSpans: ['AWS Organizations User Guide §SCP'],
+      domain,
+    } as unknown as SessionItemResponseDto,
+  ]
+
+  installBaseMocks(page)
+
+  mock(page, /\/api\/v1\/sessions\/[0-9a-f-]{36}(\?|$)/, async (route) => {
+    await fulfilJson(route, 200, buildSessionDetail(id, items))
+  })
+
+  return { id, citationId, domain }
+}
+
+/**
+ * Installs the route surface for a completed session whose summary reports
+ * `questionsAnswered: 0` — the misleading-zeros repro from proposal.md ("ACCURACY 0% · 0/0",
+ * "READINESS +0% 19%→19%", weak areas "↑0%", an empty "Domains covered" box).
+ */
+export function mockZeroAnsweredSummary(page: Page, options: { id?: string } = {}): { id: string } {
+  const id = options.id ?? sessionId
+  const startedAt = '2026-06-28T09:00:00.000Z'
+  const endedAt = '2026-06-28T09:20:00.000Z'
+
+  installBaseMocks(page)
+
+  mock(page, /\/api\/v1\/sessions\/[0-9a-f-]{36}\/summary$/, async (route) => {
+    await fulfilJson(route, 200, {
+      data: {
+        questionsAnswered: 0,
+        accuracy: 0,
+        domains: [],
+        weakAreaDeltas: [],
+        readiness: { before: 19, after: 19, delta: 0 },
+        strongestQuestion: null,
+        weakestQuestion: null,
+        nextFocus: null,
+      },
+    } as unknown as SessionSummaryEnvelopeDto)
+  })
+  mock(page, /\/api\/v1\/sessions\/[0-9a-f-]{36}(\?|$)/, async (route) => {
+    await fulfilJson(
+      route,
+      200,
+      buildSessionDetail(id, [], { status: 'completed', startedAt, endedAt, lastItemIndex: 0 }),
+    )
+  })
+
+  return { id }
+}
 
 /**
  * Installs the full route-mock surface for the session loop and returns the fixtures. Auth-bootstrap
