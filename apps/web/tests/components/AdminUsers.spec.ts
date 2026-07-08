@@ -2,7 +2,7 @@ import type { AdminUserListItem, CollectionMeta } from '@readion/shared'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { computed } from 'vue'
+import { computed, toValue } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import AdminUsers from '~/components/admin/AdminUsers.vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
@@ -48,9 +48,10 @@ const META: CollectionMeta = { total: 3, page: 1, limit: 20 }
 function stubUsers(
   users: AdminUserListItem[] = USERS,
   options: { isLoading?: boolean; isError?: boolean } = {},
+  meta: CollectionMeta = META,
 ) {
   vi.mocked(useAdminUsers).mockReturnValue({
-    data: computed(() => ({ data: users, meta: META })),
+    data: computed(() => ({ data: users, meta })),
     isLoading: computed(() => options.isLoading ?? false),
     isError: computed(() => options.isError ?? false),
     refetch: vi.fn(),
@@ -141,6 +142,28 @@ describe('AdminUsers table render', () => {
 
     expect(wrapper.find('[data-testid="admin-users-error"]').exists()).toBe(true)
     expect(wrapper.findAll('[data-testid="admin-user-row"]')).toHaveLength(0)
+  })
+})
+
+describe('AdminUsers pagination', () => {
+  it('does not render a pagination control when meta reports a single page', () => {
+    stubUsers(USERS, {}, { total: 3, page: 1, limit: 20 })
+    const { wrapper } = mountUsers()
+
+    expect(wrapper.find('[data-testid="admin-users-pagination"]').exists()).toBe(false)
+  })
+
+  it('renders a pagination control when meta reports more than one page and advancing requests the next page', async () => {
+    stubUsers(USERS, {}, { total: 23, page: 1, limit: 20 })
+    const { wrapper } = mountUsers()
+
+    expect(wrapper.find('[data-testid="admin-users-pagination"]').exists()).toBe(true)
+
+    await wrapper.find('[data-testid="admin-users-pagination-next"]').trigger('click')
+    await flushPromises()
+
+    const [pageArg] = vi.mocked(useAdminUsers).mock.calls[0]
+    expect(toValue(pageArg)).toBe(2)
   })
 })
 

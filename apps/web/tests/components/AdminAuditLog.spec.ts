@@ -1,8 +1,8 @@
 import type { AuditLogEntry, CollectionMeta } from '@readion/shared'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { computed } from 'vue'
+import { computed, toValue } from 'vue'
 import AdminAuditLog from '~/components/admin/AdminAuditLog.vue'
 import { useAdminAuditLogs } from '~/composables/useAdminAuditLogs'
 
@@ -44,9 +44,10 @@ const META: CollectionMeta = { total: 2, page: 1, limit: 20 }
 function stubAuditLogs(
   entries: AuditLogEntry[] = ENTRIES,
   options: { isLoading?: boolean; isError?: boolean } = {},
+  meta: CollectionMeta = META,
 ) {
   vi.mocked(useAdminAuditLogs).mockReturnValue({
-    data: computed(() => ({ data: entries, meta: META })),
+    data: computed(() => ({ data: entries, meta })),
     isLoading: computed(() => options.isLoading ?? false),
     isError: computed(() => options.isError ?? false),
     refetch: vi.fn(),
@@ -144,5 +145,27 @@ describe('AdminAuditLog table render', () => {
 
     expect(wrapper.find('[data-testid="admin-audit-log-error"]').exists()).toBe(true)
     expect(wrapper.findAll('[data-testid="audit-log-row"]')).toHaveLength(0)
+  })
+})
+
+describe('AdminAuditLog pagination', () => {
+  it('does not render a pagination control when meta reports a single page', () => {
+    stubAuditLogs(ENTRIES, {}, { total: 2, page: 1, limit: 20 })
+    const wrapper = mountAuditLog()
+
+    expect(wrapper.find('[data-testid="admin-audit-log-pagination"]').exists()).toBe(false)
+  })
+
+  it('renders a pagination control when meta reports more than one page and advancing requests the next page', async () => {
+    stubAuditLogs(ENTRIES, {}, { total: 23, page: 1, limit: 20 })
+    const wrapper = mountAuditLog()
+
+    expect(wrapper.find('[data-testid="admin-audit-log-pagination"]').exists()).toBe(true)
+
+    await wrapper.find('[data-testid="admin-audit-log-pagination-next"]').trigger('click')
+    await flushPromises()
+
+    const [pageArg] = vi.mocked(useAdminAuditLogs).mock.calls[0]
+    expect(toValue(pageArg)).toBe(2)
   })
 })
