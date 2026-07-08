@@ -28,7 +28,7 @@ import { gotoAuthenticated } from './support/session-view-seed'
 //                 exam-timer-paused (HH:MM:SS placeholder while deadline is null),
 //                 exam-nav, exam-nav-square (one per question)
 //   Active      : exam-active-scene, exam-header, exam-cert-chip, exam-timer (HH:MM:SS countdown),
-//                 exam-question-counter ("Question N of T"), exam-domain-tag, exam-question-stem,
+//                 exam-question-counter ("Q N / T"), exam-domain-tag, exam-question-stem,
 //                 exam-option (one per option; data-state rest|selected — NO correct/incorrect during exam),
 //                 exam-prev-button, exam-skip-button, exam-next-button,
 //                 exam-nav, exam-nav-square (data-state answered|current|unanswered),
@@ -66,7 +66,7 @@ test.describe('web-mock-exam — full timed-exam loop', () => {
 
     // --- Ready transitions to the active timed exam ---
     await expect(page.getByTestId('exam-active-scene')).toBeVisible()
-    await expect(page.getByTestId('exam-question-counter')).toContainText(/question 1 of 65/i)
+    await expect(page.getByTestId('exam-question-counter')).toContainText(/Q 1 \/ 65/i)
     // Countdown is seeded from server remainingSeconds (6443 ≈ 01:47:23), not paused.
     await expect(page.getByTestId('exam-timer')).toContainText(/\d\d:\d\d:\d\d/)
 

@@ -40,7 +40,7 @@ describe('ExamHeader', () => {
       props: { certCode: 'SAA-C03', mode: 'active', currentIndex: 0, totalQuestions: 65 },
     })
 
-    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(/Question 1 of 65/)
+    expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(/Q 1 \/ 65/)
   })
 
   it('omits the question counter when no current index is supplied', () => {
