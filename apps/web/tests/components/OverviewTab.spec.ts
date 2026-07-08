@@ -2,13 +2,18 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, ref } from 'vue'
 import OverviewTab from '~/components/OverviewTab.vue'
+import type { SessionFocusAreaEntry } from '~/composables/lastStudiedAt'
 import { useCardDueReviews } from '~/composables/useCardDueReviews'
 import type { CardReadiness } from '~/composables/useCardReadiness'
 import { useCardReadiness } from '~/composables/useCardReadiness'
 import type { RecentSessionEntry } from '~/composables/useCardRecentSessions'
 import { useCertWeakAreas } from '~/composables/useCertWeakAreas'
 import { useOverviewSessions } from '~/composables/useOverviewSessions'
-import type { CertificationDomainDto, WeakAreaResponseDto } from '~~/src/api/model'
+import type {
+  CertificationDomainDto,
+  SessionSummaryResponseDto,
+  WeakAreaResponseDto,
+} from '~~/src/api/model'
 
 vi.mock('~/composables/useCardReadiness', () => ({ useCardReadiness: vi.fn() }))
 vi.mock('~/composables/useCertWeakAreas', () => ({ useCertWeakAreas: vi.fn() }))
@@ -48,6 +53,8 @@ function stubSessions(value: {
   nextFocusDomain: string | null
   questionsAnswered?: number
   accuracy?: number | null
+  latestSummary?: SessionSummaryResponseDto | null
+  sessionFocusAreas?: SessionFocusAreaEntry[]
 }) {
   vi.mocked(useOverviewSessions).mockReturnValue({
     sessions: computed(() => value.sessions),
@@ -55,6 +62,8 @@ function stubSessions(value: {
     nextFocusDomain: computed(() => value.nextFocusDomain),
     questionsAnswered: computed(() => value.questionsAnswered ?? 0),
     accuracy: computed(() => value.accuracy ?? null),
+    latestSummary: computed(() => value.latestSummary ?? null),
+    sessionFocusAreas: computed(() => value.sessionFocusAreas ?? []),
     isLoading: ref(false),
     isError: ref(false),
   })

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/vue-query'
 import type { MaybeRefOrGetter } from 'vue'
 import { computed, toValue } from 'vue'
 import { certDetailQueryKeys } from '~/composables/certDetailQueryKeys'
+import type { SessionFocusAreaEntry } from '~/composables/lastStudiedAt'
 import { recentSessionLabel } from '~/composables/recentSessionLabel'
 import {
   fetchRecentSessionSummaries,
@@ -9,7 +10,10 @@ import {
 } from '~/composables/recentSessionSummaries'
 import { aggregateSessionStats } from '~/composables/sessionStatsAggregate'
 import type { RecentSessionEntry } from '~/composables/useCardRecentSessions'
-import type { SessionSummaryResponseDtoNextFocus } from '~~/src/api/model'
+import type {
+  SessionSummaryResponseDto,
+  SessionSummaryResponseDtoNextFocus,
+} from '~~/src/api/model'
 import { sessionsControllerList } from '~~/src/api/sessions/sessions'
 
 interface OverviewSessionsData {
@@ -18,6 +22,8 @@ interface OverviewSessionsData {
   nextFocusDomain: string | null
   questionsAnswered: number
   accuracy: number | null
+  latestSummary: SessionSummaryResponseDto | null
+  sessionFocusAreas: SessionFocusAreaEntry[]
 }
 
 const readNextFocusDomain = (
@@ -50,11 +56,15 @@ export function useOverviewSessions(certificationId: MaybeRefOrGetter<string | n
       })
 
       const latestCompleted = sessionRows.find((session) => summaries.has(session.id))
-      const nextFocusDomain = latestCompleted
-        ? readNextFocusDomain(summaries.get(latestCompleted.id)?.nextFocus)
-        : null
+      const latestSummary = latestCompleted ? (summaries.get(latestCompleted.id) ?? null) : null
+      const nextFocusDomain = readNextFocusDomain(latestSummary?.nextFocus)
 
       const { questionsAnswered, accuracy } = aggregateSessionStats(summaries)
+
+      const sessionFocusAreas = sessionRows.map<SessionFocusAreaEntry>((session) => ({
+        startedAt: session.startedAt,
+        focusArea: session.focusArea,
+      }))
 
       return {
         sessions,
@@ -62,6 +72,8 @@ export function useOverviewSessions(certificationId: MaybeRefOrGetter<string | n
         nextFocusDomain,
         questionsAnswered,
         accuracy,
+        latestSummary,
+        sessionFocusAreas,
       }
     },
   })
@@ -71,6 +83,12 @@ export function useOverviewSessions(certificationId: MaybeRefOrGetter<string | n
   const nextFocusDomain = computed<string | null>(() => query.data.value?.nextFocusDomain ?? null)
   const questionsAnswered = computed<number>(() => query.data.value?.questionsAnswered ?? 0)
   const accuracy = computed<number | null>(() => query.data.value?.accuracy ?? null)
+  const latestSummary = computed<SessionSummaryResponseDto | null>(
+    () => query.data.value?.latestSummary ?? null,
+  )
+  const sessionFocusAreas = computed<SessionFocusAreaEntry[]>(
+    () => query.data.value?.sessionFocusAreas ?? [],
+  )
 
   return {
     sessions,
@@ -78,6 +96,8 @@ export function useOverviewSessions(certificationId: MaybeRefOrGetter<string | n
     nextFocusDomain,
     questionsAnswered,
     accuracy,
+    latestSummary,
+    sessionFocusAreas,
     isLoading: query.isLoading,
     isError: query.isError,
   }

@@ -13,7 +13,8 @@ export function selectSuggestedNextFocus(
   weakAreas: WeakAreaResponseDto[],
 ): SuggestedNextFocus {
   if (sessionNextFocusDomain) {
-    return { domain: sessionNextFocusDomain, source: 'session', score: null }
+    const matched = weakAreas.find((area) => area.domain === sessionNextFocusDomain)
+    return { domain: sessionNextFocusDomain, source: 'session', score: matched?.score ?? null }
   }
 
   const lowest = weakAreas.reduce<WeakAreaResponseDto | null>((min, area) => {
