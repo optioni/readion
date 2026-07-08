@@ -13,6 +13,7 @@ export interface RecentSessionEntry {
   date: string
   label: string
   accuracy: number | null
+  durationMinutes: number | null
 }
 
 interface RecentSessionsData {
@@ -38,6 +39,7 @@ export function useCardRecentSessions(enrollmentId: string, certificationId: str
           date: session.startedAt,
           label: recentSessionLabel(session),
           accuracy: summary ? summary.accuracy : null,
+          durationMinutes: session.durationMinutes ?? null,
         }
       })
 

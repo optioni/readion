@@ -90,8 +90,20 @@ describe('useOverviewSessions', () => {
 
     expect(sessionsControllerList).toHaveBeenCalledWith({ certificationId: 'cert-1', limit: 3 })
     expect(result.sessions.value).toEqual([
-      { id: 's1', date: '2026-06-20T00:00:00Z', label: 'Study · Networking', accuracy: 0.8 },
-      { id: 's2', date: '2026-06-19T00:00:00Z', label: 'Study · All domains', accuracy: null },
+      {
+        id: 's1',
+        date: '2026-06-20T00:00:00Z',
+        label: 'Study · Networking',
+        accuracy: 0.8,
+        durationMinutes: 30,
+      },
+      {
+        id: 's2',
+        date: '2026-06-19T00:00:00Z',
+        label: 'Study · All domains',
+        accuracy: null,
+        durationMinutes: 30,
+      },
     ])
     expect(result.totalSessions.value).toBe(7)
     expect(result.nextFocusDomain.value).toBe('Networking')

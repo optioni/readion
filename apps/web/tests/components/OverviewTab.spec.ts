@@ -358,7 +358,15 @@ describe('OverviewTab weakest-domain side panel', () => {
 describe('OverviewTab recent sessions', () => {
   it('renders recent session rows from the reused panel', () => {
     stubSessions({
-      sessions: [{ id: 's1', date: '2026-06-20T00:00:00Z', label: 'Security', accuracy: 0.82 }],
+      sessions: [
+        {
+          id: 's1',
+          date: '2026-06-20T00:00:00Z',
+          label: 'Security',
+          accuracy: 0.82,
+          durationMinutes: 20,
+        },
+      ],
       totalSessions: 1,
       nextFocusDomain: null,
     })

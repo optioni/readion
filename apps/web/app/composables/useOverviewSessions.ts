@@ -52,6 +52,7 @@ export function useOverviewSessions(certificationId: MaybeRefOrGetter<string | n
           date: session.startedAt,
           label: recentSessionLabel(session),
           accuracy: summary ? summary.accuracy : null,
+          durationMinutes: session.durationMinutes ?? null,
         }
       })
 
