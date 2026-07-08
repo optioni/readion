@@ -57,6 +57,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.clearAllMocks()
+  vi.unstubAllGlobals()
 })
 
 function mountWizard() {
@@ -285,5 +286,98 @@ describe('CertSetupWizard step 2→3 — submit draft + coverage', () => {
     expect(certificationCoverageControllerCoverage).toHaveBeenCalledWith(
       'c0000000-0000-0000-0000-000000000002',
     )
+  })
+})
+
+describe('CertSetupWizard — SetupHeader chrome', () => {
+  function envelopeFor(payload: unknown, status = 200) {
+    // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+    return { data: { data: payload }, status, headers: new Headers() } as any
+  }
+
+  it('renders the SetupHeader at step 1 alongside the discover form', () => {
+    const wrapper = mountWizard()
+
+    expect(wrapper.find('[data-testid="setup-header"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="setup-header-step-indicator"]').text()).toBe(
+      'Step 1 of 4 · Source search',
+    )
+    expect(wrapper.find('[data-testid="discover-name-input"]').exists()).toBe(true)
+  })
+
+  it('advances the SetupHeader when the wizard moves to step 2', async () => {
+    mockDiscover()
+    mockExtract('extract-job-1')
+    const wrapper = mountWizard()
+
+    await fillAndDiscover(wrapper)
+    await wrapper.findAll('[data-testid="source-candidate"]')[0]!.trigger('click')
+    await wrapper.find('[data-testid="confirm-source-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="setup-header-step-indicator"]').text()).toBe(
+      'Step 2 of 4 · Field extraction',
+    )
+    expect(wrapper.find('[data-testid="cert-extraction-step"]').exists()).toBe(true)
+  })
+
+  it('advances the SetupHeader to step 3 alongside coverage once a draft is created', async () => {
+    mockDiscover()
+    mockExtract()
+    vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
+      envelopeFor({
+        state: 'completed',
+        fields: {
+          domains: {
+            value: [
+              { name: 'Secure', weight: 30 },
+              { name: 'Resilient', weight: 26 },
+              { name: 'High-Performing', weight: 24 },
+              { name: 'Cost-Optimized', weight: 20 },
+            ],
+            citation: { url: PDF_URL, passage: 'Four domains' },
+          },
+          questionCount: { unverified: true },
+          passingScore: { unverified: true },
+          timeLimitMinutes: { unverified: true },
+        },
+      }),
+    )
+    vi.mocked(certSetupControllerCreate).mockResolvedValue(
+      envelopeFor({ id: 'c0000000-0000-0000-0000-000000000003', state: 'draft' }, 201),
+    )
+    vi.mocked(certificationCoverageControllerCoverage).mockResolvedValue(
+      envelopeFor({ domains: [], totalChunks: 0, totalThreshold: 0, state: 'draft', met: false }),
+    )
+
+    const wrapper = mountWizard()
+    await fillAndDiscover(wrapper)
+    await wrapper.findAll('[data-testid="source-candidate"]')[0]!.trigger('click')
+    await wrapper.find('[data-testid="confirm-source-btn"]').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('[data-testid="cert-name-input"]').setValue(CERT_NAME)
+    await wrapper.find('[data-testid="cert-provider-input"]').setValue('AWS')
+    await wrapper.find('[data-testid="cert-code-input"]').setValue(CODE)
+    await wrapper.find('[data-testid="submit-draft-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="setup-header-step-indicator"]').text()).toBe(
+      'Step 3 of 4 · Content sources',
+    )
+    expect(wrapper.find('[data-testid="cert-coverage"]').exists()).toBe(true)
+  })
+
+  it('activating Cancel navigates to the certifications landing without creating a draft', async () => {
+    const navigateTo = vi.fn()
+    vi.stubGlobal('navigateTo', navigateTo)
+    const wrapper = mountWizard()
+
+    await wrapper.find('[data-testid="setup-header-cancel"]').trigger('click')
+
+    expect(navigateTo).toHaveBeenCalledWith('/admin/certifications')
+    expect(certSetupControllerDiscoverSources).not.toHaveBeenCalled()
+    expect(certSetupControllerExtract).not.toHaveBeenCalled()
+    expect(certSetupControllerCreate).not.toHaveBeenCalled()
   })
 })

@@ -4,6 +4,7 @@ import CertSetupExtractionStep from '~/components/admin/CertSetupExtractionStep.
 import CertSetupReviewStep from '~/components/admin/CertSetupReviewStep.vue'
 import CertSetupSourceStep from '~/components/admin/CertSetupSourceStep.vue'
 import CertSetupSourcesStep from '~/components/admin/CertSetupSourcesStep.vue'
+import SetupHeader from '~/components/admin/SetupHeader.vue'
 import { useCertSetupWizard } from '~/composables/useCertSetupWizard'
 
 // Owns the shared wizard state (see CertSetupWizardState). Step 1 (discover) and step 2 (extraction
@@ -11,10 +12,17 @@ import { useCertSetupWizard } from '~/composables/useCertSetupWizard'
 // navigation; a successful create advances to step 3 (read-only coverage + sources registration).
 const { state, confirmSource, applyExtraction, editFieldValue, flagField, registerCreatedDraft } =
   useCertSetupWizard()
+
+// Cancel exits the wizard without creating a draft — plain navigation, no discover/create call.
+function cancelSetup(): void {
+  navigateTo('/admin/certifications')
+}
 </script>
 
 <template>
   <div data-testid="admin-cert-setup-page" class="flex flex-col gap-6">
+    <SetupHeader :step="state.step" @cancel="cancelSetup" />
+
     <CertSetupSourceStep v-if="state.step === 1" :state="state" :confirm-source="confirmSource" />
 
     <template v-else-if="state.step === 2">
