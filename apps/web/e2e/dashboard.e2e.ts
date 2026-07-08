@@ -43,8 +43,10 @@ test.describe('web-dashboard — vertical cert list, hero, quick-starts, add cer
     // Lands authenticated on the dashboard home.
     await expect(page).toHaveURL('/')
 
-    // The dashboard is a vertical list of certification cards under the section label.
-    await expect(page.getByText(/my certifications/i)).toBeVisible()
+    // The dashboard is a vertical list of certification cards under the shared PageHeader
+    // (fix-learner-surfaces-fidelity replaces the old "My certifications" label with the
+    // spec-mandated "Your certifications" h1 — see openspec/design/Dashboard.html).
+    await expect(page.getByRole('heading', { level: 1, name: 'Your certifications' })).toBeVisible()
 
     const cards = page.getByTestId('cert-card')
     await expect(cards).toHaveCount(seed.enrollments.length)

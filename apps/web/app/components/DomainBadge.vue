@@ -6,9 +6,7 @@ const props = defineProps<{ label: string; score: number; hero?: boolean }>()
 
 const status = computed(() => statusColorForScore(props.score))
 const dotClass = computed(() => (props.hero ? 'bg-white' : `bg-readion-status-${status.value}`))
-const labelClass = computed(() =>
-  props.hero ? 'text-white' : statusTextColorClass(status.value),
-)
+const labelClass = computed(() => (props.hero ? 'text-white' : statusTextColorClass(status.value)))
 const chipClass = computed(() =>
   props.hero
     ? 'border-white/20 bg-white/10'
