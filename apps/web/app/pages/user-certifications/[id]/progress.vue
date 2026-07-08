@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import AccuracyBars from '~/components/AccuracyBars.vue'
 import CardPanel from '~/components/CardPanel.vue'
 import CertTabs from '~/components/CertTabs.vue'
 import ProgressDomainRow from '~/components/ProgressDomainRow.vue'
 import ProgressSessionHistoryTable from '~/components/ProgressSessionHistoryTable.vue'
 import ProgressStatCard from '~/components/ProgressStatCard.vue'
-import ReadinessTrend from '~/components/ReadinessTrend.vue'
+import ReadinessAccuracyCard from '~/components/ReadinessAccuracyCard.vue'
 import TrajectoryCallout from '~/components/TrajectoryCallout.vue'
-import { useActivityStats } from '~/composables/useActivityStats'
 import { pluralizeUnit } from '~/composables/paceFormatter'
+import { useActivityStats } from '~/composables/useActivityStats'
 import { useProgressData } from '~/composables/useProgressData'
 import { useTrack } from '~/composables/useTrack'
 
@@ -88,10 +87,12 @@ const streakUnit = computed(() => pluralizeUnit(activityStats.value.currentStrea
         />
       </div>
 
-      <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <ReadinessTrend :points="trend.points" :has-data="trend.hasData" />
-        <AccuracyBars :series="accuracySeries" />
-      </div>
+      <ReadinessAccuracyCard
+        :points="trend.points"
+        :has-data="trend.hasData"
+        :series="accuracySeries"
+        class="mb-4"
+      />
 
       <CardPanel label="Domain Breakdown" class="mb-4">
         <div

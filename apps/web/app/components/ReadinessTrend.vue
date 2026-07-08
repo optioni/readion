@@ -12,6 +12,7 @@ const PAD_LEFT = 24
 const PAD = 8
 
 const GRID_YS = [25, 50, 75, 100] as const
+const TARGET_Y = 80
 
 function xScale(i: number, total: number): number {
   return PAD_LEFT + (i / Math.max(total - 1, 1)) * (WIDTH - PAD_LEFT - PAD)
@@ -42,10 +43,13 @@ const tickLabels = computed(() =>
     topPct: (yScale(tickY) / HEIGHT) * 100,
   })),
 )
+
+const targetY = computed(() => yScale(TARGET_Y))
+const targetTopPct = computed(() => (targetY.value / HEIGHT) * 100)
 </script>
 
 <template>
-  <div data-testid="readiness-trend" class="rounded-md bg-black/25 p-3">
+  <div data-testid="readiness-trend">
     <div class="mb-2 text-[11px] uppercase tracking-wider opacity-70">Readiness Trend</div>
 
     <div v-if="!hasData" data-testid="progress-not-calibrated" class="py-4 text-center">
@@ -77,6 +81,18 @@ const tickLabels = computed(() =>
             />
           </g>
 
+          <line
+            data-testid="readiness-target-line"
+            :x1="PAD_LEFT"
+            :y1="targetY"
+            :x2="WIDTH - PAD"
+            :y2="targetY"
+            stroke="currentColor"
+            stroke-width="1"
+            stroke-dasharray="4,3"
+            class="text-readion-status-good/60"
+          />
+
           <polyline
             :points="svgPoints"
             fill="none"
@@ -107,6 +123,15 @@ const tickLabels = computed(() =>
           :style="{ top: `${tick.topPct}%` }"
         >
           {{ tick.label }}
+        </div>
+
+        <div
+          data-testid="readiness-target-label"
+          class="pointer-events-none absolute left-[calc(100%-2%)] -translate-y-1/2 whitespace-nowrap text-readion-status-good/70"
+          style="font-size: 9px"
+          :style="{ top: `${targetTopPct}%` }"
+        >
+          80% target
         </div>
       </div>
     </template>

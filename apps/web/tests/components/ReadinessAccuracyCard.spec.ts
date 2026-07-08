@@ -22,9 +22,7 @@ describe('ReadinessAccuracyCard', () => {
 
     // Only one shared card background — the two sub-components must not each carry their own
     // card chrome (that would render as two separate cards rather than one composed surface).
-    expect(card.classes()).toEqual(
-      expect.arrayContaining(['rounded-md', 'bg-black/25']),
-    )
+    expect(card.classes()).toEqual(expect.arrayContaining(['rounded-md', 'bg-black/25']))
     expect(card.find('[data-testid="readiness-trend"]').classes()).not.toContain('bg-black/25')
     expect(card.find('[data-testid="accuracy-bars"]').classes()).not.toContain('bg-black/25')
   })

@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import DeltaBadge from '~/components/DeltaBadge.vue'
+import { friendlyDate } from '~/composables/friendlyDate'
 import { mockExamRunPath, sessionRunPath } from '~/composables/runnerRoutes'
 import { statusColorForScore, statusTextColorClass } from '~/composables/statusColor'
 import type { MergedHistoryRow } from '~/composables/useSessionHistoryMerge'
+
+const HISTORY_COLUMNS = ['Date', 'Type', 'Duration', 'Questions', 'Accuracy', 'Readiness'] as const
 
 defineProps<{
   rows: MergedHistoryRow[]
@@ -13,13 +16,6 @@ function rowPath(row: MergedHistoryRow): string {
     return mockExamRunPath(row.id)
   }
   return sessionRunPath(row.id)
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) {
-    return '—'
-  }
-  return new Date(iso).toLocaleDateString()
 }
 
 function accuracyColorClass(accuracy: number): string {
@@ -35,51 +31,65 @@ function accuracyColorClass(accuracy: number): string {
       No sessions yet
     </p>
 
-    <div v-else class="divide-y divide-readion-background-surface">
+    <template v-else>
       <div
-        v-for="row in rows"
-        :key="row.id"
-        data-testid="progress-session-row"
-        class="flex items-center gap-3 py-2 text-sm"
+        data-testid="progress-history-header"
+        class="flex items-center gap-3 border-readion-background-surface border-b pb-2 text-[11px] text-slate-500 uppercase tracking-wide"
       >
-        <a
-          :href="rowPath(row)"
-          class="flex flex-1 items-center gap-3 text-slate-200 hover:text-slate-100"
-        >
-          <span
-            class="inline-flex items-center rounded px-1.5 py-0.5 font-medium text-[11px] uppercase tracking-wide"
-            :class="{
-              'bg-readion-primary/20 text-readion-primary': row.kind === 'study',
-              'bg-purple-500/20 text-purple-400': row.kind === 'mock' || row.kind === 'diagnostic',
-              'bg-amber-500/20 text-amber-400': row.kind === 'drill' || row.kind === 'review',
-            }"
-          >
-            {{ row.kind }}
-          </span>
-
-          <span class="flex-1 text-slate-400 text-xs">{{ formatDate(row.startedAt) }}</span>
-
-          <span data-testid="session-duration" class="text-slate-400 text-xs">
-            {{ row.durationMinutes !== null ? `${row.durationMinutes}m` : '—' }}
-          </span>
-
-          <span data-testid="session-questions" class="text-slate-400 text-xs">
-            {{ row.questionsAnswered !== null ? row.questionsAnswered : '—' }}
-          </span>
-
-          <span
-            class="text-xs"
-            :class="row.accuracy !== null ? accuracyColorClass(row.accuracy) : 'text-slate-500'"
-          >
-            {{ row.accuracy !== null ? `${row.accuracy}%` : '—' }}
-          </span>
-
-          <span data-testid="session-readiness-delta" class="text-xs">
-            <DeltaBadge v-if="row.readinessDelta !== null" :value="row.readinessDelta" />
-            <span v-else class="text-slate-500">—</span>
-          </span>
-        </a>
+        <span v-for="column in HISTORY_COLUMNS" :key="column" class="flex-1 first:flex-[1.6]">
+          {{ column }}
+        </span>
       </div>
-    </div>
+
+      <div class="divide-y divide-readion-background-surface">
+        <div
+          v-for="row in rows"
+          :key="row.id"
+          data-testid="progress-session-row"
+          class="flex items-center gap-3 py-2 text-sm"
+        >
+          <a
+            :href="rowPath(row)"
+            class="flex flex-1 items-center gap-3 text-slate-200 hover:text-slate-100"
+          >
+            <span class="flex-[1.6] text-slate-400 text-xs">{{
+              friendlyDate(row.startedAt)
+            }}</span>
+
+            <span
+              class="inline-flex items-center rounded px-1.5 py-0.5 font-medium text-[11px] uppercase tracking-wide"
+              :class="{
+                'bg-readion-primary/20 text-readion-primary': row.kind === 'study',
+                'bg-purple-500/20 text-purple-400':
+                  row.kind === 'mock' || row.kind === 'diagnostic',
+                'bg-amber-500/20 text-amber-400': row.kind === 'drill' || row.kind === 'review',
+              }"
+            >
+              {{ row.kind }}
+            </span>
+
+            <span data-testid="session-duration" class="text-slate-400 text-xs">
+              {{ row.durationMinutes !== null ? `${row.durationMinutes}m` : '—' }}
+            </span>
+
+            <span data-testid="session-questions" class="text-slate-400 text-xs">
+              {{ row.questionsAnswered !== null ? row.questionsAnswered : '—' }}
+            </span>
+
+            <span
+              class="text-xs"
+              :class="row.accuracy !== null ? accuracyColorClass(row.accuracy) : 'text-slate-500'"
+            >
+              {{ row.accuracy !== null ? `${row.accuracy}%` : '—' }}
+            </span>
+
+            <span data-testid="session-readiness-delta" class="text-xs">
+              <DeltaBadge v-if="row.readinessDelta !== null" :value="row.readinessDelta" />
+              <span v-else class="text-slate-500">—</span>
+            </span>
+          </a>
+        </div>
+      </div>
+    </template>
   </div>
 </template>

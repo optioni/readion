@@ -10,7 +10,7 @@ defineProps<{
 </script>
 
 <template>
-  <div data-testid="accuracy-bars" class="rounded-md bg-black/25 p-3">
+  <div data-testid="accuracy-bars">
     <div class="mb-2 text-[11px] uppercase tracking-wider opacity-70">Accuracy per Session</div>
 
     <!-- Fixed-height plot area (56px bars + 20px label row) so the per-bar percentage maps to a definite pixel height; matches openspec/design/Progress.html. -->
