@@ -3,6 +3,7 @@ import {
   mockReviewAllCaughtUp,
   mockReviewLoop,
   mockReviewSelfGrade,
+  REVIEW_CERT_CODE,
   REVIEW_IDS,
   REVIEW_REFERENCE_NOW,
 } from './support/quick-review-seed'
@@ -188,7 +189,7 @@ test.describe('web-progress — 5-minute review loop', () => {
     const header = page.getByTestId('review-header')
     await expect(header).toBeVisible()
     await expect(header).toContainText(/Quick review/i)
-    await expect(page.getByTestId('review-header-cert-chip')).toContainText('SAA-C03')
+    await expect(page.getByTestId('review-header-cert-chip')).toContainText(REVIEW_CERT_CODE)
     await expect(page.getByTestId('review-header-progress')).toBeVisible()
     await expect(page.getByTestId('review-header-timer')).toContainText('5:00')
 

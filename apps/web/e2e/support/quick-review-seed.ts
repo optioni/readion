@@ -61,11 +61,15 @@ const PROFILE = {
   },
 }
 
+// Exported so the e2e assertion on review-header-cert-chip's rendered text stays in lockstep with
+// the fixture instead of duplicating the literal.
+export const REVIEW_CERT_CODE = 'SAA-C03'
+
 const CERTIFICATION: CertificationResponseDto = {
   id: REVIEW_IDS.certificationId,
   name: 'AWS Certified Solutions Architect — Associate',
   provider: 'AWS',
-  code: 'SAA-C03',
+  code: REVIEW_CERT_CODE,
   domains: [
     { name: 'Secure Architectures', weight: 30 },
     { name: 'Resilient Architectures', weight: 26 },
@@ -78,14 +82,16 @@ const CERTIFICATION: CertificationResponseDto = {
   state: 'live',
 }
 
+// Overdue math (fix-review-page-fidelity), both relative to REVIEW_REFERENCE_NOW
+// (2026-07-01T09:00:00Z): OVERDUE_DUE_AT is 57h earlier, floor(57/24) = 2 whole days overdue.
+// DUE_TODAY_AT is only 9h earlier, floor(9/24) = 0 days, i.e. NOT overdue (< 1 day).
+const OVERDUE_DUE_AT = '2026-06-29T00:00:00.000Z'
+const DUE_TODAY_AT = '2026-07-01T00:00:00.000Z'
+
 // Five due review items across two domains (Secure: 3, Resilient: 2). Drives the queue-entry
-// scene: review-due-count = "5" and two domain rows in review-domain-breakdown.
-//
-// Overdue math (fix-review-page-fidelity): against REVIEW_REFERENCE_NOW (2026-07-01T09:00:00Z),
-// items 1/2/5 are dueAt 2026-06-29T00:00:00Z — 57h earlier, floor(57/24) = 2 whole days overdue.
-// Items 3/4 are dueAt 2026-07-01T00:00:00Z — only 9h earlier, floor(9/24) = 0 days, i.e. NOT
-// overdue (< 1 day). So 3 of the 5 items are overdue by exactly 2 days, matching the spec
-// scenario's "some overdue by 2 days" and producing the deterministic note
+// scene: review-due-count = "5" and two domain rows in review-domain-breakdown. Items 1/2/5 use
+// OVERDUE_DUE_AT and items 3/4 use DUE_TODAY_AT, so 3 of the 5 items are overdue by exactly 2 days
+// — matching the spec scenario's "some overdue by 2 days" and producing the deterministic note
 // "3 items overdue by 2 days".
 const REVIEW_QUEUE_RESPONSE = {
   items: [
@@ -96,7 +102,7 @@ const REVIEW_QUEUE_RESPONSE = {
       domain: 'Secure Architectures',
       box: 1,
       state: 'due',
-      dueAt: '2026-06-29T00:00:00.000Z',
+      dueAt: OVERDUE_DUE_AT,
       lastReviewedAt: null,
     },
     {
@@ -106,7 +112,7 @@ const REVIEW_QUEUE_RESPONSE = {
       domain: 'Secure Architectures',
       box: 2,
       state: 'due',
-      dueAt: '2026-06-29T00:00:00.000Z',
+      dueAt: OVERDUE_DUE_AT,
       lastReviewedAt: '2026-06-22T09:00:00.000Z',
     },
     {
@@ -116,7 +122,7 @@ const REVIEW_QUEUE_RESPONSE = {
       domain: 'Secure Architectures',
       box: 1,
       state: 'due',
-      dueAt: '2026-07-01T00:00:00.000Z',
+      dueAt: DUE_TODAY_AT,
       lastReviewedAt: null,
     },
     {
@@ -126,7 +132,7 @@ const REVIEW_QUEUE_RESPONSE = {
       domain: 'Resilient Architectures',
       box: 1,
       state: 'due',
-      dueAt: '2026-07-01T00:00:00.000Z',
+      dueAt: DUE_TODAY_AT,
       lastReviewedAt: null,
     },
     {
@@ -136,7 +142,7 @@ const REVIEW_QUEUE_RESPONSE = {
       domain: 'Resilient Architectures',
       box: 2,
       state: 'due',
-      dueAt: '2026-06-29T00:00:00.000Z',
+      dueAt: OVERDUE_DUE_AT,
       lastReviewedAt: '2026-06-21T09:00:00.000Z',
     },
   ],
@@ -144,7 +150,7 @@ const REVIEW_QUEUE_RESPONSE = {
 }
 
 // Enrollment detail — needed by the GREEN ReviewHeader to resolve enrollmentId → certificationId
-// so it can fetch /api/v1/certifications/:certificationId for the cert-code chip ("SAA-C03").
+// so it can fetch /api/v1/certifications/:certificationId for the cert-code chip.
 const ENROLLMENT_DETAIL = {
   id: REVIEW_IDS.enrollmentId,
   userId: REVIEW_IDS.userId,
@@ -271,40 +277,45 @@ function mock(target: Target, pattern: RegExp, handler: Handler): void {
 
 const { enrollmentId, certificationId, reviewSessionId, questionId, drillSessionId } = REVIEW_IDS
 
-/**
- * Installs the full route-mock surface for the quick-review happy path. Five items are due across
- * two domains. "Start review" returns a started session with one quiz item. Auth-bootstrap endpoints
- * are mocked so the app is authenticated without a real sign-in.
- */
-export function mockReviewLoop(page: Page): void {
-  const context = page.context()
-
-  // Context-level safety net (page routes take precedence over context routes in Playwright).
-  mock(context, /\/api\/v1\//, async (route) => {
+// Shared by the three fixtures below: authenticates the client and installs a context-level
+// catch-all so any unmocked /api/v1 read degrades to empty data instead of hitting the absent
+// backend (page routes take precedence over context routes in Playwright). Mirrors
+// installBaseMocks in session-view-seed.ts.
+function installBaseMocks(page: Page): void {
+  mock(page.context(), /\/api\/v1\//, async (route) => {
     if (route.request().method() === 'GET') {
       await fulfilJson(route, 200, { data: [], meta: { total: 0, page: 1, limit: 20 } })
       return
     }
     await fulfilJson(route, 200, { data: {} })
   })
-
-  // --- Auth bootstrap ---
   mock(page, /\/api\/v1\/auth\/refresh$/, async (route) => {
     await fulfilJson(route, 200, { data: { accessToken: 'mock-access-token' } })
   })
   mock(page, /\/api\/v1\/users\/me(\?|$)/, async (route) => {
     await fulfilJson(route, 200, { data: PROFILE })
   })
+}
 
-  // --- Certification detail (cert chip + domain names) ---
+// Shared by the three fixtures below: resolves the certification detail (cert chip + domain names)
+// and the enrollment detail the GREEN ReviewHeader needs to go from enrollmentId → certificationId.
+function installCertificationMocks(page: Page): void {
   mock(page, new RegExp(`/api/v1/certifications/${certificationId}(\\?|$)`), async (route) => {
     await fulfilJson(route, 200, { data: CERTIFICATION, relationships: {} })
   })
-
-  // --- Enrollment detail (cert-code chip resolution: enrollmentId → certificationId) ---
   mock(page, new RegExp(`/api/v1/user-certifications/${enrollmentId}(\\?|$)`), async (route) => {
     await fulfilJson(route, 200, { data: ENROLLMENT_DETAIL, relationships: {} })
   })
+}
+
+/**
+ * Installs the full route-mock surface for the quick-review happy path. Five items are due across
+ * two domains. "Start review" returns a started session with one quiz item. Auth-bootstrap endpoints
+ * are mocked so the app is authenticated without a real sign-in.
+ */
+export function mockReviewLoop(page: Page): void {
+  installBaseMocks(page)
+  installCertificationMocks(page)
 
   // --- Review queue (drives queue-entry scene: due count + per-domain breakdown) ---
   mock(
@@ -411,30 +422,8 @@ export function mockReviewLoop(page: Page): void {
  * scene renders correctly. The grade endpoint fulfils 200 so each card advances without a real API.
  */
 export function mockReviewSelfGrade(page: Page): void {
-  const context = page.context()
-
-  mock(context, /\/api\/v1\//, async (route) => {
-    if (route.request().method() === 'GET') {
-      await fulfilJson(route, 200, { data: [], meta: { total: 0, page: 1, limit: 20 } })
-      return
-    }
-    await fulfilJson(route, 200, { data: {} })
-  })
-
-  mock(page, /\/api\/v1\/auth\/refresh$/, async (route) => {
-    await fulfilJson(route, 200, { data: { accessToken: 'mock-access-token' } })
-  })
-  mock(page, /\/api\/v1\/users\/me(\?|$)/, async (route) => {
-    await fulfilJson(route, 200, { data: PROFILE })
-  })
-  mock(page, new RegExp(`/api/v1/certifications/${certificationId}(\\?|$)`), async (route) => {
-    await fulfilJson(route, 200, { data: CERTIFICATION, relationships: {} })
-  })
-
-  // --- Enrollment detail (cert-code chip resolution: enrollmentId → certificationId) ---
-  mock(page, new RegExp(`/api/v1/user-certifications/${enrollmentId}(\\?|$)`), async (route) => {
-    await fulfilJson(route, 200, { data: ENROLLMENT_DETAIL, relationships: {} })
-  })
+  installBaseMocks(page)
+  installCertificationMocks(page)
 
   mock(
     page,
@@ -477,30 +466,8 @@ export function mockReviewSelfGrade(page: Page): void {
  * due items, so the review page renders the `review-all-caught-up` empty state without a start CTA.
  */
 export function mockReviewAllCaughtUp(page: Page): void {
-  const context = page.context()
-
-  mock(context, /\/api\/v1\//, async (route) => {
-    if (route.request().method() === 'GET') {
-      await fulfilJson(route, 200, { data: [], meta: { total: 0, page: 1, limit: 20 } })
-      return
-    }
-    await fulfilJson(route, 200, { data: {} })
-  })
-
-  mock(page, /\/api\/v1\/auth\/refresh$/, async (route) => {
-    await fulfilJson(route, 200, { data: { accessToken: 'mock-access-token' } })
-  })
-  mock(page, /\/api\/v1\/users\/me(\?|$)/, async (route) => {
-    await fulfilJson(route, 200, { data: PROFILE })
-  })
-  mock(page, new RegExp(`/api/v1/certifications/${certificationId}(\\?|$)`), async (route) => {
-    await fulfilJson(route, 200, { data: CERTIFICATION, relationships: {} })
-  })
-
-  // --- Enrollment detail (cert-code chip resolution: enrollmentId → certificationId) ---
-  mock(page, new RegExp(`/api/v1/user-certifications/${enrollmentId}(\\?|$)`), async (route) => {
-    await fulfilJson(route, 200, { data: ENROLLMENT_DETAIL, relationships: {} })
-  })
+  installBaseMocks(page)
+  installCertificationMocks(page)
 
   // Zero due items — triggers the all-caught-up empty state.
   mock(
