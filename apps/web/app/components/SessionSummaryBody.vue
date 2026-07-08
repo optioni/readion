@@ -50,6 +50,8 @@ const domainRows = computed<DomainRow[]>(() =>
   }),
 )
 
+const hasAnsweredQuestions = computed(() => props.summary.questionsAnswered > 0)
+
 const readiness = computed(() => {
   const { before, after, delta } = props.summary.readiness
   if (before === null || after === null) {
@@ -67,71 +69,81 @@ const readiness = computed(() => {
 <template>
   <div class="flex flex-col gap-3.5">
     <div
-      class="flex overflow-hidden rounded-xl border border-readion-border-strong bg-readion-background-surface"
+      v-if="!hasAnsweredQuestions"
+      data-testid="summary-empty-state"
+      class="rounded-xl border border-readion-border-strong bg-readion-background-surface px-6 py-8 text-center text-readion-text-secondary text-sm"
     >
-      <div data-testid="summary-accuracy" class="flex-1 border-readion-border-strong border-r px-5 py-4">
-        <div class="mb-1.5 text-[11px] text-readion-text-muted uppercase tracking-wider">Accuracy</div>
-        <div class="font-bold text-2xl text-readion-text-primary leading-none">{{ accuracyPercent }}%</div>
-        <div class="mt-1 text-[11px] text-readion-text-subtle">{{ correctCount }}/{{ summary.questionsAnswered }} correct</div>
-      </div>
+      No questions answered this session.
+    </div>
+
+    <template v-if="hasAnsweredQuestions">
       <div
-        data-testid="summary-readiness"
-        class="flex-1 px-5 py-4"
-        :class="timeLabel ? 'border-readion-border-strong border-r' : ''"
+        class="flex overflow-hidden rounded-xl border border-readion-border-strong bg-readion-background-surface"
       >
-        <div class="mb-1.5 text-[11px] text-readion-text-muted uppercase tracking-wider">Readiness</div>
-        <template v-if="readiness.calibrated">
-          <div class="font-bold text-2xl text-readion-status-good leading-none">{{ readiness.delta }}</div>
-          <div class="mt-1 text-[11px] text-readion-text-subtle">
-            {{ readiness.before }}% → {{ readiness.after }}%
-          </div>
-        </template>
-        <template v-else>
-          <div class="text-readion-text-secondary text-sm leading-snug">Readiness not yet calibrated</div>
-        </template>
-      </div>
-      <div v-if="timeLabel" class="flex-1 px-5 py-4">
-        <div class="mb-1.5 text-[11px] text-readion-text-muted uppercase tracking-wider">Time</div>
-        <div class="font-bold text-2xl text-readion-text-primary leading-none">{{ timeLabel }}</div>
-      </div>
-    </div>
-
-    <div
-      data-testid="summary-domains"
-      class="rounded-xl border border-readion-border-strong bg-readion-background-surface px-6 py-5"
-    >
-      <div class="mb-3.5 text-[11px] text-readion-text-muted uppercase tracking-widest">Domains covered</div>
-      <div class="flex flex-col">
+        <div data-testid="summary-accuracy" class="flex-1 border-readion-border-strong border-r px-5 py-4">
+          <div class="mb-1.5 text-[11px] text-readion-text-muted uppercase tracking-wider">Accuracy</div>
+          <div class="font-bold text-2xl text-readion-text-primary leading-none">{{ accuracyPercent }}%</div>
+          <div class="mt-1 text-[11px] text-readion-text-subtle">{{ correctCount }}/{{ summary.questionsAnswered }} correct</div>
+        </div>
         <div
-          v-for="row in domainRows"
-          :key="row.domain"
-          class="flex items-center gap-3 border-readion-border-default border-b py-2.5 last:border-b-0"
+          data-testid="summary-readiness"
+          class="flex-1 px-5 py-4"
+          :class="timeLabel ? 'border-readion-border-strong border-r' : ''"
         >
-          <div class="min-w-0 flex-1 truncate text-readion-text-secondary text-[13px]">{{ row.domain }}</div>
-          <div class="w-9 flex-shrink-0 text-right font-semibold text-[13px]" :class="row.colorClass">{{ row.percent }}%</div>
-          <div class="w-12 flex-shrink-0">
-            <DeltaBadge v-if="row.delta !== null" :value="row.delta" />
+          <div class="mb-1.5 text-[11px] text-readion-text-muted uppercase tracking-wider">Readiness</div>
+          <template v-if="readiness.calibrated">
+            <div class="font-bold text-2xl text-readion-status-good leading-none">{{ readiness.delta }}</div>
+            <div class="mt-1 text-[11px] text-readion-text-subtle">
+              {{ readiness.before }}% → {{ readiness.after }}%
+            </div>
+          </template>
+          <template v-else>
+            <div class="text-readion-text-secondary text-sm leading-snug">Readiness not yet calibrated</div>
+          </template>
+        </div>
+        <div v-if="timeLabel" class="flex-1 px-5 py-4">
+          <div class="mb-1.5 text-[11px] text-readion-text-muted uppercase tracking-wider">Time</div>
+          <div class="font-bold text-2xl text-readion-text-primary leading-none">{{ timeLabel }}</div>
+        </div>
+      </div>
+
+      <div
+        data-testid="summary-domains"
+        class="rounded-xl border border-readion-border-strong bg-readion-background-surface px-6 py-5"
+      >
+        <div class="mb-3.5 text-[11px] text-readion-text-muted uppercase tracking-widest">Domains covered</div>
+        <div class="flex flex-col">
+          <div
+            v-for="row in domainRows"
+            :key="row.domain"
+            class="flex items-center gap-3 border-readion-border-default border-b py-2.5 last:border-b-0"
+          >
+            <div class="min-w-0 flex-1 truncate text-readion-text-secondary text-[13px]">{{ row.domain }}</div>
+            <div class="w-9 flex-shrink-0 text-right font-semibold text-[13px]" :class="row.colorClass">{{ row.percent }}%</div>
+            <div class="w-12 flex-shrink-0">
+              <DeltaBadge v-if="row.delta !== null" :value="row.delta" />
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div
-      class="rounded-xl border border-readion-border-strong bg-readion-background-surface px-6 py-5"
-    >
-      <div class="mb-3.5 text-[11px] text-readion-text-muted uppercase tracking-widest">Weak area movement</div>
-      <div class="flex flex-col gap-2.5">
-        <div
-          v-for="area in summary.weakAreaDeltas"
-          :key="area.domain"
-          data-testid="weak-area-delta"
-          class="flex items-center gap-2.5"
-        >
-          <div class="flex-1 text-[13px] text-readion-text-secondary">{{ area.domain }}</div>
-          <DeltaBadge :value="area.delta" />
+      <div
+        class="rounded-xl border border-readion-border-strong bg-readion-background-surface px-6 py-5"
+      >
+        <div class="mb-3.5 text-[11px] text-readion-text-muted uppercase tracking-widest">Weak area movement</div>
+        <div class="flex flex-col gap-2.5">
+          <div
+            v-for="area in summary.weakAreaDeltas"
+            :key="area.domain"
+            data-testid="weak-area-delta"
+            class="flex items-center gap-2.5"
+          >
+            <div class="flex-1 text-[13px] text-readion-text-secondary">{{ area.domain }}</div>
+            <DeltaBadge :value="area.delta" />
+          </div>
         </div>
       </div>
-    </div>
+    </template>
 
     <div class="flex gap-3.5">
       <div
