@@ -88,6 +88,7 @@ describe('admin envelope narrowing helpers', () => {
       enabled: true,
       lastFetchedAt: null,
       recheckIntervalMinutes: 60,
+      chunkCount: 0,
       createdAt: '2026-01-01',
     }
     const response = { data: { data: [source] } }

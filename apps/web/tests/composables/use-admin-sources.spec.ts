@@ -19,6 +19,7 @@ const SOURCES: ContentSourceResponse[] = [
     enabled: true,
     lastFetchedAt: null,
     recheckIntervalMinutes: 10080,
+    chunkCount: 0,
     createdAt: '2026-01-01T00:00:00.000Z',
   },
 ]
