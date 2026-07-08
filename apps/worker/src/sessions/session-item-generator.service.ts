@@ -7,22 +7,37 @@ import { z } from 'zod'
 import { LlmService } from '../llm/llm.service'
 
 const readingBlockSchema = z.object({
-  markdown: z.string(),
-  tldr: z.array(z.string()),
-  supportingSpans: z.array(z.string()).optional().default([]),
+  markdown: z
+    .string()
+    .describe('Markdown prose with headings, drawn only from the sources, at most 400 words'),
+  tldr: z.array(z.string()).describe('3-5 bullet-point takeaways'),
+  supportingSpans: z
+    .array(z.string())
+    .optional()
+    .default([])
+    .describe('verbatim quotes from the sources that back the prose'),
 })
 
 const quizItemSchema = z.object({
-  question: z.string(),
-  options: z.array(z.string()),
-  correctAnswer: z.string(),
-  supportingSpans: z.array(z.string()),
-  sourceChunkIds: z.array(z.string()),
+  question: z.string().describe('the question stem, answerable from the provided content alone'),
+  options: z.array(z.string()).describe('3-5 answer choices, exactly one correct'),
+  correctAnswer: z.string().describe('must equal one of options verbatim'),
+  supportingSpans: z
+    .array(z.string())
+    .describe('verbatim quotes from the provided content that justify the correct answer'),
+  sourceChunkIds: z.array(z.string()).describe('the id attribute of each <source> element used'),
 })
 
 type ChunkRow = { id: string; text: string; primary_domain: string }
 
 const VERBATIM_CAP = 200
+
+function sourcesXml(chunks: ChunkRow[], cap?: number): string {
+  const sources = chunks
+    .map((c) => `<source id="${c.id}">${cap ? c.text.slice(0, cap) : c.text}</source>`)
+    .join('\n')
+  return `<sources>\n${sources}\n</sources>`
+}
 
 @Injectable()
 export class SessionItemGeneratorService {
@@ -92,10 +107,8 @@ export class SessionItemGeneratorService {
       throw new Error('No content chunks found')
     }
 
-    const chunkTexts = chunks
-      .map((c) => `[Source: ${c.id}]\n${c.text.slice(0, VERBATIM_CAP)}`)
-      .join('\n\n')
-    const prompt = `Create a concise study reading block about "${itemPlan.domain}" at ${difficulty} level.\nUse only information from the provided sources. Do not exceed 400 words.\n\nSource content:\n${chunkTexts}`
+    const chunkTexts = sourcesXml(chunks, VERBATIM_CAP)
+    const prompt = `Create a concise study reading block about "${itemPlan.domain}" at ${difficulty} level.\nUse only the content in <sources>. Do not exceed 400 words.\n\n${chunkTexts}`
 
     try {
       const parsed = await this.llm.generateStructured(prompt, readingBlockSchema)
@@ -148,8 +161,8 @@ export class SessionItemGeneratorService {
 
     const format = itemPlan.format ?? 'multiple_choice'
     const formatLabel = format.replace(/_/g, '-')
-    const chunkTexts = chunks.map((c) => `[Source: ${c.id}]\n${c.text}`).join('\n\n')
-    const prompt = `Generate a ${formatLabel} quiz question at ${difficulty} level grounded in the provided content.\n\nContent:\n${chunkTexts}`
+    const chunkTexts = sourcesXml(chunks)
+    const prompt = `Generate a ${formatLabel} quiz question at ${difficulty} level using only the content in <sources>. Do not use outside knowledge.\n\n${chunkTexts}`
 
     try {
       const parsed = await this.llm.generateStructured(prompt, quizItemSchema)

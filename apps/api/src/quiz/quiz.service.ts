@@ -35,12 +35,19 @@ type QuizCacheReadResult = {
   format: QuestionFormat | undefined
 }
 
+function sourcesXml(chunks: GroundedChunk[]): string {
+  const sources = chunks.map((c) => `<source id="${c.id}">${c.text}</source>`).join('\n')
+  return `<sources>\n${sources}\n</sources>`
+}
+
 const llmExtractiveItemSchema = z.object({
-  question: z.string(),
-  options: z.array(z.string()),
-  correctAnswer: z.string(),
-  supportingSpans: z.array(z.string()),
-  sourceChunkIds: z.array(z.string()),
+  question: z.string().describe('the question stem, answerable from the provided sources alone'),
+  options: z.array(z.string()).describe('3-5 answer choices, exactly one correct'),
+  correctAnswer: z.string().describe('must equal one of options verbatim'),
+  supportingSpans: z
+    .array(z.string())
+    .describe('verbatim quotes from the provided content that justify the correct answer'),
+  sourceChunkIds: z.array(z.string()).describe('the id attribute of each <source> element used'),
 })
 
 export type GenerateResult =
@@ -477,7 +484,7 @@ export class QuizService {
 
   private buildQuizGenerationFn(format: string): GenerationFn {
     return async (chunks: GroundedChunk[]): Promise<ExtractiveItem> => {
-      const chunkTexts = chunks.map((c) => `[Source: ${c.id}]\n${c.text}`).join('\n\n')
+      const chunkTexts = sourcesXml(chunks)
       const formatLabel = format.replace(/_/g, '-')
 
       try {
@@ -489,7 +496,7 @@ export class QuizService {
               content: [
                 {
                   type: 'text',
-                  text: `Generate a ${formatLabel} quiz question grounded in the provided content.\n\nContent:\n${chunkTexts}`,
+                  text: `Generate a ${formatLabel} quiz question using only the content in <sources>. Do not use outside knowledge.\n\n${chunkTexts}`,
                 },
               ],
             },
@@ -509,7 +516,7 @@ export class QuizService {
 
   private buildExplanationGenerationFn(originalItem: ExtractiveItem): GenerationFn {
     return async (chunks: GroundedChunk[]): Promise<ExtractiveItem> => {
-      const chunkTexts = chunks.map((c) => `[Source: ${c.id}]\n${c.text}`).join('\n\n')
+      const chunkTexts = sourcesXml(chunks)
 
       try {
         const { object } = await this.llm.generateObject({
@@ -520,7 +527,7 @@ export class QuizService {
               content: [
                 {
                   type: 'text',
-                  text: `Generate an explanation for why "${originalItem.correctAnswer}" is the correct answer to: "${originalItem.question}". The explanation must be grounded in the provided content.\n\nContent:\n${chunkTexts}`,
+                  text: `Generate an explanation for why "${originalItem.correctAnswer}" is the correct answer to: "${originalItem.question}". Use only the content in <sources>; do not use outside knowledge.\n\n${chunkTexts}`,
                 },
               ],
             },

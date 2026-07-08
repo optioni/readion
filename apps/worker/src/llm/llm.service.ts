@@ -11,8 +11,8 @@ import type { CertFieldProposals } from '../content-pipeline/cert-extraction/cer
 const domainTagSchema = z.object({
   tags: z.array(
     z.object({
-      domain: z.string(),
-      confidence: z.number().min(0).max(1),
+      domain: z.string().describe('one of the provided certification domains, verbatim'),
+      confidence: z.number().min(0).max(1).describe('0 = unrelated, 1 = squarely on-topic'),
     }),
   ),
 })
@@ -67,7 +67,6 @@ export class LlmService {
       output: Output.object({ schema: domainTagSchema }),
       prompt: [
         `Classify the following text excerpt against these certification domains: ${domains.join(', ')}.`,
-        `For each relevant domain, provide a confidence score between 0 and 1.`,
         `Only include domains with confidence above ${confidenceThreshold}.`,
         `Text: ${text}`,
       ].join('\n'),

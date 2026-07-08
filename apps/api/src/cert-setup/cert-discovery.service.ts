@@ -25,10 +25,23 @@ const SELECT_SYSTEM_PROMPT =
   'You select the most authoritative, relevant sources for a certification exam from a catalog of search results. Choose only URLs that appear in the catalog — never invent one. Prefer official vendor pages, and classify any reusable content sources by type.'
 
 const modelOutputSchema = z.object({
-  candidates: z.array(z.object({ url: z.string() })).optional(),
+  candidates: z
+    .array(
+      z.object({
+        url: z.string().describe('a url value copied verbatim from a <result> in <catalog>'),
+      }),
+    )
+    .optional()
+    .describe('the most relevant pages describing the exam, most authoritative first'),
   suggestedContentSources: z
-    .array(z.object({ url: z.string(), type: z.enum(contentSourceTypes) }))
-    .optional(),
+    .array(
+      z.object({
+        url: z.string().describe('a url value copied verbatim from a <result> in <catalog>'),
+        type: z.enum(contentSourceTypes),
+      }),
+    )
+    .optional()
+    .describe('reusable ingestion sources, classified by type'),
 })
 
 type CandidateSelection = {
@@ -85,7 +98,7 @@ export class CertDiscoveryService {
       messages: [
         {
           role: 'user',
-          content: `Find authoritative sources describing the certification exam "${labelFor(request)}". Search the web thoroughly.`,
+          content: `Find authoritative sources describing the certification exam "${labelFor(request)}".`,
         },
       ],
       tools,
@@ -107,13 +120,13 @@ export class CertDiscoveryService {
       return { candidateUrls: [], suggested: [] }
     }
 
-    const catalog = searchResults
-      .map((result, index) => {
-        const title = result.title ? ` — ${result.title}` : ''
-        const snippet = result.snippet ? `\n   ${result.snippet}` : ''
-        return `${index + 1}. ${result.url}${title}${snippet}`
+    const results = searchResults
+      .map((result) => {
+        const meta = [result.title, result.snippet].filter(Boolean).join(' — ')
+        return `<result url="${result.url}">${meta}</result>`
       })
       .join('\n')
+    const catalog = `<catalog>\n${results}\n</catalog>`
 
     try {
       const { object } = await this.llm.generateObject({
@@ -122,7 +135,7 @@ export class CertDiscoveryService {
         messages: [
           {
             role: 'user',
-            content: `Certification exam: "${labelFor(request)}".\n\nSearch results catalog:\n${catalog}\n\nSelect the most relevant candidate pages and any reusable content sources, using only URLs from the catalog.`,
+            content: `Certification exam: "${labelFor(request)}".\n\n${catalog}\n\nSelect the most relevant candidate pages and any reusable content sources, using only url values that appear in <catalog>.`,
           },
         ],
         schema: modelOutputSchema,

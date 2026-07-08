@@ -32,22 +32,23 @@ function buildVerifierPrompt(item: ExtractiveItem, chunks: GroundedChunk[]): str
     'Verify:',
     '1. Is the correct answer entailed by the cited supporting spans?',
     '2. Is each distractor actually incorrect per the source material?',
-    '',
-    'Respond with JSON only:',
-    '{"pass": boolean, "score": number (0-1), "distractorFindings": [{"option": string, "isCorrect": boolean, "reason": string}]}',
   ].join('\n')
 }
 
 const verifierVerdictSchema = z.object({
-  pass: z.boolean(),
-  score: z.number(),
-  distractorFindings: z.array(
-    z.object({
-      option: z.string(),
-      isCorrect: z.boolean(),
-      reason: z.string().optional(),
-    }),
-  ),
+  pass: z.boolean().describe('true only if the correct answer is entailed by the cited spans'),
+  score: z.number().min(0).max(1).describe('confidence the answer is entailed, 1 = fully entailed'),
+  distractorFindings: z
+    .array(
+      z.object({
+        option: z.string().describe('the distractor option text, verbatim'),
+        isCorrect: z
+          .boolean()
+          .describe('true if this distractor is actually defensible per source'),
+        reason: z.string().optional().describe('why the distractor is correct or incorrect'),
+      }),
+    )
+    .describe('one finding per distractor (non-correct) option'),
 })
 
 @Injectable()

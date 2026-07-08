@@ -39,12 +39,25 @@ export interface ReadingBlockComposer {
 }
 
 const readingBlockSchema = z.object({
-  markdown: z.string(),
-  tldr: z.array(z.string()),
-  supportingSpans: z.array(z.string()).optional().default([]),
+  markdown: z
+    .string()
+    .describe('Markdown prose with headings, drawn only from the sources, at most 400 words'),
+  tldr: z.array(z.string()).describe('3-5 bullet-point takeaways'),
+  supportingSpans: z
+    .array(z.string())
+    .optional()
+    .default([])
+    .describe('verbatim quotes from the sources that back the prose'),
 })
 
 const VERBATIM_CAP = 200
+
+function sourcesXml(chunks: GroundedChunk[], cap: number): string {
+  const sources = chunks
+    .map((c) => `<source id="${c.id}">${c.text.slice(0, cap)}</source>`)
+    .join('\n')
+  return `<sources>\n${sources}\n</sources>`
+}
 
 @Injectable()
 export class ReadingBlockComposerService implements ReadingBlockComposer {
@@ -87,9 +100,7 @@ export class ReadingBlockComposerService implements ReadingBlockComposer {
     const chunks = await this.loadChunksByIds(input.sourceChunkIds)
     if (chunks.length === 0) return input.originalContent
 
-    const chunkTexts = chunks
-      .map((c) => `[Source: ${c.id}]\n${c.text.slice(0, this.verbatimCap)}`)
-      .join('\n\n')
+    const chunkTexts = sourcesXml(chunks, this.verbatimCap)
 
     try {
       const { object } = await this.llm.generateObject({
@@ -100,7 +111,7 @@ export class ReadingBlockComposerService implements ReadingBlockComposer {
             content: [
               {
                 type: 'text',
-                text: `Expand on this material with a detailed explanation.\n\nOriginal:\n${input.originalContent}\n\nSource content:\n${chunkTexts}`,
+                text: `Expand on this material with a detailed explanation, using only the content in <sources>.\n\nOriginal:\n${input.originalContent}\n\n${chunkTexts}`,
               },
             ],
           },
@@ -124,9 +135,7 @@ export class ReadingBlockComposerService implements ReadingBlockComposer {
     domain: string,
     difficulty: string,
   ): Promise<{ markdown: string; tldr: string[]; supportingSpans: string[] }> {
-    const chunkTexts = chunks
-      .map((c) => `[Source: ${c.id}]\n${c.text.slice(0, this.verbatimCap)}`)
-      .join('\n\n')
+    const chunkTexts = sourcesXml(chunks, this.verbatimCap)
 
     try {
       const { object } = await this.llm.generateObject({
@@ -138,9 +147,8 @@ export class ReadingBlockComposerService implements ReadingBlockComposer {
               {
                 type: 'text',
                 text: `Create a concise study reading block about "${domain}" at ${difficulty} level.
-Use only information from the provided sources. Do not exceed 400 words.
+Use only the content in <sources>. Do not exceed 400 words.
 
-Source content:
 ${chunkTexts}`,
               },
             ],
