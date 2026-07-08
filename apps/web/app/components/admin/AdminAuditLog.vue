@@ -20,8 +20,20 @@ function formatTimestamp(createdAt: string): string {
   return dateFormatter.format(new Date(createdAt))
 }
 
-function formatSnapshot(value: Record<string, unknown> | null): string {
-  return value === null ? '—' : JSON.stringify(value)
+function formatSnapshotValue(value: Record<string, unknown> | null): string {
+  if (value === null) {
+    return '—'
+  }
+
+  const entries = Object.entries(value)
+  if (entries.length === 0) {
+    return '—'
+  }
+  if (entries.length === 1) {
+    return String(entries[0][1])
+  }
+
+  return entries.map(([key, entryValue]) => `${key}: ${String(entryValue)}`).join(', ')
 }
 </script>
 
@@ -59,16 +71,16 @@ function formatSnapshot(value: Record<string, unknown> | null): string {
             {{ entry.action }}
           </td>
           <td data-testid="audit-target" class="px-3 py-3 text-slate-300">
-            {{ entry.targetType }} · {{ entry.targetId }}
+            {{ entry.targetLabel }}
           </td>
           <td data-testid="audit-before" class="px-3 py-3 font-mono text-slate-400 text-xs">
-            {{ formatSnapshot(entry.before) }}
+            {{ formatSnapshotValue(entry.before) }}
           </td>
           <td data-testid="audit-after" class="px-3 py-3 font-mono text-slate-400 text-xs">
-            {{ formatSnapshot(entry.after) }}
+            {{ formatSnapshotValue(entry.after) }}
           </td>
           <td data-testid="audit-actor" class="px-3 py-3 text-slate-300">
-            {{ entry.userId ?? '—' }}
+            {{ entry.actorEmail ?? 'System' }}
           </td>
           <td data-testid="audit-timestamp" class="px-3 py-3 text-slate-300">
             {{ formatTimestamp(entry.createdAt) }}
