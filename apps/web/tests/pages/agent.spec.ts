@@ -108,6 +108,22 @@ describe('Agent chat page scaffold', () => {
   })
 })
 
+describe('Agent chat header identity', () => {
+  it('renders a circular star avatar beside the "Study assistant" title, preserving the subtitle', async () => {
+    const wrapper = await mountPage()
+
+    const heading = wrapper.find('h1')
+    expect(heading.exists()).toBe(true)
+    expect(heading.text()).toBe('Study assistant')
+
+    const avatar = wrapper.find('[data-testid="agent-header-avatar"]')
+    expect(avatar.exists()).toBe(true)
+    expect(avatar.classes()).toContain('rounded-full')
+
+    expect(wrapper.text()).toContain('General knowledge · no session context')
+  })
+})
+
 describe('Agent chat page message hydration', () => {
   it('hydrates prior messages after create and renders user/assistant bubbles in order; skips tool and system rows', async () => {
     const detailWithMessages = standaloneConversationDetail([
@@ -232,6 +248,21 @@ describe('Agent chat empty state and suggestions', () => {
     expect(chips[1]!.text()).toBe('Explain eventual consistency in plain language')
     expect(chips[2]!.text()).toBe('How does TLS handshake work?')
     expect(chips[3]!.text()).toBe('When would I use a queue vs a topic?')
+  })
+
+  it('renders the circular star avatar above the "Study assistant" heading in the empty state', async () => {
+    const wrapper = await mountPage()
+
+    const emptyState = wrapper.find('[data-testid="agent-empty-state"]')
+    const avatar = emptyState.find('[data-testid="agent-empty-avatar"]')
+    expect(avatar.exists()).toBe(true)
+    expect(avatar.classes()).toContain('rounded-full')
+
+    const html = emptyState.html()
+    const avatarIndex = html.indexOf('data-testid="agent-empty-avatar"')
+    const headingIndex = html.indexOf('Study assistant')
+    expect(avatarIndex).toBeGreaterThanOrEqual(0)
+    expect(headingIndex).toBeGreaterThan(avatarIndex)
   })
 
   it('clicking a suggestion chip submits its text as the first turn and removes the empty state', async () => {
