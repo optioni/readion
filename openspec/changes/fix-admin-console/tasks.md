@@ -43,9 +43,9 @@ Reproduce the highest-impact defects first: Audit Log human-readability, the Adm
 
 ## 6. Sources table fidelity (`web-admin`)
 
-- [ ] 6.1 RED: Component-test `AdminSources.vue` — certification selection renders as pills (not a `<select>`), source registration sits behind a dashed "Add source" affordance (not an always-open form), the table has `Enabled` toggle / `Last ingested` / `Chunks` columns, and with no certification selected an empty state ("Select a certification to view its sources") renders instead of floating headers over a blank body
-- [ ] 6.2 GREEN: Implement cert pills, the "Add source" affordance, the `Enabled`/`Last ingested`/`Chunks` columns (chunk count + last-ingested from the contract when present, placeholder otherwise), and the empty state
-- [ ] 6.3 REFACTOR: Reuse the shared status/job helpers for the enabled/last-ingested derivation
+- [x] 6.1 RED: Component-test `AdminSources.vue` — certification selection renders as pills (not a `<select>`), source registration sits behind a dashed "Add source" affordance (not an always-open form), the table has `Enabled` toggle / `Last ingested` / `Chunks` columns, and with no certification selected an empty state ("Select a certification to view its sources") renders instead of floating headers over a blank body
+- [x] 6.2 GREEN: Implement cert pills, the "Add source" affordance, the `Enabled`/`Last ingested`/`Chunks` columns (chunk count + last-ingested from the contract — chunkCount added to the content-source contract this change), and the empty state
+- [x] 6.3 REFACTOR: Reuse the shared status/job helpers for the enabled/last-ingested derivation
 
 ## 7. Review queue fidelity (`web-admin`)
 
