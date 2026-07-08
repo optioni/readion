@@ -23,9 +23,9 @@ Reproduce the highest-impact defects first: Audit Log human-readability, the Adm
 
 ## 3. Audit Log + Users pagination (`web-admin`)
 
-- [ ] 3.1 RED: Component-test both tables — when the API `meta` reports multiple pages a pagination control renders and advancing the page requests the next page
-- [ ] 3.2 GREEN: Wire pagination (page/limit) through `useAdminAuditLogs` and `useAdminUsers` and render the control
-- [ ] 3.3 REFACTOR: Share a single pagination control/composable between the two tables
+- [x] 3.1 RED: Component-test both tables — when the API `meta` reports multiple pages a pagination control renders and advancing the page requests the next page
+- [x] 3.2 GREEN: Wire pagination (page/limit) through `useAdminAuditLogs` and `useAdminUsers` and render the control
+- [x] 3.3 REFACTOR: Share a single pagination control/composable between the two tables
 
 ## 4. Admin shell chrome — AdminSidebar (`web-admin`)
 
