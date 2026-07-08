@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { QuarantinedItemDetail, VerifierVerdict } from '@readion/shared'
+import type { QuarantinedItemDetail } from '@readion/shared'
 import { computed } from 'vue'
 import { useAdminQuarantineDetail } from '~/composables/useAdminQuarantineDetail'
-import { formatVerdict } from '~/utils/formatVerdict'
+import { formatVerdict, verdictInputFromProvenance } from '~/utils/formatVerdict'
 
 const props = defineProps<{
   id: string | null
@@ -26,12 +26,7 @@ const verdict = computed(() => {
   const current = detail.value
   if (!current) return null
 
-  const nestedVerdict = current.provenance.verdict as VerifierVerdict | undefined
-  return formatVerdict({
-    pass: nestedVerdict?.pass ?? false,
-    score: nestedVerdict?.score ?? current.provenance.score,
-    reason: current.reason,
-  })
+  return formatVerdict(verdictInputFromProvenance(current))
 })
 
 const toneClasses = computed(() =>

@@ -33,3 +33,24 @@ export function formatVerdict(input: FormatVerdictInput): FormattedVerdict {
     reason: input.reason,
   }
 }
+
+export interface VerdictProvenanceSource {
+  reason: string
+  provenance: {
+    score: number
+    verdict?: { pass: boolean; score: number }
+  }
+}
+
+/**
+ * Quarantined items expose their verifier verdict nested under `provenance.verdict`, which may be
+ * absent on older/partial records — fall back to a fail at `provenance.score` in that case. Shared
+ * by the review queue list rows and the detail pane so both derive the same badge from the same data.
+ */
+export function verdictInputFromProvenance(source: VerdictProvenanceSource): FormatVerdictInput {
+  return {
+    pass: source.provenance.verdict?.pass ?? false,
+    score: source.provenance.verdict?.score ?? source.provenance.score,
+    reason: source.reason,
+  }
+}

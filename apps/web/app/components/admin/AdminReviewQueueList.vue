@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { QuarantinedItemListItem, VerifierVerdict } from '@readion/shared'
-import { formatVerdict } from '~/utils/formatVerdict'
+import type { QuarantinedItemListItem } from '@readion/shared'
+import { formatVerdict, verdictInputFromProvenance } from '~/utils/formatVerdict'
 
 interface CertLookupEntry {
   name: string
@@ -34,12 +34,7 @@ function certLabel(certificationId: string): string | undefined {
 }
 
 function verdictFor(item: QuarantinedItemListItem) {
-  const nestedVerdict = item.provenance.verdict as VerifierVerdict | undefined
-  return formatVerdict({
-    pass: nestedVerdict?.pass ?? false,
-    score: nestedVerdict?.score ?? item.provenance.score,
-    reason: item.reason,
-  })
+  return formatVerdict(verdictInputFromProvenance(item))
 }
 </script>
 
