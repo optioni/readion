@@ -4,7 +4,7 @@ import {
   contentSourceTypes,
   registerSourceRequestSchema,
 } from '@readion/shared'
-import { useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
@@ -15,9 +15,9 @@ import {
   sourceStatusLabel,
   sourceStatusTextClass,
 } from '~/composables/sourceStatus'
+import { useAdminCertificationsList } from '~/composables/useAdminCertificationsList'
 import { useAdminSources, useSourceJobs } from '~/composables/useAdminSources'
 import { lastIngestedTimestamp } from '~/utils/deriveLastIngested'
-import { certificationsControllerList } from '~~/src/api/certifications/certifications'
 import {
   contentControllerDisable,
   contentControllerEnable,
@@ -33,10 +33,7 @@ const queryClient = useQueryClient()
 
 const certId = computed(() => (route.query.certificationId as string | undefined) ?? '')
 
-const certsQuery = useQuery({
-  queryKey: ['admin', 'certifications-list'],
-  queryFn: async () => (await certificationsControllerList()).data.data,
-})
+const certsQuery = useAdminCertificationsList()
 const certs = computed(() => certsQuery.data.value ?? [])
 
 const sourcesQuery = useAdminSources(certId)

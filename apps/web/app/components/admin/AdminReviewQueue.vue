@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import AdminReviewQueueDetail from '~/components/admin/AdminReviewQueueDetail.vue'
 import AdminReviewQueueList from '~/components/admin/AdminReviewQueueList.vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
+import { useAdminCertificationsList } from '~/composables/useAdminCertificationsList'
 import { useAdminQuarantine } from '~/composables/useAdminQuarantine'
-import { certificationsControllerList } from '~~/src/api/certifications/certifications'
 import {
   quarantineAdminControllerApprove,
   quarantineAdminControllerReject,
@@ -20,10 +20,7 @@ const awaitingCount = computed(() => quarantineQuery.data.value?.meta.total ?? i
 const isLoading = computed(() => quarantineQuery.isLoading.value)
 const isError = computed(() => quarantineQuery.isError.value)
 
-const certsQuery = useQuery({
-  queryKey: ['admin', 'certifications-list'],
-  queryFn: async () => (await certificationsControllerList()).data.data,
-})
+const certsQuery = useAdminCertificationsList()
 const certsById = computed(() =>
   Object.fromEntries((certsQuery.data.value ?? []).map((cert) => [cert.id, cert])),
 )
