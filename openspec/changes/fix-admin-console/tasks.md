@@ -37,9 +37,9 @@ Reproduce the highest-impact defects first: Audit Log human-readability, the Adm
 
 ## 5. Users table fidelity (`web-admin`)
 
-- [ ] 5.1 RED: Component-test `AdminUsers.vue` — header-utility row (search field, Invite user, `N users · M admins` summary), `Certs` column header (not `Enrollments`), a `Name` column, a `Last active` column, a capitalized+colored role badge (`Admin`/`User`), and a single contextual role-toggle button (`Promote` for a user, `Demote` for an admin) plus a red `Remove`
-- [ ] 5.2 GREEN: Implement the header-utility row, column changes, role-badge styling, and contextual action buttons; render `Name`/`Last active` from the contract fields when present and a graceful placeholder otherwise
-- [ ] 5.3 REFACTOR: Keep the summary count derivation and the contextual-action selection in small pure helpers
+- [x] 5.1 RED: Component-test `AdminUsers.vue` — header-utility row (search field, Invite user, `N users · M admins` summary), `Certs` column header (not `Enrollments`), a `Name` column, a `Last active` column, a capitalized+colored role badge (`Admin`/`User`), and a single contextual role-toggle button (`Promote` for a user, `Demote` for an admin) plus a red `Remove`
+- [x] 5.2 GREEN: Implement the header-utility row, column changes, role-badge styling, and contextual action buttons; render `Name`/`Last active` from the contract fields when present and a graceful placeholder otherwise
+- [x] 5.3 REFACTOR: Keep the summary count derivation and the contextual-action selection in small pure helpers
 
 ## 6. Sources table fidelity (`web-admin`)
 
