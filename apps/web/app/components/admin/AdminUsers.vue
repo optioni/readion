@@ -33,7 +33,7 @@ function formatJoinDate(createdAt: string): string {
   return dateFormatter.format(new Date(createdAt))
 }
 
-const userSummary = computed(() => deriveUserSummary(users.value))
+const userSummary = computed(() => deriveUserSummary(users.value, meta.value?.total))
 const userSummaryLabel = computed(() => {
   const { total, admins } = userSummary.value
   const userNoun = total === 1 ? 'user' : 'users'

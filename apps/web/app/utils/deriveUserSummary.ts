@@ -5,9 +5,9 @@ export interface UserSummary {
   admins: number
 }
 
-export function deriveUserSummary(users: AdminUserListItem[]): UserSummary {
+export function deriveUserSummary(users: AdminUserListItem[], total?: number): UserSummary {
   return {
-    total: users.length,
+    total: total ?? users.length,
     admins: users.filter((user) => user.role === 'admin').length,
   }
 }
