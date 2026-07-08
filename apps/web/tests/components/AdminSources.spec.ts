@@ -10,6 +10,7 @@ import { useAdminSources, useSourceJobs } from '~/composables/useAdminSources'
 import { certificationsControllerList } from '~~/src/api/certifications/certifications'
 import {
   contentControllerDisable,
+  contentControllerEnable,
   contentControllerRegister,
   contentControllerReingest,
 } from '~~/src/api/content/content'
@@ -22,8 +23,34 @@ vi.mock('~~/src/api/content/content')
 vi.mock('~~/src/api/certifications/certifications')
 
 const CERT_ID = 'c0000000-0000-0000-0000-000000000001'
+const OTHER_CERT_ID = 'c0000000-0000-0000-0000-000000000002'
 const ENABLED_ID = 'd0000000-0000-0000-0000-000000000001'
 const DISABLED_ID = 'd0000000-0000-0000-0000-000000000002'
+
+const CERTS = [
+  {
+    id: CERT_ID,
+    name: 'AWS Certified Solutions Architect',
+    provider: 'AWS',
+    code: 'SAA-C03',
+    domains: [],
+    questionCount: 65,
+    passingScore: 72,
+    timeLimitMinutes: 130,
+    state: 'live',
+  },
+  {
+    id: OTHER_CERT_ID,
+    name: 'Azure Fundamentals',
+    provider: 'Microsoft',
+    code: 'AZ-900',
+    domains: [],
+    questionCount: 40,
+    passingScore: 700,
+    timeLimitMinutes: 60,
+    state: 'published',
+  },
+]
 
 const SOURCES: ContentSourceResponse[] = [
   {
@@ -32,9 +59,10 @@ const SOURCES: ContentSourceResponse[] = [
     type: 'web',
     url: 'https://docs.aws.amazon.com/',
     enabled: true,
-    lastFetchedAt: null,
+    lastFetchedAt: '2026-06-25T08:00:00.000Z',
     recheckIntervalMinutes: 10080,
     createdAt: '2026-01-01T00:00:00.000Z',
+    chunkCount: 142,
   },
   {
     id: DISABLED_ID,
@@ -45,6 +73,7 @@ const SOURCES: ContentSourceResponse[] = [
     lastFetchedAt: null,
     recheckIntervalMinutes: 1440,
     createdAt: '2026-01-02T00:00:00.000Z',
+    chunkCount: 0,
     // biome-ignore lint/suspicious/noExplicitAny: the API may return a source type outside the shared enum
   } as any as ContentSourceResponse,
 ]
@@ -86,8 +115,8 @@ function stubJobs(jobsBySource: Record<string, IngestionJobStatus[]> = {}) {
   } as any)
 }
 
-function mountSources() {
-  vi.stubGlobal('useRoute', () => ({ query: { certificationId: CERT_ID } }))
+function mountWithQuery(query: Record<string, string>) {
+  vi.stubGlobal('useRoute', () => ({ query }))
   const replace = vi.fn()
   vi.stubGlobal('useRouter', () => ({ replace }))
   const queryClient = new QueryClient({
@@ -100,8 +129,16 @@ function mountSources() {
   return { wrapper, invalidateSpy, replace }
 }
 
+function mountSources() {
+  return mountWithQuery({ certificationId: CERT_ID })
+}
+
 function rowFor(wrapper: ReturnType<typeof mountSources>['wrapper'], id: string) {
   return wrapper.find(`[data-testid="source-row"][data-source-id="${id}"]`)
+}
+
+async function openAddSourceForm(wrapper: ReturnType<typeof mountSources>['wrapper']) {
+  await wrapper.find('[data-testid="add-source-toggle"]').trigger('click')
 }
 
 const created = (source: ContentSourceResponse) => ({
@@ -112,7 +149,7 @@ const created = (source: ContentSourceResponse) => ({
 
 beforeEach(() => {
   vi.mocked(certificationsControllerList).mockResolvedValue({
-    data: { data: [], meta: { total: 0, page: 1, limit: 20 } },
+    data: { data: CERTS, meta: { total: CERTS.length, page: 1, limit: 20 } },
     status: 200,
     headers: new Headers(),
     // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
@@ -185,14 +222,46 @@ describe('AdminSources render', () => {
     expect(wrapper.find('[data-testid="source-jobs-banner"]').exists()).toBe(false)
   })
 
-  it('exposes no chunk-count, cancel or upload controls', () => {
+  it('renders chunk counts and last-ingested dates from the contract, with no cancel or upload controls', () => {
     stubSources()
     stubJobs()
     const { wrapper } = mountSources()
 
-    expect(wrapper.find('[data-testid="source-chunk-count"]').exists()).toBe(false)
+    expect(rowFor(wrapper, ENABLED_ID).find('[data-testid="source-chunk-count"]').text()).toBe(
+      '142',
+    )
+    expect(rowFor(wrapper, DISABLED_ID).find('[data-testid="source-chunk-count"]').text()).toBe(
+      '0',
+    )
+    expect(
+      rowFor(wrapper, ENABLED_ID).find('[data-testid="source-last-ingested"]').text(),
+    ).toContain('Jun 25, 2026')
+    expect(
+      rowFor(wrapper, DISABLED_ID).find('[data-testid="source-last-ingested"]').text(),
+    ).not.toBe('')
+
     expect(wrapper.find('[data-testid="source-cancel-btn"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="source-upload-input"]').exists()).toBe(false)
+  })
+
+  it('falls back to the latest completed job for last-ingested when lastFetchedAt is null', () => {
+    stubSources()
+    stubJobs({ [DISABLED_ID]: [job({ state: 'completed', finishedOn: 1751000000000 })] })
+    const { wrapper } = mountSources()
+
+    const cell = rowFor(wrapper, DISABLED_ID).find('[data-testid="source-last-ingested"]')
+    expect(cell.text()).not.toBe('')
+    expect(cell.text().toLowerCase()).not.toContain('never')
+  })
+
+  it('shows a placeholder for last-ingested when there is no fetch date and no completed job', () => {
+    stubSources()
+    stubJobs()
+    const { wrapper } = mountSources()
+
+    expect(
+      rowFor(wrapper, DISABLED_ID).find('[data-testid="source-last-ingested"]').text().length,
+    ).toBeGreaterThan(0)
   })
 
   it('shows loading and error states', () => {
@@ -209,6 +278,96 @@ describe('AdminSources render', () => {
   })
 })
 
+describe('AdminSources empty state', () => {
+  it('renders an empty state instead of the table when no certification is selected', async () => {
+    stubSources([])
+    stubJobs()
+    const { wrapper } = mountWithQuery({})
+    await flushPromises()
+
+    const empty = wrapper.find('[data-testid="sources-empty-state"]')
+    expect(empty.exists()).toBe(true)
+    expect(empty.text()).toContain('Select a certification to view its sources')
+    expect(wrapper.find('table').exists()).toBe(false)
+    expect(wrapper.find('thead').exists()).toBe(false)
+  })
+
+  it('still renders the certification pills when no certification is selected', async () => {
+    stubSources([])
+    stubJobs()
+    const { wrapper } = mountWithQuery({})
+    await flushPromises()
+
+    expect(wrapper.findAll('[data-testid="source-cert-pill"]')).toHaveLength(2)
+  })
+})
+
+describe('AdminSources certification pills', () => {
+  it('renders one pill per certification with the active one marked', async () => {
+    stubSources()
+    stubJobs()
+    const { wrapper } = mountSources()
+    await flushPromises()
+
+    const pills = wrapper.findAll('[data-testid="source-cert-pill"]')
+    expect(pills).toHaveLength(2)
+
+    const activePill = wrapper.find('[data-testid="source-cert-pill"][data-cert-id="' + CERT_ID + '"]')
+    expect(activePill.attributes('aria-pressed')).toBe('true')
+
+    const inactivePill = wrapper.find(
+      '[data-testid="source-cert-pill"][data-cert-id="' + OTHER_CERT_ID + '"]',
+    )
+    expect(inactivePill.attributes('aria-pressed')).toBe('false')
+  })
+
+  it('does not render a select element for certification choice', () => {
+    stubSources()
+    stubJobs()
+    const { wrapper } = mountSources()
+
+    expect(wrapper.find('[data-testid="source-cert-select"]').exists()).toBe(false)
+  })
+
+  it('writes the chosen certification back to the route query when a pill is clicked', async () => {
+    stubSources()
+    stubJobs()
+    const { wrapper, replace } = mountSources()
+    await flushPromises()
+
+    await wrapper
+      .find('[data-testid="source-cert-pill"][data-cert-id="' + OTHER_CERT_ID + '"]')
+      .trigger('click')
+
+    expect(replace).toHaveBeenCalledWith({
+      query: { certificationId: OTHER_CERT_ID },
+    })
+  })
+})
+
+describe('AdminSources add-source affordance', () => {
+  it('hides the registration form until the dashed affordance is activated', () => {
+    stubSources()
+    stubJobs()
+    const { wrapper } = mountSources()
+
+    expect(wrapper.find('[data-testid="add-source-toggle"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="register-source-url-input"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="add-source-form"]').exists()).toBe(false)
+  })
+
+  it('reveals the registration form once the affordance is activated', async () => {
+    stubSources()
+    stubJobs()
+    const { wrapper } = mountSources()
+
+    await openAddSourceForm(wrapper)
+
+    expect(wrapper.find('[data-testid="add-source-form"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="register-source-url-input"]').exists()).toBe(true)
+  })
+})
+
 describe('AdminSources register', () => {
   it('registers a source by url for the active certification and invalidates the list', async () => {
     stubSources()
@@ -218,6 +377,7 @@ describe('AdminSources register', () => {
       created(SOURCES[0] as ContentSourceResponse) as any,
     )
     const { wrapper, invalidateSpy } = mountSources()
+    await openAddSourceForm(wrapper)
 
     await wrapper
       .find('[data-testid="register-source-url-input"]')
@@ -242,6 +402,7 @@ describe('AdminSources register', () => {
     stubSources()
     stubJobs()
     const { wrapper } = mountSources()
+    await openAddSourceForm(wrapper)
 
     await wrapper.find('[data-testid="register-source-url-input"]').setValue('not-a-url')
     await wrapper.find('[data-testid="register-source-submit"]').trigger('submit')
@@ -262,6 +423,7 @@ describe('AdminSources register', () => {
       }),
     )
     const { wrapper } = mountSources()
+    await openAddSourceForm(wrapper)
 
     await wrapper
       .find('[data-testid="register-source-url-input"]')
@@ -314,42 +476,57 @@ describe('AdminSources row actions', () => {
       queryKey: adminQueryKeys.contentSources(CERT_ID),
     })
   })
-})
 
-describe('AdminSources cert selector', () => {
-  it('writes the chosen certification back to the route query', async () => {
+  it('reflects the enabled field via the Enabled toggle', () => {
     stubSources()
     stubJobs()
-    vi.mocked(certificationsControllerList).mockResolvedValue({
-      data: {
-        data: [
-          {
-            id: 'c0000000-0000-0000-0000-000000000002',
-            name: 'Azure Fundamentals',
-            provider: 'Microsoft',
-            code: 'AZ-900',
-            domains: [],
-            questionCount: 40,
-            passingScore: 700,
-            timeLimitMinutes: 60,
-            state: 'published',
-          },
-        ],
-        meta: { total: 1, page: 1, limit: 20 },
-      },
-      status: 200,
-      headers: new Headers(),
+    const { wrapper } = mountSources()
+
+    expect(
+      rowFor(wrapper, ENABLED_ID).find('[data-testid="source-enabled-toggle"]').attributes(
+        'aria-checked',
+      ),
+    ).toBe('true')
+    expect(
+      rowFor(wrapper, DISABLED_ID).find('[data-testid="source-enabled-toggle"]').attributes(
+        'aria-checked',
+      ),
+    ).toBe('false')
+  })
+
+  it('disables an enabled source when its Enabled toggle is switched off', async () => {
+    stubSources()
+    stubJobs()
+    vi.mocked(contentControllerDisable).mockResolvedValue(
       // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
-    } as any)
-    const { wrapper, replace } = mountSources()
+      created(SOURCES[0] as ContentSourceResponse) as any,
+    )
+    const { wrapper } = mountSources()
+
+    await rowFor(wrapper, ENABLED_ID)
+      .find('[data-testid="source-enabled-toggle"]')
+      .trigger('click')
     await flushPromises()
 
-    const select = wrapper.find('[data-testid="source-cert-select"]')
-    expect(select.exists()).toBe(true)
-    await select.setValue('c0000000-0000-0000-0000-000000000002')
+    expect(contentControllerDisable).toHaveBeenCalledWith(ENABLED_ID, expect.anything())
+    expect(contentControllerEnable).not.toHaveBeenCalled()
+  })
 
-    expect(replace).toHaveBeenCalledWith({
-      query: { certificationId: 'c0000000-0000-0000-0000-000000000002' },
-    })
+  it('enables a disabled source when its Enabled toggle is switched on', async () => {
+    stubSources()
+    stubJobs()
+    vi.mocked(contentControllerEnable).mockResolvedValue(
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      created(SOURCES[1] as ContentSourceResponse) as any,
+    )
+    const { wrapper } = mountSources()
+
+    await rowFor(wrapper, DISABLED_ID)
+      .find('[data-testid="source-enabled-toggle"]')
+      .trigger('click')
+    await flushPromises()
+
+    expect(contentControllerEnable).toHaveBeenCalledWith(DISABLED_ID, expect.anything())
+    expect(contentControllerDisable).not.toHaveBeenCalled()
   })
 })
