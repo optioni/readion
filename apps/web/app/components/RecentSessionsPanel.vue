@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import CardPanel from '~/components/CardPanel.vue'
 import DeltaBadge from '~/components/DeltaBadge.vue'
+import { friendlyDate } from '~/composables/friendlyDate'
 import type { RecentSessionEntry } from '~/composables/useCardRecentSessions'
 
 const props = defineProps<{ sessions: RecentSessionEntry[]; readinessDelta?: number | null }>()
 
-const whenLabel = (session: RecentSessionEntry) =>
-  new Date(session.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+const whenLabel = (session: RecentSessionEntry) => friendlyDate(session.date)
 
 const accuracyPercent = (accuracy: number) => `${Math.round(accuracy * 100)}%`
 
