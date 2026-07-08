@@ -35,7 +35,15 @@ import { gotoAuthenticated } from './support/session-view-seed'
 //                 exam-answered-count, exam-submit-button,
 //                 exam-submit-confirm, exam-submit-confirm-button
 //   Results     : exam-results-scene, exam-score-hero, exam-score-value, exam-pass-badge (omitted when
-//                 passed is null), exam-domain-breakdown, exam-domain-row, exam-review-button
+//                 passed is null), exam-passing-score (e.g. "Passing score: 72%", resolved via the
+//                 enrollment → certification two-hop lookup: GET /user-certifications/:enrollmentId then
+//                 GET /certifications/:certificationId), exam-counts ("N correct · M incorrect ·
+//                 K unanswered" — correct = Σ domainBreakdown.correct, unanswered = count of
+//                 questions[].userAnswer == null, incorrect = total - correct - unanswered),
+//                 exam-domain-breakdown, exam-domain-row, exam-domain-weight (per-row weight, e.g. "25%"),
+//                 exam-domain-threshold-marker (per row, only when that domain's accuracy < passingScore),
+//                 exam-below-threshold-note (per row, only when below threshold; text "Below passing
+//                 threshold"), exam-review-button
 //                 + reused SessionSummaryBody: summary-accuracy, summary-readiness, summary-domains,
 //                   weak-area-delta, summary-strongest, summary-weakest, drill-button, summary-back-button
 //                 (the body's ask-agent affordance is suppressed in the agent-free mock context)
@@ -78,10 +86,47 @@ test.describe('web-mock-exam — full timed-exam loop', () => {
 
     // --- Results: exam-faithful score hero + per-domain breakdown + reused summary body ---
     await expect(page.getByTestId('exam-results-scene')).toBeVisible()
-    await expect(page.getByTestId('exam-score-value')).toContainText('73')
+    // score is the raw 0..1 fraction (0.73) from the API; Math.round(0.73) === 1 today, so this renders
+    // "1%" instead of "73%" until the results scene formats it as a percentage.
+    await expect(page.getByTestId('exam-score-value')).toContainText('73%')
     await expect(page.getByTestId('exam-pass-badge')).toContainText(/pass/i)
+
+    // --- Passing-score reference, resolved via the enrollment → certification two-hop lookup ---
+    await expect(page.getByTestId('exam-passing-score')).toContainText(/passing score: 72%/i)
+
+    // --- Counts line: correct = Σ domainBreakdown.correct (14+11+12+9=46), unanswered = count of
+    // questions[].userAnswer == null (4, Q61-Q64), incorrect = 65 - 46 - 4 = 15 ---
+    await expect(page.getByTestId('exam-counts')).toContainText(/46 correct/i)
+    await expect(page.getByTestId('exam-counts')).toContainText(/15 incorrect/i)
+    await expect(page.getByTestId('exam-counts')).toContainText(/4 unanswered/i)
+
     await expect(page.getByTestId('exam-domain-breakdown')).toBeVisible()
     await expect(page.getByTestId('exam-domain-row')).toHaveCount(4)
+
+    // --- Per-domain table: weight column + below-passing-threshold marker/note ---
+    await expect(page.getByTestId('exam-domain-weight').first()).toContainText('25%')
+
+    const secureRow = page
+      .getByTestId('exam-domain-row')
+      .filter({ hasText: 'Secure Architectures' })
+    await expect(secureRow.getByTestId('exam-domain-threshold-marker')).toBeVisible()
+    await expect(secureRow.getByTestId('exam-below-threshold-note')).toContainText(
+      /below passing threshold/i,
+    )
+
+    const costOptimizedRow = page
+      .getByTestId('exam-domain-row')
+      .filter({ hasText: 'Cost-Optimized Architectures' })
+    await expect(costOptimizedRow.getByTestId('exam-domain-threshold-marker')).toBeVisible()
+    await expect(costOptimizedRow.getByTestId('exam-below-threshold-note')).toContainText(
+      /below passing threshold/i,
+    )
+
+    // Domains at/above the passing score must NOT show the below-threshold note.
+    const resilientRow = page
+      .getByTestId('exam-domain-row')
+      .filter({ hasText: 'Resilient Architectures' })
+    await expect(resilientRow.getByTestId('exam-below-threshold-note')).toHaveCount(0)
 
     // Reused SessionSummaryBody (from web-session-view) renders readiness / weak-area / drill.
     await expect(page.getByTestId('summary-readiness')).toContainText('74')

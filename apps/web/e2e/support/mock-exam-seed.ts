@@ -116,12 +116,14 @@ function buildQuestion({ index, terminal, answers }: QuestionState): MockExamQue
     } as unknown as MockExamQuestionResponseDto
   }
 
-  // Terminal reveal: Q0 answered incorrectly, Q1 answered correctly, the rest left unanswered (skipped).
+  // Terminal reveal: Q0 answered incorrectly, Q1..Q60 answered correctly, the last 4 (Q61-Q64) left
+  // unanswered (skipped). This keeps the fixture coherent with TERMINAL_DOMAIN_BREAKDOWN (46 correct of
+  // 65 total): 61 answered + 4 unanswered, so incorrect = 65 - 46 - 4 = 15.
   const correctAnswer = options[1]
   let userAnswer: string | null = null
   if (index === 0) {
     userAnswer = options[2] ?? null
-  } else if (index === 1) {
+  } else if (index >= 1 && index <= 60) {
     userAnswer = options[1] ?? null
   }
 
@@ -215,7 +217,7 @@ function buildTerminal(
     startedAt: '2026-06-29T10:00:00.000Z',
     deadline: '2026-06-29T11:47:23.000Z',
     remainingSeconds: 0,
-    score: 73,
+    score: 0.73,
     passed: true,
     domainBreakdown: TERMINAL_DOMAIN_BREAKDOWN,
     questions: buildQuestions(TOTAL_QUESTIONS, { terminal: true, answers }),
@@ -311,6 +313,18 @@ export function mockMockExamLoop(page: Page): {
   })
   mock(page, /\/api\/v1\/users\/me(\?|$)/, async (route) => {
     await fulfilJson(route, 200, { data: PROFILE })
+  })
+
+  // --- User-certification enrollment read (hop 1 of the passing-score lookup: enrollment →
+  // certification → passingScore) ---
+  mock(page, new RegExp(`/api/v1/user-certifications/${enrollmentId}(\\?|$)`), async (route) => {
+    await fulfilJson(route, 200, {
+      data: {
+        id: enrollmentId,
+        certificationId,
+      },
+      relationships: {},
+    })
   })
 
   // --- Optional certification read (omitted by default; safe if the page joins it) ---
