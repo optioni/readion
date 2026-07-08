@@ -18,7 +18,7 @@ const emit = defineEmits<{
   review: []
 }>()
 
-const scorePercent = computed<number>(() => Math.round(props.exam.score ?? 0))
+const scorePercent = computed<number>(() => Math.round((props.exam.score ?? 0) * 100))
 const isExpired = computed<boolean>(() => props.exam.status === 'expired')
 
 const summaryQuery = useQuery({
