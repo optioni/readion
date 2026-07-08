@@ -28,11 +28,14 @@ const modelOutputSchema = z.object({
     .optional(),
 })
 
+type ParseReason = 'ok' | 'no-json' | 'schema-invalid'
+
 interface DiscoveryDiagnostics {
   searchResultCount: number
   parsedCandidateCount: number
   groundedCandidateCount: number
   finalTextLength: number
+  parseReason: ParseReason
 }
 
 @Injectable()
@@ -92,11 +95,12 @@ export class CertDiscoveryService {
       `cert discovery "${label}": searchResults=${diagnostics.searchResultCount} ` +
       `parsedCandidates=${diagnostics.parsedCandidateCount} ` +
       `grounded=${diagnostics.groundedCandidateCount} ` +
-      `candidates=${candidateCount} finalTextLen=${diagnostics.finalTextLength}`
+      `candidates=${candidateCount} finalTextLen=${diagnostics.finalTextLength} ` +
+      `parseReason=${diagnostics.parseReason}`
 
     if (candidateCount === 0) {
       this.logger.warn(
-        `${summary} — no candidates; finalTextPreview=${JSON.stringify(finalText.slice(0, 300))}`,
+        `${summary} — no candidates; finalText=${JSON.stringify(finalText.slice(0, 2000))}`,
       )
       return
     }
@@ -150,6 +154,7 @@ function assembleResponse(
       parsedCandidateCount: parsed.candidateUrls.length,
       groundedCandidateCount: groundedCandidates.length,
       finalTextLength: finalText.length,
+      parseReason: parsed.reason,
     },
   }
 }
@@ -179,18 +184,20 @@ function hostOf(url: string): string | null {
 function parseModelOutput(text: string): {
   candidateUrls: string[]
   suggested: SuggestedContentSource[]
+  reason: ParseReason
 } {
   const json = extractJson(text)
   if (json === null) {
-    return { candidateUrls: [], suggested: [] }
+    return { candidateUrls: [], suggested: [], reason: 'no-json' }
   }
   const parsed = modelOutputSchema.safeParse(json)
   if (!parsed.success) {
-    return { candidateUrls: [], suggested: [] }
+    return { candidateUrls: [], suggested: [], reason: 'schema-invalid' }
   }
   return {
     candidateUrls: (parsed.data.candidates ?? []).map((candidate) => candidate.url),
     suggested: parsed.data.suggestedContentSources ?? [],
+    reason: 'ok',
   }
 }
 
