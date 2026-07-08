@@ -497,6 +497,11 @@ export function mockReviewAllCaughtUp(page: Page): void {
     await fulfilJson(route, 200, { data: CERTIFICATION, relationships: {} })
   })
 
+  // --- Enrollment detail (cert-code chip resolution: enrollmentId → certificationId) ---
+  mock(page, new RegExp(`/api/v1/user-certifications/${enrollmentId}(\\?|$)`), async (route) => {
+    await fulfilJson(route, 200, { data: ENROLLMENT_DETAIL, relationships: {} })
+  })
+
   // Zero due items — triggers the all-caught-up empty state.
   mock(
     page,

@@ -7,7 +7,11 @@ vi.mock('~/composables/runnerRoutes', () => ({
   sessionStartPath: (id: string) => `/user-certifications/${id}/session/start`,
 }))
 
-function dueItem(domain: string, id = domain, dueAt = '2026-06-29T00:00:00.000Z'): ReviewItemResponse {
+function dueItem(
+  domain: string,
+  id = domain,
+  dueAt = '2026-06-29T00:00:00.000Z',
+): ReviewItemResponse {
   return {
     id,
     userCertificationId: 'enr-1',

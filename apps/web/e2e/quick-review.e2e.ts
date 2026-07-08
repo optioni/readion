@@ -86,6 +86,11 @@ test.describe('web-progress — 5-minute review loop', () => {
     // No due items — the page shows the all-caught-up empty state and hides the start CTA.
     await expect(page.getByTestId('review-all-caught-up')).toBeVisible()
     await expect(page.getByTestId('start-review-button')).toHaveCount(0)
+
+    // The secondary "Review all N" action and the overdue note only belong to the due-items
+    // branch — the empty state must not render either of them.
+    await expect(page.getByTestId('review-all-button')).toHaveCount(0)
+    await expect(page.getByTestId('review-overdue-note')).toHaveCount(0)
   })
 
   test('single-entry model: chips + one Start review, no separate self-grade entry button', async ({
