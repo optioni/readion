@@ -53,6 +53,28 @@ describe('formatCertStatRow', () => {
     expect(withoutTrajectory.trajectoryLabel).toBeNull()
   })
 
+  it('uses singular "week" when exactly one week to ready', () => {
+    const row = formatCertStatRow({
+      readiness: readiness({ trajectory: { weeksToReady: 1 } }),
+      totalSessions: 3,
+      dueCount: 1,
+      questionsAnswered: 0,
+      accuracy: null,
+    })
+    expect(row.trajectoryLabel).toBe('exam-ready in ~1 week')
+  })
+
+  it('uses plural "weeks" when more than one week to ready', () => {
+    const row = formatCertStatRow({
+      readiness: readiness({ trajectory: { weeksToReady: 3 } }),
+      totalSessions: 3,
+      dueCount: 1,
+      questionsAnswered: 0,
+      accuracy: null,
+    })
+    expect(row.trajectoryLabel).toBe('exam-ready in ~3 weeks')
+  })
+
   it('passes through the total-sessions and due-review counts', () => {
     const row = formatCertStatRow({
       readiness: readiness({}),
@@ -85,6 +107,19 @@ describe('formatCertStatRow', () => {
       dueCount: 0,
       questionsAnswered: 0,
       accuracy: null,
+    })
+    expect(row.questionsAnswered).toBe(0)
+    expect(row.accuracyLabel).toBeNull()
+    expect(row.accuracyColorClass).toBeNull()
+  })
+
+  it('suppresses accuracy label and colour when no questions have been answered, even with a non-null accuracy', () => {
+    const row = formatCertStatRow({
+      readiness: readiness({}),
+      totalSessions: 0,
+      dueCount: 0,
+      questionsAnswered: 0,
+      accuracy: 0,
     })
     expect(row.questionsAnswered).toBe(0)
     expect(row.accuracyLabel).toBeNull()
