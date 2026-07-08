@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useAdminAuditLogs } from '~/composables/useAdminAuditLogs'
+import { formatAuditDiff } from '~/utils/formatAuditDiff'
 
 const auditLogsQuery = useAdminAuditLogs()
 
@@ -18,22 +19,6 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 
 function formatTimestamp(createdAt: string): string {
   return dateFormatter.format(new Date(createdAt))
-}
-
-function formatSnapshotValue(value: Record<string, unknown> | null): string {
-  if (value === null) {
-    return '—'
-  }
-
-  const entries = Object.entries(value)
-  if (entries.length === 0) {
-    return '—'
-  }
-  if (entries.length === 1) {
-    return String(entries[0][1])
-  }
-
-  return entries.map(([key, entryValue]) => `${key}: ${String(entryValue)}`).join(', ')
 }
 </script>
 
@@ -74,10 +59,10 @@ function formatSnapshotValue(value: Record<string, unknown> | null): string {
             {{ entry.targetLabel }}
           </td>
           <td data-testid="audit-before" class="px-3 py-3 font-mono text-slate-400 text-xs">
-            {{ formatSnapshotValue(entry.before) }}
+            {{ formatAuditDiff(entry.before, entry.after).before }}
           </td>
           <td data-testid="audit-after" class="px-3 py-3 font-mono text-slate-400 text-xs">
-            {{ formatSnapshotValue(entry.after) }}
+            {{ formatAuditDiff(entry.before, entry.after).after }}
           </td>
           <td data-testid="audit-actor" class="px-3 py-3 text-slate-300">
             {{ entry.actorEmail ?? 'System' }}

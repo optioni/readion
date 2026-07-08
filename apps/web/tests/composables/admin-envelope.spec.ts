@@ -65,9 +65,11 @@ describe('admin envelope narrowing helpers', () => {
     const entry: AuditLogEntry = {
       id: 'l1',
       userId: 'u1',
+      actorEmail: 'admin@example.com',
       action: 'user.role.promoted',
       targetType: 'user',
       targetId: 'u2',
+      targetLabel: 'target@example.com',
       before: null,
       after: null,
       createdAt: '2026-01-01',
