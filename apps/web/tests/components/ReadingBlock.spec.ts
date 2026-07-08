@@ -6,12 +6,14 @@ import { goDeeperOnItem } from '~/composables/sessionViewApi'
 
 vi.mock('~/composables/sessionViewApi', () => ({ goDeeperOnItem: vi.fn() }))
 
+const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+
 const readingItem: SessionItemResponse = {
   index: 0,
   type: 'reading',
   content: '**TL;DR** — SCPs are guardrails, not grants.',
   completed: false,
-  sourceChunkIds: ['chunk-scp-001'],
+  sourceChunkIds: ['bb9dd4b7-e3e5-44e6-b006-1b6fd247e14b'],
   supportingSpans: ['AWS Organizations User Guide §SCP'],
 }
 
@@ -42,8 +44,17 @@ describe('ReadingBlock rendering', () => {
 
     const chips = wrapper.findAll('[data-testid="citation-chip"]')
     expect(chips).toHaveLength(2)
-    expect(wrapper.text()).toContain('chunk-scp-001')
     expect(wrapper.text()).toContain('AWS Organizations User Guide §SCP')
+  })
+
+  it('never renders a raw content-chunk UUID as a citation chip label, falling back to a human label', () => {
+    const wrapper = mountBlock()
+
+    const chips = wrapper.findAll('[data-testid="citation-chip"]')
+    for (const chip of chips) {
+      expect(chip.text()).not.toMatch(UUID_PATTERN)
+    }
+    expect(wrapper.text()).toContain('Source')
   })
 })
 
