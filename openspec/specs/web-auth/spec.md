@@ -1,9 +1,7 @@
 ## Purpose
 
 Specifies the browser-side authentication layer for the Nuxt web app: in-memory token storage, auth pages (login, register, email verification, password reset), silent token refresh on load, logout, and route middleware that protects authenticated routes and gates auth-only pages.
-
 ## Requirements
-
 ### Requirement: Auth store holds the access token in memory only
 
 The web app SHALL provide a Pinia auth store that holds the JWT access token in reactive in-memory state and MUST NEVER persist it to `localStorage`, `sessionStorage`, or a cookie. The store SHALL expose the current authenticated user (when hydrated), an `isAuthenticated` getter derived from the presence of a valid access token, and actions to set/clear the token and user.
@@ -25,7 +23,7 @@ The web app SHALL provide a Pinia auth store that holds the JWT access token in 
 
 The web app SHALL expose a `/login` page with email and password fields. On submit it MUST call `POST /api/v1/auth/login`, store the returned access token in memory, hydrate the current user from `GET /api/v1/users/me`, and navigate to the post-login destination (the originally requested route, or the app home when none). A `401` MUST surface a single uniform "invalid email or password" message without revealing which field was wrong.
 
-The login form SHALL be presented in the design's contained-card placement (matching `openspec/design/Login.html`): the split-panel auth layout (brand panel + form panel) with the form constrained to a fixed reading width inside the form panel, so the fields sit in a tidy card rather than floating across a large empty region. The deliberately preserved divergence stands: the page SHALL NOT render the artboard's "Sign in with SSO" button or `or` divider — SSO remains omitted and is NOT reintroduced by this placement tightening.
+The login form SHALL be presented in the design's split-panel auth layout (brand panel + form panel) matching `openspec/design/Login.html`. The form panel SHALL be a **full-height `background-surface` pane that fills the right side of the layout** (`flex: 1`), with the form **vertically centered and left-aligned** inside it and its content constrained to a comfortable reading width. It MUST NOT render as a bordered card floating in an empty `background-base` void. The deliberately preserved divergence stands: the page SHALL NOT render the artboard's "Sign in with SSO" button or `or` divider — SSO remains omitted and is NOT reintroduced by this fidelity change (any future SSO is a separate product decision with its own backend scope).
 
 #### Scenario: Successful login lands in the app
 
@@ -40,11 +38,17 @@ The login form SHALL be presented in the design's contained-card placement (matc
 - **THEN** the page shows a single "invalid email or password" message
 - **AND** the access token in the store remains empty and the user stays on `/login`
 
-#### Scenario: Form sits in the contained-card placement without SSO
+#### Scenario: Form pane fills the surface, not a floating card
 
 - **WHEN** the `/login` page renders
-- **THEN** the form is constrained to a fixed reading width within the auth layout's form panel (not stretched across the full panel width)
-- **AND** no "Sign in with SSO" control or `or` divider is rendered
+- **THEN** the form panel is a full-height `background-surface` pane filling the right side of the split-panel layout
+- **THEN** the form is vertically centered and left-aligned within the pane with its content constrained to a reading width
+- **AND** the form is not a bordered card floating in an empty `background-base` region
+
+#### Scenario: No SSO control or divider is rendered
+
+- **WHEN** the `/login` page renders
+- **THEN** no "Sign in with SSO" control or `or` divider is present
 
 ### Requirement: Registration page creates an account and signs the user in
 
@@ -153,3 +157,19 @@ The web app SHALL register global route middleware that, after the auth bootstra
 
 - **WHEN** an unauthenticated user navigates to `/register` or the reset-password page
 - **THEN** the middleware allows the navigation without redirecting to `/login`
+
+### Requirement: Auth brand panel presents product framing
+
+The auth pages SHALL render a brand panel on the left of the split-panel layout, matching `openspec/design/Login.html`, consistent across all auth states. The brand panel SHALL show the Readion logo mark and wordmark and the product tagline. Its feature list SHALL contain **exactly three items**, each preceded by a **circular green check badge** (using the Readion `status-good` token), not a plain checkmark and not four items. The panel SHALL include a testimonial rendered as a **bordered overlay box** (bordered container with the Readion border/overlay tokens), not plain italic text without a container.
+
+#### Scenario: Brand panel lists exactly three green-badge feature checks
+
+- **WHEN** an auth page renders its brand panel
+- **THEN** the feature list contains exactly three items
+- **THEN** each feature item is preceded by a circular green check badge using the Readion `status-good` token
+
+#### Scenario: Testimonial is a bordered overlay box
+
+- **WHEN** the brand panel renders its testimonial
+- **THEN** the testimonial is contained in a bordered overlay box, not rendered as plain italic text without a container
+

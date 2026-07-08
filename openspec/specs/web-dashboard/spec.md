@@ -3,12 +3,12 @@
 ## Purpose
 
 Defines the authenticated home dashboard that surfaces a user's active certification enrollments, exposes per-certification health signals (readiness score, weak areas, recent sessions, due reviews), and provides quick-start entry points for study sessions, mock exams, and spaced-repetition review runs. The dashboard is the primary navigation hub after sign-in.
-
 ## Requirements
-
 ### Requirement: Dashboard renders enrolled certifications as a vertical list
 
 The web app SHALL provide an authenticated dashboard at the app home that fetches the user's active enrollments via `GET /api/v1/user-certifications?status=active` and renders one card per enrollment in a single vertical list. Each card MUST display the certification name and provider, resolved from `GET /api/v1/certifications` by the enrollment's `certificationId` (the enrollment row carries `certificationId` only). When the user has no active enrollments, the dashboard MUST render an empty state with an add-certification entry instead of an empty list.
+
+The list SHALL be introduced by the shared **PageHeader** (matching `openspec/design/Dashboard.html` and `openspec/design/App Shell.html`): an eyebrow reading "DASHBOARD", an h1 reading "Your certifications", and a right-aligned active-count indicator ("N active") accompanied by a green status dot. The PageHeader MUST be the shared component, not bespoke per-page header markup.
 
 #### Scenario: Enrolled certifications appear as cards
 
@@ -22,9 +22,17 @@ The web app SHALL provide an authenticated dashboard at the app home that fetche
 - **THEN** an empty state is shown with an add-certification call to action
 - **AND** no certification card is rendered
 
+#### Scenario: Shared PageHeader introduces the list
+
+- **WHEN** an authenticated user with two active enrollments opens the dashboard
+- **THEN** the shared PageHeader renders with the eyebrow "DASHBOARD" and the h1 "Your certifications"
+- **AND** a right-aligned "2 active" indicator with a green status dot is shown
+
 ### Requirement: Lowest-readiness cert gets the hero treatment and the list is sorted by readiness
 
 The dashboard SHALL promote the calibrated enrollment with the lowest readiness score to a gradient hero card at the top of the list, render the remaining cards in the muted surface style, and sort all cards by readiness score ascending. Enrollments whose readiness is not yet calibrated MUST be ordered after calibrated ones and MUST NOT be selected as the hero on score. When no enrollment is calibrated, the most recently enrolled certification SHALL take the hero slot. Sorting and hero selection MUST be derived from the `readinessScore` already present on each enrollment row, without a per-cert readiness request solely to order the list.
+
+The hero card's visual hierarchy MUST match `openspec/design/Dashboard.html`: the **certification NAME is the primary heading** of the card, introduced by a "NEEDS ATTENTION" eyebrow, and the readiness percentage renders as a secondary supporting figure — the readiness percentage MUST NOT be the card's primary heading.
 
 #### Scenario: Lowest-readiness cert is the hero
 
@@ -42,6 +50,12 @@ The dashboard SHALL promote the calibrated enrollment with the lowest readiness 
 - **WHEN** every enrollment is not yet calibrated
 - **THEN** the most recently enrolled certification is rendered in the hero slot
 
+#### Scenario: Hero heading is the cert name with a NEEDS ATTENTION eyebrow
+
+- **WHEN** the lowest-readiness certification "AWS Solutions Architect" at 42% is rendered as the hero
+- **THEN** the card's primary heading is the certification name "AWS Solutions Architect", introduced by a "NEEDS ATTENTION" eyebrow
+- **AND** the 42% readiness figure is shown as a secondary supporting figure, not as the card's main heading
+
 ### Requirement: Each card shows readiness with calibration state and delta
 
 Each certification card SHALL display its exam readiness. When `GET /api/v1/user-certifications/:id/readiness` returns `calibrated: true`, the card MUST show the score as a percentage and, when a prior completed session exists, the change since the last session derived from that session's `GET /api/v1/sessions/:id/summary` (`readiness.delta`). When `calibrated` is `false` (equivalently `readinessScore` is `null`), the card MUST show "not yet calibrated" instead of a percentage and MUST NOT show a delta. No per-cert exam-date countdown is shown (no such field exists in the backend contract).
@@ -58,13 +72,14 @@ Each certification card SHALL display its exam readiness. When `GET /api/v1/user
 
 ### Requirement: Each card shows top weak areas with status-coloured scores
 
-Each certification card SHALL show up to the top three weak-area domains from `GET /api/v1/user-certifications/:id/weak-areas`, each with its score coloured on the status scale (below 50% poor, 50–65% warning, 65–80% medium, above 80% good). When no weak-area data exists yet for the enrollment, the card MUST show a neutral "no data yet" placeholder rather than an empty panel.
+Each certification card SHALL show up to the top three weak-area domains from `GET /api/v1/user-certifications/:id/weak-areas`, each rendered as an inline **DomainBadge** chip — a status dot, the domain label, and its score percentage — matching `openspec/design/Dashboard.html`, rather than a bordered text list. Each chip's score MUST be coloured on the status scale (below 50% poor, 50–65% warning, 65–80% medium, above 80% good). When no weak-area data exists yet for the enrollment, the card MUST show a neutral "no data yet" placeholder rather than an empty panel.
 
-#### Scenario: Top three weak areas are shown with status colours
+#### Scenario: Top three weak areas are shown as status-coloured chips
 
 - **WHEN** an enrollment has weak areas Billing 48%, Security 61%, Networking 70%, and Storage 75%
-- **THEN** the card shows Billing, Security, and Networking (the lowest three)
+- **THEN** the card shows Billing, Security, and Networking (the lowest three) as inline DomainBadge chips, each with a status dot, label, and percentage
 - **AND** 48% is rendered in the poor colour, 61% in the warning colour, and 70% in the medium colour
+- **AND** the weak areas are not rendered as a bordered text list
 
 #### Scenario: No weak-area data shows a placeholder
 
@@ -73,12 +88,13 @@ Each certification card SHALL show up to the top three weak-area domains from `G
 
 ### Requirement: Each card shows recent sessions with domain and accuracy
 
-Each certification card SHALL show up to the last three sessions for the certification from `GET /api/v1/sessions?certificationId=<certificationId>&limit=3` (filtered by the enrollment's underlying certification id). For each completed session the card MUST show a domain label and the session accuracy obtained from `GET /api/v1/sessions/:id/summary`; a session without an available summary MUST fall back to a date and focus-area label without an accuracy figure. When the enrollment has no sessions yet, the card MUST show a "no sessions yet" placeholder.
+Each certification card SHALL show up to the last three sessions for the certification from `GET /api/v1/sessions?certificationId=<certificationId>&limit=3` (filtered by the enrollment's underlying certification id). Recent sessions MUST render as a compact multi-column mini layout matching `openspec/design/Dashboard.html` — for each session a **when** label, its **duration**, and its **+delta** — rather than a single text line. For each completed session the card MUST show a domain label and the session accuracy obtained from `GET /api/v1/sessions/:id/summary`; a session without an available summary MUST fall back to a date and focus-area label without an accuracy figure. When the enrollment has no sessions yet, the card MUST show a "no sessions yet" placeholder.
 
-#### Scenario: Recent completed sessions show domain and accuracy
+#### Scenario: Recent completed sessions show a compact when/duration/delta layout
 
 - **WHEN** an enrollment's three most recent completed sessions report accuracies of 82%, 55%, and 71%
-- **THEN** the recent-sessions panel lists three rows, each with a domain label and its accuracy
+- **THEN** the recent-sessions panel lists three rows, each in a compact layout showing a when label, a duration, and a signed delta
+- **AND** each row carries a domain label and its accuracy
 
 #### Scenario: No sessions shows a placeholder
 
@@ -87,21 +103,22 @@ Each certification card SHALL show up to the last three sessions for the certifi
 
 ### Requirement: Due-review quick-start appears only when reviews are due
 
-Each certification card SHALL request the due-review count via `GET /api/v1/user-certifications/:id/review` and, only when `meta.dueCount` is greater than zero, render a "5-minute review" quick-start showing the due count. Activating it MUST call `POST /api/v1/user-certifications/:id/review/start` and navigate into the review run loop. When `dueCount` is zero the quick-start MUST NOT be rendered.
+Each certification card SHALL request the due-review count via `GET /api/v1/user-certifications/:id/review` and, only when `meta.dueCount` is greater than zero, render a review-due row showing the due count. Matching `openspec/design/Dashboard.html`, this row MUST present the due count as a prominent number paired with a "reviews due" label and a pill affordance aligned to the leading (left) edge of the row; on the hero card the pill MUST use the white-translucent hero treatment. Activating it MUST call `POST /api/v1/user-certifications/:id/review/start` and navigate into the review run loop. When `dueCount` is zero the row MUST NOT be rendered.
 
-#### Scenario: Due reviews show the quick-start
+#### Scenario: Due reviews show the review-due row
 
 - **WHEN** an enrollment has a due-review count of 12
-- **THEN** the card shows a "5-minute review" quick-start indicating 12 due reviews
+- **THEN** the card shows a review-due row with the prominent count "12", a "reviews due" label, and a leading-aligned pill affordance
+- **AND** activating the pill starts the review run loop
 
-#### Scenario: No due reviews hides the quick-start
+#### Scenario: No due reviews hides the row
 
 - **WHEN** an enrollment has a due-review count of 0
-- **THEN** no review quick-start is rendered on the card
+- **THEN** no review-due row is rendered on the card
 
 ### Requirement: Start-Session and Mock-Exam quick-starts launch from each card
 
-Each certification card SHALL provide a Start-Session quick-start that calls `POST /api/v1/user-certifications/:id/sessions` and a Mock-Exam quick-start that calls `POST /api/v1/user-certifications/:id/mock-exams`, each navigating to the corresponding runner route. The hero card MUST render these actions in the primary (filled) style and standard cards in the muted style, per the design.
+Each certification card SHALL provide a Start-Session quick-start that calls `POST /api/v1/user-certifications/:id/sessions` and a Mock-Exam quick-start that calls `POST /api/v1/user-certifications/:id/mock-exams`, each navigating to the corresponding runner route. Matching `openspec/design/Dashboard.html`, both actions MUST be placed in the card's **bottom action row** (Mock exam alongside "Start session →"), not in the card's top-right corner. The hero card MUST render these actions in the primary (filled) style and standard cards in the muted style, per the design.
 
 #### Scenario: Start Session launches a session for the cert
 
@@ -113,9 +130,14 @@ Each certification card SHALL provide a Start-Session quick-start that calls `PO
 - **WHEN** the user activates Mock Exam on a certification card
 - **THEN** the app calls `POST /user-certifications/:id/mock-exams` for that enrollment and navigates to the mock-exam route
 
+#### Scenario: Actions render in the card's bottom row
+
+- **WHEN** a certification card is rendered
+- **THEN** the Mock exam and "Start session →" actions appear in the card's bottom action row, not in the top-right corner
+
 ### Requirement: Add-certification enrolls in a new certification
 
-The dashboard SHALL provide an "+ Add certification" entry that opens a modal listing certifications the user is not already enrolled in (derived from `GET /api/v1/certifications` minus current enrollments). Selecting one MUST call `POST /api/v1/user-certifications` to enroll and, on success, refresh the dashboard so the new certification appears as a card.
+The dashboard SHALL provide an "+ Add certification" entry that opens a modal listing certifications the user is not already enrolled in (derived from `GET /api/v1/certifications` minus current enrollments). Selecting one MUST call `POST /api/v1/user-certifications` to enroll and, on success, refresh the dashboard so the new certification appears as a card. Matching `openspec/design/Dashboard.html`, the add-certification card MUST show the subtitle "Track another exam alongside this one" beneath its label.
 
 #### Scenario: Adding a certification enrolls and shows a new card
 
@@ -127,3 +149,19 @@ The dashboard SHALL provide an "+ Add certification" entry that opens a modal li
 
 - **WHEN** the user opens the add-certification modal
 - **THEN** certifications the user is already actively enrolled in are not listed as options
+
+#### Scenario: Add-certification card shows the subtitle
+
+- **WHEN** the dashboard renders the "+ Add certification" entry
+- **THEN** the card shows the subtitle "Track another exam alongside this one" beneath its label
+
+### Requirement: First-visit diagnostic banner is an accent-tinted welcome callout
+
+The dashboard SHALL render its first-visit / diagnostic message as an accent-tinted welcome callout with a shield icon, matching `openspec/design/Dashboard.html`, rather than as plain unstyled text. The callout is informational and MUST NOT block the certification list.
+
+#### Scenario: Diagnostic banner renders as an accent-tinted callout
+
+- **WHEN** the dashboard shows its first-visit / diagnostic welcome message
+- **THEN** the message renders as an accent-tinted callout with a shield icon
+- **AND** the message is not rendered as plain unstyled text
+
