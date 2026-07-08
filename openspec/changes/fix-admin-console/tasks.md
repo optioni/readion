@@ -29,11 +29,11 @@ Reproduce the highest-impact defects first: Audit Log human-readability, the Adm
 
 ## 4. Admin shell chrome — AdminSidebar (`web-admin`)
 
-- [ ] 4.1 RED: Component-test `AdminConsole.vue` — asserts the `ADMIN` eyebrow, per-item icons, a Review-queue badge bound to the pending quarantine count, and an Admin-session card showing the signed-in admin email; asserts the console is not wrapped by the study app shell (single admin nav)
-- [ ] 4.2 GREEN: Add the eyebrow, per-item icons, review-queue badge (from the quarantine pending count), and admin-session card; ensure admin routes use only the admin shell
-- [ ] 4.3 RED: Route-test `/admin` — an admin visiting `/admin` is redirected to `/admin/certifications`
-- [ ] 4.4 GREEN: Add the `/admin` → `/admin/certifications` redirect
-- [ ] 4.5 REFACTOR: De-duplicate nav item definitions and active-state logic
+- [x] 4.1 RED: Component-test `AdminConsole.vue` — asserts the `ADMIN` eyebrow, per-item icons, a Review-queue badge bound to the pending quarantine count, and an Admin-session card showing the signed-in admin email; asserts the console is not wrapped by the study app shell (single admin nav)
+- [x] 4.2 GREEN: Add the eyebrow, per-item icons, review-queue badge (from the quarantine pending count), and admin-session card; ensure admin routes use only the admin shell
+- [x] 4.3 RED: Route-test `/admin` — an admin visiting `/admin` is redirected to `/admin/certifications`
+- [x] 4.4 GREEN: Add the `/admin` → `/admin/certifications` redirect
+- [x] 4.5 REFACTOR: De-duplicate nav item definitions and active-state logic
 
 ## 5. Users table fidelity (`web-admin`)
 
