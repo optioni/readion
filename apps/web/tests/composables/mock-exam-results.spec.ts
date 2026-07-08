@@ -1,6 +1,6 @@
 import type { MockExamDomainBreakdown, MockExamQuestionResponse } from '@readion/shared'
 import { describe, expect, it } from 'vitest'
-import { deriveExamCounts, passingScorePercent } from '~/composables/mockExamResults'
+import { deriveExamCounts, passingScorePercent, weightPercent } from '~/composables/mockExamResults'
 
 const DOMAIN_BREAKDOWN: MockExamDomainBreakdown = {
   'Resilient Architectures': { correct: 14, total: 18, accuracy: 0.78 },
@@ -51,5 +51,15 @@ describe('passingScorePercent', () => {
   it('returns null for null or undefined', () => {
     expect(passingScorePercent(null)).toBeNull()
     expect(passingScorePercent(undefined)).toBeNull()
+  })
+})
+
+describe('weightPercent', () => {
+  it('scales a 0-1 fraction up to a percentage', () => {
+    expect(weightPercent(0.2)).toBe(20)
+  })
+
+  it('leaves an already-percentage value unchanged', () => {
+    expect(weightPercent(25)).toBe(25)
   })
 })
