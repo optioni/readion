@@ -26,8 +26,14 @@ describe('ScrapperClient', () => {
         res.writeHead(500)
         res.end()
       } else {
-        res.writeHead(200, { 'Content-Type': 'text/plain' })
-        res.end('# Cleaned Content\n\nSome markdown text.')
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(
+          JSON.stringify({
+            title: 'Doc',
+            textContent: 'Cleaned Content',
+            content: '<p>ignored</p>',
+          }),
+        )
       }
     })
 
@@ -50,7 +56,7 @@ describe('ScrapperClient', () => {
   describe('buildScrapperUrl', () => {
     it('Base URL comes from validated config', () => {
       const url = buildScrapperUrl('http://scrapper:3001', 'https://example.com/page')
-      expect(url).toContain('http://scrapper:3001/')
+      expect(url).toContain('http://scrapper:3001/api/article')
       expect(url).toContain('url=')
       expect(url).toContain(encodeURIComponent('https://example.com/page'))
     })

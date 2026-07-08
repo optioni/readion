@@ -6,14 +6,29 @@ export interface ScrapperResult {
   url: string
 }
 
+// The scrapper's article-extraction endpoint. The service root ("/") only
+// serves the web UI, so hitting it returns the SPA HTML for every url; the
+// readable page text lives behind /api/article as JSON.
 export function buildScrapperUrl(baseUrl: string, targetUrl: string): string {
-  const request = new URL('/', baseUrl)
+  const request = new URL('/api/article', baseUrl)
   request.searchParams.set('url', targetUrl)
   return request.toString()
 }
 
 export function mapResponseError(targetUrl: string, status: number): never {
   throw new ScrapperError(targetUrl, status)
+}
+
+// /api/article returns the Readability result as JSON; textContent is the plain
+// reading text. Fall back to the raw body if the response is not the expected
+// JSON, so an unexpected shape degrades to "something" rather than throwing.
+function extractArticleText(body: string): string {
+  try {
+    const parsed = JSON.parse(body) as { textContent?: string | null }
+    return parsed.textContent ?? ''
+  } catch {
+    return body
+  }
 }
 
 @Injectable()
@@ -42,7 +57,7 @@ export class ScrapperClient {
       mapResponseError(targetUrl, response.status)
     }
 
-    const content = await response.text()
+    const content = extractArticleText(await response.text())
     return { content, url: targetUrl }
   }
 }
