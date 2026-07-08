@@ -148,6 +148,13 @@ describe('AdminUsers table render', () => {
     expect(wrapper.find('[data-testid="user-summary"]').text()).toBe('3 users · 1 admin')
   })
 
+  it('sources the users count from meta.total rather than the current page size', () => {
+    stubUsers(USERS, {}, { total: 23, page: 1, limit: 20 })
+    const { wrapper } = mountUsers()
+
+    expect(wrapper.find('[data-testid="user-summary"]').text()).toBe('23 users · 1 admin')
+  })
+
   it('exposes a Name and Last active column and a disabled Remove action per row', () => {
     stubUsers()
     const { wrapper } = mountUsers()
