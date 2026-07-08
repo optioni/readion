@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { computePaceRate, formatPaceString } from '~/composables/paceFormatter'
+import { computePaceRate, formatPaceString, pluralizeUnit } from '~/composables/paceFormatter'
+
+describe('pluralizeUnit', () => {
+  it('returns the singular word when count is 1', () => {
+    expect(pluralizeUnit(1, 'week')).toBe('week')
+    expect(pluralizeUnit(1, 'day')).toBe('day')
+  })
+
+  it('returns the pluralized word for counts other than 1', () => {
+    expect(pluralizeUnit(0, 'week')).toBe('weeks')
+    expect(pluralizeUnit(2, 'week')).toBe('weeks')
+    expect(pluralizeUnit(3, 'day')).toBe('days')
+    expect(pluralizeUnit(-1, 'day')).toBe('days')
+  })
+})
 
 describe('computePaceRate', () => {
   it('returns null when points has fewer than 2 entries', () => {
