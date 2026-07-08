@@ -56,8 +56,12 @@ import { gotoAuthenticated } from './support/session-view-seed'
 //                   admin-nav-certifications, admin-nav-review-queue, admin-nav-sources,
 //                   admin-nav-users, admin-nav-audit-log, admin-nav-settings (links to /settings)
 //   Users         : admin-users-page, admin-user-row (data-user-id), user-avatar (initials),
-//                   user-email, user-role, promote-user-btn, demote-user-btn, demote-error;
-//                   user-search / user-invite / user-delete / user-last-active MUST be absent
+//                   user-name (placeholder), user-email, user-role (Capitalized), user-joined,
+//                   user-last-active (placeholder), user-enrollments (Certs column), user-search,
+//                   user-invite-btn (disabled placeholder), user-summary (`N users · M admins`),
+//                   promote-user-btn OR demote-user-btn (single contextual toggle, never both),
+//                   user-remove-btn (disabled placeholder), demote-error;
+//                   user-delete-btn MUST be absent (removal is the disabled user-remove-btn)
 //   Audit Log     : admin-audit-log-page, audit-log-row, audit-actor (actorEmail / System
 //                   fallback, NOT a raw UUID), audit-target (targetLabel), audit-change (scalar
 //                   `before → after` diff, NOT JSON.stringify), audit-action;
@@ -123,9 +127,10 @@ test.describe('web-admin — admin console', () => {
     await gotoAuthenticated(page, '/admin/users')
 
     await expect(page.getByTestId('admin-users-page')).toBeVisible()
-    // No name/search/invite/delete controls — promote/demote only.
-    await expect(page.getByTestId('user-search')).toHaveCount(0)
-    await expect(page.getByTestId('user-invite-btn')).toHaveCount(0)
+    // Search + Invite render as deferred placeholders (contract fields don't exist yet); no
+    // stray user-delete-btn testid (removal is a disabled user-remove-btn, not a live action).
+    await expect(page.getByTestId('user-search')).toBeVisible()
+    await expect(page.getByTestId('user-invite-btn')).toBeDisabled()
     await expect(page.getByTestId('user-delete-btn')).toHaveCount(0)
 
     const promoteRow = page.locator(
@@ -141,7 +146,7 @@ test.describe('web-admin — admin console', () => {
     await expect.poll(() => handles.demotedUserIds.at(-1)).toBe(ADMIN_USER_ID)
     await expect(page.getByTestId('demote-error')).toBeVisible()
     // Last admin stays admin after the 409.
-    await expect(adminRow.getByTestId('user-role')).toContainText('admin')
+    await expect(adminRow.getByTestId('user-role')).toContainText('Admin')
   })
 
   test('audit log: read-only render, human-readable actor/target/diff, no edit/export', async ({
