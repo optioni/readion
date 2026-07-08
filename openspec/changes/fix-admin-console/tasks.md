@@ -61,9 +61,9 @@ Reproduce the highest-impact defects first: Audit Log human-readability, the Adm
 
 ## 9. Cert setup wizard chrome (`web-admin`)
 
-- [ ] 9.1 RED: Component-test the new-certification flow — a `SetupHeader` renders a breadcrumb, a `Step N of 4 · <step name>` indicator with a progress bar, and a Cancel affordance, across the discover → extraction → coverage steps
-- [ ] 9.2 GREEN: Add the `SetupHeader` chrome (breadcrumb + step indicator + progress bar + Cancel) around the existing wizard steps
-- [ ] 9.3 REFACTOR: Derive the step index/label and progress from the existing wizard state (no duplicated step constants)
+- [x] 9.1 RED: Component-test the new-certification flow — a `SetupHeader` renders a breadcrumb, a `Step N of 4 · <step name>` indicator with a progress bar, and a Cancel affordance, across the discover → extraction → coverage steps
+- [x] 9.2 GREEN: Add the `SetupHeader` chrome (breadcrumb + step indicator + progress bar + Cancel) around the existing wizard steps
+- [x] 9.3 REFACTOR: Derive the step index/label and progress from the existing wizard state (no duplicated step constants)
 
 ## 10. Acceptance Test — Outer Loop GREEN
 
