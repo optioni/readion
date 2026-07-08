@@ -192,3 +192,55 @@ describe('Progress page — stat cards', () => {
     expect(wrapper.find('[data-testid="progress-page"]').text()).toContain('Current streak')
   })
 })
+
+describe('Progress page — current streak unit', () => {
+  it('renders a singular "1 day" for a one-day streak', () => {
+    stubProgressData({
+      sessions: [
+        {
+          id: 's1',
+          userCertificationId: 'uc-1',
+          kind: 'study',
+          status: 'completed',
+          durationMinutes: 60,
+          startedAt: '2026-06-01T09:00:00Z',
+        },
+      ],
+    })
+    const wrapper = mountPage()
+    const streakCard = wrapper
+      .findAll('[data-testid="progress-stat-card"]')
+      .find((card) => card.text().includes('Current streak'))
+    const unit = streakCard?.findAll('span').at(-1)
+    expect(unit?.text()).toBe('day')
+  })
+
+  it('renders a plural "2 days" for a two-day streak', () => {
+    stubProgressData({
+      sessions: [
+        {
+          id: 's1',
+          userCertificationId: 'uc-1',
+          kind: 'study',
+          status: 'completed',
+          durationMinutes: 60,
+          startedAt: '2026-06-01T09:00:00Z',
+        },
+        {
+          id: 's2',
+          userCertificationId: 'uc-1',
+          kind: 'study',
+          status: 'completed',
+          durationMinutes: 60,
+          startedAt: '2026-06-02T09:00:00Z',
+        },
+      ],
+    })
+    const wrapper = mountPage()
+    const streakCard = wrapper
+      .findAll('[data-testid="progress-stat-card"]')
+      .find((card) => card.text().includes('Current streak'))
+    const unit = streakCard?.findAll('span').at(-1)
+    expect(unit?.text()).toBe('days')
+  })
+})
