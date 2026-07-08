@@ -1,5 +1,6 @@
 import type { AdminUserListItem, CollectionMeta } from '@readion/shared'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import { useAdminUsers } from '~/composables/useAdminUsers'
 import { adminControllerListUsers } from '~~/src/api/admin/admin'
@@ -49,6 +50,7 @@ describe('useAdminUsers', () => {
       expect(result.data.value).toEqual({ data: USERS, meta: META })
     })
     expect(adminControllerListUsers).toHaveBeenCalledOnce()
+    expect(adminControllerListUsers).toHaveBeenCalledWith({ page: 1, limit: 20 })
   })
 
   it('caches the users under the shared admin users key', async () => {
@@ -60,6 +62,25 @@ describe('useAdminUsers', () => {
     await vi.waitFor(() => {
       expect(result.data.value).toBeDefined()
     })
-    expect(queryClient.getQueryData(adminQueryKeys.users())).toEqual({ data: USERS, meta: META })
+    expect(queryClient.getQueryData(adminQueryKeys.users(1))).toEqual({ data: USERS, meta: META })
+  })
+
+  it('passes the reactive page to the generated client and refetches when it changes', async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+    vi.mocked(adminControllerListUsers).mockResolvedValue(listEnvelope as any)
+    const page = ref(1)
+
+    const { result, queryClient } = renderComposable(() => useAdminUsers(page))
+
+    await vi.waitFor(() => {
+      expect(result.data.value).toBeDefined()
+    })
+    expect(adminControllerListUsers).toHaveBeenCalledWith({ page: 1, limit: 20 })
+
+    page.value = 2
+    await vi.waitFor(() => {
+      expect(adminControllerListUsers).toHaveBeenCalledWith({ page: 2, limit: 20 })
+    })
+    expect(queryClient.getQueryData(adminQueryKeys.users(2))).toEqual({ data: USERS, meta: META })
   })
 })

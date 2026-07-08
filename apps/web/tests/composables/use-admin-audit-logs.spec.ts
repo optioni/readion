@@ -1,5 +1,6 @@
 import type { AuditLogEntry, CollectionMeta } from '@readion/shared'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import { useAdminAuditLogs } from '~/composables/useAdminAuditLogs'
 import { adminControllerListAuditLogs } from '~~/src/api/admin/admin'
@@ -53,6 +54,7 @@ describe('useAdminAuditLogs', () => {
       expect(result.data.value).toEqual({ data: ENTRIES, meta: META })
     })
     expect(adminControllerListAuditLogs).toHaveBeenCalledOnce()
+    expect(adminControllerListAuditLogs).toHaveBeenCalledWith({ page: 1, limit: 20 })
   })
 
   it('caches the entries under the shared admin audit-logs key', async () => {
@@ -64,7 +66,29 @@ describe('useAdminAuditLogs', () => {
     await vi.waitFor(() => {
       expect(result.data.value).toBeDefined()
     })
-    expect(queryClient.getQueryData(adminQueryKeys.auditLogs())).toEqual({
+    expect(queryClient.getQueryData(adminQueryKeys.auditLogs(1))).toEqual({
+      data: ENTRIES,
+      meta: META,
+    })
+  })
+
+  it('passes the reactive page to the generated client and refetches when it changes', async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+    vi.mocked(adminControllerListAuditLogs).mockResolvedValue(listEnvelope as any)
+    const page = ref(1)
+
+    const { result, queryClient } = renderComposable(() => useAdminAuditLogs(page))
+
+    await vi.waitFor(() => {
+      expect(result.data.value).toBeDefined()
+    })
+    expect(adminControllerListAuditLogs).toHaveBeenCalledWith({ page: 1, limit: 20 })
+
+    page.value = 2
+    await vi.waitFor(() => {
+      expect(adminControllerListAuditLogs).toHaveBeenCalledWith({ page: 2, limit: 20 })
+    })
+    expect(queryClient.getQueryData(adminQueryKeys.auditLogs(2))).toEqual({
       data: ENTRIES,
       meta: META,
     })
