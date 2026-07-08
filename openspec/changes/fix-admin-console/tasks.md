@@ -10,16 +10,16 @@ Reproduce the highest-impact defects first: Audit Log human-readability, the Adm
 
 ## 1. Audit-log contract — resolvable identity (`audit-log`)
 
-- [ ] 1.1 RED: Unit-test the admin audit-logs read model / mapper — for a `user.role.promoted` entry it resolves `actorEmail` from `userId` and sets `targetLabel` to the target user's email; for a purged actor (`userId = null`) `actorEmail` is `null`; for a source/cert action `targetLabel` is the source/cert title
-- [ ] 1.2 GREEN: Extend the audit-logs query/DTO to expose `actorEmail` (nullable) and `targetLabel`; add `actorEmail`/`targetLabel` to the shared `AuditLogEntry` type in `packages/shared`
-- [ ] 1.3 REFACTOR: Keep the resolution in one read-model mapper; ensure the append-only + purge invariants are untouched (write path still stores only `userId`)
-- [ ] 1.4 Regenerate the Orval client and commit the updated `~~/src/api` audit-logs model
+- [x] 1.1 RED: Unit-test the admin audit-logs read model / mapper — for a `user.role.promoted` entry it resolves `actorEmail` from `userId` and sets `targetLabel` to the target user's email; for a purged actor (`userId = null`) `actorEmail` is `null`; for a source/cert action `targetLabel` is the source/cert title
+- [x] 1.2 GREEN: Extend the audit-logs query/DTO to expose `actorEmail` (nullable) and `targetLabel`; add `actorEmail`/`targetLabel` to the shared `AuditLogEntry` type in `packages/shared`
+- [x] 1.3 REFACTOR: Keep the resolution in one read-model mapper; ensure the append-only + purge invariants are untouched (write path still stores only `userId`)
+- [x] 1.4 Regenerate the Orval client and commit the updated `~~/src/api` audit-logs model
 
 ## 2. Audit Log rendering — human-readable (`web-admin`)
 
-- [ ] 2.1 RED: Unit/component-test `AdminAuditLog.vue` — a row renders `actorEmail` (and a `System`/`—` fallback when null), `targetLabel`, and a human `before → after` diff (scalar values, not `JSON.stringify`)
-- [ ] 2.2 GREEN: Render `actorEmail` / `targetLabel` and a scalar before→after formatter; drop the raw-JSON `formatSnapshot`
-- [ ] 2.3 REFACTOR: Extract the before→after diff formatter so it degrades gracefully for multi-key snapshots
+- [x] 2.1 RED: Unit/component-test `AdminAuditLog.vue` — a row renders `actorEmail` (and a `System`/`—` fallback when null), `targetLabel`, and a human `before → after` diff (scalar values, not `JSON.stringify`)
+- [x] 2.2 GREEN: Render `actorEmail` / `targetLabel` and a scalar before→after formatter; drop the raw-JSON `formatSnapshot`
+- [x] 2.3 REFACTOR: Extract the before→after diff formatter so it degrades gracefully for multi-key snapshots
 
 ## 3. Audit Log + Users pagination (`web-admin`)
 
