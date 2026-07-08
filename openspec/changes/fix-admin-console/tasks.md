@@ -55,9 +55,9 @@ Reproduce the highest-impact defects first: Audit Log human-readability, the Adm
 
 ## 8. Certifications index list (`web-admin`)
 
-- [ ] 8.1 RED: Component-test `AdminCertifications.vue` — the section lists existing certifications (from the certifications list endpoint), each linking to its detail/setup, in addition to the Due-for-re-verification section
-- [ ] 8.2 GREEN: Fetch and render the existing-certifications list with an empty state
-- [ ] 8.3 REFACTOR: Reuse the shared certifications list query already used by Sources
+- [x] 8.1 RED: Component-test `AdminCertifications.vue` — the section lists existing certifications (from the certifications list endpoint), each linking to its detail/setup, in addition to the Due-for-re-verification section
+- [x] 8.2 GREEN: Fetch and render the existing-certifications list with an empty state
+- [x] 8.3 REFACTOR: Reuse the shared certifications list query already used by Sources
 
 ## 9. Cert setup wizard chrome (`web-admin`)
 
