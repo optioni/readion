@@ -256,19 +256,20 @@ describe('Session view live timer', () => {
 })
 
 describe('Session view ended session lifecycle', () => {
-  it.each(['completed', 'partial', 'abandoned'])(
-    'does not render the active runner or End session control for a %s session',
-    async (status) => {
-      stubSession([quizItem(0)], { status })
-      const wrapper = mountPage()
-      await flushPromises()
+  it.each([
+    'completed',
+    'partial',
+    'abandoned',
+  ])('does not render the active runner or End session control for a %s session', async (status) => {
+    stubSession([quizItem(0)], { status })
+    const wrapper = mountPage()
+    await flushPromises()
 
-      expect(wrapper.find('[data-testid="quiz-stub"]').exists()).toBe(false)
-      expect(wrapper.find('[data-testid="reading-stub"]').exists()).toBe(false)
-      expect(wrapper.find('[data-testid="end-session-button"]').exists()).toBe(false)
-      expect(mockNavigate).toHaveBeenCalledWith('/sessions/sess-1/summary')
-    },
-  )
+    expect(wrapper.find('[data-testid="quiz-stub"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="reading-stub"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="end-session-button"]').exists()).toBe(false)
+    expect(mockNavigate).toHaveBeenCalledWith('/sessions/sess-1/summary')
+  })
 
   it('still renders the active runner for an active session', async () => {
     stubSession([readingItem(0)], { status: 'active' })
