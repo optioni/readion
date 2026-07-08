@@ -22,26 +22,26 @@ const mockClass = computed(() =>
 </script>
 
 <template>
-  <div class="flex flex-col items-end gap-1.5">
-    <button
-      type="button"
-      data-testid="start-session-btn"
-      class="cursor-pointer rounded-md px-3.5 py-1.5 font-semibold text-xs disabled:cursor-not-allowed disabled:opacity-60"
-      :class="startClass"
-      :disabled="props.isStartingSession"
-      @click="emit('start-session')"
-    >
-      Start Session
-    </button>
+  <div class="flex flex-shrink-0 items-center gap-2">
     <button
       type="button"
       data-testid="mock-exam-btn"
-      class="cursor-pointer rounded-md px-3.5 py-1.5 font-semibold text-xs disabled:cursor-not-allowed disabled:opacity-60"
+      class="cursor-pointer rounded-md px-3.5 py-2 font-medium text-xs disabled:cursor-not-allowed disabled:opacity-60"
       :class="mockClass"
       :disabled="props.isStartingMockExam"
       @click="emit('mock-exam')"
     >
       Mock Exam
+    </button>
+    <button
+      type="button"
+      data-testid="start-session-btn"
+      class="cursor-pointer rounded-md px-4 py-2 font-semibold text-xs disabled:cursor-not-allowed disabled:opacity-60"
+      :class="startClass"
+      :disabled="props.isStartingSession"
+      @click="emit('start-session')"
+    >
+      Start Session →
     </button>
   </div>
 </template>

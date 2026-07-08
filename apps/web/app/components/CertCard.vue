@@ -42,21 +42,39 @@ const cardStyle = computed(() =>
   <article
     data-testid="cert-card"
     :data-variant="variant"
-    class="mb-4 rounded-lg p-6"
-    :class="{ 'bg-readion-background-surface': !isHero }"
+    class="mb-4 rounded-xl p-6"
+    :class="{ 'border border-readion-background-surface bg-readion-background-surface': !isHero }"
     :style="cardStyle"
   >
-    <div class="mb-4 flex items-start justify-between">
-      <div>
-        <NuxtLink
-          data-testid="cert-title"
-          :to="`/user-certifications/${props.card.enrollmentId}`"
-          class="mb-1 block text-[11px] uppercase tracking-wider opacity-80 transition-opacity hover:opacity-100"
+    <div class="mb-4 flex items-start justify-between gap-5">
+      <NuxtLink
+        data-testid="cert-title"
+        :to="`/user-certifications/${props.card.enrollmentId}`"
+        class="block min-w-0 transition-opacity hover:opacity-90"
+      >
+        <p
+          v-if="isHero"
+          class="mb-1 font-medium text-[10px] uppercase tracking-widest opacity-60"
         >
-          {{ props.card.name }} · {{ props.card.provider }}
-        </NuxtLink>
-        <CardReadiness :display="readinessDisplay" />
-      </div>
+          NEEDS ATTENTION
+        </p>
+        <h2 class="font-semibold text-base leading-snug">{{ props.card.name }}</h2>
+        <p class="mt-1 text-[11px] opacity-70">{{ props.card.provider }}</p>
+      </NuxtLink>
+      <CardReadiness :display="readinessDisplay" class="flex-shrink-0 text-right" />
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <WeakAreasPanel :weak-areas="weakAreas" :hero="isHero" />
+      <RecentSessionsPanel :sessions="sessions" :readiness-delta="readinessDelta" />
+    </div>
+    <div class="mt-4 flex items-center justify-between gap-3">
+      <ReviewQuickStart
+        v-if="dueCount > 0"
+        :enrollment-id="props.card.enrollmentId"
+        :due-count="dueCount"
+        :hero="isHero"
+      />
+      <span v-else />
       <QuickStartButtons
         :variant="variant"
         :is-starting-session="isStartingSession"
@@ -65,14 +83,5 @@ const cardStyle = computed(() =>
         @mock-exam="startMockExam"
       />
     </div>
-    <div class="grid grid-cols-2 gap-3">
-      <WeakAreasPanel :weak-areas="weakAreas" />
-      <RecentSessionsPanel :sessions="sessions" />
-    </div>
-    <ReviewQuickStart
-      v-if="dueCount > 0"
-      :enrollment-id="props.card.enrollmentId"
-      :due-count="dueCount"
-    />
   </article>
 </template>

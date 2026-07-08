@@ -159,7 +159,9 @@ describe('CertCard weak areas', () => {
       weakArea({ domain: 'Security', score: 61 }),
       weakArea({ domain: 'Pricing', score: 88 }),
     ])
-    const wrapper = mountCard()
+    // Standard variant: hero cards use the white/translucent DomainBadge treatment (matching
+    // Dashboard.html) instead of the status-scale colours asserted here.
+    const wrapper = mountCard('standard')
     const chips = wrapper.findAll('[data-testid="domain-badge"]')
     expect(chips).toHaveLength(3)
     expect(chips[0]!.text()).toContain('Billing')
