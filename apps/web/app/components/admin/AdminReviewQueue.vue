@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { useQueryClient } from '@tanstack/vue-query'
+import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import AdminReviewQueueDetail from '~/components/admin/AdminReviewQueueDetail.vue'
 import AdminReviewQueueList from '~/components/admin/AdminReviewQueueList.vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import { useAdminQuarantine } from '~/composables/useAdminQuarantine'
+import { certificationsControllerList } from '~~/src/api/certifications/certifications'
 import {
   quarantineAdminControllerApprove,
   quarantineAdminControllerReject,
@@ -15,8 +16,37 @@ const queryClient = useQueryClient()
 const quarantineQuery = useAdminQuarantine()
 
 const items = computed(() => quarantineQuery.data.value?.data ?? [])
+const awaitingCount = computed(() => quarantineQuery.data.value?.meta.total ?? items.value.length)
 const isLoading = computed(() => quarantineQuery.isLoading.value)
 const isError = computed(() => quarantineQuery.isError.value)
+
+const certsQuery = useQuery({
+  queryKey: ['admin', 'certifications-list'],
+  queryFn: async () => (await certificationsControllerList()).data.data,
+})
+const certsById = computed(() =>
+  Object.fromEntries((certsQuery.data.value ?? []).map((cert) => [cert.id, cert])),
+)
+
+const selectedCertId = ref<string | null>(null)
+
+const certChips = computed(() => {
+  const uniqueCertIds = Array.from(new Set(items.value.map((item) => item.certificationId)))
+  return uniqueCertIds.map((certId) => ({
+    id: certId,
+    label: certsById.value[certId]?.code ?? certsById.value[certId]?.name ?? certId,
+  }))
+})
+
+const filteredItems = computed(() =>
+  selectedCertId.value === null
+    ? items.value
+    : items.value.filter((item) => item.certificationId === selectedCertId.value),
+)
+
+function selectCertFilter(certId: string | null) {
+  selectedCertId.value = certId
+}
 
 const selectedId = ref<string | null>(null)
 const actionError = ref<string | null>(null)
@@ -56,7 +86,16 @@ function reject(id: string) {
 
 <template>
   <section data-testid="admin-review-queue-page" class="flex flex-col gap-6">
-    <h1 class="font-semibold text-lg text-white">Review queue</h1>
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h1 class="font-semibold text-lg text-white">Review queue</h1>
+      <p
+        v-if="!isLoading && !isError"
+        data-testid="review-queue-awaiting-count"
+        class="text-slate-400 text-sm"
+      >
+        {{ awaitingCount }} {{ awaitingCount === 1 ? 'item' : 'items' }} awaiting review
+      </p>
+    </div>
 
     <p v-if="isLoading" data-testid="admin-review-queue-loading" class="text-slate-400 text-sm">
       Loading quarantined items…
@@ -74,6 +113,41 @@ function reject(id: string) {
         {{ actionError }}
       </p>
 
+      <div v-if="certChips.length > 0" data-testid="review-queue-cert-chips" class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          data-testid="review-queue-cert-chip"
+          data-cert-id="all"
+          :aria-pressed="selectedCertId === null"
+          class="rounded-full border px-3 py-1.5 font-medium text-sm transition-colors"
+          :class="
+            selectedCertId === null
+              ? 'border-readion-primary bg-readion-primary/10 text-readion-primary'
+              : 'border-readion-background-surface text-slate-300 hover:border-readion-primary'
+          "
+          @click="selectCertFilter(null)"
+        >
+          All
+        </button>
+        <button
+          v-for="chip in certChips"
+          :key="chip.id"
+          type="button"
+          data-testid="review-queue-cert-chip"
+          :data-cert-id="chip.id"
+          :aria-pressed="selectedCertId === chip.id"
+          class="rounded-full border px-3 py-1.5 font-medium text-sm transition-colors"
+          :class="
+            selectedCertId === chip.id
+              ? 'border-readion-primary bg-readion-primary/10 text-readion-primary'
+              : 'border-readion-background-surface text-slate-300 hover:border-readion-primary'
+          "
+          @click="selectCertFilter(chip.id)"
+        >
+          {{ chip.label }}
+        </button>
+      </div>
+
       <div class="flex overflow-hidden rounded-lg border border-readion-background-surface">
         <div
           v-if="items.length === 0"
@@ -82,7 +156,13 @@ function reject(id: string) {
         >
           No quarantined items are awaiting review.
         </div>
-        <AdminReviewQueueList v-else :items="items" :selected-id="selectedId" @select="select" />
+        <AdminReviewQueueList
+          v-else
+          :items="filteredItems"
+          :selected-id="selectedId"
+          :certs-by-id="certsById"
+          @select="select"
+        />
         <AdminReviewQueueDetail
           :id="selectedId"
           :pending-id="pendingId"

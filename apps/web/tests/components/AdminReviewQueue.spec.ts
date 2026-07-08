@@ -383,10 +383,11 @@ describe('AdminReviewQueue awaiting count and certification filters', () => {
     expect(wrapper.findAll('[data-testid="review-queue-item"]')).toHaveLength(3)
   })
 
-  it('shows a resolved certification badge and formatted verdict badge on each row', () => {
+  it('shows a resolved certification badge and formatted verdict badge on each row', async () => {
     stubQuarantine()
     stubQuarantineDetail()
     const { wrapper } = mountQueue()
+    await flushPromises()
 
     const rowA = rowFor(wrapper, ITEM_A_ID)
     expect(rowA.find('[data-testid="review-queue-item-id"]').text()).toBe(ITEM_A_ID)

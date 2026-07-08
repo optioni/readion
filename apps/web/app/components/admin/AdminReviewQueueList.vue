@@ -1,10 +1,20 @@
 <script setup lang="ts">
-import type { QuarantinedItemListItem } from '@readion/shared'
+import type { QuarantinedItemListItem, VerifierVerdict } from '@readion/shared'
+import { formatVerdict } from '~/utils/formatVerdict'
 
-defineProps<{
-  items: QuarantinedItemListItem[]
-  selectedId: string | null
-}>()
+interface CertLookupEntry {
+  name: string
+  code: string
+}
+
+const props = withDefaults(
+  defineProps<{
+    items: QuarantinedItemListItem[]
+    selectedId: string | null
+    certsById?: Record<string, CertLookupEntry>
+  }>(),
+  { certsById: () => ({}) },
+)
 
 const emit = defineEmits<{ select: [id: string] }>()
 
@@ -16,6 +26,20 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 
 function formatDate(createdAt: string): string {
   return dateFormatter.format(new Date(createdAt))
+}
+
+function certLabel(certificationId: string): string | undefined {
+  const cert = props.certsById[certificationId]
+  return cert?.code ?? cert?.name
+}
+
+function verdictFor(item: QuarantinedItemListItem) {
+  const nestedVerdict = item.provenance.verdict as VerifierVerdict | undefined
+  return formatVerdict({
+    pass: nestedVerdict?.pass ?? false,
+    score: nestedVerdict?.score ?? item.provenance.score,
+    reason: item.reason,
+  })
 }
 </script>
 
@@ -36,10 +60,36 @@ function formatDate(createdAt: string): string {
       @click="emit('select', item.id)"
     >
       <div class="flex items-center justify-between gap-2">
+        <span
+          data-testid="review-queue-item-id"
+          class="truncate font-mono text-[11px] text-slate-500"
+        >
+          {{ item.id }}
+        </span>
+        <span class="flex-shrink-0 text-slate-500 text-xs">{{ formatDate(item.createdAt) }}</span>
+      </div>
+      <div class="mt-1 flex items-center justify-between gap-2">
         <span class="font-medium text-slate-100 text-sm">{{ item.domain }}</span>
-        <span class="text-slate-500 text-xs">{{ formatDate(item.createdAt) }}</span>
+        <span
+          v-if="certLabel(item.certificationId)"
+          data-testid="review-queue-item-cert"
+          class="flex-shrink-0 rounded-full bg-readion-background-surface px-2 py-0.5 text-[10px] text-slate-300"
+        >
+          {{ certLabel(item.certificationId) }}
+        </span>
       </div>
       <p class="mt-1 line-clamp-2 text-slate-400 text-xs">{{ item.reason }}</p>
+      <p
+        data-testid="review-queue-item-verdict"
+        class="mt-1 font-medium text-xs"
+        :class="
+          verdictFor(item).tone === 'good'
+            ? 'text-readion-status-good'
+            : 'text-readion-status-poor'
+        "
+      >
+        {{ verdictFor(item).label }} · {{ verdictFor(item).scorePercent }}
+      </p>
     </li>
   </ul>
 </template>
