@@ -84,6 +84,7 @@ function stubCert() {
     certificationId: computed(() => 'cert-1'),
     domains: computed(() => []),
     questionCount: computed(() => 65),
+    passingScore: computed(() => null),
     isLoading: computed(() => false),
     isError: computed(() => false),
     notFound: computed(() => false),

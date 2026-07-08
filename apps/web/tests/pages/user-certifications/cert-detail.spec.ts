@@ -26,6 +26,7 @@ function stubCertDetail(
     certificationId: computed(() => options.certificationId ?? 'cert-1'),
     domains: computed(() => []),
     questionCount: computed(() => 65),
+    passingScore: computed(() => null),
     isLoading: computed(() => options.isLoading ?? false),
     isError: computed(() => options.isError ?? false),
     notFound: computed(() => options.notFound ?? false),

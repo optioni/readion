@@ -1,24 +1,24 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-- [ ] 0.1 Fix the fixture scale first (it currently masks the bug): in `apps/web/e2e/support/mock-exam-seed.ts` change the terminal attempt `score: 73` (line ~218) to the real **0..1 fraction** `0.73`, matching `MockExam.score` (`correct/total`). Keep `passed: true`.
-- [ ] 0.2 RED: In `apps/web/e2e/mock-exam.e2e.ts` assert the submitted results hero shows **"73%"** (from `score: 0.73`) via `exam-score-value`. Confirm this now FAILS because `Math.round(0.73) = 1` renders "1%" — reproducing the real bug the old fixture hid.
-- [ ] 0.3 RED: Extend the same e2e to assert the design-parity hero additions: a passing-score reference (`Passing score: 72%`) and a "X correct · Y incorrect · Z unanswered" line whose numbers match the seed's `domainBreakdown` + unanswered `questions[].userAnswer`. The passing score comes from the **two-hop certification chain**, so the seed must mock BOTH: **add** `GET /api/v1/user-certifications/:enrollmentId` returning `{ certificationId }` (currently absent — hop 1), and enable the already-defined `GET /api/v1/certifications/:certificationId` read (hop 2, `mock-exam-seed.ts:317-332`). Confirm these fail (elements absent).
-- [ ] 0.4 RED: Assert the per-domain table shows a passing-threshold marker and a "Below passing threshold" note on any domain whose accuracy is under the passing score, plus a Weight column. Confirm they fail.
-- [ ] 0.5 Confirm every new assertion fails for the RIGHT reason (wrong score scale / missing design elements), not a harness/route-mock error.
+- [x] 0.1 Fix the fixture scale first (it currently masks the bug): in `apps/web/e2e/support/mock-exam-seed.ts` change the terminal attempt `score: 73` (line ~218) to the real **0..1 fraction** `0.73`, matching `MockExam.score` (`correct/total`). Keep `passed: true`.
+- [x] 0.2 RED: In `apps/web/e2e/mock-exam.e2e.ts` assert the submitted results hero shows **"73%"** (from `score: 0.73`) via `exam-score-value`. Confirm this now FAILS because `Math.round(0.73) = 1` renders "1%" — reproducing the real bug the old fixture hid.
+- [x] 0.3 RED: Extend the same e2e to assert the design-parity hero additions: a passing-score reference (`Passing score: 72%`) and a "X correct · Y incorrect · Z unanswered" line whose numbers match the seed's `domainBreakdown` + unanswered `questions[].userAnswer`. The passing score comes from the **two-hop certification chain**, so the seed must mock BOTH: **add** `GET /api/v1/user-certifications/:enrollmentId` returning `{ certificationId }` (currently absent — hop 1), and enable the already-defined `GET /api/v1/certifications/:certificationId` read (hop 2, `mock-exam-seed.ts:317-332`). Confirm these fail (elements absent).
+- [x] 0.4 RED: Assert the per-domain table shows a passing-threshold marker and a "Below passing threshold" note on any domain whose accuracy is under the passing score, plus a Weight column. Confirm they fail.
+- [x] 0.5 Confirm every new assertion fails for the RIGHT reason (wrong score scale / missing design elements), not a harness/route-mock error.
 
 ## 1. Overall score renders as round(score × 100)% (the HIGH bug)
 
-- [ ] 1.1 RED: Add co-located unit spec `apps/web/app/components/MockExamResultsScene.spec.ts` asserting that with `exam.score = 0.7` the `exam-score-value` renders `70%` (and `0.735 → 74%`, `1 → 100%`, `0 → 0%`). Fails against the current `Math.round(props.exam.score ?? 0)`.
-- [ ] 1.2 GREEN: Change `scorePercent` in `MockExamResultsScene.vue:21` to `Math.round((props.exam.score ?? 0) * 100)`.
-- [ ] 1.3 RED: Regression-cover the badge scenarios preserved in the MODIFIED requirement — `passed: true` → PASS, `passed: false` → FAIL (poor colour), `passed: null` (diagnostic) → no badge rendered — so the score-scale change does not disturb them.
-- [ ] 1.4 REFACTOR: Confirm the pass/fail colour and badge (already driven by `exam.passed`) still read correctly with the corrected number; no duplicate scale conversion anywhere in the scene.
+- [x] 1.1 RED: Add co-located unit spec `apps/web/app/components/MockExamResultsScene.spec.ts` asserting that with `exam.score = 0.7` the `exam-score-value` renders `70%` (and `0.735 → 74%`, `1 → 100%`, `0 → 0%`). Fails against the current `Math.round(props.exam.score ?? 0)`.
+- [x] 1.2 GREEN: Change `scorePercent` in `MockExamResultsScene.vue:21` to `Math.round((props.exam.score ?? 0) * 100)`.
+- [x] 1.3 RED: Regression-cover the badge scenarios preserved in the MODIFIED requirement — `passed: true` → PASS, `passed: false` → FAIL (poor colour), `passed: null` (diagnostic) → no badge rendered — so the score-scale change does not disturb them.
+- [x] 1.4 REFACTOR: Confirm the pass/fail colour and badge (already driven by `exam.passed`) still read correctly with the corrected number; no duplicate scale conversion anywhere in the scene.
 
 ## 2. Passing-score reference + correct/incorrect/unanswered counts in the hero
 
-- [ ] 2.1 RED: Unit-test that the hero renders "Passing score: N%" from the certification `passingScore` resolved via the two-hop chain (`userCertificationsControllerDetail(userCertificationId).certificationId` → `certificationsControllerDetail(certificationId)`), normalised to a percentage, and omits the line when either hop is unavailable. Fails (not rendered).
-- [ ] 2.2 RED: Unit-test the derived counts line — correct = Σ `domainBreakdown[*].correct`, unanswered = count of `questions[]` with `userAnswer == null`, incorrect = total − correct − unanswered — rendering "46 correct · 15 incorrect · 4 unanswered" for the fixture. Fails.
-- [ ] 2.3 GREEN: In `MockExamResultsScene.vue` resolve the certification via the two-hop chain — reuse the `apps/web/app/composables/useCertDetail.ts` pattern (or the composable itself) with `props.exam.userCertificationId`, both operations already committed in the Orval client (no codegen) — and render the passing-score reference; compute and render the counts line from `domainBreakdown` + `questions`.
-- [ ] 2.4 REFACTOR: Extract count derivation into a small pure helper so it is unit-testable without the component; guard against a missing/empty `domainBreakdown`.
+- [x] 2.1 RED: Unit-test that the hero renders "Passing score: N%" from the certification `passingScore` resolved via the two-hop chain (`userCertificationsControllerDetail(userCertificationId).certificationId` → `certificationsControllerDetail(certificationId)`), normalised to a percentage, and omits the line when either hop is unavailable. Fails (not rendered).
+- [x] 2.2 RED: Unit-test the derived counts line — correct = Σ `domainBreakdown[*].correct`, unanswered = count of `questions[]` with `userAnswer == null`, incorrect = total − correct − unanswered — rendering "46 correct · 15 incorrect · 4 unanswered" for the fixture. Fails.
+- [x] 2.3 GREEN: In `MockExamResultsScene.vue` resolve the certification via the two-hop chain — reuse the `apps/web/app/composables/useCertDetail.ts` pattern (or the composable itself) with `props.exam.userCertificationId`, both operations already committed in the Orval client (no codegen) — and render the passing-score reference; compute and render the counts line from `domainBreakdown` + `questions`.
+- [x] 2.4 REFACTOR: Extract count derivation into a small pure helper so it is unit-testable without the component; guard against a missing/empty `domainBreakdown`.
 
 ## 3. Per-domain passing-threshold marker + weight column
 

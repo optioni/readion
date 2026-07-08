@@ -6,7 +6,9 @@ import MockExamDomainBreakdown from '~/components/MockExamDomainBreakdown.vue'
 import SessionSummaryBody from '~/components/SessionSummaryBody.vue'
 import { drillMockExam, fetchMockExamSummary } from '~/composables/mockExamApi'
 import { mockExamQueryKeys } from '~/composables/mockExamQueryKeys'
+import { deriveExamCounts, passingScorePercent } from '~/composables/mockExamResults'
 import { sessionRunPath } from '~/composables/runnerRoutes'
+import { useCertDetail } from '~/composables/useCertDetail'
 import type { SessionSummaryResponseDto } from '~~/src/api/model'
 
 const props = defineProps<{
@@ -20,6 +22,13 @@ const emit = defineEmits<{
 
 const scorePercent = computed<number>(() => Math.round((props.exam.score ?? 0) * 100))
 const isExpired = computed<boolean>(() => props.exam.status === 'expired')
+
+const { passingScore } = useCertDetail(props.exam.userCertificationId)
+const passingScoreLabel = computed<number | null>(() => passingScorePercent(passingScore.value))
+
+const examCounts = computed(() =>
+  deriveExamCounts(props.exam.domainBreakdown, props.exam.questions),
+)
 
 const summaryQuery = useQuery({
   queryKey: mockExamQueryKeys.summary(props.examId),
@@ -114,6 +123,20 @@ async function handleBack() {
           >
             {{ exam.passed ? 'PASS' : 'FAIL' }}
           </span>
+        </div>
+        <div
+          v-if="passingScoreLabel !== null"
+          data-testid="exam-passing-score"
+          class="mb-1.5 text-[13px] text-readion-text-secondary"
+        >
+          Passing score: {{ passingScoreLabel }}%
+        </div>
+        <div
+          data-testid="exam-counts"
+          class="mb-3 text-[13px] text-readion-text-secondary"
+        >
+          {{ examCounts.correct }} correct · {{ examCounts.incorrect }} incorrect ·
+          {{ examCounts.unanswered }} unanswered
         </div>
         <div
           v-if="isExpired"

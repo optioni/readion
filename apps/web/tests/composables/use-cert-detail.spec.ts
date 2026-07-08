@@ -79,9 +79,7 @@ describe('useCertDetail', () => {
   })
 
   it('exposes null passingScore before the certification has loaded', () => {
-    vi.mocked(userCertificationsControllerDetail).mockImplementation(
-      () => new Promise(() => {}),
-    )
+    vi.mocked(userCertificationsControllerDetail).mockImplementation(() => new Promise(() => {}))
 
     const { result } = renderComposable(() => useCertDetail('enr-1'))
 

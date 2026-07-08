@@ -198,9 +198,7 @@ describe('MockExamResultsScene score hero', () => {
   it('renders the passing-score reference derived from the certification', async () => {
     const wrapper = mountScene()
     await flushPromises()
-    expect(wrapper.find('[data-testid="exam-passing-score"]').text()).toMatch(
-      /passing score: 72%/i,
-    )
+    expect(wrapper.find('[data-testid="exam-passing-score"]').text()).toMatch(/passing score: 72%/i)
   })
 
   it('omits the passing-score line when the certification is unavailable', async () => {
