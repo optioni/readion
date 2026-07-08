@@ -1,4 +1,4 @@
-import type { BrowserContext, Page, Route } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import type {
   CertificationResponseDto,
   EnrollmentResponseDto,
@@ -9,6 +9,7 @@ import type {
   SessionSummaryEnvelopeDto,
   WeakAreaListResponseDto,
 } from '../../src/api/model'
+import { fulfilJson, mock } from './route-mock'
 
 // Route-mock harness for the fix-learner-surfaces-fidelity outer-loop RED tests (tasks 0.2 and
 // 0.4). Mirrors support/progress-seed.ts: per design.md Test Boundaries, the deterministic
@@ -16,18 +17,7 @@ import type {
 // regression states are hard/flaky to reach through the REAL readiness/summary computation path
 // locally (they depend on graded quiz responses the LLM-backed pipeline produces), so this harness
 // drives the REAL apps/web cert-detail page against a FULLY MOCKED HTTP API instead. No running
-// NestJS API or Postgres is required.
-
-const WEB_ORIGIN = 'http://127.0.0.1:3000'
-
-// Cross-origin (web :3000 → api :3001) credentialed fetches require explicit CORS headers; a wildcard
-// origin is rejected by the browser when `credentials: 'include'` is used (auth bootstrap + mutator).
-const CORS_HEADERS: Record<string, string> = {
-  'access-control-allow-origin': WEB_ORIGIN,
-  'access-control-allow-credentials': 'true',
-  'access-control-allow-methods': 'GET,POST,PATCH,DELETE,OPTIONS',
-  'access-control-allow-headers': 'authorization,content-type,x-csrf-token',
-}
+// NestJS API or Postgres is required. Shared CORS/route-mock plumbing lives in ./route-mock.
 
 export const CERT_DETAIL_MOCK_IDS = {
   userId: '55555555-cccc-cccc-cccc-cccccccccccc',
@@ -153,30 +143,6 @@ function buildSummary(questionsAnswered: number, accuracy: number): SessionSumma
       nextFocus: { domain: 'Secure Architectures' },
     },
   }
-}
-
-async function fulfilJson(route: Route, status: number, body: unknown): Promise<void> {
-  await route.fulfill({
-    status,
-    contentType: 'application/json',
-    headers: CORS_HEADERS,
-    body: JSON.stringify(body),
-  })
-}
-
-type Target = Page | BrowserContext
-type Handler = (route: Route) => Promise<void>
-
-// Registers a handler that short-circuits the CORS preflight (custom headers trigger one) before
-// delegating to `handler`.
-function mock(target: Target, pattern: RegExp, handler: Handler): void {
-  void target.route(pattern, async (route) => {
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: CORS_HEADERS, body: '' })
-      return
-    }
-    await handler(route)
-  })
 }
 
 function installAuthMocks(page: Page): void {

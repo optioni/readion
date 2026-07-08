@@ -1,5 +1,6 @@
-import type { BrowserContext, Page, Route } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import type { CertificationListResponseDto, EnrollmentListResponseDto } from '../../src/api/model'
+import { fulfilJson, mock } from './route-mock'
 
 // Route-mock harness for the fix-learner-surfaces-fidelity outer-loop RED test (task 0.5,
 // dashboard anchors). support/dashboard-seed.ts drives the REAL NestJS API + Postgres, which is
@@ -8,15 +9,7 @@ import type { CertificationListResponseDto, EnrollmentListResponseDto } from '..
 // (a pre-existing local-environment limitation, not something this change introduces or should
 // fix), so the design-fidelity anchors below use a fully mocked HTTP API instead, matching the
 // route-mock pattern already used by support/progress-seed.ts and support/session-view-seed.ts.
-
-const WEB_ORIGIN = 'http://127.0.0.1:3000'
-
-const CORS_HEADERS: Record<string, string> = {
-  'access-control-allow-origin': WEB_ORIGIN,
-  'access-control-allow-credentials': 'true',
-  'access-control-allow-methods': 'GET,POST,PATCH,DELETE,OPTIONS',
-  'access-control-allow-headers': 'authorization,content-type,x-csrf-token',
-}
+// Shared CORS/route-mock plumbing lives in ./route-mock.
 
 export const DASHBOARD_MOCK_IDS = {
   userId: '11111111-dddd-dddd-dddd-dddddddddddd',
@@ -81,28 +74,6 @@ const ENROLLMENT_LIST: EnrollmentListResponseDto = {
   ],
   meta: { total: 1, page: 1, limit: 20 },
 } as unknown as EnrollmentListResponseDto
-
-async function fulfilJson(route: Route, status: number, body: unknown): Promise<void> {
-  await route.fulfill({
-    status,
-    contentType: 'application/json',
-    headers: CORS_HEADERS,
-    body: JSON.stringify(body),
-  })
-}
-
-type Target = Page | BrowserContext
-type Handler = (route: Route) => Promise<void>
-
-function mock(target: Target, pattern: RegExp, handler: Handler): void {
-  void target.route(pattern, async (route) => {
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: CORS_HEADERS, body: '' })
-      return
-    }
-    await handler(route)
-  })
-}
 
 /**
  * Installs the route-mock surface for the dashboard with a single calibrated (42%) enrollment,
