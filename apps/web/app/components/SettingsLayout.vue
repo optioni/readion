@@ -13,7 +13,7 @@ function select(id: SettingsTabId) {
   <section data-testid="settings-page" class="-mx-4 sm:-mx-6 lg:-mx-8">
     <SettingsTabs :active="active" @select="select" />
 
-    <div class="mx-auto w-full max-w-[580px] px-4 py-8 sm:px-6 lg:px-8">
+    <div class="w-full max-w-[580px] px-4 py-8 sm:px-6 lg:px-8">
       <div v-show="active === 'account'" data-testid="account-panel" role="tabpanel">
         <slot name="account" />
       </div>

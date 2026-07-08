@@ -8,6 +8,7 @@
   --color-readion-background-elevated: #0a0f1e;
   --color-readion-background-overlay: #16213e;
   --color-readion-primary: #1d4ed8;
+  --color-readion-accent-label: #818cf8;
   --color-readion-primary-hover: #1e40af;
   --color-readion-primary-50: #eff6ff;
   --color-readion-primary-100: #dbeafe;
@@ -33,6 +34,7 @@
   --readion-background-elevated: #0a0f1e;
   --readion-background-overlay: #16213e;
   --readion-primary: #1d4ed8;
+  --readion-accent-label: #818cf8;
   --ui-primary: #1d4ed8;
   --readion-status-poor: #f87171;
   --readion-status-warning: #fb923c;
