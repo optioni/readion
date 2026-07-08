@@ -36,29 +36,35 @@
           <li
             v-for="feature in features"
             :key="feature"
-            class="flex items-start gap-2.5 text-sm text-slate-400"
+            class="flex items-start gap-2.5 text-xs text-readion-text-secondary"
           >
-            <svg
-              class="w-4 h-4 text-indigo-400 mt-0.5 flex-shrink-0"
-              viewBox="0 0 16 16"
-              fill="currentColor"
+            <span
+              data-testid="feature-badge"
+              class="mt-px flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border border-readion-status-good bg-readion-status-good/[0.12]"
             >
-              <path
-                d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"
-              />
-            </svg>
-            {{ feature }}
+              <svg class="h-2 w-2 text-readion-status-good" viewBox="0 0 9 9" fill="none">
+                <path
+                  d="M2 4.5l2 2 3-3"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+            <span class="leading-[1.55]">{{ feature }}</span>
           </li>
         </ul>
       </div>
 
       <!-- Testimonial -->
-      <blockquote class="mt-10 border-t border-slate-700 pt-6">
-        <p class="text-sm text-slate-400 italic leading-relaxed mb-3">
-          "Readion's diagnostic found gaps I didn't know I had. Passed AWS SAA on the first
-          attempt."
+      <blockquote
+        class="mt-10 rounded-lg border border-readion-border-strong bg-readion-background-overlay px-3.5 py-3"
+      >
+        <p class="mb-2 text-xs text-readion-text-secondary italic leading-[1.6]">
+          "Passed SAA-C03 on the first attempt. The weak area targeting is genuinely different."
         </p>
-        <cite class="text-xs text-slate-500 not-italic">— Santiago R., AWS Solutions Architect</cite>
+        <cite class="text-[11px] text-readion-text-muted not-italic">— Alex K., AWS Solutions Architect</cite>
       </blockquote>
     </aside>
 
@@ -76,6 +82,5 @@ const features = [
   'Readiness score that actually predicts pass/fail',
   'AI agent during sessions — no context limits',
   'Diagnostic that maps your gaps from day one',
-  'Covers AWS, Azure, Kubernetes, and AI/ML certs',
 ]
 </script>

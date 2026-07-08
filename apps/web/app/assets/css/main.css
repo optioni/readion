@@ -27,6 +27,7 @@
   --color-readion-status-warning: #fb923c;
   --color-readion-status-medium: #fbbf24;
   --color-readion-status-good: #34d399;
+  --color-readion-border-strong: #334155;
 }
 
 :root {
@@ -44,6 +45,7 @@
   --readion-status-warning: #fb923c;
   --readion-status-medium: #fbbf24;
   --readion-status-good: #34d399;
+  --readion-border-strong: #334155;
 }
 
 html {
