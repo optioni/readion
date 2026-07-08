@@ -91,6 +91,22 @@ describe('AccountTab profile identity', () => {
     expect(wrapper.find('[data-testid="account-full-name"]').exists()).toBe(false)
   })
 
+  it('renders no "Full name" field after the FieldRow refactor — the User entity has no name attribute', async () => {
+    stubProfile()
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="account-full-name"]').exists()).toBe(false)
+
+    const labelTexts = wrapper.findAll('label').map((label) => label.text())
+    expect(labelTexts).not.toContain('Full name')
+
+    for (const label of wrapper.findAll('label')) {
+      expect(label.classes()).not.toContain('uppercase')
+      expect(label.classes()).not.toContain('font-mono')
+    }
+  })
+
   it('shows a derived initials avatar from the email', async () => {
     stubProfile()
     const { wrapper } = mountTab()
