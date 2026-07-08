@@ -29,6 +29,10 @@ function mountBody(
     timeLabel?: string | null
     drillNoMisses?: boolean
     hideAskAgent?: boolean
+    certCode?: string | null
+    certName?: string | null
+    completedAt?: string | null
+    streakDays?: number | null
   } = {},
 ) {
   return mount(SessionSummaryBody, {
@@ -37,6 +41,10 @@ function mountBody(
       timeLabel: props.timeLabel ?? null,
       drillNoMisses: props.drillNoMisses ?? false,
       hideAskAgent: props.hideAskAgent ?? false,
+      certCode: props.certCode ?? null,
+      certName: props.certName ?? null,
+      completedAt: props.completedAt ?? null,
+      streakDays: props.streakDays ?? null,
     },
   })
 }
@@ -159,6 +167,92 @@ describe('SessionSummaryBody next focus', () => {
   it('omits the next-focus card when there is no suggestion', () => {
     const wrapper = mountBody({ summary: baseSummary({ nextFocus: null }) })
     expect(wrapper.find('[data-testid="summary-next-focus"]').exists()).toBe(false)
+  })
+})
+
+describe('SessionSummaryBody page header', () => {
+  it('renders the session-complete badge, title, cert name/duration, and a completion timestamp', () => {
+    const wrapper = mountBody({
+      certCode: 'SAA-C03',
+      certName: 'Solutions Architect – Associate',
+      timeLabel: '20m 34s',
+      completedAt: '2026-06-29T00:20:34.000Z',
+    })
+
+    const header = wrapper.find('[data-testid="summary-header"]')
+    expect(header.exists()).toBe(true)
+    expect(header.text()).toContain('Session complete')
+    expect(header.text()).toContain('Study Session · SAA-C03')
+    expect(header.text()).toContain('Solutions Architect – Associate')
+    expect(header.text()).toContain('20m 34s')
+
+    const timestamp = wrapper.find('[data-testid="summary-completed-at"]')
+    expect(timestamp.exists()).toBe(true)
+    expect(timestamp.text().length).toBeGreaterThan(0)
+    expect(timestamp.text()).toContain('2026')
+  })
+
+  it('renders the page header even when no questions were answered (zero-state)', () => {
+    const wrapper = mountBody({
+      summary: baseSummary({ questionsAnswered: 0 }),
+      certCode: 'SAA-C03',
+      certName: 'Solutions Architect – Associate',
+    })
+
+    const header = wrapper.find('[data-testid="summary-header"]')
+    expect(header.exists()).toBe(true)
+    expect(header.text()).toContain('Session complete')
+    expect(header.text()).toContain('Study Session · SAA-C03')
+  })
+})
+
+describe('SessionSummaryBody readiness-change strip', () => {
+  it('renders the before -> after change with the signed delta badge, sourced from readiness', () => {
+    const wrapper = mountBody()
+    const strip = wrapper.find('[data-testid="summary-readiness-strip"]')
+    expect(strip.exists()).toBe(true)
+    expect(strip.text()).toContain('72%')
+    expect(strip.text()).toContain('75%')
+    expect(strip.text()).toContain('this session')
+
+    const badge = strip.find('[data-testid="delta-badge"]')
+    expect(badge.exists()).toBe(true)
+    expect(badge.text()).toContain('3%')
+  })
+
+  it('shows the calibration message instead of a percentage change when readiness is uncalibrated', () => {
+    const wrapper = mountBody({
+      summary: baseSummary({ readiness: { before: null, after: null, delta: null } }),
+    })
+    const strip = wrapper.find('[data-testid="summary-readiness-strip"]')
+    expect(strip.exists()).toBe(true)
+    expect(strip.text().toLowerCase()).toContain('calibrat')
+    expect(strip.text()).not.toContain('%')
+  })
+
+  it('is suppressed in the zero-state alongside the other data cards', () => {
+    const wrapper = mountBody({ summary: baseSummary({ questionsAnswered: 0 }) })
+    expect(wrapper.find('[data-testid="summary-readiness-strip"]').exists()).toBe(false)
+  })
+})
+
+describe('SessionSummaryBody streak stat', () => {
+  it('renders a Streak cell sourced from the streakDays prop when available', () => {
+    const wrapper = mountBody({ streakDays: 4 })
+    const streak = wrapper.find('[data-testid="summary-streak"]')
+    expect(streak.exists()).toBe(true)
+    expect(streak.text().toLowerCase()).toContain('streak')
+    expect(streak.text()).toContain('4')
+  })
+
+  it('omits the Streak cell when streakDays is not provided', () => {
+    const wrapper = mountBody()
+    expect(wrapper.find('[data-testid="summary-streak"]').exists()).toBe(false)
+  })
+
+  it('omits the Streak cell when streakDays is explicitly null', () => {
+    const wrapper = mountBody({ streakDays: null })
+    expect(wrapper.find('[data-testid="summary-streak"]').exists()).toBe(false)
   })
 })
 
