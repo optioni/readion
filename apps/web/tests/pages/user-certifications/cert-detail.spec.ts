@@ -1,12 +1,17 @@
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useCertDetail } from '~/composables/useCertDetail'
+import { useQuickStartActions } from '~/composables/useQuickStartActions'
 import CertDetailPage from '~/pages/user-certifications/[id]/index.vue'
 
 vi.mock('~/composables/useCertDetail', () => ({ useCertDetail: vi.fn() }))
+vi.mock('~/composables/useQuickStartActions', () => ({ useQuickStartActions: vi.fn() }))
 
 vi.stubGlobal('useRoute', () => ({ params: { id: 'enr-1' } }))
+
+const startSession = vi.fn()
+const startMockExam = vi.fn()
 
 function stubCertDetail(
   options: {
@@ -57,6 +62,12 @@ function tabByName(wrapper: ReturnType<typeof mountPage>, pattern: RegExp) {
 beforeEach(() => {
   vi.clearAllMocks()
   stubCertDetail()
+  vi.mocked(useQuickStartActions).mockReturnValue({
+    startSession,
+    startMockExam,
+    isStartingSession: ref(false),
+    isStartingMockExam: ref(false),
+  })
 })
 
 describe('Cert detail page header', () => {
@@ -67,6 +78,30 @@ describe('Cert detail page header', () => {
     expect(page.exists()).toBe(true)
     expect(page.text()).toContain('Azure Fundamentals')
     expect(page.text()).toContain('Microsoft')
+  })
+
+  it('uses the full content width rather than a narrow centred column', () => {
+    const wrapper = mountPage()
+    const page = wrapper.find('[data-testid="cert-detail-page"]')
+    const classes = page.classes()
+    expect(classes).not.toContain('max-w-[720px]')
+    expect(classes).not.toContain('mx-auto')
+  })
+
+  it('renders a full-bleed cert header bar with a "← Dashboard / CODE" breadcrumb', () => {
+    stubCertDetail({ code: 'SAA-C03' })
+    const wrapper = mountPage()
+    const page = wrapper.find('[data-testid="cert-detail-page"]')
+    expect(page.text()).toMatch(/^←\s*Dashboard/)
+    expect(page.text()).toContain('SAA-C03')
+  })
+
+  it('wires the header actions to the quick-start composable', async () => {
+    const wrapper = mountPage()
+    await wrapper.find('[data-testid="cert-header-mock-exam"]').trigger('click')
+    await wrapper.find('[data-testid="cert-header-start-session"]').trigger('click')
+    expect(startMockExam).toHaveBeenCalledTimes(1)
+    expect(startSession).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -99,6 +134,13 @@ describe('Cert detail tab strip', () => {
     await tabByName(wrapper, /sessions/i)?.trigger('click')
     expect(tabByName(wrapper, /sessions/i)?.attributes('aria-selected')).toBe('true')
     expect(tabByName(wrapper, /overview/i)?.attributes('aria-selected')).toBe('false')
+  })
+
+  it('uses the exact sentence-case label "Exam history", not "Exam History"', () => {
+    const wrapper = mountPage()
+    const names = tabs(wrapper).map((tab) => tab.text())
+    expect(names).toContain('Exam history')
+    expect(names).not.toContain('Exam History')
   })
 })
 
