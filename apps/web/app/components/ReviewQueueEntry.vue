@@ -3,6 +3,7 @@ import type { ReviewItemResponse } from '@readion/shared'
 import { computed } from 'vue'
 import { sessionStartPath } from '~/composables/runnerRoutes'
 import { useDueDomainBreakdown } from '~/composables/useDueDomainBreakdown'
+import { formatOverdueSummary, useOverdueSummary } from '~/composables/useOverdueSummary'
 
 const props = defineProps<{
   enrollmentId: string
@@ -15,6 +16,11 @@ const emit = defineEmits<{
 }>()
 
 const domainBreakdown = computed(() => useDueDomainBreakdown(props.items))
+
+const overdueNote = computed(() => {
+  const summary = useOverdueSummary(props.items, new Date())
+  return summary ? formatOverdueSummary(summary) : null
+})
 </script>
 
 <template>
@@ -77,13 +83,31 @@ const domainBreakdown = computed(() => useDueDomainBreakdown(props.items))
       </div>
     </div>
 
-    <button
-      type="button"
-      data-testid="start-review-button"
-      class="w-full rounded-md bg-readion-primary px-5 py-2.5 font-semibold text-sm text-white"
-      @click="emit('start')"
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        data-testid="start-review-button"
+        class="flex-1 rounded-md bg-readion-primary px-5 py-2.5 font-semibold text-sm text-white"
+        @click="emit('start')"
+      >
+        Start review →
+      </button>
+      <button
+        type="button"
+        data-testid="review-all-button"
+        class="whitespace-nowrap rounded-md border border-readion-border-strong px-4 py-2.5 text-readion-text-secondary text-xs"
+        @click="emit('start')"
+      >
+        Review all {{ dueCount }}
+      </button>
+    </div>
+
+    <p
+      v-if="overdueNote"
+      data-testid="review-overdue-note"
+      class="text-readion-text-subtle text-xs"
     >
-      Start review →
-    </button>
+      Oldest due: <span class="font-medium text-readion-status-warning">{{ overdueNote }}</span>
+    </p>
   </div>
 </template>
