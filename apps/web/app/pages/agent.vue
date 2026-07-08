@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref } from 'vue'
 import AgentBubble from '~/components/AgentBubble.vue'
+import AgentStarAvatar from '~/components/agent/AgentStarAvatar.vue'
 import { AGENT_COPY, AGENT_SUGGESTIONS } from '~/composables/agentChatCopy'
 import { formatTtlRemaining, isTtlWarning, ttlRemainingMs } from '~/composables/agentChatTtl'
 import { useStandaloneAgentChat } from '~/composables/useStandaloneAgentChat'
@@ -45,9 +46,15 @@ async function handleNewChat(): Promise<void> {
     class="flex min-h-0 flex-1 flex-col"
   >
     <div class="flex items-center justify-between border-b border-readion-border-strong px-5 py-3">
-      <div>
-        <h1 class="font-medium text-readion-text-primary text-sm">Ask AI</h1>
-        <p class="text-[10px] text-readion-text-muted">{{ AGENT_COPY.headerSubtitle }}</p>
+      <div class="flex items-center gap-2">
+        <AgentStarAvatar
+          data-testid="agent-header-avatar"
+          size="sm"
+        />
+        <div>
+          <h1 class="font-medium text-readion-text-primary text-sm">{{ AGENT_COPY.headerTitle }}</h1>
+          <p class="text-[10px] text-readion-text-muted">{{ AGENT_COPY.headerSubtitle }}</p>
+        </div>
       </div>
       <div class="flex items-center gap-2">
         <span
@@ -79,6 +86,10 @@ async function handleNewChat(): Promise<void> {
         data-testid="agent-empty-state"
         class="flex flex-col items-center gap-4 py-10 text-center"
       >
+        <AgentStarAvatar
+          data-testid="agent-empty-avatar"
+          size="lg"
+        />
         <p class="font-medium text-readion-text-primary text-sm">{{ AGENT_COPY.emptyHeading }}</p>
         <p class="max-w-xs text-[12px] text-readion-text-muted">{{ AGENT_COPY.emptyIntro }}</p>
         <div class="flex flex-col items-center gap-2">

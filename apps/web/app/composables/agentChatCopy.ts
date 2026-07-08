@@ -6,6 +6,7 @@ export const AGENT_SUGGESTIONS = [
 ] as const
 
 export const AGENT_COPY = {
+  headerTitle: 'Study assistant',
   emptyHeading: 'Study assistant',
   emptyIntro:
     'Ask me anything — concepts, explanations, analogies. No exam corpus attached here; answers from general knowledge only.',
