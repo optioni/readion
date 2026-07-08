@@ -58,8 +58,10 @@ import { gotoAuthenticated } from './support/session-view-seed'
 //   Users         : admin-users-page, admin-user-row (data-user-id), user-avatar (initials),
 //                   user-email, user-role, promote-user-btn, demote-user-btn, demote-error;
 //                   user-search / user-invite / user-delete / user-last-active MUST be absent
-//   Audit Log     : admin-audit-log-page, audit-log-row, audit-actor (userId, NOT email),
-//                   audit-action; audit-export-btn / audit-edit-btn MUST be absent
+//   Audit Log     : admin-audit-log-page, audit-log-row, audit-actor (actorEmail / System
+//                   fallback, NOT a raw UUID), audit-target (targetLabel), audit-before /
+//                   audit-after (scalar diff, NOT JSON.stringify), audit-action;
+//                   audit-export-btn / audit-edit-btn MUST be absent
 //   Sources       : admin-sources-page, source-row (data-source-id), source-status-pill,
 //                   register-source-url-input, register-source-type-select, register-source-submit,
 //                   source-reingest-btn, source-disable-btn; source-chunk-count / source-cancel-btn /
@@ -142,15 +144,28 @@ test.describe('web-admin — admin console', () => {
     await expect(adminRow.getByTestId('user-role')).toContainText('admin')
   })
 
-  test('audit log: read-only render, actor shown as userId, no edit/export', async ({ page }) => {
+  test('audit log: read-only render, human-readable actor/target/diff, no edit/export', async ({
+    page,
+  }) => {
     mockAdmin(page)
 
     await gotoAuthenticated(page, '/admin/audit-logs')
 
     await expect(page.getByTestId('admin-audit-log-page')).toBeVisible()
-    await expect(page.getByTestId('audit-log-row').first()).toBeVisible()
-    await expect(page.getByTestId('audit-action').first()).toContainText('user.promote')
-    await expect(page.getByTestId('audit-actor').first()).toContainText(ADMIN_USER_ID)
+    const row = page.getByTestId('audit-log-row').first()
+    await expect(row).toBeVisible()
+    await expect(row.getByTestId('audit-action')).toContainText('user.promote')
+    // Actor renders the resolved human email, never the raw actor UUID.
+    await expect(row.getByTestId('audit-actor')).toContainText('root@readion.io')
+    await expect(row.getByTestId('audit-actor')).not.toContainText(ADMIN_USER_ID)
+    // Target renders the human label (the promoted user's email), not `targetType · uuid`.
+    await expect(row.getByTestId('audit-target')).toContainText('casey@org.io')
+    await expect(row.getByTestId('audit-target')).not.toContainText(PROMOTE_USER_ID)
+    // Before/After render a scalar diff, never raw JSON.stringify braces.
+    await expect(row.getByTestId('audit-before')).toContainText('user')
+    await expect(row.getByTestId('audit-after')).toContainText('admin')
+    await expect(row.getByTestId('audit-before')).not.toContainText('{')
+    await expect(row.getByTestId('audit-after')).not.toContainText('{')
     await expect(page.getByTestId('audit-export-btn')).toHaveCount(0)
     await expect(page.getByTestId('audit-edit-btn')).toHaveCount(0)
   })
