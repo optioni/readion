@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import AdminPagination from '~/components/admin/AdminPagination.vue'
 import { useAdminAuditLogs } from '~/composables/useAdminAuditLogs'
 import { formatAuditDiff } from '~/utils/formatAuditDiff'
 
-const auditLogsQuery = useAdminAuditLogs()
+const page = ref(1)
+const auditLogsQuery = useAdminAuditLogs(page)
 
 const entries = computed(() => auditLogsQuery.data.value?.data ?? [])
+const meta = computed(() => auditLogsQuery.data.value?.meta)
 const isLoading = computed(() => auditLogsQuery.isLoading.value)
 const isError = computed(() => auditLogsQuery.isError.value)
 
@@ -73,5 +76,14 @@ function formatTimestamp(createdAt: string): string {
         </tr>
       </tbody>
     </table>
+
+    <AdminPagination
+      v-if="meta"
+      testid="admin-audit-log-pagination"
+      :page="page"
+      :limit="meta.limit"
+      :total="meta.total"
+      @update:page="page = $event"
+    />
   </section>
 </template>

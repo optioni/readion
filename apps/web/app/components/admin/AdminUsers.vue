@@ -2,6 +2,7 @@
 import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
+import AdminPagination from '~/components/admin/AdminPagination.vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import { emailInitials } from '~/composables/emailInitials'
 import { useAdminUsers } from '~/composables/useAdminUsers'
@@ -10,9 +11,11 @@ import { adminControllerDemote, adminControllerPromote } from '~~/src/api/admin/
 const jsonHeaders = { 'Content-Type': 'application/json' }
 
 const queryClient = useQueryClient()
-const usersQuery = useAdminUsers()
+const page = ref(1)
+const usersQuery = useAdminUsers(page)
 
 const users = computed(() => usersQuery.data.value?.data ?? [])
+const meta = computed(() => usersQuery.data.value?.meta)
 const isLoading = computed(() => usersQuery.isLoading.value)
 const isError = computed(() => usersQuery.isError.value)
 
@@ -133,6 +136,15 @@ async function demote(id: string) {
           </tr>
         </tbody>
       </table>
+
+      <AdminPagination
+        v-if="meta"
+        testid="admin-users-pagination"
+        :page="page"
+        :limit="meta.limit"
+        :total="meta.total"
+        @update:page="page = $event"
+      />
     </template>
   </section>
 </template>
