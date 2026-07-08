@@ -391,4 +391,17 @@ describe('Review page — unified entry', () => {
     expect(wrapper.find('[data-testid="review-mode-self-grade"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="review-mode-quiz"]').exists()).toBe(true)
   })
+
+  it('presents the rating mode toggle as a secondary, optional selector — not a competing entry CTA', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    const toggle = wrapper.find('[data-testid="review-mode-toggle"]')
+    expect(toggle.exists()).toBe(true)
+    // The design's single-entry model has no top-level "rating style" setting. The toggle must
+    // read as an optional, in-flow selector subordinate to the single "Start review →" CTA — not
+    // a co-equal preference row labeled like a settings choice.
+    expect(toggle.attributes('aria-label')).toMatch(/optional/i)
+    expect(toggle.text()).not.toContain('Rating style')
+  })
 })
