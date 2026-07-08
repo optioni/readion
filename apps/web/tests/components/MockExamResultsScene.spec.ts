@@ -272,10 +272,12 @@ describe('MockExamResultsScene reused summary body', () => {
     expect(wrapper.findAll('[data-testid="summary-back-button"]')).toHaveLength(1)
   })
 
-  it('derives the time label from the exam start and deadline window', async () => {
+  it('does not present the allowed exam window as elapsed time', async () => {
     const wrapper = mountScene()
     await flushPromises()
-    expect(wrapper.text()).toContain('107m 23s')
+    expect(wrapper.text()).not.toContain('107m 23s')
+    const statRow = wrapper.find('[data-testid="summary-accuracy"]').element.parentElement
+    expect(statRow?.children).toHaveLength(2)
   })
 })
 
