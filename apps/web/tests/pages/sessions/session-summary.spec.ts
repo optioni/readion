@@ -1,13 +1,33 @@
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
 import { drillSession, fetchSessionDetail, fetchSessionSummary } from '~/composables/sessionViewApi'
+import { useCertDetail } from '~/composables/useCertDetail'
+import { useProgressData } from '~/composables/useProgressData'
 import SessionSummaryPage from '~/pages/sessions/[id]/summary.vue'
 
 vi.mock('~/composables/sessionViewApi', () => ({
   fetchSessionSummary: vi.fn(),
   fetchSessionDetail: vi.fn(),
   drillSession: vi.fn(),
+}))
+
+vi.mock('~/composables/useCertDetail', () => ({
+  useCertDetail: vi.fn(() => ({
+    code: ref('SAA-C03'),
+    name: ref('Solutions Architect – Associate'),
+  })),
+}))
+
+vi.mock('~/composables/useProgressData', () => ({
+  useProgressData: vi.fn(() => ({
+    sessions: ref([
+      { id: 's1', startedAt: '2026-06-27T09:00:00.000Z', durationMinutes: 30 },
+      { id: 's2', startedAt: '2026-06-28T09:00:00.000Z', durationMinutes: 30 },
+    ]),
+    summariesMap: ref(new Map()),
+  })),
 }))
 
 vi.stubGlobal('useRoute', () => ({ params: { id: 'sess-1' } }))
@@ -61,12 +81,16 @@ function mountPage() {
       plugins: [[VueQueryPlugin, { queryClient }]],
       stubs: {
         SessionSummaryBody: {
-          props: ['summary', 'timeLabel', 'drillNoMisses'],
+          props: ['summary', 'timeLabel', 'drillNoMisses', 'certCode', 'certName', 'completedAt', 'streakDays'],
           template: `<div
             data-testid="body-stub"
             :data-acc="summary.accuracy"
             :data-time="timeLabel"
             :data-nomiss="drillNoMisses"
+            :data-cert-code="certCode"
+            :data-cert-name="certName"
+            :data-completed-at="completedAt"
+            :data-streak="streakDays"
           >
             <button data-testid="stub-drill" @click="$emit('drill')">drill</button>
             <button data-testid="stub-ask" @click="$emit('ask-agent','resp-9')">ask</button>
@@ -173,5 +197,49 @@ describe('Session summary secondary actions', () => {
       path: '/sessions/sess-1',
       query: { explain: 'resp-9' },
     })
+  })
+})
+
+describe('Session summary page header sourcing', () => {
+  it('sources the cert code/name from useCertDetail keyed on the loaded userCertificationId', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    expect(useCertDetail).toHaveBeenCalledWith('enr-1')
+    const body = wrapper.find('[data-testid="body-stub"]')
+    expect(body.attributes('data-cert-code')).toBe('SAA-C03')
+    expect(body.attributes('data-cert-name')).toBe('Solutions Architect – Associate')
+  })
+
+  it('sources the completion timestamp from the session endedAt', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    const body = wrapper.find('[data-testid="body-stub"]')
+    expect(body.attributes('data-completed-at')).toBe('2026-06-29T00:20:34.000Z')
+  })
+})
+
+describe('Session summary streak sourcing', () => {
+  it('derives a real streakDays value from useActivityStats over useProgressData sessions, keyed on the enrollment', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    expect(useProgressData).toHaveBeenCalledWith('enr-1')
+    const body = wrapper.find('[data-testid="body-stub"]')
+    expect(body.attributes('data-streak')).toBe('2')
+  })
+
+  it('omits the streak (passes no value) when useProgressData reports no sessions for the enrollment', async () => {
+    vi.mocked(useProgressData).mockReturnValueOnce({
+      sessions: ref([]),
+      summariesMap: ref(new Map()),
+      // biome-ignore lint/suspicious/noExplicitAny: partial composable return narrowed in test
+    } as any)
+    const wrapper = mountPage()
+    await flushPromises()
+
+    const body = wrapper.find('[data-testid="body-stub"]')
+    expect(body.attributes('data-streak')).toBeUndefined()
   })
 })
