@@ -84,3 +84,27 @@ describe('ReadinessTrend', () => {
     expect(text).not.toMatch(/\b(25|50|75|100)\b/)
   })
 })
+
+describe('ReadinessTrend — 80% target line (6.1)', () => {
+  it('renders a visible 80% target reference line when calibrated', () => {
+    const wrapper = mount(ReadinessTrend, {
+      props: { points: [55, 62, 66], hasData: true },
+    })
+    expect(wrapper.find('[data-testid="readiness-target-line"]').exists()).toBe(true)
+  })
+
+  it('shows an "80% target" label distinct from the plain gridlines', () => {
+    const wrapper = mount(ReadinessTrend, {
+      props: { points: [55, 62, 66], hasData: true },
+    })
+    expect(wrapper.find('[data-testid="readiness-trend"]').text()).toMatch(/80%\s*target/i)
+  })
+
+  it('does not render the target line or label in the not-calibrated state', () => {
+    const wrapper = mount(ReadinessTrend, {
+      props: { points: [], hasData: false },
+    })
+    expect(wrapper.find('[data-testid="readiness-target-line"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="progress-not-calibrated"]').text()).not.toMatch(/target/i)
+  })
+})
