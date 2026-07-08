@@ -7,6 +7,7 @@ import { sessionRunPath } from '~/composables/runnerRoutes'
 import { toSummary } from '~/composables/sessionSummaryMapper'
 import { drillSession, fetchSessionDetail, fetchSessionSummary } from '~/composables/sessionViewApi'
 import { sessionViewQueryKeys } from '~/composables/sessionViewQueryKeys'
+import { elapsedMs } from '~/composables/useElapsedTimer'
 import { useTrack } from '~/composables/useTrack'
 
 definePageMeta({ layout: 'default' })
@@ -47,15 +48,11 @@ watch(
 
 const timeLabel = computed<string | null>(() => {
   const session = sessionQuery.data.value?.data
-  if (!session?.startedAt || !session?.endedAt) {
+  const ms = elapsedMs(session?.startedAt ?? null, session?.endedAt ? String(session.endedAt) : null)
+  if (ms === null) {
     return null
   }
-  const elapsedMs =
-    new Date(String(session.endedAt)).getTime() - new Date(session.startedAt).getTime()
-  if (!Number.isFinite(elapsedMs) || elapsedMs < 0) {
-    return null
-  }
-  const totalSeconds = Math.floor(elapsedMs / 1000)
+  const totalSeconds = Math.floor(ms / 1000)
   return `${Math.floor(totalSeconds / 60)}m ${totalSeconds % 60}s`
 })
 
