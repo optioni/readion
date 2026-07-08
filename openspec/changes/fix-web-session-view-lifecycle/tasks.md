@@ -51,17 +51,17 @@
 
 ## 8. Acceptance Test — Outer Loop GREEN
 
-- [ ] 8.1 Confirm the Playwright e2e from section 0 passes end-to-end (completed session: no free-running timer, no End/Continue controls, summary/read-only shown; human citation + domain label; summary zero-state).
-- [ ] 8.2 Verify `apps/web` boots and both an active and an ended session render correctly in the running app.
+- [x] 8.1 Confirm the Playwright e2e from section 0 passes end-to-end (completed session: no free-running timer, no End/Continue controls, summary/read-only shown; human citation + domain label; summary zero-state).
+- [x] 8.2 Verify `apps/web` boots and both an active and an ended session render correctly in the running app.
 
 ## 9. Change Review — Subagent Verification
 
-- [ ] 9.1 Dispatch a subagent to review the change against `proposal.md`, the spec scenarios, and `design.md` plus the diff and this task list (reviewer reports findings only, does not edit code).
-- [ ] 9.2 Triage findings: fix every CRITICAL, resolve or consciously accept each WARNING (one-line reason per accepted WARNING), note SUGGESTIONs; re-run affected tests.
+- [x] 9.1 Dispatch a subagent to review the change against `proposal.md`, the spec scenarios, and `design.md` plus the diff and this task list (reviewer reports findings only, does not edit code).
+- [x] 9.2 Triage findings: fix every CRITICAL, resolve or consciously accept each WARNING (one-line reason per accepted WARNING), note SUGGESTIONs; re-run affected tests.
 
 ## 10. Polish
 
-- [ ] 10.1 Run linter and fix all errors (`yarn lint`).
-- [ ] 10.2 Run formatter and apply fixes (`yarn format`).
-- [ ] 10.3 Run the web type checker with zero errors.
-- [ ] 10.4 Run coverage and confirm ≥80% lines/branches for the touched files.
+- [x] 10.1 Run linter and fix all errors (`yarn lint`).
+- [x] 10.2 Run formatter and apply fixes (`yarn format`).
+- [x] 10.3 Run the web type checker with zero errors.
+- [x] 10.4 Run coverage and confirm ≥80% lines/branches for the touched files.
