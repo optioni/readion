@@ -11,8 +11,20 @@ const props = withDefaults(
     timeLabel?: string | null
     drillNoMisses?: boolean
     hideAskAgent?: boolean
+    certCode?: string | null
+    certName?: string | null
+    completedAt?: string | null
+    streakDays?: number | null
   }>(),
-  { timeLabel: null, drillNoMisses: false, hideAskAgent: false },
+  {
+    timeLabel: null,
+    drillNoMisses: false,
+    hideAskAgent: false,
+    certCode: null,
+    certName: null,
+    completedAt: null,
+    streakDays: null,
+  },
 )
 
 const emit = defineEmits<{
@@ -64,10 +76,66 @@ const readiness = computed(() => {
     delta: formatReadiness({ calibrated: true, score: after }, delta).delta,
   }
 })
+
+const readinessDeltaValue = computed(() => props.summary.readiness.delta ?? 0)
+
+const completedAtLabel = computed(() => {
+  if (!props.completedAt) {
+    return null
+  }
+  const date = new Date(props.completedAt)
+  if (Number.isNaN(date.getTime())) {
+    return null
+  }
+  return new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'UTC',
+  }).format(date)
+})
 </script>
 
 <template>
   <div class="flex flex-col gap-3.5">
+    <div
+      data-testid="summary-header"
+      class="flex flex-col gap-1 border-readion-border-strong border-b pb-3.5"
+    >
+      <div class="flex items-center gap-2">
+        <span
+          class="flex h-5 w-5 items-center justify-center rounded-full border border-readion-status-good bg-readion-status-good/15"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path
+              d="M2 5l2 2 4-4"
+              stroke="currentColor"
+              stroke-width="1.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="text-readion-status-good"
+            />
+          </svg>
+        </span>
+        <span
+          data-testid="summary-header-badge"
+          class="text-[11px] text-readion-status-good uppercase tracking-wider"
+        >
+          Session complete
+        </span>
+      </div>
+      <div class="font-semibold text-readion-text-primary text-xl leading-tight">
+        Study Session<template v-if="certCode"> · {{ certCode }}</template>
+      </div>
+      <div class="text-[12px] text-readion-text-muted">
+        <template v-if="certName">{{ certName }}</template>
+        <template v-if="certName && timeLabel"> &middot; </template>
+        <template v-if="timeLabel">{{ timeLabel }}</template>
+      </div>
+      <div v-if="completedAtLabel" data-testid="summary-completed-at" class="text-[11px] text-readion-text-subtle">
+        {{ completedAtLabel }}
+      </div>
+    </div>
+
     <div
       v-if="!hasAnsweredQuestions"
       data-testid="summary-empty-state"
@@ -88,7 +156,7 @@ const readiness = computed(() => {
         <div
           data-testid="summary-readiness"
           class="flex-1 px-5 py-4"
-          :class="timeLabel ? 'border-readion-border-strong border-r' : ''"
+          :class="timeLabel || streakDays !== null ? 'border-readion-border-strong border-r' : ''"
         >
           <div class="mb-1.5 text-[11px] text-readion-text-muted uppercase tracking-wider">Readiness</div>
           <template v-if="readiness.calibrated">
@@ -101,10 +169,40 @@ const readiness = computed(() => {
             <div class="text-readion-text-secondary text-sm leading-snug">Readiness not yet calibrated</div>
           </template>
         </div>
-        <div v-if="timeLabel" class="flex-1 px-5 py-4">
+        <div
+          v-if="timeLabel"
+          class="flex-1 px-5 py-4"
+          :class="streakDays !== null ? 'border-readion-border-strong border-r' : ''"
+        >
           <div class="mb-1.5 text-[11px] text-readion-text-muted uppercase tracking-wider">Time</div>
           <div class="font-bold text-2xl text-readion-text-primary leading-none">{{ timeLabel }}</div>
         </div>
+        <div v-if="streakDays !== null" data-testid="summary-streak" class="flex-1 px-5 py-4">
+          <div class="mb-1.5 text-[11px] text-readion-text-muted uppercase tracking-wider">Streak</div>
+          <div class="font-bold text-2xl text-readion-accent-label leading-none">{{ streakDays }}</div>
+          <div class="mt-1 text-[11px] text-readion-text-subtle">day streak</div>
+        </div>
+      </div>
+
+      <div
+        data-testid="summary-readiness-strip"
+        class="rounded-xl border border-readion-border-strong bg-readion-background-surface px-5 py-3.5"
+      >
+        <template v-if="readiness.calibrated">
+          <div class="flex flex-wrap items-center gap-4">
+            <span class="text-[11px] text-readion-text-muted uppercase tracking-wider">Readiness score</span>
+            <span class="font-bold text-2xl text-readion-text-muted leading-none">{{ readiness.before }}%</span>
+            <div class="h-[3px] min-w-10 flex-1 rounded-full bg-readion-border-strong" />
+            <span class="font-bold text-2xl text-readion-status-good leading-none">{{ readiness.after }}%</span>
+            <div class="flex items-center gap-1.5">
+              <DeltaBadge :value="readinessDeltaValue" />
+              <span class="text-[11px] text-readion-text-subtle">this session</span>
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          <div class="text-readion-text-secondary text-sm leading-snug">Readiness not yet calibrated</div>
+        </template>
       </div>
 
       <div
