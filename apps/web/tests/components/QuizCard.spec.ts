@@ -33,6 +33,10 @@ function quizItem(content = quizContent): SessionItemResponse {
   }
 }
 
+function quizItem2(content = quizContent): SessionItemResponse {
+  return { ...quizItem(content), index: 2 }
+}
+
 const insufficientItem: SessionItemResponse = {
   index: 2,
   type: 'quiz',
@@ -42,9 +46,9 @@ const insufficientItem: SessionItemResponse = {
   supportingSpans: [],
 }
 
-function mountCard(item: SessionItemResponse = quizItem()) {
+function mountCard(item: SessionItemResponse = quizItem(), total = 12) {
   return mount(QuizCard, {
-    props: { sessionId: 'sess-1', userCertificationId: 'uc-1', item },
+    props: { sessionId: 'sess-1', userCertificationId: 'uc-1', item, total },
   })
 }
 
@@ -74,6 +78,12 @@ describe('QuizCard rendering', () => {
     expect(wrapper.find('[data-testid="quiz-card"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('enforces permission guardrails')
     expect(wrapper.findAll('[data-testid="quiz-option"]')).toHaveLength(3)
+  })
+
+  it('renders a "Q n of m" position label beside the Question pill for the 3rd of 12 items', () => {
+    const wrapper = mountCard(quizItem2(), 12)
+
+    expect(wrapper.find('[data-testid="quiz-position"]').text()).toBe('Q 3 of 12')
   })
 })
 
