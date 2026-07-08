@@ -162,6 +162,39 @@ describe('SessionSummaryBody next focus', () => {
   })
 })
 
+describe('SessionSummaryBody zero-state', () => {
+  it('renders an explicit empty state and suppresses the data cards when no questions were answered', () => {
+    const wrapper = mountBody({ summary: baseSummary({ questionsAnswered: 0 }) })
+
+    expect(wrapper.text().toLowerCase()).toContain('no questions answered this session')
+    expect(wrapper.find('[data-testid="summary-accuracy"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="summary-readiness"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="summary-domains"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="weak-area-delta"]').exists()).toBe(false)
+  })
+
+  it('still renders the back-to-dashboard action when no questions were answered', async () => {
+    const wrapper = mountBody({ summary: baseSummary({ questionsAnswered: 0 }) })
+
+    const back = wrapper.find('[data-testid="summary-back-button"]')
+    expect(back.exists()).toBe(true)
+    await back.trigger('click')
+    expect(wrapper.emitted('back')).toHaveLength(1)
+  })
+})
+
+describe('SessionSummaryBody full body (non-zero questionsAnswered)', () => {
+  it('renders the accuracy, readiness, domains, and weak-area cards when questions were answered', () => {
+    const wrapper = mountBody({ summary: baseSummary({ questionsAnswered: 12 }) })
+
+    expect(wrapper.text().toLowerCase()).not.toContain('no questions answered this session')
+    expect(wrapper.find('[data-testid="summary-accuracy"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="summary-readiness"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="summary-domains"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="weak-area-delta"]').exists()).toBe(true)
+  })
+})
+
 describe('SessionSummaryBody actions', () => {
   it('emits drill when the drill button is clicked', async () => {
     const wrapper = mountBody()
