@@ -1,6 +1,6 @@
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { AuditLog, Certification, ContentSource, User } from '@readion/db'
+import { AuditLog, Certification, ContentSource, QuarantinedItem, User } from '@readion/db'
 import {
   type AdminUserListItem,
   AuditAction,
@@ -144,6 +144,7 @@ export class AdminService {
     const userIds = new Set<string>()
     const certificationIds = new Set<string>()
     const contentSourceIds = new Set<string>()
+    const quarantinedItemIds = new Set<string>()
 
     for (const log of logs) {
       if (log.userId !== null) {
@@ -155,10 +156,12 @@ export class AdminService {
         certificationIds.add(log.targetId)
       } else if (log.targetType === 'ContentSource') {
         contentSourceIds.add(log.targetId)
+      } else if (log.targetType === 'quarantined_item') {
+        quarantinedItemIds.add(log.targetId)
       }
     }
 
-    const [users, certifications, contentSources] = await Promise.all([
+    const [users, certifications, contentSources, quarantinedItems] = await Promise.all([
       userIds.size > 0 ? em.find(User, { id: { $in: [...userIds] } }) : [],
       certificationIds.size > 0
         ? em.find(Certification, { id: { $in: [...certificationIds] } })
@@ -166,12 +169,18 @@ export class AdminService {
       contentSourceIds.size > 0
         ? em.find(ContentSource, { id: { $in: [...contentSourceIds] } })
         : [],
+      quarantinedItemIds.size > 0
+        ? em.find(QuarantinedItem, { id: { $in: [...quarantinedItemIds] } })
+        : [],
     ])
 
     const emailById = new Map(users.map((user) => [user.id, user.email]))
     const certificationNameById = new Map(certifications.map((cert) => [cert.id, cert.name]))
     const sourceLabelById = new Map(
       contentSources.map((source) => [source.id, `${source.type} · ${source.url}`]),
+    )
+    const quarantinedItemDomainById = new Map(
+      quarantinedItems.map((item) => [item.id, item.domain]),
     )
 
     return logs.map(
@@ -187,6 +196,7 @@ export class AdminService {
           emailById,
           certificationNameById,
           sourceLabelById,
+          quarantinedItemDomainById,
         ),
         before: log.before,
         after: log.after,
@@ -200,6 +210,7 @@ export class AdminService {
     emailById: Map<string, string>,
     certificationNameById: Map<string, string>,
     sourceLabelById: Map<string, string>,
+    quarantinedItemDomainById: Map<string, string>,
   ): string {
     switch (log.targetType) {
       case 'user':
@@ -209,6 +220,8 @@ export class AdminService {
         return certificationNameById.get(log.targetId) ?? log.targetId
       case 'ContentSource':
         return sourceLabelById.get(log.targetId) ?? log.targetId
+      case 'quarantined_item':
+        return quarantinedItemDomainById.get(log.targetId) ?? log.targetId
       default:
         return log.targetId
     }
