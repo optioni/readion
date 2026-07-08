@@ -1,3 +1,4 @@
+import { pluralizeUnit } from '~/composables/paceFormatter'
 import { formatReadiness } from '~/composables/readinessFormat'
 import { statusColorForScore, statusTextColorClass } from '~/composables/statusColor'
 import type { CardReadiness } from '~/composables/useCardReadiness'
@@ -22,11 +23,17 @@ export function formatCertStatRow(input: {
   const display = formatReadiness(input.readiness, null)
   const { trajectory } = input.readiness
 
-  const accuracyPercent = input.accuracy === null ? null : Math.round(input.accuracy * 100)
+  // A 0% accuracy is only meaningful once at least one question has been answered.
+  const accuracyPercent =
+    input.accuracy === null || input.questionsAnswered === 0
+      ? null
+      : Math.round(input.accuracy * 100)
 
   return {
     readinessLabel: display.percent ?? display.label ?? 'not yet calibrated',
-    trajectoryLabel: trajectory ? `exam-ready in ~${trajectory.weeksToReady} weeks` : null,
+    trajectoryLabel: trajectory
+      ? `exam-ready in ~${trajectory.weeksToReady} ${pluralizeUnit(trajectory.weeksToReady, 'week')}`
+      : null,
     totalSessions: input.totalSessions,
     dueCount: input.dueCount,
     questionsAnswered: input.questionsAnswered,
