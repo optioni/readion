@@ -7,6 +7,10 @@ export function computePaceRate(points: number[]): number | null {
   return (last - first) / (points.length - 1)
 }
 
+export function pluralizeUnit(count: number, singular: string): string {
+  return count === 1 ? singular : `${singular}s`
+}
+
 export function formatPaceString({
   paceRate,
   weeksToReady,
@@ -15,6 +19,6 @@ export function formatPaceString({
   weeksToReady: number
 }): string {
   const rate = paceRate.toFixed(1)
-  const weekWord = weeksToReady === 1 ? 'week' : 'weeks'
+  const weekWord = pluralizeUnit(weeksToReady, 'week')
   return `At your recent pace (${rate}% readiness/session avg.), you'll be exam-ready in approximately ${weeksToReady} ${weekWord}.`
 }
