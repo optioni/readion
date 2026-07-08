@@ -2,7 +2,7 @@
 import type { SessionSummaryResponse } from '@readion/shared'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref, watch } from 'vue'
-import SessionSummaryBody from '~/components/SessionSummaryBody.vue'
+import SessionSummaryContent from '~/components/SessionSummaryContent.vue'
 import { sessionRunPath } from '~/composables/runnerRoutes'
 import { toSummary } from '~/composables/sessionSummaryMapper'
 import { drillSession, fetchSessionDetail, fetchSessionSummary } from '~/composables/sessionViewApi'
@@ -25,12 +25,21 @@ const sessionQuery = useQuery({
   queryFn: () => fetchSessionDetail(sessionId.value),
 })
 
-const isLoading = computed(() => summaryQuery.isLoading.value)
-const isError = computed(() => summaryQuery.isError.value)
+const isLoading = computed(() => summaryQuery.isLoading.value || sessionQuery.isLoading.value)
+const isError = computed(() => summaryQuery.isError.value || sessionQuery.isError.value)
 
 const summary = computed<SessionSummaryResponse | null>(() => {
   const dto = summaryQuery.data.value
   return dto ? toSummary(dto) : null
+})
+
+const userCertificationId = computed<string | null>(
+  () => sessionQuery.data.value?.data.userCertificationId ?? null,
+)
+
+const completedAt = computed<string | null>(() => {
+  const endedAt = sessionQuery.data.value?.data.endedAt
+  return endedAt ? String(endedAt) : null
 })
 
 const { track } = useTrack()
@@ -48,7 +57,10 @@ watch(
 
 const timeLabel = computed<string | null>(() => {
   const session = sessionQuery.data.value?.data
-  const ms = elapsedMs(session?.startedAt ?? null, session?.endedAt ? String(session.endedAt) : null)
+  const ms = elapsedMs(
+    session?.startedAt ?? null,
+    session?.endedAt ? String(session.endedAt) : null,
+  )
   if (ms === null) {
     return null
   }
@@ -87,17 +99,19 @@ async function handleBack() {
     </div>
 
     <div
-      v-else-if="isError || !summary"
+      v-else-if="isError || !summary || !userCertificationId"
       data-testid="session-summary-error"
       class="flex flex-1 items-center justify-center text-readion-status-warning text-sm"
     >
       This summary could not be loaded.
     </div>
 
-    <SessionSummaryBody
+    <SessionSummaryContent
       v-else
+      :user-certification-id="userCertificationId ?? ''"
       :summary="summary"
       :time-label="timeLabel"
+      :completed-at="completedAt"
       :drill-no-misses="drillNoMisses"
       @drill="handleDrill"
       @ask-agent="handleAskAgent"

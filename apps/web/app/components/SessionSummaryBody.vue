@@ -5,6 +5,8 @@ import DeltaBadge from '~/components/DeltaBadge.vue'
 import { formatReadiness } from '~/composables/readinessFormat'
 import { statusColorForScore, statusTextColorClass } from '~/composables/statusColor'
 
+const NOT_CALIBRATED_MESSAGE = 'Readiness not yet calibrated'
+
 const props = withDefaults(
   defineProps<{
     summary: SessionSummaryResponse
@@ -166,7 +168,7 @@ const completedAtLabel = computed(() => {
             </div>
           </template>
           <template v-else>
-            <div class="text-readion-text-secondary text-sm leading-snug">Readiness not yet calibrated</div>
+            <div class="text-readion-text-secondary text-sm leading-snug">{{ NOT_CALIBRATED_MESSAGE }}</div>
           </template>
         </div>
         <div
@@ -201,7 +203,7 @@ const completedAtLabel = computed(() => {
           </div>
         </template>
         <template v-else>
-          <div class="text-readion-text-secondary text-sm leading-snug">Readiness not yet calibrated</div>
+          <div class="text-readion-text-secondary text-sm leading-snug">{{ NOT_CALIBRATED_MESSAGE }}</div>
         </template>
       </div>
 

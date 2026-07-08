@@ -81,7 +81,15 @@ function mountPage() {
       plugins: [[VueQueryPlugin, { queryClient }]],
       stubs: {
         SessionSummaryBody: {
-          props: ['summary', 'timeLabel', 'drillNoMisses', 'certCode', 'certName', 'completedAt', 'streakDays'],
+          props: [
+            'summary',
+            'timeLabel',
+            'drillNoMisses',
+            'certCode',
+            'certName',
+            'completedAt',
+            'streakDays',
+          ],
           template: `<div
             data-testid="body-stub"
             :data-acc="summary.accuracy"
