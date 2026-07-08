@@ -1,9 +1,9 @@
 import { createDbHarness, type DbHarness } from '@readion/db'
 import { AuditAction } from '@readion/shared'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { LastActiveAdminGuard } from '../users/last-active-admin.guard'
 import { AdminService } from './admin.service'
 import { AuditLogService } from './audit-log.service'
-import { LastActiveAdminGuard } from '../users/last-active-admin.guard'
 
 async function seedUser(harness: DbHarness, email: string): Promise<string> {
   const conn = harness.getEm().getConnection()

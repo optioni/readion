@@ -65,12 +65,16 @@ class AuditLogEntryDto {
   id!: string
   @ApiProperty({ nullable: true, type: String })
   userId!: string | null
+  @ApiProperty({ nullable: true, type: String })
+  actorEmail!: string | null
   @ApiProperty()
   action!: string
   @ApiProperty()
   targetType!: string
   @ApiProperty()
   targetId!: string
+  @ApiProperty()
+  targetLabel!: string
   @ApiProperty({ nullable: true, type: Object })
   before!: Record<string, unknown> | null
   @ApiProperty({ nullable: true, type: Object })

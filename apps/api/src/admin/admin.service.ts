@@ -1,6 +1,6 @@
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { AuditLog, User } from '@readion/db'
+import { AuditLog, Certification, ContentSource, User } from '@readion/db'
 import {
   type AdminUserListItem,
   AuditAction,
@@ -74,18 +74,7 @@ export class AdminService {
       { orderBy: { createdAt: 'DESC' }, limit: resolvedLimit, offset },
     )
 
-    const items = logs.map(
-      (log): AuditLogEntry => ({
-        id: log.id,
-        userId: log.userId,
-        action: log.action,
-        targetType: log.targetType,
-        targetId: log.targetId,
-        before: log.before,
-        after: log.after,
-        createdAt: log.createdAt.toISOString(),
-      }),
-    )
+    const items = await this.mapAuditLogEntries(em, logs)
 
     return { items, meta: { total, page: resolvedPage, limit: resolvedLimit } }
   }
@@ -149,6 +138,80 @@ export class AdminService {
 
       return { id: user.id, role: user.role }
     })
+  }
+
+  private async mapAuditLogEntries(em: EntityManager, logs: AuditLog[]): Promise<AuditLogEntry[]> {
+    const userIds = new Set<string>()
+    const certificationIds = new Set<string>()
+    const contentSourceIds = new Set<string>()
+
+    for (const log of logs) {
+      if (log.userId !== null) {
+        userIds.add(log.userId)
+      }
+      if (log.targetType === 'user') {
+        userIds.add(log.targetId)
+      } else if (log.targetType === 'Certification' || log.targetType === 'certification') {
+        certificationIds.add(log.targetId)
+      } else if (log.targetType === 'ContentSource') {
+        contentSourceIds.add(log.targetId)
+      }
+    }
+
+    const [users, certifications, contentSources] = await Promise.all([
+      userIds.size > 0 ? em.find(User, { id: { $in: [...userIds] } }) : [],
+      certificationIds.size > 0
+        ? em.find(Certification, { id: { $in: [...certificationIds] } })
+        : [],
+      contentSourceIds.size > 0
+        ? em.find(ContentSource, { id: { $in: [...contentSourceIds] } })
+        : [],
+    ])
+
+    const emailById = new Map(users.map((user) => [user.id, user.email]))
+    const certificationNameById = new Map(certifications.map((cert) => [cert.id, cert.name]))
+    const sourceLabelById = new Map(
+      contentSources.map((source) => [source.id, `${source.type} · ${source.url}`]),
+    )
+
+    return logs.map(
+      (log): AuditLogEntry => ({
+        id: log.id,
+        userId: log.userId,
+        actorEmail: log.userId !== null ? (emailById.get(log.userId) ?? null) : null,
+        action: log.action,
+        targetType: log.targetType,
+        targetId: log.targetId,
+        targetLabel: this.resolveTargetLabel(
+          log,
+          emailById,
+          certificationNameById,
+          sourceLabelById,
+        ),
+        before: log.before,
+        after: log.after,
+        createdAt: log.createdAt.toISOString(),
+      }),
+    )
+  }
+
+  private resolveTargetLabel(
+    log: AuditLog,
+    emailById: Map<string, string>,
+    certificationNameById: Map<string, string>,
+    sourceLabelById: Map<string, string>,
+  ): string {
+    switch (log.targetType) {
+      case 'user':
+        return emailById.get(log.targetId) ?? log.targetId
+      case 'Certification':
+      case 'certification':
+        return certificationNameById.get(log.targetId) ?? log.targetId
+      case 'ContentSource':
+        return sourceLabelById.get(log.targetId) ?? log.targetId
+      default:
+        return log.targetId
+    }
   }
 
   private async enrollmentCounts(

@@ -47,9 +47,11 @@ export interface AdminUserListItem {
 export interface AuditLogEntry {
   id: string
   userId: string | null
+  actorEmail: string | null
   action: AuditActionValue
   targetType: string
   targetId: string
+  targetLabel: string
   before: Record<string, unknown> | null
   after: Record<string, unknown> | null
   createdAt: string
