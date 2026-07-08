@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { YoutubeTranscript } from 'youtube-transcript'
 import type { FetchedContent, FetchStrategy } from './fetch-strategy.interface'
+
+const logger = new Logger('YouTubeFetchStrategy')
 
 function extractVideoId(url: string): string | null {
   try {
@@ -11,8 +13,10 @@ function extractVideoId(url: string): string | null {
     if (u.hostname === 'youtu.be') {
       return u.pathname.slice(1)
     }
-  } catch {
-    // ignore
+  } catch (error) {
+    logger.debug(
+      `could not parse YouTube URL: url=${url} error=${error instanceof Error ? error.message : String(error)}`,
+    )
   }
   return null
 }

@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import type { LanguageModelV3FinishReason, LanguageModelV3StreamPart } from '@ai-sdk/provider'
+import { Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Test, type TestingModule } from '@nestjs/testing'
 import { getToken } from '@willsoto/nestjs-prometheus'
@@ -266,5 +267,24 @@ describe('CertDiscoveryService', () => {
 
     expect(result.candidates).toEqual([])
     expect(result.suggestedContentSources).toBeUndefined()
+  })
+
+  it('warns with per-stage counts when discovery yields no candidates', async () => {
+    searchMock.mockResolvedValue([VENDOR_RESULT, THIRD_PARTY_RESULT])
+    modelReply = JSON.stringify({ candidates: [{ url: HALLUCINATED_URL }] })
+    const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined)
+
+    const result = await service.discoverSources({
+      name: 'AWS Certified Cloud Practitioner',
+      code: 'CLF-C02',
+    })
+
+    expect(result.candidates).toEqual([])
+    const message = warnSpy.mock.calls[0]?.[0] as string
+    expect(message).toContain('searchResults=2')
+    expect(message).toContain('parsedCandidates=1')
+    expect(message).toContain('grounded=0')
+    expect(message).toContain('candidates=0')
+    warnSpy.mockRestore()
   })
 })

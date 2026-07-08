@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import {
   contentSourceTypes,
   type DiscoverSourcesRequest,
@@ -28,8 +28,17 @@ const modelOutputSchema = z.object({
     .optional(),
 })
 
+interface DiscoveryDiagnostics {
+  searchResultCount: number
+  parsedCandidateCount: number
+  groundedCandidateCount: number
+  finalTextLength: number
+}
+
 @Injectable()
 export class CertDiscoveryService {
+  private readonly logger = new Logger(CertDiscoveryService.name)
+
   constructor(
     private readonly llm: LlmService,
     @Inject(CERT_SEARCH_PORT) private readonly search: CertSearchPort,
@@ -44,6 +53,7 @@ export class CertDiscoveryService {
         inputSchema: z.object({ query: z.string() }),
         execute: async ({ query }) => {
           const results = await this.search.search(query)
+          this.logger.debug(`webSearch query=${JSON.stringify(query)} results=${results.length}`)
           searchResults.push(...results)
           return results
         },
@@ -60,7 +70,37 @@ export class CertDiscoveryService {
 
     const finalText = await result.text
 
-    return assembleResponse(finalText, searchResults)
+    const { response, diagnostics } = assembleResponse(finalText, searchResults)
+    this.logOutcome(request, finalText, diagnostics, response.candidates.length)
+    return response
+  }
+
+  // Discovery can return zero candidates for three distinct reasons that are
+  // otherwise indistinguishable from outside the API: the model never searched
+  // (searchResults=0), it searched but emitted no parseable JSON
+  // (parsedCandidates=0), or it echoed URLs that don't match any search result
+  // verbatim and got dropped by grounding (parsedCandidates>0 but grounded=0).
+  // The zero-candidate path logs at warn so it surfaces at the default level.
+  private logOutcome(
+    request: DiscoverSourcesRequest,
+    finalText: string,
+    diagnostics: DiscoveryDiagnostics,
+    candidateCount: number,
+  ): void {
+    const label = request.code ? `${request.name} (${request.code})` : request.name
+    const summary =
+      `cert discovery "${label}": searchResults=${diagnostics.searchResultCount} ` +
+      `parsedCandidates=${diagnostics.parsedCandidateCount} ` +
+      `grounded=${diagnostics.groundedCandidateCount} ` +
+      `candidates=${candidateCount} finalTextLen=${diagnostics.finalTextLength}`
+
+    if (candidateCount === 0) {
+      this.logger.warn(
+        `${summary} — no candidates; finalTextPreview=${JSON.stringify(finalText.slice(0, 300))}`,
+      )
+      return
+    }
+    this.logger.log(summary)
   }
 }
 
@@ -77,7 +117,7 @@ function buildMessages(request: DiscoverSourcesRequest): ModelMessage[] {
 function assembleResponse(
   finalText: string,
   searchResults: CertSearchResult[],
-): DiscoverSourcesResponse {
+): { response: DiscoverSourcesResponse; diagnostics: DiscoveryDiagnostics } {
   const grounded = new Map(searchResults.map((searchResult) => [searchResult.url, searchResult]))
   const vendorDomains = deriveVendorDomains(searchResults)
   const parsed = parseModelOutput(finalText)
@@ -100,9 +140,18 @@ function assembleResponse(
   const candidates = rankDiscoveryCandidates(groundedCandidates, vendorDomains)
   const suggestedContentSources = parsed.suggested.filter((source) => grounded.has(source.url))
 
-  return suggestedContentSources.length > 0
-    ? { candidates, suggestedContentSources }
-    : { candidates }
+  const response: DiscoverSourcesResponse =
+    suggestedContentSources.length > 0 ? { candidates, suggestedContentSources } : { candidates }
+
+  return {
+    response,
+    diagnostics: {
+      searchResultCount: searchResults.length,
+      parsedCandidateCount: parsed.candidateUrls.length,
+      groundedCandidateCount: groundedCandidates.length,
+      finalTextLength: finalText.length,
+    },
+  }
 }
 
 function deriveVendorDomains(searchResults: CertSearchResult[]): string[] {

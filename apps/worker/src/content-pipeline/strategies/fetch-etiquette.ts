@@ -1,4 +1,8 @@
+import { Logger } from '@nestjs/common'
+
 export const USER_AGENT = 'Readion-Ingestion/1.0 (+https://readion.app/bot)'
+
+const logger = new Logger('FetchEtiquette')
 
 const lastRequestTime = new Map<string, number>()
 const RATE_LIMIT_MS = 1_000
@@ -33,7 +37,10 @@ export async function isAllowedByRobots(url: string): Promise<boolean> {
     if (!res.ok) return true
     const text = await res.text()
     return !isDisallowed(text, url)
-  } catch {
+  } catch (error) {
+    logger.warn(
+      `robots.txt check failed, failing open (allowing fetch): url=${url} error=${error instanceof Error ? error.message : String(error)}`,
+    )
     return true
   }
 }

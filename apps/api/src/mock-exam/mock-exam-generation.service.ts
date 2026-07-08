@@ -1,5 +1,5 @@
 import { EntityManager } from '@mikro-orm/core'
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { MockExam } from '@readion/db'
 import type {
@@ -18,6 +18,8 @@ import { planBreadthSlots, planMockSlots } from './mock-exam-slot-planner'
 
 @Injectable()
 export class MockExamGenerationService {
+  private readonly logger = new Logger(MockExamGenerationService.name)
+
   constructor(
     private readonly em: EntityManager,
     private readonly quiz: QuizService,
@@ -160,7 +162,10 @@ export class MockExamGenerationService {
         userCertificationId,
       })
       return result.explanation
-    } catch {
+    } catch (error) {
+      this.logger.warn(
+        `explanation generation failed, shipping empty explanation: questionId=${questionId} userCertificationId=${userCertificationId} error=${error instanceof Error ? error.message : String(error)}`,
+      )
       return ''
     }
   }

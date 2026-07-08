@@ -1,5 +1,5 @@
 import { EntityManager } from '@mikro-orm/core'
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { z } from 'zod'
 import type { EnvConfig } from '../config/env.schema'
@@ -45,8 +45,13 @@ const readingBlockSchema = z.object({
 
 const VERBATIM_CAP = 200
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
 @Injectable()
 export class ReadingBlockComposerService implements ReadingBlockComposer {
+  private readonly logger = new Logger(ReadingBlockComposerService.name)
   private readonly threshold: number
   private readonly verbatimCap: number
 
@@ -107,7 +112,10 @@ export class ReadingBlockComposerService implements ReadingBlockComposer {
     try {
       const parsed = readingBlockSchema.parse(JSON.parse(result.text))
       return parsed.markdown
-    } catch {
+    } catch (error) {
+      this.logger.warn(
+        `goDeeper fell back to raw LLM text: error=${errorMessage(error)} textPreview=${JSON.stringify(result.text.slice(0, 300))}`,
+      )
       return result.text
     }
   }
@@ -143,7 +151,10 @@ ${chunkTexts}`,
 
     try {
       return readingBlockSchema.parse(JSON.parse(result.text))
-    } catch {
+    } catch (error) {
+      this.logger.warn(
+        `reading block fell back to raw LLM text: domain=${JSON.stringify(domain)} difficulty=${difficulty} error=${errorMessage(error)} textPreview=${JSON.stringify(result.text.slice(0, 300))}`,
+      )
       return { markdown: result.text, tldr: [], supportingSpans: [] }
     }
   }

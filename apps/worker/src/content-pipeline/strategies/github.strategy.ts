@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { extractDomain, throttleForDomain, USER_AGENT } from './fetch-etiquette'
 import type { FetchedContent, FetchStrategy } from './fetch-strategy.interface'
 
@@ -10,6 +10,8 @@ interface GitHubSearchItem {
 
 @Injectable()
 export class GitHubFetchStrategy implements FetchStrategy {
+  private readonly logger = new Logger(GitHubFetchStrategy.name)
+
   async fetch(url: string): Promise<FetchedContent[]> {
     const repoPath = this.extractRepoPath(url)
     if (!repoPath) return []
@@ -31,8 +33,10 @@ export class GitHubFetchStrategy implements FetchStrategy {
       const u = new URL(url)
       const parts = u.pathname.split('/').filter(Boolean)
       if (parts.length >= 2) return `${parts[0]}/${parts[1]}`
-    } catch {
-      // ignore
+    } catch (error) {
+      this.logger.debug(
+        `could not parse GitHub URL: url=${url} error=${error instanceof Error ? error.message : String(error)}`,
+      )
     }
     return null
   }

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common'
+import { Inject, Injectable, Logger } from '@nestjs/common'
 import type { ScrapperClient } from '../../scrapper/scrapper.client'
 import { SCRAPPER_CLIENT } from '../../scrapper/scrapper.module'
 import { USER_AGENT } from './fetch-etiquette'
@@ -6,13 +6,18 @@ import type { FetchedContent, FetchStrategy } from './fetch-strategy.interface'
 
 @Injectable()
 export class PdfFetchStrategy implements FetchStrategy {
+  private readonly logger = new Logger(PdfFetchStrategy.name)
+
   constructor(@Inject(SCRAPPER_CLIENT) private readonly scrapper: ScrapperClient) {}
 
   async fetch(url: string): Promise<FetchedContent[]> {
     try {
       const result = await this.scrapper.fetch(url)
       return [{ text: result.content, url: result.url }]
-    } catch {
+    } catch (error) {
+      this.logger.warn(
+        `scrapper failed for PDF, falling back to direct pdf-parse: url=${url} error=${error instanceof Error ? error.message : String(error)}`,
+      )
       return this.fallbackToPdfParse(url)
     }
   }

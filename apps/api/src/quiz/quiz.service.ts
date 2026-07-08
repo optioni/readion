@@ -1,5 +1,5 @@
 import { EntityManager } from '@mikro-orm/core'
-import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
+import { Injectable, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { QuizResponse, UserCertification } from '@readion/db'
 import type {
@@ -48,6 +48,8 @@ export type GenerateResult =
 
 @Injectable()
 export class QuizService {
+  private readonly logger = new Logger(QuizService.name)
+
   constructor(
     private readonly em: EntityManager,
     private readonly groundedGeneration: GroundedGenerationService,
@@ -494,7 +496,10 @@ export class QuizService {
 
       try {
         return llmExtractiveItemSchema.parse(JSON.parse(result.text))
-      } catch {
+      } catch (error) {
+        this.logger.warn(
+          `malformed quiz content: error=${error instanceof Error ? error.message : String(error)} textPreview=${JSON.stringify(result.text.slice(0, 300))}`,
+        )
         throw new UnprocessableEntityException('LLM returned malformed quiz content')
       }
     }
@@ -521,7 +526,10 @@ export class QuizService {
 
       try {
         return llmExtractiveItemSchema.parse(JSON.parse(result.text))
-      } catch {
+      } catch (error) {
+        this.logger.warn(
+          `malformed explanation content: error=${error instanceof Error ? error.message : String(error)} textPreview=${JSON.stringify(result.text.slice(0, 300))}`,
+        )
         throw new UnprocessableEntityException('LLM returned malformed explanation content')
       }
     }

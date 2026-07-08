@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { extractDomain, throttleForDomain, USER_AGENT } from './fetch-etiquette'
 import type { FetchedContent, FetchStrategy } from './fetch-strategy.interface'
 import { type PodcastEpisode, parsePodcastFeed } from './podcast-feed-parser'
 
 @Injectable()
 export class PodcastFetchStrategy implements FetchStrategy {
+  private readonly logger = new Logger(PodcastFetchStrategy.name)
+
   async fetch(url: string): Promise<FetchedContent[]> {
     try {
       await throttleForDomain(extractDomain(url))
@@ -27,7 +29,10 @@ export class PodcastFetchStrategy implements FetchStrategy {
         results.push({ text, url: episode.url })
       }
       return results
-    } catch {
+    } catch (error) {
+      this.logger.warn(
+        `podcast source yielded no content: url=${url} error=${error instanceof Error ? error.message : String(error)}`,
+      )
       return []
     }
   }
@@ -51,7 +56,10 @@ export class PodcastFetchStrategy implements FetchStrategy {
       const text = await response.text()
       const trimmed = text.trim()
       return trimmed.length > 0 ? trimmed : undefined
-    } catch {
+    } catch (error) {
+      this.logger.debug(
+        `transcript fetch failed, using episode fallback text: url=${transcriptUrl} error=${error instanceof Error ? error.message : String(error)}`,
+      )
       return undefined
     }
   }

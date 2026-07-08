@@ -23,6 +23,10 @@ type ChunkRow = { id: string; text: string; primary_domain: string }
 
 const VERBATIM_CAP = 200
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
 @Injectable()
 export class SessionItemGeneratorService {
   private readonly logger = new Logger(SessionItemGeneratorService.name)
@@ -111,7 +115,10 @@ export class SessionItemGeneratorService {
           supportingSpans: parsed.supportingSpans,
         }),
       )
-    } catch {
+    } catch (error) {
+      this.logger.warn(
+        `reading block fell back to raw LLM text: session=${sessionId} index=${itemPlan.index} domain=${JSON.stringify(itemPlan.domain)} error=${errorMessage(error)} textPreview=${JSON.stringify(text.slice(0, 300))}`,
+      )
       em.persist(
         em.create(SessionItem, {
           session: em.getReference(StudySession, sessionId),
@@ -161,7 +168,10 @@ export class SessionItemGeneratorService {
           supportingSpans: parsed.supportingSpans,
         }),
       )
-    } catch {
+    } catch (error) {
+      this.logger.warn(
+        `malformed quiz content: session=${sessionId} index=${itemPlan.index} domain=${JSON.stringify(itemPlan.domain)} error=${errorMessage(error)} textPreview=${JSON.stringify(text.slice(0, 300))}`,
+      )
       throw new Error('LLM returned malformed quiz content')
     }
   }
