@@ -220,17 +220,19 @@ const headerTotal = computed<number>(() => {
         <div
           v-if="dueCount > 0"
           data-testid="review-mode-toggle"
-          class="flex items-center justify-center gap-2 text-readion-text-muted text-xs"
+          role="group"
+          aria-label="Optional rating mode — self-grade is the default, quiz stays reachable"
+          class="flex items-center justify-end gap-2 text-readion-text-subtle text-xs"
         >
-          <span>Rating style</span>
+          <span>Prefer quiz instead?</span>
           <button
             type="button"
             data-testid="review-mode-self-grade"
             :class="[
-              'rounded-md px-2.5 py-1',
+              'rounded-md px-1.5 py-0.5',
               reviewMode === 'self-grade'
-                ? 'bg-readion-primary/10 font-medium text-readion-primary'
-                : 'text-readion-text-muted hover:text-readion-text-secondary',
+                ? 'text-readion-text-secondary underline'
+                : 'text-readion-text-subtle hover:text-readion-text-secondary',
             ]"
             @click="reviewMode = 'self-grade'"
           >
@@ -240,10 +242,10 @@ const headerTotal = computed<number>(() => {
             type="button"
             data-testid="review-mode-quiz"
             :class="[
-              'rounded-md px-2.5 py-1',
+              'rounded-md px-1.5 py-0.5',
               reviewMode === 'quiz'
-                ? 'bg-readion-primary/10 font-medium text-readion-primary'
-                : 'text-readion-text-muted hover:text-readion-text-secondary',
+                ? 'text-readion-text-secondary underline'
+                : 'text-readion-text-subtle hover:text-readion-text-secondary',
             ]"
             @click="reviewMode = 'quiz'"
           >
