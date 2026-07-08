@@ -2,11 +2,11 @@
 
 Reproduce the highest-impact defects first: Audit Log human-readability, the AdminSidebar shell chrome, and pagination on the large tables.
 
-- [ ] 0.1 Write a failing Playwright e2e (`apps/web/e2e/admin-console.e2e.ts`) that signs in as an admin, seeds ≥2 audit entries (a role change and a source/cert action), opens `/admin/audit-logs`, and asserts each row shows the actor **email** (not a UUID), a human **target label** (not `type · <uuid>`), and human **before → after** values (e.g. `user → admin`, `draft → live`) with no raw JSON braces
-- [ ] 0.2 Extend the e2e to assert the admin area renders the `AdminSidebar` chrome exactly once (orange `ADMIN` eyebrow, per-item icons, a Review-queue badge with the pending count, an Admin-session card showing the signed-in email) and that no second/duplicate study nav is present in the admin viewport
-- [ ] 0.3 Extend the e2e to assert `/admin` redirects to `/admin/certifications`, and that the Users and Audit Log tables render a pagination control when the API `meta` reports more than one page
-- [ ] 0.4 Write a failing NestJS integration test (Supertest) asserting `GET /api/v1/admin/audit-logs` returns each entry with `actorEmail` (the actor's email, and `null` for a purged/system actor) and a non-empty `targetLabel`, in addition to the existing fields
-- [ ] 0.5 Confirm 0.1–0.4 fail for the right reason (missing response fields + missing rendering/chrome), not a harness/setup error
+- [x] 0.1 Write a failing Playwright e2e (`apps/web/e2e/admin-console.e2e.ts`) that signs in as an admin, seeds ≥2 audit entries (a role change and a source/cert action), opens `/admin/audit-logs`, and asserts each row shows the actor **email** (not a UUID), a human **target label** (not `type · <uuid>`), and human **before → after** values (e.g. `user → admin`, `draft → live`) with no raw JSON braces
+- [x] 0.2 Extend the e2e to assert the admin area renders the `AdminSidebar` chrome exactly once (orange `ADMIN` eyebrow, per-item icons, a Review-queue badge with the pending count, an Admin-session card showing the signed-in email) and that no second/duplicate study nav is present in the admin viewport
+- [x] 0.3 Extend the e2e to assert `/admin` redirects to `/admin/certifications`, and that the Users and Audit Log tables render a pagination control when the API `meta` reports more than one page
+- [x] 0.4 Write a failing NestJS integration test (Supertest) asserting `GET /api/v1/admin/audit-logs` returns each entry with `actorEmail` (the actor's email, and `null` for a purged/system actor) and a non-empty `targetLabel`, in addition to the existing fields
+- [x] 0.5 Confirm 0.1–0.4 fail for the right reason (missing response fields + missing rendering/chrome), not a harness/setup error
 
 ## 1. Audit-log contract — resolvable identity (`audit-log`)
 

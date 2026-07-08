@@ -40,6 +40,10 @@ export const REINGEST_JOB_ID = 'e0000000-0000-0000-0000-000000000002'
 export const QUARANTINE_ITEM_A_ID = 'f0000000-0000-0000-0000-000000000001'
 export const QUARANTINE_ITEM_B_ID = 'f0000000-0000-0000-0000-000000000002'
 
+// Audit log fixture ids — a role-change entry and a system-originated source/cert entry.
+export const AUDIT_LOG_ROLE_CHANGE_ID = 'au-0000000000000001'
+export const AUDIT_LOG_CERT_ACTION_ID = 'au-0000000000000002'
+
 type Role = 'admin' | 'user'
 
 type Profile = {
@@ -185,25 +189,32 @@ function buildUsers(): AdminUserListItem[] {
   ]
 }
 
+// actorEmail/targetLabel are the audit-log contract fields this change adds (see the audit-log spec
+// delta): the actor's resolved email (`null` for a purged/system actor) and a human target label
+// (an email for a role change, a cert/source title for a content or certification action).
 const AUDIT_LOGS = [
   {
-    id: 'au-0000000000000001',
+    id: AUDIT_LOG_ROLE_CHANGE_ID,
     userId: ADMIN_USER_ID,
+    actorEmail: 'root@readion.io',
     action: 'user.promote',
     targetType: 'user',
     targetId: PROMOTE_USER_ID,
+    targetLabel: 'casey@org.io',
     before: { role: 'user' },
     after: { role: 'admin' },
     createdAt: '2026-06-20T10:00:00.000Z',
   },
   {
-    id: 'au-0000000000000002',
+    id: AUDIT_LOG_CERT_ACTION_ID,
     userId: null,
-    action: 'content-source.reingest',
-    targetType: 'content-source',
-    targetId: SOURCE_ENABLED_ID,
-    before: null,
-    after: null,
+    actorEmail: null,
+    action: 'cert.published',
+    targetType: 'certification',
+    targetId: CERT_ID,
+    targetLabel: 'AWS Certified Solutions Architect — Associate',
+    before: { state: 'draft' },
+    after: { state: 'live' },
     createdAt: '2026-06-21T11:30:00.000Z',
   },
 ]
@@ -330,11 +341,14 @@ const UUID = '[0-9a-f-]{36}'
 /**
  * Installs the full route-mock surface for the admin console and returns the captured-request handles.
  * Auth-bootstrap endpoints are mocked so the app is authenticated without a real sign-in; pass
- * `{ role: 'user' }` to seed a signed-in non-admin for the /admin role-gate test. A context-level
+ * `{ role: 'user' }` to seed a signed-in non-admin for the /admin role-gate test. Pass
+ * `{ manyPages: true }` to report a `meta.total` beyond one page for Users and Audit Log, so the
+ * pagination-control acceptance assertions have something to render against. A context-level
  * catch-all keeps any unforeseen /api/v1 call from hitting the (absent) backend; page-level mocks win.
  */
-export function mockAdmin(page: Page, options: { role?: Role } = {}): AdminMockHandles {
+export function mockAdmin(page: Page, options: { role?: Role; manyPages?: boolean } = {}): AdminMockHandles {
   const role: Role = options.role ?? 'admin'
+  const manyPages = options.manyPages ?? false
   const context = page.context()
 
   const profile: Profile = {
@@ -479,14 +493,16 @@ export function mockAdmin(page: Page, options: { role?: Role } = {}): AdminMockH
     await fulfilJson(route, 200, { data: target ?? null })
   })
   mock(page, /\/api\/v1\/admin\/users(\?|$)/, async (route) => {
-    await fulfilJson(route, 200, { data: users, meta: { total: users.length, page: 1, limit: 20 } })
+    const total = manyPages ? users.length + 20 : users.length
+    await fulfilJson(route, 200, { data: users, meta: { total, page: 1, limit: 20 } })
   })
 
   // --- Audit Log ---
   mock(page, /\/api\/v1\/admin\/audit-logs(\?|$)/, async (route) => {
+    const total = manyPages ? AUDIT_LOGS.length + 20 : AUDIT_LOGS.length
     await fulfilJson(route, 200, {
       data: AUDIT_LOGS,
-      meta: { total: AUDIT_LOGS.length, page: 1, limit: 20 },
+      meta: { total, page: 1, limit: 20 },
     })
   })
 

@@ -3,6 +3,7 @@ import { EntityManager } from '@mikro-orm/core'
 import type { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import {
+  AuditLog,
   Certification,
   startPostgresContainer,
   startRedisContainer,
@@ -10,13 +11,29 @@ import {
   UserCertification,
 } from '@readion/db'
 import { acquireIsolatedDatabase } from '@readion/db/src/test-helpers/isolated-db'
+import type { AuditActionValue } from '@readion/shared'
 import type Redis from 'ioredis'
 import supertest from 'supertest'
 import type { StartedTestContainer } from 'testcontainers'
+import { v4 } from 'uuid'
 import { AppModule } from '../../app.module'
 import { bootstrapApp } from '../../bootstrap'
 import { type CapturedMailMessage, MAIL_CAPTURED_MESSAGES } from '../../mail/transport'
 import { REDIS_CLIENT } from '../../redis/redis.module'
+
+export interface SeededCertification {
+  id: string
+  name: string
+}
+
+export interface InsertAuditLogEntryInput {
+  actorUserId: string | null
+  action: AuditActionValue
+  targetType: string
+  targetId: string
+  before: Record<string, unknown> | null
+  after: Record<string, unknown> | null
+}
 
 export type AdminAcceptanceHarness = {
   app: INestApplication
@@ -24,6 +41,8 @@ export type AdminAcceptanceHarness = {
   teardown: () => Promise<void>
   registerAndLogin: (email: string, password: string) => Promise<string>
   seedActiveEnrollment: (email: string) => Promise<void>
+  seedCertification: (name: string) => Promise<SeededCertification>
+  insertAuditLogEntry: (input: InsertAuditLogEntryInput) => Promise<string>
 }
 
 export async function createAdminAcceptanceHarness(): Promise<AdminAcceptanceHarness> {
@@ -88,6 +107,37 @@ export async function createAdminAcceptanceHarness(): Promise<AdminAcceptanceHar
       fork.persist(certification)
       fork.persist(enrollment)
       await fork.flush()
+    },
+    seedCertification: async (name: string) => {
+      const fork = em.fork()
+      const certification = fork.create(Certification, {
+        name,
+        provider: 'AWS',
+        code: `CERT-${v4().slice(0, 8)}`,
+        domains: [{ name: 'Cloud Concepts', weight: 100 }],
+        questionCount: 65,
+        passingScore: 700,
+        timeLimitMinutes: 90,
+        provenance: 'verified',
+        state: 'draft',
+      })
+      fork.persist(certification)
+      await fork.flush()
+      return { id: certification.id, name: certification.name }
+    },
+    insertAuditLogEntry: async (input: InsertAuditLogEntryInput) => {
+      const fork = em.fork()
+      const entry = fork.create(AuditLog, {
+        userId: input.actorUserId,
+        action: input.action,
+        targetType: input.targetType,
+        targetId: input.targetId,
+        before: input.before,
+        after: input.after,
+      })
+      fork.persist(entry)
+      await fork.flush()
+      return entry.id
     },
   }
 }

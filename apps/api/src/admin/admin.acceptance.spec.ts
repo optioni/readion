@@ -92,6 +92,58 @@ describe('admin acceptance', () => {
     expect(newest).toBeGreaterThanOrEqual(older)
   })
 
+  it('audit log entries expose actorEmail (nullable) and a human targetLabel', async () => {
+    const adminToken = await harness.registerAndLogin('admin@example.com', 'correcthorse')
+    await harness.registerAndLogin('member@example.com', 'correcthorse')
+
+    const adminAuth = `Bearer ${adminToken}`
+
+    const list = await supertest(app.getHttpServer())
+      .get('/api/v1/admin/users')
+      .set('Authorization', adminAuth)
+
+    const member = list.body.data.find(
+      (entry: { email: string }) => entry.email === 'member@example.com',
+    )
+    const memberId = member.id as string
+
+    await supertest(app.getHttpServer())
+      .post(`/api/v1/admin/users/${memberId}/promote`)
+      .set('Authorization', adminAuth)
+
+    const certification = await harness.seedCertification('AWS Certified Cloud Practitioner')
+    await harness.insertAuditLogEntry({
+      actorUserId: null,
+      action: 'cert.published',
+      targetType: 'certification',
+      targetId: certification.id,
+      before: { state: 'draft' },
+      after: { state: 'live' },
+    })
+
+    const auditLogs = await supertest(app.getHttpServer())
+      .get('/api/v1/admin/audit-logs')
+      .set('Authorization', adminAuth)
+
+    expect(auditLogs.status).toBe(200)
+
+    const promoteEntry = auditLogs.body.data.find(
+      (entry: { targetId: string; action: string }) =>
+        entry.targetId === memberId && entry.action === 'user.role.promoted',
+    )
+    expect(promoteEntry).toBeDefined()
+    expect(promoteEntry.actorEmail).toBe('admin@example.com')
+    expect(promoteEntry.targetLabel).toBe('member@example.com')
+
+    const certEntry = auditLogs.body.data.find(
+      (entry: { targetId: string }) => entry.targetId === certification.id,
+    )
+    expect(certEntry).toBeDefined()
+    expect(certEntry.actorEmail).toBeNull()
+    expect(typeof certEntry.targetLabel).toBe('string')
+    expect(certEntry.targetLabel.length).toBeGreaterThan(0)
+  })
+
   it('rejects a user-role caller hitting an admin route with 403 problem+json', async () => {
     await harness.registerAndLogin('admin@example.com', 'correcthorse')
     const userToken = await harness.registerAndLogin('member@example.com', 'correcthorse')
