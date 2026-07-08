@@ -16,4 +16,5 @@ export interface ContentSourceResponseDto {
   lastFetchedAt: string | null
   recheckIntervalMinutes: number
   createdAt: string
+  chunkCount: number
 }
