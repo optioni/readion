@@ -275,7 +275,7 @@ async function confirmDeleteAccount() {
           class="rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
           @click="changePassword"
         >
-          Change password
+          Update password
         </button>
       </FormActions>
     </section>
