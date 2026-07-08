@@ -73,8 +73,19 @@ describe('useCertDetail', () => {
     expect(result.code.value).toBe('CLF-C02')
     expect(result.certificationId.value).toBe('cert-1')
     expect(result.questionCount.value).toBe(65)
+    expect(result.passingScore.value).toBe(700)
     expect(result.notFound.value).toBe(false)
     expect(result.isError.value).toBe(false)
+  })
+
+  it('exposes null passingScore before the certification has loaded', () => {
+    vi.mocked(userCertificationsControllerDetail).mockImplementation(
+      () => new Promise(() => {}),
+    )
+
+    const { result } = renderComposable(() => useCertDetail('enr-1'))
+
+    expect(result.passingScore.value).toBeNull()
   })
 
   it('flags notFound and skips the certification fetch when the enrollment lookup 404s', async () => {
