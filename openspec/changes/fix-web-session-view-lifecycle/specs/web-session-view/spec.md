@@ -26,13 +26,14 @@ For an **ended** session (`status` of `completed`, `partial`, or `abandoned`) th
 
 ### Requirement: Reading blocks render Markdown TL;DR with go-deeper expansion and citation chips
 
-A reading-block item SHALL render its `content` as Markdown (the LLM-formatted TL;DR), labelled with the item's domain shown beside the "Reading" pill. It MUST provide a "Read full explanation" affordance that calls `POST /api/v1/sessions/:id/items/:index/go-deeper` and renders the returned `expandedContent` Markdown inline; once expanded the affordance MUST NOT re-fetch. It MUST render source citation chips derived from the item's provenance (`supportingSpans` / `sourceChunkIds`), and each chip MUST display a **human-readable source label**. A raw content-chunk id/UUID (e.g. `bb9dd4b7-e3e5-44e6-b006-1b6fd247e14b`) MUST NEVER be used as a chip label; when no human title can be resolved for a `sourceChunkId` the chip MUST fall back to a generic "Source" label rather than exposing the id. Advancing past a reading block MUST mark it complete via `POST /api/v1/sessions/:id/items/:index/complete`.
+A reading-block item SHALL render its `content` as Markdown (the LLM-formatted TL;DR). It MUST provide a "Read full explanation" affordance that calls `POST /api/v1/sessions/:id/items/:index/go-deeper` and renders the returned `expandedContent` Markdown inline; once expanded the affordance MUST NOT re-fetch. It MUST render source citation chips derived from the item's provenance (`supportingSpans` / `sourceChunkIds`), and each chip MUST display a **human-readable source label**. A raw content-chunk id/UUID (e.g. `bb9dd4b7-e3e5-44e6-b006-1b6fd247e14b`) MUST NEVER be used as a chip label; when no human title can be resolved for a `sourceChunkId` the chip MUST fall back to a generic "Source" label rather than exposing the id. Advancing past a reading block MUST mark it complete via `POST /api/v1/sessions/:id/items/:index/complete`.
 
-#### Scenario: TL;DR renders with its domain label and expands on demand
+> **Deferred:** the design's "Reading · <domain>" label beside the "Reading" pill is NOT delivered by this change. `GET /api/v1/sessions/:id` items carry no per-item domain (no `SessionItem.domain` column/DTO), so rendering it requires a future backend change; `ReadingBlock.vue` retains an unused optional `:domain` prop for that follow-up. See `proposal.md` → "Deferred / follow-up".
 
-- **WHEN** a reading block for the "IAM & Security" domain is shown and the user presses "Read full explanation"
-- **THEN** the "IAM & Security" domain label is shown beside the "Reading" pill
-- **AND** `POST /api/v1/sessions/:id/items/:index/go-deeper` is called and the returned `expandedContent` is rendered as Markdown below the TL;DR
+#### Scenario: TL;DR renders and expands on demand
+
+- **WHEN** a reading block is shown and the user presses "Read full explanation"
+- **THEN** `POST /api/v1/sessions/:id/items/:index/go-deeper` is called and the returned `expandedContent` is rendered as Markdown below the TL;DR
 - **AND** pressing it again does not trigger a second request
 
 #### Scenario: Citation chips show human labels, never raw chunk ids
