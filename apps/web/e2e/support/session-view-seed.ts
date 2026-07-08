@@ -372,19 +372,17 @@ export function mockCompletedSessionView(
 
 /**
  * Installs the route surface for an ACTIVE session whose sole reading item carries a raw
- * content-chunk UUID in `sourceChunkIds` (plus a human `supportingSpans` entry) and a `domain`,
- * exercising the citation-label and reading-block-domain fidelity fixes independently of the
- * ended-session lifecycle branch (an ended session would not render the reading block at all).
+ * content-chunk UUID in `sourceChunkIds` (plus a human `supportingSpans` entry), exercising the
+ * citation-label fidelity fix independently of the ended-session lifecycle branch (an ended
+ * session would not render the reading block at all).
  */
 export function mockActiveSessionWithCitationFixture(page: Page): {
   id: string
   citationId: string
-  domain: string
 } {
   const id = sessionId
-  const domain = 'IAM & Security'
   const citationId = 'bb9dd4b7-e3e5-44e6-b006-1b6fd247e14b'
-  const items = [
+  const items: SessionItemResponseDto[] = [
     {
       index: 0,
       type: 'reading',
@@ -393,8 +391,7 @@ export function mockActiveSessionWithCitationFixture(page: Page): {
       completed: false,
       sourceChunkIds: [citationId],
       supportingSpans: ['AWS Organizations User Guide §SCP'],
-      domain,
-    } as unknown as SessionItemResponseDto,
+    },
   ]
 
   installBaseMocks(page)
@@ -403,7 +400,7 @@ export function mockActiveSessionWithCitationFixture(page: Page): {
     await fulfilJson(route, 200, buildSessionDetail(id, items))
   })
 
-  return { id, citationId, domain }
+  return { id, citationId }
 }
 
 /**

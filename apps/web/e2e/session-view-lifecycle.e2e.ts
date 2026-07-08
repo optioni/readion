@@ -85,12 +85,9 @@ test.describe('web-session-view — reading block fidelity', () => {
     expect(chipTexts.join(' ')).not.toContain(citationId)
   })
 
-  test('reading block shows the item domain label beside the Reading pill', async ({ page }) => {
-    const { domain } = mockActiveSessionWithCitationFixture(page)
-    await gotoAuthenticated(page, `/sessions/${SESSION_IDS.sessionId}`)
-
-    await expect(page.getByTestId('reading-block')).toContainText(domain)
-  })
+  // NOTE: the reading-block domain label is deferred — GET /sessions/:id items carry no `domain`
+  // field (no SessionItem.domain column/DTO). Rendering it requires a future backend change; see
+  // openspec/changes/fix-web-session-view-lifecycle/proposal.md → "Deferred / follow-up".
 })
 
 test.describe('web-session-view — summary zero-state', () => {
