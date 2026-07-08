@@ -92,20 +92,38 @@ async function handleNewChat(): Promise<void> {
         />
         <p class="font-medium text-readion-text-primary text-sm">{{ AGENT_COPY.emptyHeading }}</p>
         <p class="max-w-xs text-[12px] text-readion-text-muted">{{ AGENT_COPY.emptyIntro }}</p>
-        <div class="flex flex-col items-center gap-2">
+        <div class="flex w-full max-w-[440px] flex-col items-center gap-1.5">
           <p class="text-[10px] uppercase tracking-wider text-readion-text-muted">
             {{ AGENT_COPY.suggestionsLabel }}
           </p>
-          <div class="flex flex-wrap justify-center gap-2">
+          <div
+            data-testid="agent-suggestion-list"
+            class="flex w-full flex-col gap-1.5"
+          >
             <button
               v-for="suggestion in AGENT_SUGGESTIONS"
               :key="suggestion"
               type="button"
               data-testid="agent-suggestion"
-              class="rounded-full border border-readion-border-strong bg-readion-background-surface px-3 py-1 text-[11px] text-readion-text-muted transition-colors hover:text-readion-text-secondary"
+              class="flex w-full items-center justify-between gap-2 rounded-lg border border-readion-border-strong bg-readion-background-surface px-3.5 py-2 text-left text-[13px] text-readion-text-secondary transition-colors hover:text-readion-text-primary"
               @click="handleSuggestion(suggestion)"
             >
-              {{ suggestion }}
+              <span>{{ suggestion }}</span>
+              <svg
+                data-testid="agent-suggestion-arrow"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="flex-shrink-0 text-readion-text-subtle"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
             </button>
           </div>
         </div>
