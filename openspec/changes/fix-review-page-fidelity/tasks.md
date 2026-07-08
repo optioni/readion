@@ -1,13 +1,13 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-- [ ] 0.1 RED: Extend the Playwright e2e (`apps/web/e2e/quick-review.e2e.ts` + `support/quick-review-seed`) so that, with a seeded due queue (`dueCount` N > 0 and matching `items`, some overdue), `/user-certifications/:id/review` renders the dedicated `ReviewHeader` (cert-code chip + "Quick review" label, progress bar, 5:00 timer) AND the `ReviewQueueEntry` shows both the primary "Start review →" and a secondary "Review all N" action plus the "N items overdue by X days" note. Fails today: no `ReviewHeader` exists and the entry card lacks the secondary action + overdue note.
-- [ ] 0.2 Confirm it fails for the right reason (missing header component / missing secondary action + overdue note), not a harness/seed error.
+- [x] 0.1 RED: Extend the Playwright e2e (`apps/web/e2e/quick-review.e2e.ts` + `support/quick-review-seed`) so that, with a seeded due queue (`dueCount` N > 0 and matching `items`, some overdue), `/user-certifications/:id/review` renders the dedicated `ReviewHeader` (cert-code chip + "Quick review" label, progress bar, 5:00 timer) AND the `ReviewQueueEntry` shows both the primary "Start review →" and a secondary "Review all N" action plus the "N items overdue by X days" note. Fails today: no `ReviewHeader` exists and the entry card lacks the secondary action + overdue note.
+- [x] 0.2 Confirm it fails for the right reason (missing header component / missing secondary action + overdue note), not a harness/seed error.
 
 ## 1. ReviewHeader component (`QuickReview.html` fidelity)
 
-- [ ] 1.1 RED: Component/e2e-test a new `ReviewHeader` — back-to-dashboard affordance, cert-code chip + "Quick review" label, a progress bar bound to `current/total`, and a 5:00 review timer.
-- [ ] 1.2 GREEN: Implement `apps/web/app/components/ReviewHeader.vue` per the design and mount it on `/user-certifications/:id/review`.
-- [ ] 1.3 REFACTOR: Ensure the header uses readion design tokens (cert-code chip, progress accent, timer) and composes with the `minimal` layout without a second stacked nav bar.
+- [x] 1.1 RED: Component/e2e-test a new `ReviewHeader` — back-to-dashboard affordance, cert-code chip + "Quick review" label, a progress bar bound to `current/total`, and a 5:00 review timer.
+- [x] 1.2 GREEN: Implement `apps/web/app/components/ReviewHeader.vue` per the design and mount it on `/user-certifications/:id/review`.
+- [x] 1.3 REFACTOR: Ensure the header uses readion design tokens (cert-code chip, progress accent, timer) and composes with the `minimal` layout without a second stacked nav bar.
 
 ## 2. Entry card secondary action + overdue note (`ReviewQueueEntry.vue`)
 

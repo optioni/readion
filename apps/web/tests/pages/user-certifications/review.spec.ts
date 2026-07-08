@@ -155,6 +155,10 @@ function mountPage() {
           </div>`,
           emits: ['drill', 'back'],
         },
+        ReviewHeader: {
+          props: ['userCertificationId', 'current', 'total', 'timeStr', 'timeUrgent'],
+          template: '<div data-testid="review-header-stub" />',
+        },
       },
     },
   })
