@@ -23,10 +23,10 @@ describe('SettingsTabs active-tab underline', () => {
     // only generates that utility if `--color-readion-accent-label` is defined in the `@theme`
     // block. Without it, the class resolves to no rule at all and the border falls back to
     // `currentColor` (near-white), not the design's indigo accent (Settings.html:
-    // `var(--readion-accent-label)`, indigo-400 `#818cf8`).
+    // `var(--readion-accent-label)`, `#7c8cf8`).
     const match = mainCss.match(/--color-readion-accent-label:\s*(#[0-9a-fA-F]{6})/)
 
     expect(match).not.toBeNull()
-    expect(match?.[1]?.toLowerCase()).toBe('#818cf8')
+    expect(match?.[1]?.toLowerCase()).toBe('#7c8cf8')
   })
 })

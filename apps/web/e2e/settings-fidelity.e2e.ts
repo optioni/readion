@@ -93,7 +93,7 @@ test.describe('web-settings — design fidelity (Settings.html)', () => {
     await expect(activeTab).toHaveAttribute('aria-selected', 'true')
 
     const borderColor = await activeTab.evaluate((el) => getComputedStyle(el).borderBottomColor)
-    // --readion-accent-label / --color-readion-accent-label resolves to indigo-400 (#818cf8).
-    expect(borderColor).toBe('rgb(129, 140, 248)')
+    // --readion-accent-label / --color-readion-accent-label resolves to #7c8cf8.
+    expect(borderColor).toBe('rgb(124, 140, 248)')
   })
 })
