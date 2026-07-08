@@ -5,13 +5,14 @@ import type {
 } from '@readion/shared'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount } from '@vue/test-utils'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, toValue } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import AdminReviewQueue from '~/components/admin/AdminReviewQueue.vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import { useAdminQuarantine } from '~/composables/useAdminQuarantine'
 import { useAdminQuarantineDetail } from '~/composables/useAdminQuarantineDetail'
+import { certificationsControllerList } from '~~/src/api/certifications/certifications'
 import {
   quarantineAdminControllerApprove,
   quarantineAdminControllerReject,
@@ -20,10 +21,13 @@ import {
 vi.mock('~/composables/useAdminQuarantine', () => ({ useAdminQuarantine: vi.fn() }))
 vi.mock('~/composables/useAdminQuarantineDetail', () => ({ useAdminQuarantineDetail: vi.fn() }))
 vi.mock('~~/src/api/quarantine-admin/quarantine-admin')
+vi.mock('~~/src/api/certifications/certifications')
 
 const ITEM_A_ID = '00000000-0000-0000-0000-0000000000a1'
 const ITEM_B_ID = '00000000-0000-0000-0000-0000000000b2'
+const ITEM_C_ID = '00000000-0000-0000-0000-0000000000c1'
 const CERT_ID = '00000000-0000-0000-0000-0000000000c3'
+const CERT_ID_2 = '00000000-0000-0000-0000-0000000000c9'
 
 const ITEM_A: QuarantinedItemListItem = {
   id: ITEM_A_ID,
@@ -57,7 +61,48 @@ const ITEM_B: QuarantinedItemListItem = {
   createdAt: '2026-06-21T10:00:00.000Z',
 }
 
+const ITEM_C: QuarantinedItemListItem = {
+  id: ITEM_C_ID,
+  certificationId: CERT_ID_2,
+  domain: 'Networking',
+  verdict: JSON.stringify({ pass: true, score: 0.9 }),
+  reason: 'Looks fine',
+  status: 'pending',
+  provenance: {
+    sourceChunkIds: ['chunk-3'],
+    supportingSpans: ['Amazon VPC connects resources'],
+    verdict: { pass: true, score: 0.9, distractorFindings: [] },
+    score: 0.9,
+  },
+  createdAt: '2026-06-22T10:00:00.000Z',
+}
+
 const ITEMS: QuarantinedItemListItem[] = [ITEM_A, ITEM_B]
+
+const CERTS = [
+  {
+    id: CERT_ID,
+    name: 'AWS Certified Solutions Architect',
+    provider: 'AWS',
+    code: 'SAA-C03',
+    domains: [],
+    questionCount: 65,
+    passingScore: 72,
+    timeLimitMinutes: 130,
+    state: 'live',
+  },
+  {
+    id: CERT_ID_2,
+    name: 'Azure Fundamentals',
+    provider: 'Microsoft',
+    code: 'AZ-900',
+    domains: [],
+    questionCount: 40,
+    passingScore: 700,
+    timeLimitMinutes: 60,
+    state: 'published',
+  },
+]
 
 const DETAIL_A: QuarantinedItemDetail = {
   ...ITEM_A,
@@ -134,6 +179,15 @@ const okResolution = (id: string, status: string) => ({
   data: { data: { id, status } },
   status: 200,
   headers: new Headers(),
+})
+
+beforeEach(() => {
+  vi.mocked(certificationsControllerList).mockResolvedValue({
+    data: { data: CERTS, meta: { total: CERTS.length, page: 1, limit: 20 } },
+    status: 200,
+    headers: new Headers(),
+    // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+  } as any)
 })
 
 afterEach(() => {
@@ -288,5 +342,58 @@ describe('AdminReviewQueue reject', () => {
     expect(error.exists()).toBe(true)
     expect(error.text()).toContain('already been resolved')
     expect(invalidateSpy).not.toHaveBeenCalled()
+  })
+})
+
+describe('AdminReviewQueue awaiting count and certification filters', () => {
+  it('shows the N items awaiting review count from the collection meta total', () => {
+    stubQuarantine()
+    stubQuarantineDetail()
+    const { wrapper } = mountQueue()
+
+    expect(wrapper.find('[data-testid="review-queue-awaiting-count"]').text()).toContain(
+      '2 items awaiting review',
+    )
+  })
+
+  it('renders an All chip plus one chip per certification represented in the queue, and filters the list on click', async () => {
+    stubQuarantine([ITEM_A, ITEM_B, ITEM_C])
+    stubQuarantineDetail()
+    const { wrapper } = mountQueue()
+    await flushPromises()
+
+    const chips = wrapper.findAll('[data-testid="review-queue-cert-chip"]')
+    expect(chips).toHaveLength(3)
+
+    const allChip = wrapper.find('[data-testid="review-queue-cert-chip"][data-cert-id="all"]')
+    expect(allChip.exists()).toBe(true)
+
+    const certChip = wrapper.find(
+      `[data-testid="review-queue-cert-chip"][data-cert-id="${CERT_ID_2}"]`,
+    )
+    expect(certChip.exists()).toBe(true)
+
+    await certChip.trigger('click')
+
+    expect(wrapper.findAll('[data-testid="review-queue-item"]')).toHaveLength(1)
+    expect(rowFor(wrapper, ITEM_C_ID).exists()).toBe(true)
+
+    await allChip.trigger('click')
+
+    expect(wrapper.findAll('[data-testid="review-queue-item"]')).toHaveLength(3)
+  })
+
+  it('shows a resolved certification badge and formatted verdict badge on each row', () => {
+    stubQuarantine()
+    stubQuarantineDetail()
+    const { wrapper } = mountQueue()
+
+    const rowA = rowFor(wrapper, ITEM_A_ID)
+    expect(rowA.find('[data-testid="review-queue-item-id"]').text()).toBe(ITEM_A_ID)
+    expect(rowA.find('[data-testid="review-queue-item-cert"]').text()).toContain('SAA-C03')
+    const verdictBadge = rowA.find('[data-testid="review-queue-item-verdict"]')
+    expect(verdictBadge.text()).toContain('Failed')
+    expect(verdictBadge.text()).toContain('20%')
+    expect(wrapper.text()).not.toContain('{"pass"')
   })
 })

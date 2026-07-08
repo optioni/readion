@@ -44,6 +44,10 @@ function rowFor(wrapper: ReturnType<typeof mount>, itemId: string) {
   return wrapper.find(`[data-testid="review-queue-item"][data-item-id="${itemId}"]`)
 }
 
+const CERTS_BY_ID = {
+  [CERT_ID]: { name: 'AWS Certified Solutions Architect', code: 'SAA-C03' },
+}
+
 describe('AdminReviewQueueList', () => {
   it('renders one row per item with its id set as data-item-id', () => {
     const wrapper = mount(AdminReviewQueueList, { props: { items: ITEMS, selectedId: null } })
@@ -66,5 +70,38 @@ describe('AdminReviewQueueList', () => {
 
     expect(rowFor(wrapper, ITEM_A_ID).attributes('data-selected')).toBe('true')
     expect(rowFor(wrapper, ITEM_B_ID).attributes('data-selected')).toBe('false')
+  })
+})
+
+describe('AdminReviewQueueList metadata', () => {
+  it('shows the full item id in a mono id element', () => {
+    const wrapper = mount(AdminReviewQueueList, {
+      props: { items: ITEMS, selectedId: null, certsById: CERTS_BY_ID },
+    })
+
+    expect(rowFor(wrapper, ITEM_A_ID).find('[data-testid="review-queue-item-id"]').text()).toBe(
+      ITEM_A_ID,
+    )
+  })
+
+  it('shows a certification badge resolved from the certsById lookup', () => {
+    const wrapper = mount(AdminReviewQueueList, {
+      props: { items: ITEMS, selectedId: null, certsById: CERTS_BY_ID },
+    })
+
+    expect(
+      rowFor(wrapper, ITEM_A_ID).find('[data-testid="review-queue-item-cert"]').text(),
+    ).toContain('SAA-C03')
+  })
+
+  it('shows a human-formatted verdict badge derived from provenance, never the raw JSON verdict string', () => {
+    const wrapper = mount(AdminReviewQueueList, {
+      props: { items: ITEMS, selectedId: null, certsById: CERTS_BY_ID },
+    })
+
+    const badge = rowFor(wrapper, ITEM_A_ID).find('[data-testid="review-queue-item-verdict"]')
+    expect(badge.text()).toContain('Failed')
+    expect(badge.text()).toContain('20%')
+    expect(wrapper.text()).not.toContain('{"pass"')
   })
 })
