@@ -45,6 +45,22 @@ async function seedContentSource(
   return rows[0]!.id
 }
 
+async function seedQuarantinedItem(
+  harness: DbHarness,
+  certificationId: string,
+  domain: string,
+): Promise<string> {
+  const conn = harness.getEm().getConnection()
+  const rows = await conn.execute<{ id: string }[]>(
+    `INSERT INTO quarantined_items
+       (id, certification_id, domain, verdict, reason, status, cache_key, provenance, created_at, updated_at)
+     VALUES (gen_random_uuid(), ?, ?, 'needs_review', 'low confidence', 'pending', ?, '{}', now(), now())
+     RETURNING id`,
+    [certificationId, domain, `cache-key-${Math.random().toString(36).slice(2, 8)}`],
+  )
+  return rows[0]!.id
+}
+
 describe('AdminService.listAuditLogs read-model mapper', () => {
   let harness: DbHarness | undefined
 
@@ -146,5 +162,48 @@ describe('AdminService.listAuditLogs read-model mapper', () => {
 
     expect(entry).toBeDefined()
     expect(entry?.targetLabel).toContain('https://learn.microsoft.com/az-900')
+  })
+
+  it('resolves targetLabel to the quarantined item domain for a quarantine resolution action', async () => {
+    if (!harness) throw new Error('DB harness was not initialized')
+    const actorUserId = await seedUser(harness, 'admin4@example.com')
+    const certificationId = await seedCertification(harness, 'AWS Certified Solutions Architect')
+    const itemId = await seedQuarantinedItem(harness, certificationId, 'Compute')
+
+    await new AuditLogService(harness.getEm()).record({
+      actorUserId,
+      action: AuditAction.QuarantineApproved,
+      targetType: 'quarantined_item',
+      targetId: itemId,
+      before: { status: 'pending' },
+      after: { status: 'approved' },
+    })
+
+    const { items } = await service().listAuditLogs()
+    const entry = items.find((item) => item.targetId === itemId)
+
+    expect(entry).toBeDefined()
+    expect(entry?.targetLabel).toBe('Compute')
+  })
+
+  it('falls back to the raw targetId when the quarantined item no longer exists', async () => {
+    if (!harness) throw new Error('DB harness was not initialized')
+    const actorUserId = await seedUser(harness, 'admin5@example.com')
+    const missingItemId = '00000000-0000-0000-0000-000000000000'
+
+    await new AuditLogService(harness.getEm()).record({
+      actorUserId,
+      action: AuditAction.QuarantineRejected,
+      targetType: 'quarantined_item',
+      targetId: missingItemId,
+      before: { status: 'pending' },
+      after: { status: 'rejected' },
+    })
+
+    const { items } = await service().listAuditLogs()
+    const entry = items.find((item) => item.targetId === missingItemId)
+
+    expect(entry).toBeDefined()
+    expect(entry?.targetLabel).toBe(missingItemId)
   })
 })
