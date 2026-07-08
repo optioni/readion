@@ -35,7 +35,7 @@ function mountConsole(path: string) {
   vi.stubGlobal('useRoute', () => ({ path }))
   return mount(AdminConsole, {
     slots: { default: '<div data-testid="section-content">Section</div>' },
-    global: { plugins: [createPinia()], stubs: { NuxtLink: NuxtLinkStub } },
+    global: { stubs: { NuxtLink: NuxtLinkStub } },
   })
 }
 
