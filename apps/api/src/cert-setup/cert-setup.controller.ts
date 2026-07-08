@@ -184,11 +184,12 @@ export class CertSetupController {
     return { data: await this.service.enqueueExtraction(parse(extractRequestSchema, body)) }
   }
 
-  // Status polling must not consume the tight `agent` bucket (30/60s) — it is a
-  // cheap read the wizard hits every 1.5s while an extraction runs. Skipping the
-  // agent throttle leaves it under `general` (300/60s). Superseded once the
-  // wizard moves to SSE push (see the sse-extraction-events change).
-  @SkipThrottle({ agent: true })
+  // Status polling must use only the `general` bucket (300/60s). Every route is
+  // otherwise metered by all three throttlers, and both `auth` (10/15min, for
+  // login brute-force) and `agent` (30/60s) are far too tight for a read the
+  // wizard hits every 1.5s while an extraction runs. Superseded once the wizard
+  // moves to SSE push (see the sse-extraction-events change).
+  @SkipThrottle({ auth: true, agent: true })
   @Get('extractions/:jobId')
   @ApiResponse({ status: 200, type: ExtractionStatusDetailDto })
   @ApiResponse({ status: 404, description: 'Extraction job not found' })
