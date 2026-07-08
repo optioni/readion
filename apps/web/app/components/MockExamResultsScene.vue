@@ -58,19 +58,6 @@ const summary = computed<SessionSummaryResponse | null>(() => {
   return dto ? toSummary(dto) : null
 })
 
-const timeLabel = computed<string | null>(() => {
-  if (!props.exam.startedAt || !props.exam.deadline) {
-    return null
-  }
-  const elapsedMs =
-    new Date(props.exam.deadline).getTime() - new Date(props.exam.startedAt).getTime()
-  if (!Number.isFinite(elapsedMs) || elapsedMs < 0) {
-    return null
-  }
-  const totalSeconds = Math.floor(elapsedMs / 1000)
-  return `${Math.floor(totalSeconds / 60)}m ${totalSeconds % 60}s`
-})
-
 const drillNoMisses = ref(false)
 
 async function handleDrill() {
@@ -165,7 +152,6 @@ async function handleBack() {
     <SessionSummaryBody
       v-if="summary"
       :summary="summary"
-      :time-label="timeLabel"
       :drill-no-misses="drillNoMisses"
       :hide-ask-agent="true"
       @drill="handleDrill"
