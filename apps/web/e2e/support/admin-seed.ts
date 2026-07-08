@@ -347,7 +347,10 @@ const UUID = '[0-9a-f-]{36}'
  * pagination-control acceptance assertions have something to render against. A context-level
  * catch-all keeps any unforeseen /api/v1 call from hitting the (absent) backend; page-level mocks win.
  */
-export function mockAdmin(page: Page, options: { role?: Role; manyPages?: boolean } = {}): AdminMockHandles {
+export function mockAdmin(
+  page: Page,
+  options: { role?: Role; manyPages?: boolean } = {},
+): AdminMockHandles {
   const role: Role = options.role ?? 'admin'
   const manyPages = options.manyPages ?? false
   const context = page.context()

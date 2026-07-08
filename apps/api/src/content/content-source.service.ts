@@ -234,13 +234,15 @@ export class ContentSourceService {
     }
 
     const placeholders = sourceIds.map(() => '?').join(', ')
-    const rows = await this.em.getConnection().execute<{ content_source_id: string; count: number }[]>(
-      `SELECT content_source_id, count(*)::int AS count
+    const rows = await this.em
+      .getConnection()
+      .execute<{ content_source_id: string; count: number }[]>(
+        `SELECT content_source_id, count(*)::int AS count
          FROM content_chunks
          WHERE content_source_id IN (${placeholders})
          GROUP BY content_source_id`,
-      sourceIds,
-    )
+        sourceIds,
+      )
 
     for (const row of rows) {
       counts.set(row.content_source_id, row.count)

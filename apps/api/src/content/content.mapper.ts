@@ -6,10 +6,7 @@ import {
   ingestionJobStates,
 } from '@readion/shared'
 
-export function mapSourceToDto(
-  source: ContentSource,
-  chunkCount: number,
-): ContentSourceResponse {
+export function mapSourceToDto(source: ContentSource, chunkCount: number): ContentSourceResponse {
   return {
     id: source.id,
     certificationId: source.certificationId,
