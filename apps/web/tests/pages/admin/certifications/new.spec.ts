@@ -2,8 +2,8 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed } from 'vue'
-import NewCertPage from '~/pages/admin/certifications/new.vue'
 import { useAdminQuarantine } from '~/composables/useAdminQuarantine'
+import NewCertPage from '~/pages/admin/certifications/new.vue'
 import { useAuthStore } from '~/stores/auth'
 
 vi.mock('~~/src/api/cert-setup/cert-setup')
