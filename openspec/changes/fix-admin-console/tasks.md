@@ -49,9 +49,9 @@ Reproduce the highest-impact defects first: Audit Log human-readability, the Adm
 
 ## 7. Review queue fidelity (`web-admin`)
 
-- [ ] 7.1 RED: Component-test `AdminReviewQueue.vue` — header shows `N items awaiting review`, certification filter chips filter the list, and each list row shows a mono item id, a certification badge, and a formatted flag/verdict badge
-- [ ] 7.2 GREEN: Implement the count, filter chips, and richer list-row metadata
-- [ ] 7.3 REFACTOR: Keep the verdict/flag badge formatting in one place shared with the detail pane
+- [x] 7.1 RED: Component-test `AdminReviewQueue.vue` — header shows `N items awaiting review`, certification filter chips filter the list, and each list row shows a mono item id, a certification badge, and a formatted flag/verdict badge
+- [x] 7.2 GREEN: Implement the count, filter chips, and richer list-row metadata
+- [x] 7.3 REFACTOR: Keep the verdict/flag badge formatting in one place shared with the detail pane
 
 ## 8. Certifications index list (`web-admin`)
 
