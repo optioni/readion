@@ -22,35 +22,35 @@
 
 ## 3. Per-domain passing-threshold marker + weight column
 
-- [ ] 3.1 RED: Unit-test `MockExamDomainBreakdown.vue` (or its spec) that each domain bar renders a threshold marker positioned at the certification passing score, a "Below passing threshold" note when the domain accuracy is under it, and a Weight cell from the certification's per-domain `weight`. Fails.
-- [ ] 3.2 GREEN: Pass the passing score and the per-domain `weight` (from the resolved certification's `domains[]`, matched by domain name) into `MockExamDomainBreakdown.vue`; render the marker, note, and Weight column per `openspec/design/MockExam.html` (ExamResults domain table). Reuse `statusColorForScore` for bar colour.
-- [ ] 3.3 REFACTOR: Keep weight/threshold optional so the component still renders when the certification join is absent (marker/weight simply omitted); no fabricated defaults.
+- [x] 3.1 RED: Unit-test `MockExamDomainBreakdown.vue` (or its spec) that each domain bar renders a threshold marker positioned at the certification passing score, a "Below passing threshold" note when the domain accuracy is under it, and a Weight cell from the certification's per-domain `weight`. Fails.
+- [x] 3.2 GREEN: Pass the passing score and the per-domain `weight` (from the resolved certification's `domains[]`, matched by domain name) into `MockExamDomainBreakdown.vue`; render the marker, note, and Weight column per `openspec/design/MockExam.html` (ExamResults domain table). Reuse `statusColorForScore` for bar colour.
+- [x] 3.3 REFACTOR: Keep weight/threshold optional so the component still renders when the certification join is absent (marker/weight simply omitted); no fabricated defaults.
 
 ## 4. Do not present the allowed window as elapsed time
 
-- [ ] 4.1 RED: Unit-test that `timeLabel` is NOT the full `deadline − startedAt` window mislabeled as elapsed — with no real elapsed source the results scene passes `null`/omits the time card rather than showing the whole allowed window as time spent. Fails against current `deadline − startedAt` computation.
-- [ ] 4.2 GREEN: Remove the `deadline − startedAt`-as-elapsed computation feeding `SessionSummaryBody`; omit the time label when elapsed is unavailable in the terminal `MockExamResponse`.
-- [ ] 4.3 REFACTOR: If a real allowed-window reference is shown ("of Hh Mm allowed"), keep it clearly labelled as the allowed limit, distinct from elapsed.
+- [x] 4.1 RED: Unit-test that `timeLabel` is NOT the full `deadline − startedAt` window mislabeled as elapsed — with no real elapsed source the results scene passes `null`/omits the time card rather than showing the whole allowed window as time spent. Fails against current `deadline − startedAt` computation.
+- [x] 4.2 GREEN: Remove the `deadline − startedAt`-as-elapsed computation feeding `SessionSummaryBody`; omit the time label when elapsed is unavailable in the terminal `MockExamResponse`.
+- [x] 4.3 REFACTOR: If a real allowed-window reference is shown ("of Hh Mm allowed"), keep it clearly labelled as the allowed limit, distinct from elapsed.
 
 ## 5. In-progress question counter copy (minor)
 
-- [ ] 5.1 RED: Unit-test the active scene's `exam-question-counter` renders the compact `Q 1 / 65` form (per `MockExam.html`) instead of "Question 1 of 65". Update the corresponding assertion in `mock-exam.e2e.ts`. Fails.
-- [ ] 5.2 GREEN: Update the question-counter copy in the active scene component to the `Q N / T` form.
-- [ ] 5.3 REFACTOR: Confirm no other scene/snapshot relies on the old "Question N of T" string.
+- [x] 5.1 RED: Unit-test the active scene's `exam-question-counter` renders the compact `Q 1 / 65` form (per `MockExam.html`) instead of "Question 1 of 65". Update the corresponding assertion in `mock-exam.e2e.ts`. Fails.
+- [x] 5.2 GREEN: Update the question-counter copy in the active scene component to the `Q N / T` form.
+- [x] 5.3 REFACTOR: Confirm no other scene/snapshot relies on the old "Question N of T" string.
 
 ## 6. Acceptance Test — Outer Loop GREEN
 
-- [ ] 6.1 Run `yarn workspace apps/web test:e2e` — the full mock-exam loop passes: hero shows "73%" + PASS + "Passing score: 72%" + counts, the domain table shows the threshold marker/weight, and review still works.
-- [ ] 6.2 Sanity-check the corrected score across scales (0, a low fraction like 0.01 → "1%", 1 → "100%") reads sensibly and matches the Accuracy card.
+- [x] 6.1 Run `yarn workspace apps/web test:e2e` — the full mock-exam loop passes: hero shows "73%" + PASS + "Passing score: 72%" + counts, the domain table shows the threshold marker/weight, and review still works.
+- [x] 6.2 Sanity-check the corrected score across scales (0, a low fraction like 0.01 → "1%", 1 → "100%") reads sensibly and matches the Accuracy card.
 
 ## 7. Change Review — Subagent Verification
 
-- [ ] 7.1 Dispatch a subagent to review the change against `proposal.md`, the spec scenarios, and the diff (reviewer reports findings only, does not edit code). Confirm nothing is fabricated — every displayed value traces to `MockExamResponse` or the joined certification.
-- [ ] 7.2 Triage findings: fix every CRITICAL, resolve or consciously accept each WARNING (one-line reason per accepted WARNING), note SUGGESTIONs; re-run affected tests.
+- [x] 7.1 Dispatch a subagent to review the change against `proposal.md`, the spec scenarios, and the diff (reviewer reports findings only, does not edit code). Confirm nothing is fabricated — every displayed value traces to `MockExamResponse` or the joined certification. (Reviewer: no CRITICAL; 1 WARNING; 3 SUGGESTIONs.)
+- [x] 7.2 Triage findings: fix every CRITICAL, resolve or consciously accept each WARNING (one-line reason per accepted WARNING), note SUGGESTIONs; re-run affected tests. (No CRITICAL. WARNING — threshold rendered as a below-threshold marker+note rather than a positioned bar/tick — consciously ACCEPTED: satisfies the acceptance scenarios and the team-lead threshold-warning ask; documented as a descope note in proposal.md. SUGGESTIONs noted as non-blocking, deferred: clamp is a `Math.max` call with no uncovered branch, helper normalization is covered at the observed 700/72 and 0.2/25 scales, column headers are cosmetic. Affected unit specs re-run green: 173 files / 1172 tests.)
 
 ## 8. Polish
 
-- [ ] 8.1 Run linter and fix all errors (`yarn lint`).
-- [ ] 8.2 Run formatter and apply fixes (`yarn format`).
-- [ ] 8.3 Run the web type checker with zero errors.
-- [ ] 8.4 Run coverage and confirm ≥80% lines/branches/functions for the touched components.
+- [x] 8.1 Run linter and fix all errors (`yarn lint`). No new real errors: the only diagnostics on touched files are Biome 2.x's known `.vue` `<script setup>` `noUnusedVariables` false positives (Biome doesn't parse template usage) — the same class present repo-wide on unmodified SFCs; the new `.ts` helper introduces none.
+- [x] 8.2 Run formatter and apply fixes (`yarn format`). Reflowed the now-shorter counter-assertion lines in `MockExamActiveScene.spec.ts` back to single lines (whitespace only).
+- [x] 8.3 Run the web type checker with zero errors. `yarn workspace @readion/web typecheck` → exit 0 (the mid-implementation IDE `weightPercent`/`passingScore` warnings were stale and are resolved).
+- [x] 8.4 Run coverage and confirm ≥80% lines/branches/functions for the touched components. All touched files ≥80% on stmts/funcs/branch: ExamHeader.vue 100/100/100, MockExamDomainBreakdown.vue 100/100/100, MockExamResultsScene.vue 100/100/81.6, mockExamResults.ts 100/100/87.5, useCertDetail.ts 100/100/84.
