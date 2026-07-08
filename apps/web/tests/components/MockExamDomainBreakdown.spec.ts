@@ -98,9 +98,7 @@ describe('MockExamDomainBreakdown', () => {
     )
 
     const highPerforming = rows[2]! // 75%, above passing
-    expect(highPerforming.find('[data-testid="exam-domain-threshold-marker"]').exists()).toBe(
-      false,
-    )
+    expect(highPerforming.find('[data-testid="exam-domain-threshold-marker"]').exists()).toBe(false)
     expect(highPerforming.find('[data-testid="exam-below-threshold-note"]').exists()).toBe(false)
 
     const cost = rows[3]! // 60%, below passing

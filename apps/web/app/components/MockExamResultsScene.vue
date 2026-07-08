@@ -23,7 +23,7 @@ const emit = defineEmits<{
 const scorePercent = computed<number>(() => Math.round((props.exam.score ?? 0) * 100))
 const isExpired = computed<boolean>(() => props.exam.status === 'expired')
 
-const { passingScore } = useCertDetail(props.exam.userCertificationId)
+const { passingScore, domains } = useCertDetail(props.exam.userCertificationId)
 const passingScoreLabel = computed<number | null>(() => passingScorePercent(passingScore.value))
 
 const examCounts = computed(() =>
@@ -156,7 +156,11 @@ async function handleBack() {
       </div>
     </div>
 
-    <MockExamDomainBreakdown :breakdown="exam.domainBreakdown" />
+    <MockExamDomainBreakdown
+      :breakdown="exam.domainBreakdown"
+      :passing-score="passingScoreLabel"
+      :domains="domains"
+    />
 
     <SessionSummaryBody
       v-if="summary"

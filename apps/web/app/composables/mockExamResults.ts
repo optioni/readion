@@ -18,3 +18,7 @@ export function passingScorePercent(raw: number | null | undefined): number | nu
   }
   return raw > 100 ? Math.round(raw / 10) : Math.round(raw)
 }
+
+export function weightPercent(raw: number): number {
+  return raw <= 1 ? Math.round(raw * 100) : Math.round(raw)
+}
