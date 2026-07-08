@@ -107,12 +107,17 @@ function envelope(data: unknown) {
   return { data: { data }, status: 200, headers: new Headers() } as any
 }
 
+const NuxtLinkStub = {
+  props: ['to'],
+  template: '<a :data-to="JSON.stringify(to)"><slot /></a>',
+}
+
 function mountComponent() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   })
   return mount(AdminCertifications, {
-    global: { plugins: [[VueQueryPlugin, { queryClient }]], stubs: { NuxtLink: true } },
+    global: { plugins: [[VueQueryPlugin, { queryClient }]], stubs: { NuxtLink: NuxtLinkStub } },
   })
 }
 
@@ -365,7 +370,7 @@ describe('AdminCertifications existing certifications list', () => {
 
     const link = firstRow.find('[data-testid="existing-cert-link"]')
     expect(link.exists()).toBe(true)
-    expect(JSON.stringify(link.props('to'))).toContain(EXISTING_CERTS[0]?.id)
+    expect(link.attributes('data-to')).toContain(EXISTING_CERTS[0]?.id)
 
     expect(wrapper.find('[data-testid="due-reverification-row"]').exists()).toBe(true)
 

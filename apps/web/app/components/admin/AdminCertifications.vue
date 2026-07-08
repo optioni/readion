@@ -9,6 +9,7 @@ import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import { isTerminalWithoutFields, nextRefetchInterval } from '~/composables/certExtractionPoll'
 import { buildCertDiff, buildReverifyBody, type CertDiff } from '~/composables/certReverifyDiff'
 import { discoverCertSources, enqueueCertExtraction } from '~/composables/certSetupKickoff'
+import { useAdminCertificationsList } from '~/composables/useAdminCertificationsList'
 import { useDueForReverification } from '~/composables/useDueForReverification'
 import {
   certSetupControllerReadExtraction,
@@ -25,6 +26,11 @@ const dueQuery = useDueForReverification()
 const dueItems = computed<DueForReverificationItem[]>(() => dueQuery.data.value ?? [])
 const isLoading = computed(() => dueQuery.isLoading.value)
 const isError = computed(() => dueQuery.isError.value)
+
+const existingCertsQuery = useAdminCertificationsList()
+const existingCerts = computed<CertificationResponseDto[]>(
+  () => existingCertsQuery.data.value ?? [],
+)
 
 const activeCertId = ref<string | null>(null)
 const currentCert = ref<CertificationResponseDto | null>(null)
@@ -147,6 +153,49 @@ function formatVerifiedAt(verifiedAt: string | null): string {
         New certification
       </NuxtLink>
     </div>
+
+    <h2 class="font-medium text-slate-200 text-sm">Certifications</h2>
+
+    <p
+      v-if="existingCerts.length === 0"
+      data-testid="existing-certs-empty"
+      class="text-slate-400 text-sm"
+    >
+      No certifications have been set up yet.
+    </p>
+
+    <table v-else class="w-full border-collapse text-left text-sm">
+      <thead>
+        <tr class="border-readion-background-surface border-b text-slate-400">
+          <th class="px-3 py-2 font-medium">Certification</th>
+          <th class="px-3 py-2 font-medium">Code</th>
+          <th class="px-3 py-2 font-medium">Provider</th>
+          <th class="px-3 py-2 font-medium">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="cert in existingCerts"
+          :key="cert.id"
+          data-testid="existing-cert-row"
+          :data-cert-id="cert.id"
+          class="border-readion-background-surface/60 border-b"
+        >
+          <td class="px-3 py-3 text-slate-100">{{ cert.name }}</td>
+          <td class="px-3 py-3 text-slate-300">{{ cert.code }}</td>
+          <td class="px-3 py-3 text-slate-300">{{ cert.provider }}</td>
+          <td class="px-3 py-3">
+            <NuxtLink
+              data-testid="existing-cert-link"
+              :to="{ path: '/admin/sources', query: { certificationId: cert.id } }"
+              class="font-medium text-readion-primary text-xs hover:underline"
+            >
+              Manage sources
+            </NuxtLink>
+          </td>
+        </tr>
+      </tbody>
+    </table>
 
     <h2 class="font-medium text-slate-200 text-sm">Due for re-verification</h2>
 
