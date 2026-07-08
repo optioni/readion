@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { gotoAuthenticated, mockAgentChat, SUGGESTIONS } from './support/agent-chat-seed'
+import { requireBoundingBoxes } from './support/fidelity-helpers'
 
 // ============================================================================
 // web-agent-chat — design-fidelity acceptance test (outer-loop RED).
@@ -54,12 +55,11 @@ test.describe('web-agent-chat — design fidelity (AgentChat.html)', () => {
     const chips = page.getByTestId('agent-suggestion')
     await expect(chips).toHaveCount(SUGGESTIONS.length)
 
-    const chip0 = await chips.nth(0).boundingBox()
-    const chip1 = await chips.nth(1).boundingBox()
-    const emptyStateBox = await emptyState.boundingBox()
-    if (!chip0 || !chip1 || !emptyStateBox) {
-      throw new Error('missing bounding box for the suggestion chips / empty state')
-    }
+    const { chip0, chip1, emptyStateBox } = await requireBoundingBoxes({
+      chip0: chips.nth(0),
+      chip1: chips.nth(1),
+      emptyStateBox: emptyState,
+    })
 
     // RED: a vertical stack puts chip1 strictly below chip0. The current
     // `flex flex-wrap justify-center` row instead places them side by side on the same line at a

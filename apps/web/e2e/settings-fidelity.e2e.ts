@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { requireBoundingBoxes } from './support/fidelity-helpers'
 import { gotoAuthenticated } from './support/session-view-seed'
 import { mockSettings } from './support/settings-seed'
 
@@ -33,11 +34,10 @@ test.describe('web-settings — design fidelity (Settings.html)', () => {
     await expect(page.getByTestId('settings-page')).toBeVisible()
     await expect(page.getByTestId('account-panel')).toBeVisible()
 
-    const contentArea = await page.getByTestId('shell-container').boundingBox()
-    const contentColumn = await page.getByTestId('account-panel').boundingBox()
-    if (!contentArea || !contentColumn) {
-      throw new Error('missing bounding box for shell-container / account-panel')
-    }
+    const { contentArea, contentColumn } = await requireBoundingBoxes({
+      contentArea: page.getByTestId('shell-container'),
+      contentColumn: page.getByTestId('account-panel'),
+    })
 
     // Left-aligned against the sidebar means the column's left edge sits at the content area's
     // leading padding (Settings.html: `padding: 32px 40px`) — a small, fixed gap. Centering via
@@ -58,11 +58,10 @@ test.describe('web-settings — design fidelity (Settings.html)', () => {
     const label = page.locator('label[for="timezone-select"]')
     const control = page.getByTestId('timezone-select')
 
-    const labelBox = await label.boundingBox()
-    const controlBox = await control.boundingBox()
-    if (!labelBox || !controlBox) {
-      throw new Error('missing bounding box for the timezone label / control')
-    }
+    const { labelBox, controlBox } = await requireBoundingBoxes({
+      labelBox: label,
+      controlBox: control,
+    })
 
     // Horizontal FieldRow: label sits in a column to the LEFT of the control, on the same row (the
     // two boxes vertically overlap). The current stacked layout (`flex flex-col`) puts the label

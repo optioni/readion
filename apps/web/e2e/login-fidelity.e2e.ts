@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { requireBoundingBoxes } from './support/fidelity-helpers'
 
 // ============================================================================
 // web-auth — Login design-fidelity acceptance test (outer-loop RED).
@@ -35,11 +36,10 @@ test.describe('web-auth — Login design fidelity (Login.html)', () => {
     const form = page.locator('form')
     await expect(form).toBeVisible()
 
-    const paneBox = await pane.boundingBox()
-    const formBox = await form.boundingBox()
-    if (!paneBox || !formBox) {
-      throw new Error('missing bounding box for the form pane / form')
-    }
+    const { paneBox, formBox } = await requireBoundingBoxes({
+      paneBox: pane,
+      formBox: form,
+    })
 
     // RED: the design's pane background is `background-surface` (#1e293b). The current `<main>`
     // is `bg-readion-background-base` (#0f172a) with a separately-surfaced bordered card floating
