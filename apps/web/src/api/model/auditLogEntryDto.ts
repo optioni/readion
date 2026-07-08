@@ -12,9 +12,12 @@ export interface AuditLogEntryDto {
   id: string
   /** @nullable */
   userId: string | null
+  /** @nullable */
+  actorEmail: string | null
   action: string
   targetType: string
   targetId: string
+  targetLabel: string
   /** @nullable */
   before: AuditLogEntryDtoBefore
   /** @nullable */
