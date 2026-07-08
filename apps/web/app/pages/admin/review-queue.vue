@@ -2,7 +2,7 @@
 import AdminConsole from '~/components/admin/AdminConsole.vue'
 import AdminReviewQueue from '~/components/admin/AdminReviewQueue.vue'
 
-definePageMeta({ middleware: 'admin' })
+definePageMeta({ middleware: 'admin', layout: 'admin' })
 </script>
 
 <template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AdminConsole from '~/components/admin/AdminConsole.vue'
 
-definePageMeta({ middleware: 'admin' })
+definePageMeta({ middleware: 'admin', layout: 'admin' })
 </script>
 
 <template>

@@ -2,7 +2,7 @@
 import AdminConsole from '~/components/admin/AdminConsole.vue'
 import AdminUsers from '~/components/admin/AdminUsers.vue'
 
-definePageMeta({ middleware: 'admin' })
+definePageMeta({ middleware: 'admin', layout: 'admin' })
 </script>
 
 <template>

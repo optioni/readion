@@ -2,7 +2,7 @@
 import AdminConsole from '~/components/admin/AdminConsole.vue'
 import CertSetupWizard from '~/components/admin/CertSetupWizard.vue'
 
-definePageMeta({ middleware: 'admin' })
+definePageMeta({ middleware: 'admin', layout: 'admin' })
 </script>
 
 <template>
