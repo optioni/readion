@@ -74,8 +74,12 @@ Reproduce the highest-impact defects first: Audit Log human-readability, the Adm
 
 ## 11. Change Review — Subagent Verification
 
-- [ ] 11.1 Dispatch a subagent to review the change against `proposal.md`, the spec scenarios, and the diff plus this task list (reviewer reports findings only, does not edit code)
-- [ ] 11.2 Triage findings: fix every CRITICAL, resolve or consciously accept each WARNING (one-line reason per accepted WARNING), note SUGGESTIONs; re-run affected tests
+- [x] 11.1 Dispatch a subagent to review the change against `proposal.md`, the spec scenarios, and the diff plus this task list (reviewer reports findings only, does not edit code)
+- [x] 11.2 Triage findings: fix every CRITICAL, resolve or consciously accept each WARNING (one-line reason per accepted WARNING), note SUGGESTIONs; re-run affected tests
+  - CRITICAL (quarantine `targetLabel` rendered a raw UUID): FIXED — `quarantined_item` now resolves to the item's `domain` (batched lookup), covered by a new integration test.
+  - WARNING (Users `N users` summary under-reported at scale): FIXED — the count now sources `meta.total`, covered by a test.
+  - WARNING (cert-setup "Step 4 of 4" unreachable): ACCEPTED — the wizard state machine (owned by the prior cert-setup changes) traverses 3 states; reworking it is out of scope for this presentational `SetupHeader` chrome; the spec's "Step N of 4" labeling is honored. Follow-up.
+  - SUGGESTION (drop lowercase `certification` branch): REJECTED — both `Certification`/`certification` casings are emitted by live writers (verified), so the branch is reachable.
 
 ## 12. Polish
 
