@@ -67,10 +67,10 @@ Reproduce the highest-impact defects first: Audit Log human-readability, the Adm
 
 ## 10. Acceptance Test — Outer Loop GREEN
 
-- [ ] 10.1 Confirm the e2e (0.1–0.3) and the integration test (0.4) pass end-to-end
-- [ ] 10.2 Verify `apps/web` and `apps/api` boot locally with the audit-logs response and any admin-users field additions — no startup/config errors
-- [ ] 10.3 Regression: confirm the behaviors preserved by the MODIFIED requirements still pass — role-gate redirects (non-admin blocked, unauthenticated → login) and audit-logs `403`/`401` guards; Users promote + last-admin-demote `409`; Sources re-ingest job status + disable-maps-to-Remove; and the Review-queue detail reviewer (select, Approve/Reject removes the item, `content: null` degrades gracefully, no-selection empty prompt) — none regressed by the fidelity/pagination changes
-- [ ] 10.4 REFACTOR: Clean up test fixtures and the admin seed helpers
+- [x] 10.1 Confirm the e2e (0.1–0.3) and the integration test (0.4) pass end-to-end
+- [x] 10.2 Verify `apps/web` and `apps/api` boot locally with the audit-logs response and any admin-users field additions — no startup/config errors
+- [x] 10.3 Regression: confirm the behaviors preserved by the MODIFIED requirements still pass — role-gate redirects (non-admin blocked, unauthenticated → login) and audit-logs `403`/`401` guards; Users promote + last-admin-demote `409`; Sources re-ingest job status + disable-maps-to-Remove; and the Review-queue detail reviewer (select, Approve/Reject removes the item, `content: null` degrades gracefully, no-selection empty prompt) — none regressed by the fidelity/pagination changes
+- [x] 10.4 REFACTOR: Clean up test fixtures and the admin seed helpers
 
 ## 11. Change Review — Subagent Verification
 
