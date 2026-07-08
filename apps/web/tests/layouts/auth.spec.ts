@@ -63,4 +63,36 @@ describe('Auth layout', () => {
     const main = wrapper.get('main')
     expect(main.find('[data-testid="page-content"]').exists()).toBe(true)
   })
+
+  it('renders exactly three brand-panel feature items, each with a circular green-check badge', () => {
+    const wrapper = mountLayout('<div />')
+
+    const features = wrapper.findAll('aside li')
+    expect(features).toHaveLength(3)
+
+    for (const feature of features) {
+      const badge = feature.get('[data-testid="feature-badge"]')
+      const badgeClasses = badge.classes()
+      expect(badgeClasses).toContain('rounded-full')
+      expect(badgeClasses).toContain('border-readion-status-good')
+      expect(badgeClasses.some((cls) => cls.startsWith('bg-readion-status-good'))).toBe(true)
+
+      const icon = badge.get('svg')
+      expect(icon.classes()).toContain('text-readion-status-good')
+      expect(icon.get('path').attributes('d')).toBe('M2 4.5l2 2 3-3')
+    }
+  })
+
+  it('renders the testimonial as a bordered overlay box, not a border-top-only rule', () => {
+    const wrapper = mountLayout('<div />')
+
+    const testimonial = wrapper.get('aside blockquote')
+    const classes = testimonial.classes()
+
+    expect(classes).toContain('border')
+    expect(classes).toContain('border-readion-border-strong')
+    expect(classes).toContain('bg-readion-background-overlay')
+    expect(classes).toContain('rounded-lg')
+    expect(classes).not.toContain('border-t')
+  })
 })
