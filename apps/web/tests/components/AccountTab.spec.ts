@@ -204,6 +204,14 @@ describe('AccountTab change password', () => {
     expect(confirm.attributes('type')).toBe('password')
   })
 
+  it('labels the submit action "Update password" per the design copy', async () => {
+    stubProfile()
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="change-password-btn"]').text()).toBe('Update password')
+  })
+
   it('submits the change, clears the form, and shows a confirmation on success', async () => {
     stubProfile()
     vi.mocked(authControllerChangePassword).mockResolvedValue(
