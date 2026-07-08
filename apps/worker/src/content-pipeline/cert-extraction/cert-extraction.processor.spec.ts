@@ -10,6 +10,15 @@ import { CertExtractionProcessor } from './cert-extraction.processor'
 import { CertExtractionService } from './cert-extraction.service'
 import type { CertFieldProposals } from './cert-extraction.types'
 
+const { PDF_TEXT } = vi.hoisted(() => ({ PDF_TEXT: 'The PDF exam contains 65 questions.' }))
+vi.mock('pdf-parse', () => ({
+  PDFParse: class {
+    async getText() {
+      return { text: PDF_TEXT }
+    }
+  },
+}))
+
 const SOURCE_URL = 'https://aws.amazon.com/certification/saa-c03/exam-guide'
 
 const SOURCE_TEXT = [
@@ -145,5 +154,34 @@ describe('CertExtractionProcessor (integration)', () => {
 
     expect(result!.fields.questionCount).toEqual({ unverified: true })
     expect('citation' in result!.fields.timeLimitMinutes).toBe(true)
+  })
+
+  it('extracts a PDF source via pdf-parse instead of the scrapper', async () => {
+    const pdfUrl = 'https://d1.awsstatic.com/exam/guide.pdf'
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(8),
+    } as Response)
+    extractCertFields.mockResolvedValue({
+      domains: null,
+      questionCount: { value: 65, passage: 'contains 65 questions' },
+      passingScore: null,
+      timeLimitMinutes: null,
+    })
+
+    const job = {
+      id: 'job-pdf',
+      queueName: CERT_EXTRACTION_QUEUE,
+      data: { name: 'AWS Cloud Practitioner', code: 'CLF-C02', confirmedSourceUrl: pdfUrl },
+    } as Partial<Job> as Job
+    const result = (await processor.handle(job)) as CertExtractionResult
+
+    expect(scrapperFetch).not.toHaveBeenCalled()
+    expect(fetchSpy).toHaveBeenCalledWith(pdfUrl, expect.anything())
+    expect(result!.fields.questionCount).toEqual({
+      value: 65,
+      citation: { url: pdfUrl, passage: 'contains 65 questions' },
+    })
+    fetchSpy.mockRestore()
   })
 })

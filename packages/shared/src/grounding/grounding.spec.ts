@@ -112,4 +112,12 @@ describe('isVerbatimPassage', () => {
     expect(isVerbatimPassage(source, '')).toBe(false)
     expect(isVerbatimPassage(source, '   ')).toBe(false)
   })
+
+  it('matches across ligatures and compatibility characters (NFKC)', () => {
+    // PDF text uses the ﬁ/ﬂ ligatures; the model quotes them as plain ASCII.
+    expect(isVerbatimPassage('AWS Certiﬁed Cloud Practitioner', 'AWS Certified Cloud')).toBe(true)
+    expect(isVerbatimPassage('Reserved Instance ﬂexibility', 'Reserved Instance flexibility')).toBe(
+      true,
+    )
+  })
 })
