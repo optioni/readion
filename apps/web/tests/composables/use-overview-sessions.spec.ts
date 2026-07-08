@@ -32,13 +32,17 @@ const sessionsEnvelope = <T>(rows: T[], total: number) => ({
   headers: new Headers(),
 })
 
-const summaryEnvelope = (accuracy: number, nextFocus: unknown) => ({
+const summaryEnvelope = (
+  accuracy: number,
+  nextFocus: unknown,
+  weakAreaDeltas: Array<{ domain: string; delta: number }> = [],
+) => ({
   data: {
     data: {
       questionsAnswered: 10,
       accuracy,
       domains: [],
-      weakAreaDeltas: [],
+      weakAreaDeltas,
       readiness: { before: null, after: null, delta: null },
       nextFocus,
     },
@@ -93,6 +97,49 @@ describe('useOverviewSessions', () => {
     expect(result.nextFocusDomain.value).toBe('Networking')
   })
 
+  it('exposes the latest completed summary and the raw session focus areas for client-side derivation', async () => {
+    vi.mocked(sessionsControllerList).mockResolvedValue(
+      sessionsEnvelope(
+        [
+          session({
+            id: 's1',
+            status: 'completed',
+            startedAt: '2026-06-20T00:00:00Z',
+            focusArea: { mode: 'domains', domains: ['Networking'] },
+          }),
+          session({
+            id: 's2',
+            status: 'abandoned',
+            startedAt: '2026-06-19T00:00:00Z',
+            focusArea: 'auto',
+          }),
+        ],
+        7,
+        // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      ) as any,
+    )
+    vi.mocked(sessionSummaryControllerSummary).mockResolvedValue(
+      summaryEnvelope(0.8, { domain: 'Networking' }, [
+        { domain: 'Networking', delta: 7 },
+        // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      ]) as any,
+    )
+
+    const { result } = renderComposable(() => useOverviewSessions('cert-1'))
+
+    await vi.waitFor(() => {
+      expect(result.isLoading.value).toBe(false)
+    })
+
+    expect(result.latestSummary.value).toMatchObject({
+      weakAreaDeltas: [{ domain: 'Networking', delta: 7 }],
+    })
+    expect(result.sessionFocusAreas.value).toEqual([
+      { startedAt: '2026-06-20T00:00:00Z', focusArea: { mode: 'domains', domains: ['Networking'] } },
+      { startedAt: '2026-06-19T00:00:00Z', focusArea: 'auto' },
+    ])
+  })
+
   it('narrows a missing or non-string nextFocus domain to null', async () => {
     vi.mocked(sessionsControllerList).mockResolvedValue(
       sessionsEnvelope(
@@ -129,5 +176,7 @@ describe('useOverviewSessions', () => {
     expect(result.sessions.value).toEqual([])
     expect(result.totalSessions.value).toBe(0)
     expect(result.nextFocusDomain.value).toBeNull()
+    expect(result.latestSummary.value).toBeNull()
+    expect(result.sessionFocusAreas.value).toEqual([])
   })
 })

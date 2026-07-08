@@ -35,4 +35,13 @@ describe('selectSuggestedNextFocus', () => {
       score: null,
     })
   })
+
+  it('looks up the score for a session-sourced domain from the weak areas', () => {
+    expect(
+      selectSuggestedNextFocus('Security', [
+        weakArea({ domain: 'Security', score: 48 }),
+        weakArea({ domain: 'Billing', score: 70 }),
+      ]),
+    ).toEqual({ domain: 'Security', source: 'session', score: 48 })
+  })
 })

@@ -50,4 +50,24 @@ describe('ProgressStatCard', () => {
     const unit = wrapper.findAll('span').find((span) => span.text() === '72%')
     expect(unit?.classes()).toContain('text-readion-status-medium')
   })
+
+  it('applies the optional valueClass to the value span', () => {
+    const wrapper = mount(ProgressStatCard, {
+      props: {
+        label: 'Avg accuracy',
+        value: '72%',
+        valueClass: 'text-readion-status-medium',
+      },
+    })
+    const value = wrapper.findAll('span').find((span) => span.text() === '72%')
+    expect(value?.classes()).toContain('text-readion-status-medium')
+  })
+
+  it('defaults the value colour when valueClass is not provided', () => {
+    const wrapper = mount(ProgressStatCard, {
+      props: { label: 'Sessions', value: '5' },
+    })
+    const value = wrapper.findAll('span').find((span) => span.text() === '5')
+    expect(value?.classes()).toContain('text-slate-100')
+  })
 })
