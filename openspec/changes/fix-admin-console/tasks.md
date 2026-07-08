@@ -83,8 +83,8 @@ Reproduce the highest-impact defects first: Audit Log human-readability, the Adm
 
 ## 12. Polish
 
-- [ ] 12.1 Run linter and fix all errors (`yarn lint`)
-- [ ] 12.2 Run formatter and apply fixes (`yarn format`)
-- [ ] 12.3 Run type checker with zero errors (`apps/web`, `apps/api`, shared)
-- [ ] 12.4 Run coverage and confirm ≥80% lines/branches/functions (`yarn test:coverage`)
-- [ ] 12.5 Run `yarn codegen` and commit the regenerated client if the API changed
+- [x] 12.1 Run linter and fix all errors (`yarn lint`) — 0 errors (remaining are pre-existing out-of-scope `.vue`/`noNonNullAssertion` warnings)
+- [x] 12.2 Run formatter and apply fixes (`yarn format`) — 3 files formatted and committed
+- [x] 12.3 Run type checker with zero errors (`apps/web`, `apps/api`, shared) — all exit 0
+- [x] 12.4 Run coverage and confirm ≥80% lines/branches/functions (`yarn test:coverage`) — web 94.37% lines / 86.56% branches; api 96.04% lines / 84.14% branches
+- [x] 12.5 Run `yarn codegen` and commit the regenerated client if the API changed — regenerated + committed for audit-log (`actorEmail`/`targetLabel`) and content-source (`chunkCount`)
