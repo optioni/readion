@@ -34,10 +34,10 @@ const THIRD_PARTY_RESULT: CertSearchResult = {
   official: false,
 }
 
-// The model is asked to return a ranked list; it lists the third-party page
-// first and even hallucinates a URL the search never returned. The service must
-// re-rank vendor-first and drop the hallucinated URL.
-const MODEL_OUTPUT_JSON = JSON.stringify({
+// The model lists the third-party page first and even selects a URL the search
+// never returned. The service must re-rank vendor-first and drop the
+// unsurfaced URL by grounding it against the search pool.
+const MODEL_SELECTION_JSON = JSON.stringify({
   candidates: [{ url: THIRD_PARTY_URL }, { url: VENDOR_URL }, { url: HALLUCINATED_URL }],
   suggestedContentSources: [
     { url: VENDOR_URL, type: 'web' },
@@ -111,14 +111,16 @@ describe('CertDiscoveryService', () => {
   let modelRegistry: ModelRegistryService
   let searchMock: ReturnType<typeof vi.fn>
   let capturedTools: Array<{ name: string }> | undefined
-  let modelReply: string
+  // Phase 2 (structured selection) reply — the model's object output as JSON text.
+  let selectionReply: string
 
   beforeEach(async () => {
     capturedTools = undefined
     searchMock = vi.fn()
-    modelReply = MODEL_OUTPUT_JSON
+    selectionReply = MODEL_SELECTION_JSON
 
     const langModel = new MockLanguageModelV3({
+      // Phase 1: the tool-driven search loop.
       doStream: async ({ prompt, tools }: StreamArgs) => {
         capturedTools = tools
         const hasToolResult = prompt.some((message) => message.role === 'tool')
@@ -129,8 +131,15 @@ describe('CertDiscoveryService', () => {
             ),
           }
         }
-        return { stream: streamFromParts(textReplyParts([modelReply])) }
+        return { stream: streamFromParts(textReplyParts(['done'])) }
       },
+      // Phase 2: structured candidate selection.
+      doGenerate: async () => ({
+        content: [{ type: 'text', text: selectionReply }],
+        finishReason: FINISH_REASON_STOP,
+        usage: STREAM_USAGE,
+        warnings: [],
+      }),
     })
 
     moduleRef = await Test.createTestingModule({
@@ -222,7 +231,7 @@ describe('CertDiscoveryService', () => {
 
   it('emits a candidate without a snippet when the search result has none', async () => {
     searchMock.mockResolvedValue([{ url: VENDOR_URL, title: VENDOR_RESULT.title, official: true }])
-    modelReply = JSON.stringify({ candidates: [{ url: VENDOR_URL }] })
+    selectionReply = JSON.stringify({ candidates: [{ url: VENDOR_URL }] })
 
     const result = await service.discoverSources({ name: 'AWS Cloud Practitioner' })
 
@@ -234,34 +243,16 @@ describe('CertDiscoveryService', () => {
       { url: 'not a valid url', title: 'Broken', official: true },
       VENDOR_RESULT,
     ])
-    modelReply = JSON.stringify({ candidates: [{ url: VENDOR_URL }] })
+    selectionReply = JSON.stringify({ candidates: [{ url: VENDOR_URL }] })
 
     const result = await service.discoverSources({ name: 'AWS Cloud Practitioner' })
 
     expect(result.candidates.map((candidate) => candidate.url)).toEqual([VENDOR_URL])
   })
 
-  it('returns no candidates when the model emits no JSON object', async () => {
+  it('returns no candidates when the model selects nothing', async () => {
     searchMock.mockResolvedValue([VENDOR_RESULT])
-    modelReply = 'I was unable to find any authoritative sources.'
-
-    const result = await service.discoverSources({ name: 'AWS Cloud Practitioner' })
-
-    expect(result.candidates).toEqual([])
-  })
-
-  it('returns no candidates when the model output fails schema validation', async () => {
-    searchMock.mockResolvedValue([VENDOR_RESULT])
-    modelReply = JSON.stringify({ candidates: 'not-an-array' })
-
-    const result = await service.discoverSources({ name: 'AWS Cloud Practitioner' })
-
-    expect(result.candidates).toEqual([])
-  })
-
-  it('handles model output that omits the optional candidate and suggestion arrays', async () => {
-    searchMock.mockResolvedValue([VENDOR_RESULT])
-    modelReply = JSON.stringify({})
+    selectionReply = JSON.stringify({})
 
     const result = await service.discoverSources({ name: 'AWS Cloud Practitioner' })
 
@@ -269,9 +260,18 @@ describe('CertDiscoveryService', () => {
     expect(result.suggestedContentSources).toBeUndefined()
   })
 
+  it('returns no candidates when the selection produces no valid object', async () => {
+    searchMock.mockResolvedValue([VENDOR_RESULT])
+    selectionReply = 'I could not choose any sources.'
+
+    const result = await service.discoverSources({ name: 'AWS Cloud Practitioner' })
+
+    expect(result.candidates).toEqual([])
+  })
+
   it('warns with per-stage counts when discovery yields no candidates', async () => {
     searchMock.mockResolvedValue([VENDOR_RESULT, THIRD_PARTY_RESULT])
-    modelReply = JSON.stringify({ candidates: [{ url: HALLUCINATED_URL }] })
+    selectionReply = JSON.stringify({ candidates: [{ url: HALLUCINATED_URL }] })
     const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined)
 
     const result = await service.discoverSources({
@@ -280,9 +280,9 @@ describe('CertDiscoveryService', () => {
     })
 
     expect(result.candidates).toEqual([])
-    const message = warnSpy.mock.calls[0]?.[0] as string
+    const message = warnSpy.mock.calls.map((call) => call[0] as string).join('\n')
     expect(message).toContain('searchResults=2')
-    expect(message).toContain('parsedCandidates=1')
+    expect(message).toContain('selected=1')
     expect(message).toContain('grounded=0')
     expect(message).toContain('candidates=0')
     warnSpy.mockRestore()

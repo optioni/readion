@@ -194,6 +194,8 @@ export async function createCertSetupAcceptanceHarness(): Promise<CertSetupAccep
   const searchFake: CertSearchPort = { search: (query) => searchImpl(query) }
 
   const langModel = new MockLanguageModelV3({
+    // Phase 1: the tool-driven search loop. The model's text output is ignored;
+    // only the tool results (via CERT_SEARCH_PORT) feed the grounding guard.
     doStream: async ({ prompt }: { prompt: Array<{ role: string }> }) => {
       const hasToolResult = prompt.some((message) => message.role === 'tool')
       if (!hasToolResult) {
@@ -203,8 +205,15 @@ export async function createCertSetupAcceptanceHarness(): Promise<CertSetupAccep
           ),
         }
       }
-      return { stream: streamFromParts(textReplyParts(MODEL_CANDIDATE_REPLY)) }
+      return { stream: streamFromParts(textReplyParts('done')) }
     },
+    // Phase 2: structured candidate selection from the gathered pool.
+    doGenerate: async () => ({
+      content: [{ type: 'text', text: MODEL_CANDIDATE_REPLY }],
+      finishReason: FINISH_REASON_STOP,
+      usage: STREAM_USAGE,
+      warnings: [],
+    }),
   })
 
   const moduleRef = await Test.createTestingModule({

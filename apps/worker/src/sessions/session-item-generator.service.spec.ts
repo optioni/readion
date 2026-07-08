@@ -1,3 +1,4 @@
+import { NoObjectGeneratedError } from 'ai'
 import { describe, expect, it, vi } from 'vitest'
 import { SessionItemGeneratorService } from './session-item-generator.service'
 
@@ -31,8 +32,35 @@ function makeEm(chunkRows: typeof CHUNK_ROWS = CHUNK_ROWS) {
   return { em, forkedEm, execute }
 }
 
+// Mirrors generateStructured: valid JSON resolves as the parsed object; invalid
+// JSON rejects with a NoObjectGeneratedError carrying the raw text, exactly as
+// Output.object does when the model returns something unparseable.
 function makeLlm(response: string) {
-  return { generateContent: vi.fn().mockResolvedValue(response) }
+  return {
+    generateStructured: vi.fn().mockImplementation(async () => {
+      try {
+        return JSON.parse(response)
+      } catch {
+        throw new NoObjectGeneratedError({
+          message: 'no object generated',
+          text: response,
+          response: { id: 'r', timestamp: new Date(0), modelId: 'mock' },
+          usage: {
+            inputTokens: undefined,
+            inputTokenDetails: {
+              noCacheTokens: undefined,
+              cacheReadTokens: undefined,
+              cacheWriteTokens: undefined,
+            },
+            outputTokens: undefined,
+            outputTokenDetails: { textTokens: undefined, reasoningTokens: undefined },
+            totalTokens: undefined,
+          },
+          finishReason: 'stop',
+        })
+      }
+    }),
+  }
 }
 
 describe('SessionItemGeneratorService', () => {
@@ -56,7 +84,7 @@ describe('SessionItemGeneratorService', () => {
         'balanced',
       )
 
-      expect(llm.generateContent).toHaveBeenCalledTimes(2)
+      expect(llm.generateStructured).toHaveBeenCalledTimes(2)
       expect(forkedEm.persist).toHaveBeenCalledTimes(2)
       expect(forkedEm.flush).toHaveBeenCalledTimes(1)
     })
@@ -176,7 +204,10 @@ describe('SessionItemGeneratorService', () => {
         'balanced',
       )
 
-      expect(llm.generateContent).toHaveBeenCalledWith(expect.stringContaining('exam-ready'))
+      expect(llm.generateStructured).toHaveBeenCalledWith(
+        expect.stringContaining('exam-ready'),
+        expect.anything(),
+      )
     })
   })
 
@@ -231,7 +262,10 @@ describe('SessionItemGeneratorService', () => {
         'balanced',
       )
 
-      expect(llm.generateContent).toHaveBeenCalledWith(expect.stringContaining('true-false'))
+      expect(llm.generateStructured).toHaveBeenCalledWith(
+        expect.stringContaining('true-false'),
+        expect.anything(),
+      )
     })
 
     it('falls back to placeholder when LLM returns malformed content', async () => {

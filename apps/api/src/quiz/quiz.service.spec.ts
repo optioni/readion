@@ -121,7 +121,7 @@ describe('QuizService (integration)', () => {
     } as unknown as EmbeddingService
 
     llmService = {
-      generateText: vi.fn().mockResolvedValue({ text: JSON.stringify(FIXTURE_ITEM), usage: {} }),
+      generateObject: vi.fn().mockResolvedValue({ object: FIXTURE_ITEM, usage: {} }),
     } as unknown as LlmService
 
     groundedGeneration = {

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import type { ExtractiveItem, VerifierVerdict } from '@readion/shared'
 import { InjectMetric } from '@willsoto/nestjs-prometheus'
 import type { Counter } from 'prom-client'
+import { z } from 'zod'
 import { LlmService } from '../llm/llm.service'
 import { GROUNDING_VERIFIER_RESULTS_METRIC } from './grounding.metrics'
 import type { GroundedChunk } from './types'
@@ -37,22 +38,17 @@ function buildVerifierPrompt(item: ExtractiveItem, chunks: GroundedChunk[]): str
   ].join('\n')
 }
 
-function parseVerdict(text: string): VerifierVerdict {
-  const parsed = JSON.parse(text) as {
-    pass: boolean
-    score: number
-    distractorFindings: Array<{ option: string; isCorrect: boolean; reason?: string }>
-  }
-  return {
-    pass: Boolean(parsed.pass),
-    score: Number(parsed.score),
-    distractorFindings: parsed.distractorFindings.map((f) => ({
-      option: f.option,
-      isCorrect: f.isCorrect,
-      reason: f.reason,
-    })),
-  }
-}
+const verifierVerdictSchema = z.object({
+  pass: z.boolean(),
+  score: z.number(),
+  distractorFindings: z.array(
+    z.object({
+      option: z.string(),
+      isCorrect: z.boolean(),
+      reason: z.string().optional(),
+    }),
+  ),
+})
 
 @Injectable()
 export class VerifierService {
@@ -64,12 +60,21 @@ export class VerifierService {
 
   async verify(item: ExtractiveItem, chunks: GroundedChunk[]): Promise<VerifierVerdict> {
     const prompt = buildVerifierPrompt(item, chunks)
-    const result = await this.llmService.generateText({
+    const { object } = await this.llmService.generateObject({
       taskType: 'answer-verification',
       messages: [{ role: 'user', content: prompt }],
+      schema: verifierVerdictSchema,
     })
 
-    const verdict = parseVerdict(result.text)
+    const verdict: VerifierVerdict = {
+      pass: object.pass,
+      score: object.score,
+      distractorFindings: object.distractorFindings.map((finding) => ({
+        option: finding.option,
+        isCorrect: finding.isCorrect,
+        reason: finding.reason,
+      })),
+    }
     this.verifierResultsCounter.inc({ result: verdict.pass ? 'pass' : 'fail' })
     return verdict
   }

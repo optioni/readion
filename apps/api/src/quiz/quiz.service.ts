@@ -16,6 +16,7 @@ import type {
   SubmitAnswerResponse,
 } from '@readion/shared'
 import { QUIZ_ANSWERED_EVENT } from '@readion/shared'
+import { NoObjectGeneratedError } from 'ai'
 import { z } from 'zod'
 import type { GenerationFn, GroundedChunk } from '../grounding/grounded-generation.service'
 import { GroundedGenerationService } from '../grounding/grounded-generation.service'
@@ -479,27 +480,28 @@ export class QuizService {
       const chunkTexts = chunks.map((c) => `[Source: ${c.id}]\n${c.text}`).join('\n\n')
       const formatLabel = format.replace(/_/g, '-')
 
-      const result = await this.llm.generateText({
-        taskType: 'quiz-generation',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `Generate a ${formatLabel} quiz question grounded in the provided content. Return a JSON object with this exact structure: {"question":"...","options":["...","...","...","..."],"correctAnswer":"...","supportingSpans":["..."],"sourceChunkIds":["..."]}\n\nContent:\n${chunkTexts}`,
-              },
-            ],
-          },
-        ],
-      })
-
       try {
-        return llmExtractiveItemSchema.parse(JSON.parse(result.text))
+        const { object } = await this.llm.generateObject({
+          taskType: 'quiz-generation',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `Generate a ${formatLabel} quiz question grounded in the provided content.\n\nContent:\n${chunkTexts}`,
+                },
+              ],
+            },
+          ],
+          schema: llmExtractiveItemSchema,
+        })
+        return object
       } catch (error) {
-        this.logger.warn(
-          `malformed quiz content: error=${error instanceof Error ? error.message : String(error)} textPreview=${JSON.stringify(result.text.slice(0, 300))}`,
-        )
+        if (!NoObjectGeneratedError.isInstance(error)) {
+          throw error
+        }
+        this.logger.warn(`malformed quiz content: error=${error.message}`)
         throw new UnprocessableEntityException('LLM returned malformed quiz content')
       }
     }
@@ -509,27 +511,28 @@ export class QuizService {
     return async (chunks: GroundedChunk[]): Promise<ExtractiveItem> => {
       const chunkTexts = chunks.map((c) => `[Source: ${c.id}]\n${c.text}`).join('\n\n')
 
-      const result = await this.llm.generateText({
-        taskType: 'material-generation',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `Generate an explanation for why "${originalItem.correctAnswer}" is the correct answer to: "${originalItem.question}". The explanation must be grounded in the provided content. Return a JSON object with this exact structure: {"question":"<explanation text>","options":["<explanation text>"],"correctAnswer":"<explanation text>","supportingSpans":["..."],"sourceChunkIds":["..."]}\n\nContent:\n${chunkTexts}`,
-              },
-            ],
-          },
-        ],
-      })
-
       try {
-        return llmExtractiveItemSchema.parse(JSON.parse(result.text))
+        const { object } = await this.llm.generateObject({
+          taskType: 'material-generation',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `Generate an explanation for why "${originalItem.correctAnswer}" is the correct answer to: "${originalItem.question}". The explanation must be grounded in the provided content.\n\nContent:\n${chunkTexts}`,
+                },
+              ],
+            },
+          ],
+          schema: llmExtractiveItemSchema,
+        })
+        return object
       } catch (error) {
-        this.logger.warn(
-          `malformed explanation content: error=${error instanceof Error ? error.message : String(error)} textPreview=${JSON.stringify(result.text.slice(0, 300))}`,
-        )
+        if (!NoObjectGeneratedError.isInstance(error)) {
+          throw error
+        }
+        this.logger.warn(`malformed explanation content: error=${error.message}`)
         throw new UnprocessableEntityException('LLM returned malformed explanation content')
       }
     }

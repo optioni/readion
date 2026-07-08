@@ -2,6 +2,7 @@ import { EntityManager } from '@mikro-orm/core'
 import { Injectable, Logger } from '@nestjs/common'
 import { SessionItem, StudySession } from '@readion/db'
 import type { SessionItemPlan } from '@readion/shared'
+import { NoObjectGeneratedError } from 'ai'
 import { z } from 'zod'
 import { LlmService } from '../llm/llm.service'
 
@@ -22,10 +23,6 @@ const quizItemSchema = z.object({
 type ChunkRow = { id: string; text: string; primary_domain: string }
 
 const VERBATIM_CAP = 200
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
-}
 
 @Injectable()
 export class SessionItemGeneratorService {
@@ -98,12 +95,10 @@ export class SessionItemGeneratorService {
     const chunkTexts = chunks
       .map((c) => `[Source: ${c.id}]\n${c.text.slice(0, VERBATIM_CAP)}`)
       .join('\n\n')
-    const prompt = `Create a concise study reading block about "${itemPlan.domain}" at ${difficulty} level.\nReturn JSON: {"markdown":"<Markdown prose>","tldr":["<3-5 bullet points>"],"supportingSpans":["<key quoted phrases>"]}\nUse only information from the provided sources. Do not exceed 400 words.\n\nSource content:\n${chunkTexts}`
-
-    const text = await this.llm.generateContent(prompt)
+    const prompt = `Create a concise study reading block about "${itemPlan.domain}" at ${difficulty} level.\nUse only information from the provided sources. Do not exceed 400 words.\n\nSource content:\n${chunkTexts}`
 
     try {
-      const parsed = readingBlockSchema.parse(JSON.parse(text))
+      const parsed = await this.llm.generateStructured(prompt, readingBlockSchema)
       em.persist(
         em.create(SessionItem, {
           session: em.getReference(StudySession, sessionId),
@@ -116,15 +111,18 @@ export class SessionItemGeneratorService {
         }),
       )
     } catch (error) {
+      if (!NoObjectGeneratedError.isInstance(error)) {
+        throw error
+      }
       this.logger.warn(
-        `reading block fell back to raw LLM text: session=${sessionId} index=${itemPlan.index} domain=${JSON.stringify(itemPlan.domain)} error=${errorMessage(error)} textPreview=${JSON.stringify(text.slice(0, 300))}`,
+        `reading block fell back to raw LLM text: session=${sessionId} index=${itemPlan.index} domain=${JSON.stringify(itemPlan.domain)} error=${error.message} textPreview=${JSON.stringify((error.text ?? '').slice(0, 300))}`,
       )
       em.persist(
         em.create(SessionItem, {
           session: em.getReference(StudySession, sessionId),
           index: itemPlan.index,
           type: 'reading',
-          content: text,
+          content: error.text ?? '',
           completed: false,
           sourceChunkIds: chunks.map((c) => c.id),
           supportingSpans: [],
@@ -151,12 +149,10 @@ export class SessionItemGeneratorService {
     const format = itemPlan.format ?? 'multiple_choice'
     const formatLabel = format.replace(/_/g, '-')
     const chunkTexts = chunks.map((c) => `[Source: ${c.id}]\n${c.text}`).join('\n\n')
-    const prompt = `Generate a ${formatLabel} quiz question at ${difficulty} level grounded in the provided content.\nReturn JSON: {"question":"...","options":["...","...","...","..."],"correctAnswer":"...","supportingSpans":["..."],"sourceChunkIds":["..."]}\n\nContent:\n${chunkTexts}`
-
-    const text = await this.llm.generateContent(prompt)
+    const prompt = `Generate a ${formatLabel} quiz question at ${difficulty} level grounded in the provided content.\n\nContent:\n${chunkTexts}`
 
     try {
-      const parsed = quizItemSchema.parse(JSON.parse(text))
+      const parsed = await this.llm.generateStructured(prompt, quizItemSchema)
       em.persist(
         em.create(SessionItem, {
           session: em.getReference(StudySession, sessionId),
@@ -169,8 +165,11 @@ export class SessionItemGeneratorService {
         }),
       )
     } catch (error) {
+      if (!NoObjectGeneratedError.isInstance(error)) {
+        throw error
+      }
       this.logger.warn(
-        `malformed quiz content: session=${sessionId} index=${itemPlan.index} domain=${JSON.stringify(itemPlan.domain)} error=${errorMessage(error)} textPreview=${JSON.stringify(text.slice(0, 300))}`,
+        `malformed quiz content: session=${sessionId} index=${itemPlan.index} domain=${JSON.stringify(itemPlan.domain)} error=${error.message} textPreview=${JSON.stringify((error.text ?? '').slice(0, 300))}`,
       )
       throw new Error('LLM returned malformed quiz content')
     }

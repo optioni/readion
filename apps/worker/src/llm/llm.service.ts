@@ -96,6 +96,15 @@ export class LlmService {
     return text
   }
 
+  async generateStructured<T>(prompt: string, schema: z.ZodType<T>): Promise<T> {
+    const { output } = await generateText({
+      model: this.getContentModel(),
+      prompt,
+      output: Output.object({ schema }),
+    })
+    return output
+  }
+
   private getCertPrefillModel() {
     const provider = this.config.get('AI_PROVIDER') ?? 'openai'
     const apiKey = this.config.get('AI_API_KEY')

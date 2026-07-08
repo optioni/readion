@@ -16,15 +16,15 @@ function makeChunkRow(id: string, similarity: number, domain = 'Security'): Mock
 }
 
 function makeLlm(
-  text: string = JSON.stringify({
+  object: unknown = {
     markdown: '## Overview\n\nSome content here.',
     tldr: ['Key point 1', 'Key point 2', 'Key point 3'],
     supportingSpans: ['some span'],
-  }),
+  },
 ) {
   return {
-    generateText: vi.fn().mockResolvedValue({
-      text,
+    generateObject: vi.fn().mockResolvedValue({
+      object,
       usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
     }),
   } as unknown as LlmService
@@ -144,13 +144,11 @@ describe('ReadingBlockComposerService', () => {
   it('captures supportingSpans from LLM output', async () => {
     const chunks = [makeChunkRow('c1', 0.9)]
     const em = makeEm(chunks)
-    const llm = makeLlm(
-      JSON.stringify({
-        markdown: '## Security\n\nKey concepts.',
-        tldr: ['Point 1', 'Point 2'],
-        supportingSpans: ['span about security', 'another span'],
-      }),
-    )
+    const llm = makeLlm({
+      markdown: '## Security\n\nKey concepts.',
+      tldr: ['Point 1', 'Point 2'],
+      supportingSpans: ['span about security', 'another span'],
+    })
     const svc = new ReadingBlockComposerService(llm, em, makeConfig())
 
     const result = await svc.compose({
@@ -165,13 +163,11 @@ describe('ReadingBlockComposerService', () => {
   describe('goDeeper', () => {
     it('generates expanded explanation using source chunks', async () => {
       const chunks = [makeChunkRow('c1', 0.9)]
-      const llm = makeLlm(
-        JSON.stringify({
-          markdown: '## Deep Dive\n\nA very detailed explanation.',
-          tldr: ['Detail 1', 'Detail 2'],
-          supportingSpans: [],
-        }),
-      )
+      const llm = makeLlm({
+        markdown: '## Deep Dive\n\nA very detailed explanation.',
+        tldr: ['Detail 1', 'Detail 2'],
+        supportingSpans: [],
+      })
       const em = makeEm(chunks)
       const svc = new ReadingBlockComposerService(llm, em, makeConfig())
 

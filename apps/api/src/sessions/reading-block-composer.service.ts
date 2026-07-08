@@ -1,6 +1,7 @@
 import { EntityManager } from '@mikro-orm/core'
 import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
+import { NoObjectGeneratedError } from 'ai'
 import { z } from 'zod'
 import type { EnvConfig } from '../config/env.schema'
 import { LlmService } from '../llm/llm.service'
@@ -44,10 +45,6 @@ const readingBlockSchema = z.object({
 })
 
 const VERBATIM_CAP = 200
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
-}
 
 @Injectable()
 export class ReadingBlockComposerService implements ReadingBlockComposer {
@@ -94,29 +91,31 @@ export class ReadingBlockComposerService implements ReadingBlockComposer {
       .map((c) => `[Source: ${c.id}]\n${c.text.slice(0, this.verbatimCap)}`)
       .join('\n\n')
 
-    const result = await this.llm.generateText({
-      taskType: 'material-generation',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `Expand on this material with a detailed explanation. Return JSON: {"markdown":"...","tldr":["..."]}\n\nOriginal:\n${input.originalContent}\n\nSource content:\n${chunkTexts}`,
-            },
-          ],
-        },
-      ],
-    })
-
     try {
-      const parsed = readingBlockSchema.parse(JSON.parse(result.text))
-      return parsed.markdown
+      const { object } = await this.llm.generateObject({
+        taskType: 'material-generation',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `Expand on this material with a detailed explanation.\n\nOriginal:\n${input.originalContent}\n\nSource content:\n${chunkTexts}`,
+              },
+            ],
+          },
+        ],
+        schema: readingBlockSchema,
+      })
+      return object.markdown
     } catch (error) {
+      if (!NoObjectGeneratedError.isInstance(error)) {
+        throw error
+      }
       this.logger.warn(
-        `goDeeper fell back to raw LLM text: error=${errorMessage(error)} textPreview=${JSON.stringify(result.text.slice(0, 300))}`,
+        `goDeeper fell back to raw LLM text: error=${error.message} textPreview=${JSON.stringify((error.text ?? '').slice(0, 300))}`,
       )
-      return result.text
+      return error.text ?? input.originalContent
     }
   }
 
@@ -129,33 +128,35 @@ export class ReadingBlockComposerService implements ReadingBlockComposer {
       .map((c) => `[Source: ${c.id}]\n${c.text.slice(0, this.verbatimCap)}`)
       .join('\n\n')
 
-    const result = await this.llm.generateText({
-      taskType: 'material-generation',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `Create a concise study reading block about "${domain}" at ${difficulty} level.
-Return JSON: {"markdown":"<Markdown prose with headings>","tldr":["<3-5 bullet points>"],"supportingSpans":["<key quoted phrases from source>"]}
+    try {
+      const { object } = await this.llm.generateObject({
+        taskType: 'material-generation',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `Create a concise study reading block about "${domain}" at ${difficulty} level.
 Use only information from the provided sources. Do not exceed 400 words.
 
 Source content:
 ${chunkTexts}`,
-            },
-          ],
-        },
-      ],
-    })
-
-    try {
-      return readingBlockSchema.parse(JSON.parse(result.text))
+              },
+            ],
+          },
+        ],
+        schema: readingBlockSchema,
+      })
+      return object
     } catch (error) {
+      if (!NoObjectGeneratedError.isInstance(error)) {
+        throw error
+      }
       this.logger.warn(
-        `reading block fell back to raw LLM text: domain=${JSON.stringify(domain)} difficulty=${difficulty} error=${errorMessage(error)} textPreview=${JSON.stringify(result.text.slice(0, 300))}`,
+        `reading block fell back to raw LLM text: domain=${JSON.stringify(domain)} difficulty=${difficulty} error=${error.message} textPreview=${JSON.stringify((error.text ?? '').slice(0, 300))}`,
       )
-      return { markdown: result.text, tldr: [], supportingSpans: [] }
+      return { markdown: error.text ?? '', tldr: [], supportingSpans: [] }
     }
   }
 

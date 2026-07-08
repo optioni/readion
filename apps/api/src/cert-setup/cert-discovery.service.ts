@@ -7,7 +7,7 @@ import {
   rankDiscoveryCandidates,
   type SuggestedContentSource,
 } from '@readion/shared'
-import { type ModelMessage, stepCountIs, type ToolSet, tool } from 'ai'
+import { NoObjectGeneratedError, stepCountIs, type ToolSet, tool } from 'ai'
 import { z } from 'zod'
 import { LlmService } from '../llm/llm.service'
 import {
@@ -18,8 +18,11 @@ import {
 
 const CERT_DISCOVERY_MAX_STEPS = 4
 
-const DISCOVERY_SYSTEM_PROMPT =
-  'You research certification exams. Use the webSearch tool to find authoritative pages, then return only the URLs the search actually surfaced. Never invent a URL. Respond with JSON: { "candidates": [{ "url": string }], "suggestedContentSources": [{ "url": string, "type": string }] }.'
+const SEARCH_SYSTEM_PROMPT =
+  'You research certification exams. Use the webSearch tool to find authoritative pages describing the exam. Search thoroughly, issuing multiple queries if it helps surface official sources.'
+
+const SELECT_SYSTEM_PROMPT =
+  'You select the most authoritative, relevant sources for a certification exam from a catalog of search results. Choose only URLs that appear in the catalog — never invent one. Prefer official vendor pages, and classify any reusable content sources by type.'
 
 const modelOutputSchema = z.object({
   candidates: z.array(z.object({ url: z.string() })).optional(),
@@ -28,14 +31,15 @@ const modelOutputSchema = z.object({
     .optional(),
 })
 
-type ParseReason = 'ok' | 'no-json' | 'schema-invalid'
+type CandidateSelection = {
+  candidateUrls: string[]
+  suggested: SuggestedContentSource[]
+}
 
 interface DiscoveryDiagnostics {
   searchResultCount: number
-  parsedCandidateCount: number
+  selectedCandidateCount: number
   groundedCandidateCount: number
-  finalTextLength: number
-  parseReason: ParseReason
 }
 
 @Injectable()
@@ -48,6 +52,18 @@ export class CertDiscoveryService {
   ) {}
 
   async discoverSources(request: DiscoverSourcesRequest): Promise<DiscoverSourcesResponse> {
+    const searchResults = await this.gatherSearchResults(request)
+    const selection = await this.selectCandidates(request, searchResults)
+
+    const { response, diagnostics } = assembleResponse(selection, searchResults)
+    this.logOutcome(request, diagnostics, response.candidates.length)
+    return response
+  }
+
+  // Phase 1: let the model drive web search through the tool, accumulating the
+  // grounded pool. The model's free-text output is intentionally ignored — only
+  // the tool results (real URLs) are trusted downstream.
+  private async gatherSearchResults(request: DiscoverSourcesRequest): Promise<CertSearchResult[]> {
     const searchResults: CertSearchResult[] = []
     const tools: ToolSet = {
       webSearch: tool({
@@ -65,70 +81,101 @@ export class CertDiscoveryService {
 
     const result = await this.llm.streamText({
       taskType: 'certification-prefill',
-      system: DISCOVERY_SYSTEM_PROMPT,
-      messages: buildMessages(request),
+      system: SEARCH_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content: `Find authoritative sources describing the certification exam "${labelFor(request)}". Search the web thoroughly.`,
+        },
+      ],
       tools,
       stopWhen: stepCountIs(CERT_DISCOVERY_MAX_STEPS),
     })
+    await result.text
 
-    const finalText = await result.text
-
-    const { response, diagnostics } = assembleResponse(finalText, searchResults)
-    this.logOutcome(request, finalText, diagnostics, response.candidates.length)
-    return response
+    return searchResults
   }
 
-  // Discovery can return zero candidates for three distinct reasons that are
-  // otherwise indistinguishable from outside the API: the model never searched
-  // (searchResults=0), it searched but emitted no parseable JSON
-  // (parsedCandidates=0), or it echoed URLs that don't match any search result
-  // verbatim and got dropped by grounding (parsedCandidates>0 but grounded=0).
-  // The zero-candidate path logs at warn so it surfaces at the default level.
+  // Phase 2: structured selection from the grounded pool. Using a schema-bound
+  // object output removes the fragile free-text JSON parsing that previously
+  // dropped every candidate when the model wrapped its answer in a code fence.
+  private async selectCandidates(
+    request: DiscoverSourcesRequest,
+    searchResults: CertSearchResult[],
+  ): Promise<CandidateSelection> {
+    if (searchResults.length === 0) {
+      return { candidateUrls: [], suggested: [] }
+    }
+
+    const catalog = searchResults
+      .map((result, index) => {
+        const title = result.title ? ` — ${result.title}` : ''
+        const snippet = result.snippet ? `\n   ${result.snippet}` : ''
+        return `${index + 1}. ${result.url}${title}${snippet}`
+      })
+      .join('\n')
+
+    try {
+      const { object } = await this.llm.generateObject({
+        taskType: 'certification-prefill',
+        system: SELECT_SYSTEM_PROMPT,
+        messages: [
+          {
+            role: 'user',
+            content: `Certification exam: "${labelFor(request)}".\n\nSearch results catalog:\n${catalog}\n\nSelect the most relevant candidate pages and any reusable content sources, using only URLs from the catalog.`,
+          },
+        ],
+        schema: modelOutputSchema,
+      })
+      return {
+        candidateUrls: (object.candidates ?? []).map((candidate) => candidate.url),
+        suggested: object.suggestedContentSources ?? [],
+      }
+    } catch (error) {
+      if (!NoObjectGeneratedError.isInstance(error)) {
+        throw error
+      }
+      this.logger.warn(`cert discovery selection produced no object: error=${error.message}`)
+      return { candidateUrls: [], suggested: [] }
+    }
+  }
+
+  // A zero-candidate result is otherwise indistinguishable from success outside
+  // the API. The per-stage counts localize the cause: searchResults=0 (no
+  // search), selected=0 (model selected nothing), or grounded=0 (selected URLs
+  // absent from the pool). Logged at warn so it surfaces at the default level.
   private logOutcome(
     request: DiscoverSourcesRequest,
-    finalText: string,
     diagnostics: DiscoveryDiagnostics,
     candidateCount: number,
   ): void {
-    const label = request.code ? `${request.name} (${request.code})` : request.name
     const summary =
-      `cert discovery "${label}": searchResults=${diagnostics.searchResultCount} ` +
-      `parsedCandidates=${diagnostics.parsedCandidateCount} ` +
-      `grounded=${diagnostics.groundedCandidateCount} ` +
-      `candidates=${candidateCount} finalTextLen=${diagnostics.finalTextLength} ` +
-      `parseReason=${diagnostics.parseReason}`
+      `cert discovery "${labelFor(request)}": searchResults=${diagnostics.searchResultCount} ` +
+      `selected=${diagnostics.selectedCandidateCount} ` +
+      `grounded=${diagnostics.groundedCandidateCount} candidates=${candidateCount}`
 
     if (candidateCount === 0) {
-      this.logger.warn(
-        `${summary} — no candidates; finalText=${JSON.stringify(finalText.slice(0, 2000))}`,
-      )
+      this.logger.warn(`${summary} — no candidates`)
       return
     }
     this.logger.log(summary)
   }
 }
 
-function buildMessages(request: DiscoverSourcesRequest): ModelMessage[] {
-  const label = request.code ? `${request.name} (${request.code})` : request.name
-  return [
-    {
-      role: 'user',
-      content: `Find authoritative sources describing the certification exam "${label}". Search the web first, then return the most relevant pages you actually found.`,
-    },
-  ]
+function labelFor(request: DiscoverSourcesRequest): string {
+  return request.code ? `${request.name} (${request.code})` : request.name
 }
 
 function assembleResponse(
-  finalText: string,
+  selection: CandidateSelection,
   searchResults: CertSearchResult[],
 ): { response: DiscoverSourcesResponse; diagnostics: DiscoveryDiagnostics } {
   const grounded = new Map(searchResults.map((searchResult) => [searchResult.url, searchResult]))
   const vendorDomains = deriveVendorDomains(searchResults)
-  const parsed = parseModelOutput(finalText)
 
   const seen = new Set<string>()
   const groundedCandidates: DiscoveryCandidate[] = []
-  for (const url of parsed.candidateUrls) {
+  for (const url of selection.candidateUrls) {
     const match = grounded.get(url)
     if (match === undefined || seen.has(url)) {
       continue
@@ -142,7 +189,7 @@ function assembleResponse(
   }
 
   const candidates = rankDiscoveryCandidates(groundedCandidates, vendorDomains)
-  const suggestedContentSources = parsed.suggested.filter((source) => grounded.has(source.url))
+  const suggestedContentSources = selection.suggested.filter((source) => grounded.has(source.url))
 
   const response: DiscoverSourcesResponse =
     suggestedContentSources.length > 0 ? { candidates, suggestedContentSources } : { candidates }
@@ -151,10 +198,8 @@ function assembleResponse(
     response,
     diagnostics: {
       searchResultCount: searchResults.length,
-      parsedCandidateCount: parsed.candidateUrls.length,
+      selectedCandidateCount: selection.candidateUrls.length,
       groundedCandidateCount: groundedCandidates.length,
-      finalTextLength: finalText.length,
-      parseReason: parsed.reason,
     },
   }
 }
@@ -176,40 +221,6 @@ function deriveVendorDomains(searchResults: CertSearchResult[]): string[] {
 function hostOf(url: string): string | null {
   try {
     return new URL(url).host
-  } catch {
-    return null
-  }
-}
-
-function parseModelOutput(text: string): {
-  candidateUrls: string[]
-  suggested: SuggestedContentSource[]
-  reason: ParseReason
-} {
-  const json = extractJson(text)
-  if (json === null) {
-    return { candidateUrls: [], suggested: [], reason: 'no-json' }
-  }
-  const parsed = modelOutputSchema.safeParse(json)
-  if (!parsed.success) {
-    return { candidateUrls: [], suggested: [], reason: 'schema-invalid' }
-  }
-  return {
-    candidateUrls: (parsed.data.candidates ?? []).map((candidate) => candidate.url),
-    suggested: parsed.data.suggestedContentSources ?? [],
-    reason: 'ok',
-  }
-}
-
-function extractJson(text: string): unknown {
-  const unfenced = text.replace(/```(?:json)?/gi, '').trim()
-  const start = unfenced.indexOf('{')
-  const end = unfenced.lastIndexOf('}')
-  if (start === -1 || end === -1 || end < start) {
-    return null
-  }
-  try {
-    return JSON.parse(unfenced.slice(start, end + 1))
   } catch {
     return null
   }

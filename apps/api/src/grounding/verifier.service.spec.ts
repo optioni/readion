@@ -21,7 +21,7 @@ const ITEM: ExtractiveItem = {
   sourceChunkIds: ['chunk-1'],
 }
 
-const PASSING_VERDICT_JSON = JSON.stringify({
+const PASSING_VERDICT = {
   pass: true,
   score: 0.95,
   distractorFindings: [
@@ -29,29 +29,29 @@ const PASSING_VERDICT_JSON = JSON.stringify({
     { option: 'DNS', isCorrect: false, reason: 'Not an EC2 feature' },
     { option: 'Load balancing', isCorrect: false, reason: 'That is ELB, not EC2' },
   ],
-})
+}
 
-const FAILING_VERDICT_JSON = JSON.stringify({
+const FAILING_VERDICT = {
   pass: false,
   score: 0.2,
   distractorFindings: [
     { option: 'Object storage', isCorrect: true, reason: 'S3 is mentioned in this context' },
   ],
-})
+}
 
-const DISTRACTOR_CORRECT_JSON = JSON.stringify({
+const DISTRACTOR_CORRECT_VERDICT = {
   pass: false,
   score: 0.4,
   distractorFindings: [
     { option: 'Object storage', isCorrect: true, reason: 'Object storage is mentioned in source' },
     { option: 'DNS', isCorrect: false, reason: 'Not mentioned' },
   ],
-})
+}
 
-function makeLlmService(responseText: string): LlmService {
+function makeLlmService(verdict: unknown): LlmService {
   return {
-    generateText: vi.fn().mockResolvedValue({
-      text: responseText,
+    generateObject: vi.fn().mockResolvedValue({
+      object: verdict,
       usage: { inputTokens: 10, outputTokens: 50, totalTokens: 60 },
     }),
   } as unknown as LlmService
@@ -62,10 +62,10 @@ function makeCounter(): Counter {
 }
 
 function makeService(
-  responseText: string,
+  verdict: unknown,
   counter?: Counter,
 ): { svc: VerifierService; llm: LlmService; counter: Counter } {
-  const llm = makeLlmService(responseText)
+  const llm = makeLlmService(verdict)
   const c = counter ?? makeCounter()
   const svc = new VerifierService(llm, c)
   return { svc, llm, counter: c }
@@ -73,25 +73,25 @@ function makeService(
 
 describe('VerifierService', () => {
   it('issues a separate answer-verification task-type call through the gateway', async () => {
-    const { svc, llm } = makeService(PASSING_VERDICT_JSON)
+    const { svc, llm } = makeService(PASSING_VERDICT)
 
     await svc.verify(ITEM, [CHUNK])
 
-    expect(llm.generateText).toHaveBeenCalledWith(
+    expect(llm.generateObject).toHaveBeenCalledWith(
       expect.objectContaining({ taskType: 'answer-verification' }),
     )
   })
 
   it('does not reuse the generation call — issues its own separate call', async () => {
-    const { svc, llm } = makeService(PASSING_VERDICT_JSON)
+    const { svc, llm } = makeService(PASSING_VERDICT)
 
     await svc.verify(ITEM, [CHUNK])
 
-    expect(llm.generateText).toHaveBeenCalledTimes(1)
+    expect(llm.generateObject).toHaveBeenCalledTimes(1)
   })
 
   it('returns a pass verdict with score and per-distractor findings when the answer is entailed', async () => {
-    const { svc } = makeService(PASSING_VERDICT_JSON)
+    const { svc } = makeService(PASSING_VERDICT)
 
     const verdict = await svc.verify(ITEM, [CHUNK])
 
@@ -102,7 +102,7 @@ describe('VerifierService', () => {
   })
 
   it('returns a fail verdict when the answer is not entailed by the cited span', async () => {
-    const { svc } = makeService(FAILING_VERDICT_JSON)
+    const { svc } = makeService(FAILING_VERDICT)
 
     const verdict = await svc.verify(ITEM, [CHUNK])
 
@@ -111,7 +111,7 @@ describe('VerifierService', () => {
   })
 
   it('returns a fail verdict and identifies the offending distractor when it is actually correct', async () => {
-    const { svc } = makeService(DISTRACTOR_CORRECT_JSON)
+    const { svc } = makeService(DISTRACTOR_CORRECT_VERDICT)
 
     const verdict = await svc.verify(ITEM, [CHUNK])
 
@@ -122,7 +122,7 @@ describe('VerifierService', () => {
 
   it('increments the pass metric counter when the verdict is pass', async () => {
     const counter = makeCounter()
-    const { svc } = makeService(PASSING_VERDICT_JSON, counter)
+    const { svc } = makeService(PASSING_VERDICT, counter)
 
     await svc.verify(ITEM, [CHUNK])
 
@@ -131,7 +131,7 @@ describe('VerifierService', () => {
 
   it('increments the fail metric counter when the verdict is fail', async () => {
     const counter = makeCounter()
-    const { svc } = makeService(FAILING_VERDICT_JSON, counter)
+    const { svc } = makeService(FAILING_VERDICT, counter)
 
     await svc.verify(ITEM, [CHUNK])
 
