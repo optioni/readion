@@ -153,33 +153,75 @@ describe('CertCard title + readiness', () => {
 })
 
 describe('CertCard weak areas', () => {
-  it('renders up to three weak areas with status-coloured scores', () => {
+  it('renders up to three weak areas as status-coloured DomainBadge chips', () => {
     stubWeakAreas([
       weakArea({ domain: 'Billing', score: 48 }),
       weakArea({ domain: 'Security', score: 61 }),
       weakArea({ domain: 'Pricing', score: 88 }),
     ])
     const wrapper = mountCard()
-    const rows = wrapper.findAll('[data-testid="weak-area-row"]')
-    expect(rows).toHaveLength(3)
-    expect(rows[0]!.text()).toContain('Billing')
-    expect(rows[0]!.text()).toContain('48%')
-    expect(rows[0]!.find('[data-testid="weak-area-score"]').classes()).toContain(
-      'text-readion-status-poor',
+    const chips = wrapper.findAll('[data-testid="domain-badge"]')
+    expect(chips).toHaveLength(3)
+    expect(chips[0]!.text()).toContain('Billing')
+    expect(chips[0]!.text()).toContain('48%')
+    expect(chips[0]!.find('[data-testid="domain-badge-dot"]').classes()).toContain(
+      'bg-readion-status-poor',
     )
-    expect(rows[1]!.find('[data-testid="weak-area-score"]').classes()).toContain(
-      'text-readion-status-warning',
+    expect(chips[1]!.find('[data-testid="domain-badge-dot"]').classes()).toContain(
+      'bg-readion-status-warning',
     )
-    expect(rows[2]!.find('[data-testid="weak-area-score"]').classes()).toContain(
-      'text-readion-status-good',
+    expect(chips[2]!.find('[data-testid="domain-badge-dot"]').classes()).toContain(
+      'bg-readion-status-good',
     )
+  })
+
+  it('does not render weak areas as a bordered text list', () => {
+    stubWeakAreas([weakArea({ domain: 'Billing', score: 48 })])
+    const wrapper = mountCard()
+    expect(wrapper.find('[data-testid="weak-area-row"]').exists()).toBe(false)
   })
 
   it('shows a "No data yet" placeholder when there are no weak areas', () => {
     stubWeakAreas([])
     const wrapper = mountCard()
-    expect(wrapper.findAll('[data-testid="weak-area-row"]')).toHaveLength(0)
+    expect(wrapper.findAll('[data-testid="domain-badge"]')).toHaveLength(0)
     expect(wrapper.find('[data-testid="weak-areas-panel"]').text()).toContain('No data yet')
+  })
+})
+
+describe('CertCard hero heading hierarchy', () => {
+  it('renders the certification name as the primary heading with a NEEDS ATTENTION eyebrow on the hero card', () => {
+    const wrapper = mountCard('hero')
+    const heading = wrapper.find('h2')
+    expect(heading.exists()).toBe(true)
+    expect(heading.text()).toBe('AWS Cloud Practitioner')
+    expect(wrapper.text()).toContain('NEEDS ATTENTION')
+  })
+
+  it('does not render the readiness percentage as the card heading', () => {
+    const wrapper = mountCard('hero')
+    const heading = wrapper.find('h2')
+    expect(heading.text()).not.toContain('%')
+  })
+
+  it('does not show a NEEDS ATTENTION eyebrow on standard cards', () => {
+    const wrapper = mountCard('standard')
+    expect(wrapper.text()).not.toContain('NEEDS ATTENTION')
+    expect(wrapper.find('h2').text()).toBe('AWS Cloud Practitioner')
+  })
+})
+
+describe('CertCard action row placement', () => {
+  it('renders the Mock Exam and Start Session actions in the bottom row, after the weak-areas and recent-sessions panels', () => {
+    const wrapper = mountCard()
+    const html = wrapper.html()
+    const weakAreasIndex = html.indexOf('weak-areas-panel')
+    const recentSessionsIndex = html.indexOf('recent-sessions-panel')
+    const startBtnIndex = html.indexOf('start-session-btn')
+    const mockBtnIndex = html.indexOf('mock-exam-btn')
+    expect(startBtnIndex).toBeGreaterThan(weakAreasIndex)
+    expect(startBtnIndex).toBeGreaterThan(recentSessionsIndex)
+    expect(mockBtnIndex).toBeGreaterThan(recentSessionsIndex)
   })
 })
 
@@ -204,7 +246,7 @@ describe('CertCard recent sessions', () => {
     const wrapper = mountCard()
     const row = wrapper.find('[data-testid="recent-session-row"]')
     expect(row.text()).toContain('Storage')
-    expect(row.text()).toContain('2026-06-19')
+    expect(row.text()).toContain('Jun 19')
     expect(row.text()).not.toContain('%')
   })
 
