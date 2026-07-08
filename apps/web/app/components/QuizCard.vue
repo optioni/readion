@@ -3,6 +3,7 @@ import type { SessionItemResponse, SubmitAnswerResponse } from '@readion/shared'
 import { computed, ref } from 'vue'
 import ConfidenceRating from '~/components/ConfidenceRating.vue'
 import QuizOption, { type QuizOptionState } from '~/components/QuizOption.vue'
+import { displayNumber } from '~/composables/examQuestionPosition'
 import { parseSessionItemContent } from '~/composables/parseSessionItemContent'
 import { reportQuizQuestion, submitQuizAnswer } from '~/composables/sessionViewApi'
 
@@ -10,6 +11,7 @@ const props = defineProps<{
   sessionId: string
   userCertificationId: string
   item: SessionItemResponse
+  total?: number
 }>()
 
 const emit = defineEmits<{ advance: [index: number] }>()
@@ -96,6 +98,13 @@ function advance() {
           class="rounded-full border border-readion-accent-label/20 bg-readion-accent-label/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-readion-accent-label"
         >
           Question
+        </span>
+        <span
+          v-if="total !== undefined"
+          data-testid="quiz-position"
+          class="text-readion-text-muted text-xs"
+        >
+          Q {{ displayNumber(item.index) }} of {{ total }}
         </span>
       </div>
 

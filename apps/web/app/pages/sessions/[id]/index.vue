@@ -142,6 +142,7 @@ async function handleEnd() {
           :session-id="sessionId"
           :user-certification-id="session.userCertificationId"
           :item="currentItem"
+          :total="totalCount"
           @advance="handleAdvance"
         />
         <ReadingBlock
