@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import ToolCard from '~/components/agent/ToolCard.vue'
 import CitationChip from '~/components/CitationChip.vue'
 import MarkdownBlock from '~/components/MarkdownBlock.vue'
+import { resolveCitationLabel } from '~/composables/citationLabels'
 
 type ChunkCitation = { chunkId?: string; sourceUrl?: string; primaryDomain?: string }
 type ExplanationOutput = {
@@ -20,8 +21,8 @@ const correctAnswer = computed(() => data.value.correctOption?.toUpperCase() ?? 
 const citationLabels = computed(() =>
   (data.value.citations ?? []).map((citation) =>
     typeof citation === 'string'
-      ? citation
-      : citation.primaryDomain || citation.sourceUrl || citation.chunkId || 'Source',
+      ? resolveCitationLabel(citation)
+      : resolveCitationLabel(citation.primaryDomain, citation.sourceUrl),
   ),
 )
 </script>

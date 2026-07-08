@@ -3,6 +3,7 @@ import type { SessionItemResponse } from '@readion/shared'
 import { computed, ref } from 'vue'
 import CitationChip from '~/components/CitationChip.vue'
 import MarkdownBlock from '~/components/MarkdownBlock.vue'
+import { readingCitationLabels } from '~/composables/citationLabels'
 import { parseSessionItemContent } from '~/composables/parseSessionItemContent'
 import { goDeeperOnItem } from '~/composables/sessionViewApi'
 
@@ -19,10 +20,9 @@ const tldr = computed(() =>
   parsed.value.kind === 'reading' ? parsed.value.markdown : props.item.content,
 )
 
-const citations = computed(() => [
-  ...props.item.sourceChunkIds.map(() => 'Source'),
-  ...props.item.supportingSpans,
-])
+const citations = computed(() =>
+  readingCitationLabels(props.item.sourceChunkIds, props.item.supportingSpans),
+)
 
 const expandedContent = ref<string | null>(null)
 const isLoading = ref(false)
