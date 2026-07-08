@@ -21,8 +21,8 @@ describe('WeakAreasPanel', () => {
     })
     const badges = wrapper.findAll('[data-testid="domain-badge"]')
     expect(badges).toHaveLength(3)
-    expect(badges[0]!.text()).toContain('Billing')
-    expect(badges[0]!.text()).toContain('48%')
+    expect(badges[0]?.text()).toContain('Billing')
+    expect(badges[0]?.text()).toContain('48%')
   })
 
   it('does not render a bordered text list', () => {
@@ -39,9 +39,9 @@ describe('WeakAreasPanel', () => {
       },
     })
     const dots = wrapper.findAll('[data-testid="domain-badge-dot"]')
-    expect(dots[0]!.classes()).toContain('bg-readion-status-poor')
-    expect(dots[1]!.classes()).toContain('bg-readion-status-warning')
-    expect(dots[2]!.classes()).toContain('bg-readion-status-medium')
+    expect(dots[0]?.classes()).toContain('bg-readion-status-poor')
+    expect(dots[1]?.classes()).toContain('bg-readion-status-warning')
+    expect(dots[2]?.classes()).toContain('bg-readion-status-medium')
   })
 
   it('shows the "No data yet" placeholder when there are no weak areas', () => {

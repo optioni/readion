@@ -172,15 +172,15 @@ describe('CertCard weak areas', () => {
     const wrapper = mountCard('standard')
     const chips = wrapper.findAll('[data-testid="domain-badge"]')
     expect(chips).toHaveLength(3)
-    expect(chips[0]!.text()).toContain('Billing')
-    expect(chips[0]!.text()).toContain('48%')
-    expect(chips[0]!.find('[data-testid="domain-badge-dot"]').classes()).toContain(
+    expect(chips[0]?.text()).toContain('Billing')
+    expect(chips[0]?.text()).toContain('48%')
+    expect(chips[0]?.find('[data-testid="domain-badge-dot"]').classes()).toContain(
       'bg-readion-status-poor',
     )
-    expect(chips[1]!.find('[data-testid="domain-badge-dot"]').classes()).toContain(
+    expect(chips[1]?.find('[data-testid="domain-badge-dot"]').classes()).toContain(
       'bg-readion-status-warning',
     )
-    expect(chips[2]!.find('[data-testid="domain-badge-dot"]').classes()).toContain(
+    expect(chips[2]?.find('[data-testid="domain-badge-dot"]').classes()).toContain(
       'bg-readion-status-good',
     )
   })

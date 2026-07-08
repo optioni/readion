@@ -25,7 +25,7 @@ describe('RecentSessionsPanel', () => {
     expect(text).toContain('Jun 20')
     expect(text).toContain('Study · IAM')
     expect(text).toContain('80%')
-    expect(rows[0]!.find('[data-testid="recent-session-duration"]').text()).toContain('20m')
+    expect(rows[0]?.find('[data-testid="recent-session-duration"]').text()).toContain('20m')
   })
 
   it('renders the session duration for a row that has one', () => {
@@ -98,9 +98,9 @@ describe('RecentSessionsPanel', () => {
     )
 
     const rows = wrapper.findAll('[data-testid="recent-session-row"]')
-    expect(rows[0]!.find('[data-testid="delta-badge"]').exists()).toBe(true)
-    expect(rows[0]!.text()).toContain('5%')
-    expect(rows[1]!.find('[data-testid="delta-badge"]').exists()).toBe(false)
+    expect(rows[0]?.find('[data-testid="delta-badge"]').exists()).toBe(true)
+    expect(rows[0]?.text()).toContain('5%')
+    expect(rows[1]?.find('[data-testid="delta-badge"]').exists()).toBe(false)
   })
 
   it('omits the delta badge when there is no readiness delta', () => {

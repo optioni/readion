@@ -240,17 +240,17 @@ describe('OverviewTab domain breakdown', () => {
     const rows = mountTab([domain('Security'), domain('Storage')]).findAll(
       '[data-testid="domain-score-row"]',
     )
-    const securityDelta = rows[0]!.find('[data-testid="domain-delta"]')
-    expect(securityDelta.exists()).toBe(true)
-    expect(securityDelta.text()).toContain('↑7%')
-    expect(rows[1]!.find('[data-testid="domain-delta"]').exists()).toBe(false)
+    const securityDelta = rows[0]?.find('[data-testid="domain-delta"]')
+    expect(securityDelta?.exists()).toBe(true)
+    expect(securityDelta?.text()).toContain('↑7%')
+    expect(rows[1]?.find('[data-testid="domain-delta"]').exists()).toBe(false)
   })
 
   it('shows no delta badge for any domain when there is no latest summary', () => {
     stubWeakAreas([weakArea({ domain: 'Security', score: 48 })])
     stubSessions({ sessions: [], totalSessions: 0, nextFocusDomain: null, latestSummary: null })
     const rows = mountTab([domain('Security')]).findAll('[data-testid="domain-score-row"]')
-    expect(rows[0]!.find('[data-testid="domain-delta"]').exists()).toBe(false)
+    expect(rows[0]?.find('[data-testid="domain-delta"]').exists()).toBe(false)
   })
 })
 
