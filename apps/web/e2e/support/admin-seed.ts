@@ -3,9 +3,9 @@ import type { BrowserContext, Page, Route } from '@playwright/test'
 // Route-mock harness for the web-admin acceptance loop. Mirrors settings-seed.ts: per design.md Test
 // Boundaries this change is frontend-only and drives the REAL apps/web against a FULLY MOCKED HTTP API
 // (Playwright `route` fulfil) so the admin console (Users, Audit Log, Sources, Certifications setup +
-// re-verification, Review-queue placeholder) and the /admin role gate are exercised deterministically
-// without a running NestJS backend or Postgres. Every endpoint below is a future Orval method consumed
-// by the admin pages; the data shapes match the authoritative contract in design.md.
+// re-verification, Review queue) and the /admin role gate are exercised deterministically without a
+// running NestJS backend or Postgres. Every endpoint below is a real Orval-consumed method the admin
+// pages call; the data shapes match the authoritative contract in design.md.
 
 const WEB_ORIGIN = 'http://127.0.0.1:3000'
 
@@ -23,18 +23,18 @@ const CORS_HEADERS: Record<string, string> = {
 export const ADMIN_USER_ID = 'a0000000-0000-0000-0000-000000000001'
 // A plain user that the promote flow elevates to admin.
 export const PROMOTE_USER_ID = 'a0000000-0000-0000-0000-000000000002'
-export const OTHER_USER_ID = 'a0000000-0000-0000-0000-000000000003'
+const OTHER_USER_ID = 'a0000000-0000-0000-0000-000000000003'
 
 // A live certification whose sources are managed and which is due for re-verification.
 export const CERT_ID = 'c0000000-0000-0000-0000-000000000001'
 // The DRAFT created by the cert-setup wizard.
-export const NEW_CERT_ID = 'c0000000-0000-0000-0000-000000000002'
+const NEW_CERT_ID = 'c0000000-0000-0000-0000-000000000002'
 
 export const SOURCE_ENABLED_ID = 'd0000000-0000-0000-0000-000000000001'
-export const SOURCE_DISABLED_ID = 'd0000000-0000-0000-0000-000000000002'
+const SOURCE_DISABLED_ID = 'd0000000-0000-0000-0000-000000000002'
 
-export const EXTRACT_JOB_ID = 'e0000000-0000-0000-0000-000000000001'
-export const REINGEST_JOB_ID = 'e0000000-0000-0000-0000-000000000002'
+const EXTRACT_JOB_ID = 'e0000000-0000-0000-0000-000000000001'
+const REINGEST_JOB_ID = 'e0000000-0000-0000-0000-000000000002'
 
 // Pending quarantined items the Review queue lists and resolves.
 export const QUARANTINE_ITEM_A_ID = 'f0000000-0000-0000-0000-000000000001'
