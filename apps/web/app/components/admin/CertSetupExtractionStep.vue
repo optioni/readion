@@ -44,7 +44,7 @@ const extractionQuery = useQuery({
       await certSetupControllerReadExtraction(props.state.extractionJobId as string),
     ),
   enabled: computed(() => Boolean(props.state.extractionJobId) && props.state.step === 2),
-  refetchInterval: (query) => nextRefetchInterval(query.state.data),
+  refetchInterval: (query) => nextRefetchInterval(query.state.data, query.state.fetchFailureCount),
 })
 
 watch(

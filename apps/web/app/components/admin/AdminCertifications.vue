@@ -46,7 +46,7 @@ const extractionQuery = useQuery({
   queryFn: async () =>
     readExtractionStatusEnvelope(await certSetupControllerReadExtraction(jobId.value as string)),
   enabled: computed(() => Boolean(jobId.value)),
-  refetchInterval: (query) => nextRefetchInterval(query.state.data),
+  refetchInterval: (query) => nextRefetchInterval(query.state.data, query.state.fetchFailureCount),
 })
 
 watch(

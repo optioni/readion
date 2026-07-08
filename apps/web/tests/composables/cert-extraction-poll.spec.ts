@@ -37,6 +37,15 @@ describe('nextRefetchInterval', () => {
     expect(nextRefetchInterval(status('failed'))).toBe(false)
     expect(nextRefetchInterval(status('completed'))).toBe(false)
   })
+
+  it('keeps polling through a few transient failures', () => {
+    expect(nextRefetchInterval(undefined, 4)).toBe(POLL_MS)
+  })
+
+  it('stops polling after too many consecutive failures', () => {
+    expect(nextRefetchInterval(undefined, 5)).toBe(false)
+    expect(nextRefetchInterval(status('active'), 6)).toBe(false)
+  })
 })
 
 describe('isTerminalWithoutFields', () => {

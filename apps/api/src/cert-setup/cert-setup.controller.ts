@@ -9,6 +9,7 @@ import {
   Query,
 } from '@nestjs/common'
 import { ApiProperty, ApiPropertyOptional, ApiQuery, ApiResponse } from '@nestjs/swagger'
+import { SkipThrottle } from '@nestjs/throttler'
 import type {
   CertificationDomain,
   CertificationResponse,
@@ -183,6 +184,11 @@ export class CertSetupController {
     return { data: await this.service.enqueueExtraction(parse(extractRequestSchema, body)) }
   }
 
+  // Status polling must not consume the tight `agent` bucket (30/60s) — it is a
+  // cheap read the wizard hits every 1.5s while an extraction runs. Skipping the
+  // agent throttle leaves it under `general` (300/60s). Superseded once the
+  // wizard moves to SSE push (see the sse-extraction-events change).
+  @SkipThrottle({ agent: true })
   @Get('extractions/:jobId')
   @ApiResponse({ status: 200, type: ExtractionStatusDetailDto })
   @ApiResponse({ status: 404, description: 'Extraction job not found' })
