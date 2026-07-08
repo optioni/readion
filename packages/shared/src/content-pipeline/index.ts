@@ -62,6 +62,7 @@ export interface ContentSourceResponse {
   lastFetchedAt: string | null
   recheckIntervalMinutes: number
   createdAt: string
+  chunkCount: number
 }
 
 export interface EnqueuedJobResponse {

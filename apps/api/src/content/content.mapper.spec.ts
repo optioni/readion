@@ -19,7 +19,7 @@ function buildSource(overrides: Partial<ContentSource> = {}): ContentSource {
 describe('mapSourceToDto', () => {
   it('maps all exposed fields', () => {
     const source = buildSource()
-    const dto = mapSourceToDto(source)
+    const dto = mapSourceToDto(source, 0)
 
     expect(dto).toEqual({
       id: '11111111-1111-1111-1111-111111111111',
@@ -30,19 +30,25 @@ describe('mapSourceToDto', () => {
       lastFetchedAt: null,
       recheckIntervalMinutes: 10_080,
       createdAt: '2026-06-27T10:00:00.000Z',
+      chunkCount: 0,
     })
   })
 
   it('serializes lastFetchedAt to an ISO string when present', () => {
     const source = buildSource({ lastFetchedAt: new Date('2026-06-20T08:30:00.000Z') })
-    const dto = mapSourceToDto(source)
+    const dto = mapSourceToDto(source, 0)
 
     expect(dto.lastFetchedAt).toBe('2026-06-20T08:30:00.000Z')
   })
 
   it('maps a disabled source', () => {
-    const dto = mapSourceToDto(buildSource({ enabled: false }))
+    const dto = mapSourceToDto(buildSource({ enabled: false }), 0)
     expect(dto.enabled).toBe(false)
+  })
+
+  it('passes through a nonzero chunk count', () => {
+    const dto = mapSourceToDto(buildSource(), 42)
+    expect(dto.chunkCount).toBe(42)
   })
 })
 
