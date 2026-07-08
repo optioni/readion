@@ -78,7 +78,8 @@ watch(
 )
 
 const startedAt = computed(() => session.value?.startedAt ?? null)
-const { elapsed } = useElapsedTimer(startedAt)
+const endedAt = computed(() => (session.value?.endedAt ? String(session.value.endedAt) : null))
+const { elapsed } = useElapsedTimer(startedAt, endedAt)
 const { completedCount, totalCount } = useSessionProgress(items)
 
 async function handleAdvance(index: number) {
