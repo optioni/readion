@@ -13,7 +13,7 @@ export const CERT_SETUP_STEPS = [
 export const CERT_SETUP_STEP_COUNT = CERT_SETUP_STEPS.length
 
 export function certSetupStepLabel(step: CertSetupStep): string {
-  return CERT_SETUP_STEPS[step - 1]
+  return CERT_SETUP_STEPS[step - 1] ?? ''
 }
 
 export function certSetupStepProgress(step: CertSetupStep): number {
