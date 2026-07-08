@@ -78,6 +78,35 @@ describe('AgentToolResult dispatch', () => {
     expect(wrapper.find('[data-testid="citation-chip"]').text()).toContain('Security')
   })
 
+  it('renders the explanation card with human labels for object citations without a chunkId', () => {
+    const wrapper = mountResult('explainAnswer', {
+      tool: 'explainAnswer',
+      explanation: 'IAM policies scope access by principal.',
+      citations: [{ primaryDomain: 'IAM & Security' }, { sourceUrl: 'https://docs.example.com/x' }],
+    })
+
+    const chips = wrapper.findAll('[data-testid="citation-chip"]')
+    expect(chips).toHaveLength(2)
+    expect(chips[0]?.text()).toBe('IAM & Security')
+    expect(chips[0]?.text()).not.toMatch(/^c[a-z0-9-]*$/i)
+    expect(chips[1]?.text()).not.toBe('')
+  })
+
+  it('falls back safely when the explanation output has no explanation, correctOption, or citations', () => {
+    const wrapper = mountResult('explainAnswer', { tool: 'explainAnswer' })
+
+    expect(wrapper.find('[data-testid="tool-result-card"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="explanation-correct-answer"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="citation-chip"]').exists()).toBe(false)
+  })
+
+  it('renders the explanation card gracefully when the tool output itself is missing', () => {
+    const wrapper = mountResult('explainAnswer', undefined)
+
+    expect(wrapper.find('[data-testid="tool-result-card"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="explanation-correct-answer"]').exists()).toBe(false)
+  })
+
   it('renders the exam-strategy tip card', () => {
     const wrapper = mountResult('examStrategy', {
       tool: 'examStrategy',

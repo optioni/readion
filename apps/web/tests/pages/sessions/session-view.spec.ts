@@ -193,6 +193,36 @@ describe('Session view resume behaviour', () => {
     expect(quiz.exists()).toBe(true)
     expect(quiz.attributes('data-uc')).toBe('enr-1')
   })
+
+  it('resumes at the last item (clamped to lastItemIndex) when every item is already complete', async () => {
+    stubSession(
+      [readingItem(0, true), readingItem(1, true), readingItem(2, true)],
+      { lastItemIndex: 1 },
+    )
+    const wrapper = mountPage()
+    await flushPromises()
+
+    const content = wrapper.find('[data-testid="session-content"]')
+    expect(content.text()).toContain('reading 1')
+  })
+
+  it('falls back to a reading block for an unrecognized item type', async () => {
+    stubSession([{ ...readingItem(0), type: 'mystery' }])
+    const wrapper = mountPage()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="reading-stub"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="quiz-stub"]').exists()).toBe(false)
+  })
+
+  it('renders no active runner when the session has no items', async () => {
+    stubSession([], { items: undefined })
+    const wrapper = mountPage()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="reading-stub"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="quiz-stub"]').exists()).toBe(false)
+  })
 })
 
 describe('Session view progress and advancing', () => {
@@ -253,6 +283,14 @@ describe('Session view live timer', () => {
       vi.useRealTimers()
     }
   })
+
+  it('shows a zero elapsed timer when the session has not started yet', async () => {
+    stubSession([readingItem(0)], { startedAt: null })
+    const wrapper = mountPage()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="session-timer"]').text()).toBe('00:00')
+  })
 })
 
 describe('Session view ended session lifecycle', () => {
@@ -261,7 +299,7 @@ describe('Session view ended session lifecycle', () => {
     'partial',
     'abandoned',
   ])('does not render the active runner or End session control for a %s session', async (status) => {
-    stubSession([quizItem(0)], { status })
+    stubSession([quizItem(0)], { status, endedAt: '2026-06-29T00:45:00.000Z' })
     const wrapper = mountPage()
     await flushPromises()
 
