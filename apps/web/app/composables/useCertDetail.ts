@@ -38,6 +38,7 @@ export function useCertDetail(enrollmentId: string) {
   const code = computed(() => certificationQuery.data.value?.code ?? '')
   const domains = computed(() => certificationQuery.data.value?.domains ?? [])
   const questionCount = computed(() => certificationQuery.data.value?.questionCount ?? null)
+  const passingScore = computed(() => certificationQuery.data.value?.passingScore ?? null)
 
   const isLoading = computed(() => {
     if (enrollmentQuery.isLoading.value) {
@@ -57,6 +58,7 @@ export function useCertDetail(enrollmentId: string) {
     certificationId,
     domains,
     questionCount,
+    passingScore,
     isLoading,
     isError,
     notFound,
