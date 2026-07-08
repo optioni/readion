@@ -6,6 +6,8 @@ import AdminPagination from '~/components/admin/AdminPagination.vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import { emailInitials } from '~/composables/emailInitials'
 import { useAdminUsers } from '~/composables/useAdminUsers'
+import { deriveUserSummary } from '~/utils/deriveUserSummary'
+import { roleToggleAction } from '~/utils/roleToggleAction'
 import { adminControllerDemote, adminControllerPromote } from '~~/src/api/admin/admin'
 
 const jsonHeaders = { 'Content-Type': 'application/json' }
@@ -29,6 +31,18 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 
 function formatJoinDate(createdAt: string): string {
   return dateFormatter.format(new Date(createdAt))
+}
+
+const userSummary = computed(() => deriveUserSummary(users.value))
+const userSummaryLabel = computed(() => {
+  const { total, admins } = userSummary.value
+  const userNoun = total === 1 ? 'user' : 'users'
+  const adminNoun = admins === 1 ? 'admin' : 'admins'
+  return `${total} ${userNoun} · ${admins} ${adminNoun}`
+})
+
+function roleLabel(role: string): string {
+  return role.charAt(0).toUpperCase() + role.slice(1)
 }
 
 async function promote(id: string) {
@@ -65,13 +79,37 @@ async function demote(id: string) {
         {{ demoteError }}
       </p>
 
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <input
+          type="search"
+          data-testid="user-search"
+          placeholder="Search users…"
+          class="rounded-md border border-readion-background-surface bg-readion-background-overlay px-3 py-1.5 text-slate-100 text-sm placeholder:text-slate-500"
+        />
+        <div class="flex items-center gap-4">
+          <span data-testid="user-summary" class="text-slate-400 text-sm">
+            {{ userSummaryLabel }}
+          </span>
+          <button
+            type="button"
+            data-testid="user-invite-btn"
+            disabled
+            class="cursor-not-allowed rounded-md border border-readion-background-surface px-3 py-1.5 font-medium text-slate-500 text-xs"
+          >
+            Invite user
+          </button>
+        </div>
+      </div>
+
       <table class="w-full border-collapse text-left text-sm">
         <thead>
           <tr class="border-readion-background-surface border-b text-slate-400">
+            <th class="px-3 py-2 font-medium">Name</th>
             <th class="px-3 py-2 font-medium">User</th>
             <th class="px-3 py-2 font-medium">Role</th>
             <th class="px-3 py-2 font-medium">Joined</th>
-            <th class="px-3 py-2 font-medium">Enrollments</th>
+            <th class="px-3 py-2 font-medium">Last active</th>
+            <th class="px-3 py-2 font-medium">Certs</th>
             <th class="px-3 py-2 font-medium">Actions</th>
           </tr>
         </thead>
@@ -83,6 +121,7 @@ async function demote(id: string) {
             :data-user-id="user.id"
             class="border-readion-background-surface/60 border-b"
           >
+            <td data-testid="user-name" class="px-3 py-3 text-slate-300">—</td>
             <td class="px-3 py-3">
               <div class="flex items-center gap-3">
                 <span
@@ -104,18 +143,20 @@ async function demote(id: string) {
                     : 'bg-readion-background-overlay text-slate-300'
                 "
               >
-                {{ user.role }}
+                {{ roleLabel(user.role) }}
               </span>
             </td>
             <td data-testid="user-joined" class="px-3 py-3 text-slate-300">
               {{ formatJoinDate(user.createdAt) }}
             </td>
+            <td data-testid="user-last-active" class="px-3 py-3 text-slate-300">—</td>
             <td data-testid="user-enrollments" class="px-3 py-3 text-slate-300">
               {{ user.enrollmentCount }}
             </td>
             <td class="px-3 py-3">
               <div class="flex gap-2">
                 <button
+                  v-if="roleToggleAction(user.role) === 'promote'"
                   type="button"
                   data-testid="promote-user-btn"
                   class="rounded-md border border-readion-background-surface px-3 py-1.5 font-medium text-slate-100 text-xs transition-colors hover:bg-readion-background-surface"
@@ -124,12 +165,21 @@ async function demote(id: string) {
                   Promote
                 </button>
                 <button
+                  v-else
                   type="button"
                   data-testid="demote-user-btn"
                   class="rounded-md border border-readion-background-surface px-3 py-1.5 font-medium text-slate-100 text-xs transition-colors hover:bg-readion-background-surface"
                   @click="demote(user.id)"
                 >
                   Demote
+                </button>
+                <button
+                  type="button"
+                  data-testid="user-remove-btn"
+                  disabled
+                  class="cursor-not-allowed rounded-md border border-red-900/60 px-3 py-1.5 font-medium text-red-500/60 text-xs"
+                >
+                  Remove
                 </button>
               </div>
             </td>
