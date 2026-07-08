@@ -23,6 +23,14 @@ const dateFormatter = new Intl.DateTimeFormat('en-US', {
 function formatTimestamp(createdAt: string): string {
   return dateFormatter.format(new Date(createdAt))
 }
+
+function formatChange(
+  before: Record<string, unknown> | null,
+  after: Record<string, unknown> | null,
+): string {
+  const diff = formatAuditDiff(before, after)
+  return diff.before === '—' && diff.after === '—' ? '—' : `${diff.before} → ${diff.after}`
+}
 </script>
 
 <template>
@@ -41,8 +49,7 @@ function formatTimestamp(createdAt: string): string {
         <tr class="border-readion-background-surface border-b text-slate-400">
           <th class="px-3 py-2 font-medium">Action</th>
           <th class="px-3 py-2 font-medium">Target</th>
-          <th class="px-3 py-2 font-medium">Before</th>
-          <th class="px-3 py-2 font-medium">After</th>
+          <th class="px-3 py-2 font-medium">Change</th>
           <th class="px-3 py-2 font-medium">Actor</th>
           <th class="px-3 py-2 font-medium">When</th>
         </tr>
@@ -61,11 +68,8 @@ function formatTimestamp(createdAt: string): string {
           <td data-testid="audit-target" class="px-3 py-3 text-slate-300">
             {{ entry.targetLabel }}
           </td>
-          <td data-testid="audit-before" class="px-3 py-3 font-mono text-slate-400 text-xs">
-            {{ formatAuditDiff(entry.before, entry.after).before }}
-          </td>
-          <td data-testid="audit-after" class="px-3 py-3 font-mono text-slate-400 text-xs">
-            {{ formatAuditDiff(entry.before, entry.after).after }}
+          <td data-testid="audit-change" class="px-3 py-3 font-mono text-slate-400 text-xs">
+            {{ formatChange(entry.before, entry.after) }}
           </td>
           <td data-testid="audit-actor" class="px-3 py-3 text-slate-300">
             {{ entry.actorEmail ?? 'System' }}

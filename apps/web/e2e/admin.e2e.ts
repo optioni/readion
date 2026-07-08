@@ -59,8 +59,8 @@ import { gotoAuthenticated } from './support/session-view-seed'
 //                   user-email, user-role, promote-user-btn, demote-user-btn, demote-error;
 //                   user-search / user-invite / user-delete / user-last-active MUST be absent
 //   Audit Log     : admin-audit-log-page, audit-log-row, audit-actor (actorEmail / System
-//                   fallback, NOT a raw UUID), audit-target (targetLabel), audit-before /
-//                   audit-after (scalar diff, NOT JSON.stringify), audit-action;
+//                   fallback, NOT a raw UUID), audit-target (targetLabel), audit-change (scalar
+//                   `before → after` diff, NOT JSON.stringify), audit-action;
 //                   audit-export-btn / audit-edit-btn MUST be absent
 //   Sources       : admin-sources-page, source-row (data-source-id), source-status-pill,
 //                   register-source-url-input, register-source-type-select, register-source-submit,
@@ -161,11 +161,9 @@ test.describe('web-admin — admin console', () => {
     // Target renders the human label (the promoted user's email), not `targetType · uuid`.
     await expect(row.getByTestId('audit-target')).toContainText('casey@org.io')
     await expect(row.getByTestId('audit-target')).not.toContainText(PROMOTE_USER_ID)
-    // Before/After render a scalar diff, never raw JSON.stringify braces.
-    await expect(row.getByTestId('audit-before')).toContainText('user')
-    await expect(row.getByTestId('audit-after')).toContainText('admin')
-    await expect(row.getByTestId('audit-before')).not.toContainText('{')
-    await expect(row.getByTestId('audit-after')).not.toContainText('{')
+    // Change renders a scalar before → after diff, never raw JSON.stringify braces.
+    await expect(row.getByTestId('audit-change')).toContainText('user → admin')
+    await expect(row.getByTestId('audit-change')).not.toContainText('{')
     await expect(page.getByTestId('audit-export-btn')).toHaveCount(0)
     await expect(page.getByTestId('audit-edit-btn')).toHaveCount(0)
   })

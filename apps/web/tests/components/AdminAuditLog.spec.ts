@@ -81,15 +81,14 @@ describe('AdminAuditLog table render', () => {
     expect(wrapper.findAll('[data-testid="audit-log-row"]')).toHaveLength(2)
   })
 
-  it('renders action, target label, a scalar before/after diff, timestamp and actorEmail', () => {
+  it('renders action, target label, a scalar before → after diff, timestamp and actorEmail', () => {
     stubAuditLogs()
     const wrapper = mountAuditLog()
 
     const row = rowFor(wrapper, 'audit-1')
     expect(row.find('[data-testid="audit-action"]').text()).toContain('user.promote')
     expect(row.find('[data-testid="audit-target"]').text()).toBe('casey@org.io')
-    expect(row.find('[data-testid="audit-before"]').text()).toBe('user')
-    expect(row.find('[data-testid="audit-after"]').text()).toBe('admin')
+    expect(row.find('[data-testid="audit-change"]').text()).toBe('user → admin')
     expect(row.find('[data-testid="audit-timestamp"]').text().length).toBeGreaterThan(0)
     expect(row.find('[data-testid="audit-actor"]').text()).toBe('root@readion.io')
   })
@@ -104,8 +103,7 @@ describe('AdminAuditLog table render', () => {
     expect(actor.exists()).toBe(true)
     expect(actor.text()).not.toContain('@')
     expect(['System', '—']).toContain(actor.text())
-    expect(row.find('[data-testid="audit-before"]').text()).toBe('—')
-    expect(row.find('[data-testid="audit-after"]').text()).toBe('—')
+    expect(row.find('[data-testid="audit-change"]').text()).toBe('—')
     expect(row.find('[data-testid="audit-target"]').text()).toBe(
       'AWS Certified Solutions Architect — Associate',
     )
