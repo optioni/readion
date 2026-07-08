@@ -19,12 +19,10 @@ export function findLastStudiedAt(
   domain: string,
 ): string | null {
   const matches = sessions.filter((session) => focusAreaIncludesDomain(session.focusArea, domain))
-  if (matches.length === 0) {
-    return null
-  }
-  return matches.reduce(
-    (latest, session) => (session.startedAt > latest ? session.startedAt : latest),
-    matches[0]!.startedAt,
+  return matches.reduce<string | null>(
+    (latest, session) =>
+      latest === null || session.startedAt > latest ? session.startedAt : latest,
+    null,
   )
 }
 
