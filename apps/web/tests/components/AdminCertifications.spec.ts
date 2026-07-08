@@ -11,7 +11,10 @@ import {
   certSetupControllerReadExtraction,
   certSetupControllerReverify,
 } from '~~/src/api/cert-setup/cert-setup'
-import { certificationsControllerDetail } from '~~/src/api/certifications/certifications'
+import {
+  certificationsControllerDetail,
+  certificationsControllerList,
+} from '~~/src/api/certifications/certifications'
 
 vi.mock('~~/src/api/certifications/certifications')
 vi.mock('~~/src/api/cert-setup/cert-setup')
@@ -59,6 +62,31 @@ const CURRENT_CERT = {
   state: 'live',
 }
 
+const EXISTING_CERTS = [
+  {
+    id: CERT_ID,
+    name: 'AWS Certified Solutions Architect — Associate',
+    provider: 'AWS',
+    code: 'SAA-C03',
+    domains: [],
+    questionCount: 65,
+    passingScore: 72,
+    timeLimitMinutes: 130,
+    state: 'live',
+  },
+  {
+    id: 'c0000000-0000-0000-0000-000000000002',
+    name: 'Microsoft Certified: Azure Administrator Associate',
+    provider: 'Microsoft',
+    code: 'AZ-104',
+    domains: [],
+    questionCount: 60,
+    passingScore: 70,
+    timeLimitMinutes: 120,
+    state: 'live',
+  },
+]
+
 const DISCOVER_RESPONSE = {
   candidates: [
     { url: SOURCE_URL, title: 'AWS SAA', snippet: 'official guide' },
@@ -101,6 +129,12 @@ beforeEach(() => {
   dueLoading.value = false
   dueError.value = false
   vi.mocked(certificationsControllerDetail).mockResolvedValue(envelope(CURRENT_CERT))
+  vi.mocked(certificationsControllerList).mockResolvedValue({
+    data: { data: EXISTING_CERTS, meta: { total: EXISTING_CERTS.length, page: 1, limit: 20 } },
+    status: 200,
+    headers: new Headers(),
+    // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+  } as any)
   vi.mocked(certSetupControllerDiscoverSources).mockResolvedValue(envelope(DISCOVER_RESPONSE))
   vi.mocked(certSetupControllerExtract).mockResolvedValue(
     envelope({ jobId: 'extract-job-1', state: 'active' }),
@@ -308,6 +342,49 @@ describe('AdminCertifications reverify flow', () => {
     await wrapper.find('[data-testid="reverify-cancel-btn"]').trigger('click')
     await nextTick()
     expect(wrapper.find('[data-testid="reverify-diff"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+})
+
+describe('AdminCertifications existing certifications list', () => {
+  it('lists existing certifications alongside the due-for-reverification section', async () => {
+    const wrapper = mountComponent()
+    await flush()
+
+    expect(certificationsControllerList).toHaveBeenCalled()
+
+    const rows = wrapper.findAll('[data-testid="existing-cert-row"]')
+    expect(rows).toHaveLength(2)
+
+    const firstRow = wrapper.find(
+      `[data-testid="existing-cert-row"][data-cert-id="${EXISTING_CERTS[0]?.id}"]`,
+    )
+    expect(firstRow.exists()).toBe(true)
+    expect(firstRow.text()).toContain(EXISTING_CERTS[0]?.name)
+    expect(firstRow.text()).toContain(EXISTING_CERTS[0]?.code)
+
+    const link = firstRow.find('[data-testid="existing-cert-link"]')
+    expect(link.exists()).toBe(true)
+    expect(JSON.stringify(link.props('to'))).toContain(EXISTING_CERTS[0]?.id)
+
+    expect(wrapper.find('[data-testid="due-reverification-row"]').exists()).toBe(true)
+
+    wrapper.unmount()
+  })
+
+  it('shows an empty state when there are no existing certifications', async () => {
+    vi.mocked(certificationsControllerList).mockResolvedValue({
+      data: { data: [], meta: { total: 0, page: 1, limit: 20 } },
+      status: 200,
+      headers: new Headers(),
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+    } as any)
+    const wrapper = mountComponent()
+    await flush()
+
+    expect(wrapper.find('[data-testid="existing-certs-empty"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="existing-cert-row"]').exists()).toBe(false)
+
     wrapper.unmount()
   })
 })
