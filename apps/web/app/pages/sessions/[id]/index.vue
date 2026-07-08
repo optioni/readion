@@ -8,6 +8,7 @@ import ReadingBlock from '~/components/ReadingBlock.vue'
 import SessionHeader from '~/components/SessionHeader.vue'
 import SessionLayout from '~/components/SessionLayout.vue'
 import { sessionSummaryPath } from '~/composables/runnerRoutes'
+import { isEndedSessionStatus, toSessionStatus } from '~/composables/sessionLifecycle'
 import { completeSessionItem, endSession, fetchSessionDetail } from '~/composables/sessionViewApi'
 import { sessionViewQueryKeys } from '~/composables/sessionViewQueryKeys'
 import { useElapsedTimer } from '~/composables/useElapsedTimer'
@@ -62,6 +63,20 @@ const currentItem = computed<SessionItemResponse | null>(
   () => items.value[currentPos.value] ?? null,
 )
 
+const isEnded = computed(() =>
+  session.value ? isEndedSessionStatus(toSessionStatus(session.value.status)) : false,
+)
+
+watch(
+  isEnded,
+  (ended) => {
+    if (ended) {
+      navigateTo(sessionSummaryPath(sessionId.value))
+    }
+  },
+  { immediate: true },
+)
+
 const startedAt = computed(() => session.value?.startedAt ?? null)
 const { elapsed } = useElapsedTimer(startedAt)
 const { completedCount, totalCount } = useSessionProgress(items)
@@ -99,6 +114,14 @@ async function handleEnd() {
       class="flex flex-1 items-center justify-center text-readion-status-warning text-sm"
     >
       This session could not be loaded.
+    </div>
+
+    <div
+      v-else-if="isEnded"
+      data-testid="session-view-ended"
+      class="flex flex-1 items-center justify-center text-readion-text-muted text-sm"
+    >
+      Redirecting to the session summary…
     </div>
 
     <SessionLayout v-else>
