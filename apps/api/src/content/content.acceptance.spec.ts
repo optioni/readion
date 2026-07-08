@@ -36,6 +36,7 @@ describe('content admin acceptance', () => {
       url: 'https://example.com/material',
       enabled: true,
       recheckIntervalMinutes: 10080,
+      chunkCount: 0,
     })
     expect(create.body.relationships).toBeDefined()
     const sourceId = create.body.data.id as string

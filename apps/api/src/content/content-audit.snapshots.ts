@@ -9,7 +9,7 @@ export interface AuditSnapshotPair {
 }
 
 export function sourceAddedSnapshot(source: ContentSource): AuditSnapshot {
-  const dto = mapSourceToDto(source)
+  const dto = mapSourceToDto(source, 0)
   return {
     id: dto.id,
     certificationId: dto.certificationId,

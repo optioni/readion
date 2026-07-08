@@ -92,7 +92,7 @@ export class ContentSourceService {
       after: sourceAddedSnapshot(source),
     })
 
-    return mapSourceToDto(source)
+    return mapSourceToDto(source, 0)
   }
 
   async list(query: ListContentSourcesQuery): Promise<CollectionResult<ContentSourceResponse>> {
@@ -103,7 +103,12 @@ export class ContentSourceService {
       limit,
     })
 
-    return { items: items.map(mapSourceToDto), meta: { total, page, limit } }
+    const counts = await this.countChunksBySource(items.map((item) => item.id))
+
+    return {
+      items: items.map((item) => mapSourceToDto(item, counts.get(item.id) ?? 0)),
+      meta: { total, page, limit },
+    }
   }
 
   async findOne(id: string): Promise<ContentSourceResponse> {
@@ -111,7 +116,8 @@ export class ContentSourceService {
     if (source === null) {
       throw new NotFoundException('Content source not found')
     }
-    return mapSourceToDto(source)
+    const counts = await this.countChunksBySource([source.id])
+    return mapSourceToDto(source, counts.get(source.id) ?? 0)
   }
 
   async setEnabled(
@@ -125,7 +131,8 @@ export class ContentSourceService {
     }
 
     if (source.enabled === enabled) {
-      return mapSourceToDto(source)
+      const counts = await this.countChunksBySource([source.id])
+      return mapSourceToDto(source, counts.get(source.id) ?? 0)
     }
 
     const updated = await this.repo.setEnabled(id, enabled)
@@ -143,7 +150,8 @@ export class ContentSourceService {
       after,
     })
 
-    return mapSourceToDto(updated)
+    const counts = await this.countChunksBySource([updated.id])
+    return mapSourceToDto(updated, counts.get(updated.id) ?? 0)
   }
 
   async reingest(actorUserId: string, id: string): Promise<EnqueuedJobResponse> {
@@ -216,6 +224,29 @@ export class ContentSourceService {
       throw new NotFoundException(`No ingestion queue registered for source type: ${type}`)
     }
     return queue
+  }
+
+  private async countChunksBySource(sourceIds: string[]): Promise<Map<string, number>> {
+    const counts = new Map<string, number>()
+
+    if (sourceIds.length === 0) {
+      return counts
+    }
+
+    const placeholders = sourceIds.map(() => '?').join(', ')
+    const rows = await this.em.getConnection().execute<{ content_source_id: string; count: number }[]>(
+      `SELECT content_source_id, count(*)::int AS count
+         FROM content_chunks
+         WHERE content_source_id IN (${placeholders})
+         GROUP BY content_source_id`,
+      sourceIds,
+    )
+
+    for (const row of rows) {
+      counts.set(row.content_source_id, row.count)
+    }
+
+    return counts
   }
 }
 

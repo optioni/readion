@@ -62,6 +62,8 @@ class ContentSourceResponseDto {
   recheckIntervalMinutes!: number
   @ApiProperty()
   createdAt!: string
+  @ApiProperty()
+  chunkCount!: number
 }
 
 class ContentSourceDetailDto {

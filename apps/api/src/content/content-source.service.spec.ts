@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing'
 import {
   AuditLog,
   Certification,
+  ContentChunk,
   ContentSource,
   DbModule,
   startPostgresContainer,
@@ -97,6 +98,26 @@ describe('ContentSourceService', () => {
     return em.fork().find(AuditLog, { targetId }, { orderBy: { createdAt: 'ASC' } })
   }
 
+  async function seedChunks(
+    contentSourceId: string,
+    certificationId: string,
+    count: number,
+  ): Promise<void> {
+    const fork = em.fork()
+    for (let i = 0; i < count; i++) {
+      const chunk = fork.create(ContentChunk, {
+        contentSourceId,
+        certificationId,
+        text: `seeded chunk ${i}`,
+        contentHash: `${contentSourceId}-${i}`.padEnd(64, '0').slice(0, 64),
+        domainTags: [],
+        primaryDomain: 'Cloud Concepts',
+      })
+      fork.persist(chunk)
+    }
+    await fork.flush()
+  }
+
   describe('register', () => {
     it('throws NotFoundException when the certification does not exist', async () => {
       await expect(
@@ -154,6 +175,28 @@ describe('ContentSourceService', () => {
       const result = await service.list({ limit: 9999 })
       expect(result.meta.limit).toBe(100)
     })
+
+    it('returns an accurate chunkCount per source via a batched count, not per-row N+1', async () => {
+      const cert = await seedCert()
+      const withChunks = await service.register(ADMIN_ID, {
+        certificationId: cert.id,
+        type: 'web',
+        url: 'https://docs.aws.amazon.com/with-chunks',
+      })
+      const withoutChunks = await service.register(ADMIN_ID, {
+        certificationId: cert.id,
+        type: 'web',
+        url: 'https://docs.aws.amazon.com/without-chunks',
+      })
+      await seedChunks(withChunks.id, cert.id, 3)
+
+      const result = await service.list({ certificationId: cert.id })
+
+      const foundWithChunks = result.items.find((item) => item.id === withChunks.id)
+      const foundWithoutChunks = result.items.find((item) => item.id === withoutChunks.id)
+      expect(foundWithChunks?.chunkCount).toBe(3)
+      expect(foundWithoutChunks?.chunkCount).toBe(0)
+    })
   })
 
   describe('findOne', () => {
@@ -171,6 +214,19 @@ describe('ContentSourceService', () => {
 
     it('throws NotFoundException for an unknown id', async () => {
       await expect(service.findOne(UNKNOWN_ID)).rejects.toThrow(NotFoundException)
+    })
+
+    it('returns an accurate chunkCount for the source', async () => {
+      const cert = await seedCert()
+      const created = await service.register(ADMIN_ID, {
+        certificationId: cert.id,
+        type: 'web',
+        url: 'https://docs.aws.amazon.com/',
+      })
+      await seedChunks(created.id, cert.id, 5)
+
+      const dto = await service.findOne(created.id)
+      expect(dto.chunkCount).toBe(5)
     })
   })
 
