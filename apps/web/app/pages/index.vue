@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import AddCertificationModal from '~/components/AddCertificationModal.vue'
 import CertCard from '~/components/CertCard.vue'
 import DiagnosticRePromptNudge from '~/components/DiagnosticRePromptNudge.vue'
+import PageHeader from '~/components/PageHeader.vue'
 import { selectHeroAndOrder } from '~/composables/dashboardOrdering'
 import { useEnrollments } from '~/composables/useEnrollments'
 
@@ -19,11 +20,7 @@ function openAddCert() {
 
 <template>
   <section class="mx-auto max-w-[720px]">
-    <p
-      class="mb-5 font-medium text-[11px] text-slate-400 uppercase tracking-wider"
-    >
-      My certifications
-    </p>
+    <PageHeader eyebrow="DASHBOARD" title="Your certifications" :active-count="cards.length" />
 
     <div
       v-if="isLoading"
@@ -75,7 +72,12 @@ function openAddCert() {
           <span
             class="flex h-8 w-8 items-center justify-center rounded-md bg-readion-background-surface text-lg leading-none"
           >+</span>
-          <span class="font-medium text-sm">Add certification</span>
+          <span>
+            <span class="block font-medium text-sm">Add certification</span>
+            <span class="mt-0.5 block text-[11px] text-slate-500"
+              >Track another exam alongside this one</span
+            >
+          </span>
         </button>
       </div>
 
