@@ -47,10 +47,10 @@
 
 ## 6. Progress — persist mastering with the design treatment (`web-progress`)
 
-- [ ] 6.1 RED: component/integration test asserting "Mark mastered" calls `enrollmentReviewControllerSuppressDomain`, invalidates the affected queries, and the retired state persists across a reload (not a local-only ref)
-- [ ] 6.2 RED: component test asserting a mastered domain renders under a "Mastered" divider group with strikethrough name, dimmed bar, and a "Mastered" pill, and that NO functional "Unretire" control is offered (one-way contract)
-- [ ] 6.3 GREEN: wire mastering to the suppress-domain endpoint + derive the mastered state from fetched data; add the visual treatment; omit Unretire
-- [ ] 6.4 REFACTOR: remove the dead local `mastered` ref; confirm `useDomainScores` reflects the persisted state
+- [x] 6.1 RED: component/integration test asserting "Mark mastered" calls `enrollmentReviewControllerSuppressDomain`, invalidates the affected queries, and the retired state persists across a reload (not a local-only ref)
+- [x] 6.2 RED: component test asserting a mastered domain renders under a "Mastered" divider group with strikethrough name, dimmed bar, and a "Mastered" pill, and that NO functional "Unretire" control is offered (one-way contract)
+- [x] 6.3 GREEN: wire mastering to the suppress-domain endpoint + derive the mastered state from fetched data; add the visual treatment; omit Unretire
+- [x] 6.4 REFACTOR: remove the dead local `mastered` ref; confirm `useDomainScores` reflects the persisted state
 
 ## 7. Acceptance Test — Outer Loop GREEN
 
