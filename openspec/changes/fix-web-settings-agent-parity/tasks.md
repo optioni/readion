@@ -19,10 +19,10 @@
 
 ## 3. Settings — FieldRow layout, section framing, pill shape (`web-settings`)
 
-- [ ] 3.1 RED: component test asserting fields use the two-column FieldRow (fixed label column + optional hint, control on the right), a "Session preferences" section title and intro copy render, and the duration field shows the "Default duration per session" hint
-- [ ] 3.2 RED: component test asserting pill chips are fully rounded with a solid-primary selected state (not `rounded-lg` bordered buttons), and that the Focus area field is still present (five fields)
-- [ ] 3.3 GREEN: implement the FieldRow layout, section title/intro/hint, and pill styling
-- [ ] 3.4 REFACTOR: reconcile spacing against `openspec/design/Settings.html`
+- [x] 3.1 RED: component test asserting fields use the two-column FieldRow (fixed label column + optional hint, control on the right), a "Session preferences" section title and intro copy render, and the duration field shows the "Default duration per session" hint
+- [x] 3.2 RED: component test asserting pill chips are fully rounded with a solid-primary selected state (not `rounded-lg` bordered buttons), and that the Focus area field is still present (five fields)
+- [x] 3.3 GREEN: implement the FieldRow layout, section title/intro/hint, and pill styling
+- [x] 3.4 REFACTOR: reconcile spacing against `openspec/design/Settings.html`
 
 ## 4. Agent chat — full-height shell + composer (`web-agent-chat`)
 
