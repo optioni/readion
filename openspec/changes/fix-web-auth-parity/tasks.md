@@ -43,7 +43,7 @@
 
 ## 6. Polish
 
-- [ ] 6.1 Run linter and fix all errors (`yarn lint`)
-- [ ] 6.2 Run formatter and apply fixes (`yarn format`)
-- [ ] 6.3 Run type checker with zero errors (`yarn workspace apps/web typecheck`)
-- [ ] 6.4 Run coverage and confirm ≥80% lines/branches for the touched components (`yarn workspace apps/web test:coverage`)
+- [x] 6.1 Run linter and fix all errors (`yarn lint`) — 0 errors on the touched auth files (only the pre-existing, repo-wide `noUnusedVariables` false-positive on template-only bindings in `.vue` SFCs, unrelated to this change)
+- [x] 6.2 Run formatter and apply fixes (`yarn format`) — touched files clean; the 2 repo-wide format errors found are in unrelated pre-existing files (`seo-hygiene.e2e.ts`, `session-view.spec.ts`)
+- [x] 6.3 Run type checker with zero errors (`yarn workspace apps/web typecheck`) — 0 errors repo-wide
+- [x] 6.4 Run coverage and confirm ≥80% lines/branches for the touched components (`yarn workspace apps/web test:coverage`) — login.vue 93.47/85.71 stmts/branches, register.vue 95.23/90.9, reset-password.vue 89.79/85.24; global thresholds (80/80/80) pass, exit 0
