@@ -5,11 +5,11 @@
 
 ## 1. Vendor-grouped cert list (`web-onboarding`)
 
-- [ ] 1.1 RED: component test asserting `OnboardingCertSelect` groups the loaded catalog by `provider` under uppercase vendor headers, each row showing the cert name + a code badge (provider not repeated inline)
-- [ ] 1.2 RED: component test asserting client-side search still filters by name/provider/code and that groups with no matching rows are hidden; clearing the query restores all groups
-- [ ] 1.3 RED: component test asserting single-select + Continue-disabled-until-chosen behavior is preserved across groups
-- [ ] 1.4 GREEN: derive a grouped view of `filteredOptions` by `provider`; render group headers + name/code rows
-- [ ] 1.5 REFACTOR: keep selection state keyed by `certificationId`; ensure group ordering is stable
+- [x] 1.1 RED: component test asserting `OnboardingCertSelect` groups the loaded catalog by `provider` under uppercase vendor headers, each row showing the cert name + a code badge (provider not repeated inline)
+- [x] 1.2 RED: component test asserting client-side search still filters by name/provider/code and that groups with no matching rows are hidden; clearing the query restores all groups
+- [x] 1.3 RED: component test asserting single-select + Continue-disabled-until-chosen behavior is preserved across groups
+- [x] 1.4 GREEN: derive a grouped view of `filteredOptions` by `provider`; render group headers + name/code rows
+- [x] 1.5 REFACTOR: keep selection state keyed by `certificationId`; ensure group ordering is stable
 
 ## 2. Search box count suffix + leading icon (`web-onboarding`)
 
