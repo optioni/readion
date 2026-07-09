@@ -351,6 +351,10 @@ function installAuthMocks(page: Page): void {
 }
 
 function installProgressMocks(page: Page, readiness: ReadinessDetailResponseDto): void {
+  // Domains suppressed via "Mark mastered" during this test — read back by the GET /review
+  // handler below so a reload re-derives the mastered state from a fresh fetch (see task 6.1).
+  const suppressedDomains: string[] = []
+
   // Enrollment list for the cert-switcher. Registered before the detail patterns so Playwright's
   // LIFO route ordering tries the more-specific detail patterns first.
   mock(page, /\/api\/v1\/user-certifications(\?|$)/, async (route) => {
@@ -431,11 +435,29 @@ function installProgressMocks(page: Page, readiness: ReadinessDetailResponseDto)
     },
   )
 
+  // Review queue: stateful across the test — starts empty, and the suppress-domain handler below
+  // pushes into `suppressedDomains` so a page reload re-fetches the mastered state from "the
+  // backend" instead of relying on any in-memory Vue ref (task 6.1's cross-reload persistence).
+  mock(
+    page,
+    new RegExp(`/api/v1/user-certifications/${enrollmentId}/review(\\?|$)`),
+    async (route) => {
+      await fulfilJson(route, 200, {
+        items: [],
+        meta: { dueCount: 0, total: 0, suppressedDomains: [...suppressedDomains] },
+      })
+    },
+  )
+
   // Suppress-domain mutation: one-way mark-as-mastered for a domain.
   mock(
     page,
     new RegExp(`/api/v1/user-certifications/${enrollmentId}/review/suppress-domain$`),
     async (route) => {
+      const body = route.request().postDataJSON() as { domain: string }
+      if (!suppressedDomains.includes(body.domain)) {
+        suppressedDomains.push(body.domain)
+      }
       await fulfilJson(route, 200, { data: { suppressedCount: 5 } })
     },
   )
