@@ -13,6 +13,7 @@
 - [ ] 1.4 RED: component test asserting the review button shows the play icon and buttons read "Mock exam" / "5-min review" (sentence case)
 - [ ] 1.5 GREEN: implement the ReadinessBar, code pill, flat sections, multi-column sessions, button icon/copy
 - [ ] 1.6 REFACTOR: token the bar/divider colors per `openspec/design/Dashboard.html`; keep the reviews-due hide-when-zero behavior intact (do NOT always-render)
+- [ ] 1.7 RED→green guard: assert the diagnostic re-prompt nudge remains mounted on the dashboard (shown/hidden by its own query) — reaffirmed as a conditional feature, not removed by the widening/flattening work
 
 ## 2. Dashboard — standard content width (`web-dashboard`)
 
