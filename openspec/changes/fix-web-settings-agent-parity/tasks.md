@@ -26,10 +26,10 @@
 
 ## 4. Agent chat — full-height shell + composer (`web-agent-chat`)
 
-- [ ] 4.1 RED: component/e2e test asserting `agent.vue` uses the minimal/full-height layout — header pinned top, only the message region scrolls, composer pinned to the bottom, thread centered at the ~760px width
-- [ ] 4.2 RED: component test asserting the Send button is disabled/greyed while the textarea is empty and active once it has text; the placeholder uses the ellipsis character; the TTL pill shows a clock icon and the New-chat button a refresh icon
-- [ ] 4.3 GREEN: add `definePageMeta({ layout })`, the full-height flex column, pinned composer, conditional send state, and the icons/placeholder
-- [ ] 4.4 REFACTOR: share the full-height layout treatment with the other minimal-layout scenes where sensible
+- [x] 4.1 RED: component/e2e test asserting `agent.vue` uses the minimal/full-height layout — header pinned top, only the message region scrolls, composer pinned to the bottom, thread centered at the ~760px width
+- [x] 4.2 RED: component test asserting the Send button is disabled/greyed while the textarea is empty and active once it has text; the placeholder uses the ellipsis character; the TTL pill shows a clock icon and the New-chat button a refresh icon
+- [x] 4.3 GREEN: add `definePageMeta({ layout })`, the full-height flex column, pinned composer, conditional send state, and the icons/placeholder
+- [x] 4.4 REFACTOR: share the full-height layout treatment with the other minimal-layout scenes where sensible
 
 ## 5. Agent chat — bubble roles, avatar, cursor, paragraphs (`web-agent-chat`)
 
