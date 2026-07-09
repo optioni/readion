@@ -21,9 +21,9 @@
 
 ## 3. Reaffirm deliberate divergences — guard tests (`web-auth`)
 
-- [ ] 3.1 RED→green: assert `/login` and `/register` render NO SSO control and NO `or` divider (guards the deliberate omission against re-introduction)
-- [ ] 3.2 assert `/register` renders NO "Full name" field (guards the deliberate omission — the `User` entity has no name attribute)
-- [ ] 3.3 assert registration still auto-signs-in: the post-register destination is the app home, not a "verify your email" wall (guards against accidentally adding the verify-before-access gate)
+- [x] 3.1 RED→green: assert `/login` and `/register` render NO SSO control and NO `or` divider (guards the deliberate omission against re-introduction)
+- [x] 3.2 assert `/register` renders NO "Full name" field (guards the deliberate omission — the `User` entity has no name attribute)
+- [x] 3.3 assert registration still auto-signs-in: the post-register destination is the app home, not a "verify your email" wall (guards against accidentally adding the verify-before-access gate)
 
 ## 4. Acceptance Test — Outer Loop GREEN
 

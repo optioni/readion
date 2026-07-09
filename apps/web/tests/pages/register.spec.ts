@@ -142,4 +142,54 @@ describe('/register page', () => {
 
     expect(wrapper.html()).toContain('email already registered')
   })
+
+  it('keeps SSO and the "or" divider omitted (preserved divergence)', () => {
+    const wrapper = mountRegister()
+    const html = wrapper.html()
+
+    expect(html).not.toMatch(/sso/i)
+    expect(wrapper.findAll('button').some((b) => /sso/i.test(b.text()))).toBe(false)
+    expect(wrapper.findAll('*').some((el) => el.text().trim().toLowerCase() === 'or')).toBe(false)
+  })
+
+  it('renders no "Full name" field (the User entity has no name attribute)', () => {
+    const wrapper = mountRegister()
+
+    expect(wrapper.html()).not.toMatch(/full name/i)
+    expect(wrapper.find('input[name="name"]').exists()).toBe(false)
+    expect(wrapper.findAll('label').some((l) => /full name/i.test(l.text()))).toBe(false)
+  })
+
+  it('auto-signs-in and routes to the app home, not a verify-your-email wall', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: { accessToken: 'tok' } }), { status: 201 }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              id: '1',
+              email: 'a@b.com',
+              emailVerified: false,
+              displayTimezone: 'UTC',
+              createdAt: '',
+            },
+          }),
+          { status: 200 },
+        ),
+      )
+
+    const auth = useAuthStore()
+    const wrapper = mountRegister()
+
+    await wrapper.find('input[type="email"]').setValue('a@b.com')
+    await wrapper.find('input[type="password"]').setValue('validpass1')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(auth.isAuthenticated).toBe(true)
+    expect(mockRouterPush).toHaveBeenCalledWith('/')
+    expect(mockRouterPush).not.toHaveBeenCalledWith(expect.stringMatching(/verify-email/))
+  })
 })
