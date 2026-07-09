@@ -33,8 +33,13 @@
 
 ## 5. Change Review — Subagent Verification
 
-- [ ] 5.1 Dispatch a reviewer subagent against `proposal.md`, the `web-auth` spec delta, and the diff plus this task list (reviewer reports findings only, does not edit code)
-- [ ] 5.2 Triage: fix every CRITICAL, resolve or consciously accept each WARNING (one-line reason each), note SUGGESTIONs; re-run affected tests
+- [x] 5.1 Dispatch a reviewer subagent against `proposal.md`, the `web-auth` spec delta, and the diff plus this task list (reviewer reports findings only, does not edit code)
+- [x] 5.2 Triage: fix every CRITICAL, resolve or consciously accept each WARNING (one-line reason each), note SUGGESTIONs; re-run affected tests
+
+  Reviewer findings: no CRITICAL, no WARNING. Three SUGGESTIONs, all accepted as-is (no code change):
+  1. Success-check indicator on the confirm field is driven by `passwordsMatch` alone (not gated on the ≥8-char strength rule too) — accepted: it reads as a pure "match" indicator, the strength meter communicates weakness separately, and actual submit gating (`canSubmit`) is correct regardless.
+  2. The danger-token border also appears on non-401 failures (e.g. network error), not just 401 — accepted: both fields are always styled identically regardless of cause, so the non-enumeration guarantee holds; broader-than-401 is benign/arguably better UX.
+  3. Banner copy is "Incorrect email or password." vs. spec/tasks' "invalid email or password" — accepted: pre-existing wording (not touched by this change), semantically a single uniform non-revealing message, and tests already assert the actual copy consistently.
 
 ## 6. Polish
 
