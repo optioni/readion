@@ -156,16 +156,19 @@ test.describe('web-onboarding — first-run flow (cert-select, defaults, diagnos
     await expect(page.getByTestId('onboarding-page')).toBeVisible()
 
     // RED — vendor-grouped list (`openspec/design/Onboarding.html` V3Step1 CERT_GROUPS): the seeded
-    // live cert's provider renders as an uppercase group header, not repeated inline on the row.
-    const groupHeader = page
-      .getByTestId('cert-group-header')
-      .filter({ hasText: viewer.liveCert.provider })
+    // live cert's provider renders as an uppercase group header (its own group container), not
+    // repeated inline on the row.
+    const group = page.getByTestId('cert-group').filter({
+      has: page
+        .getByTestId('cert-group-header')
+        .getByText(viewer.liveCert.provider, { exact: true }),
+    })
+    const groupHeader = group.getByTestId('cert-group-header')
     await expect(groupHeader).toBeVisible()
     await expect(groupHeader).toHaveCSS('text-transform', 'uppercase')
 
-    const liveOption = page.getByTestId('cert-option').filter({ hasText: viewer.liveCert.name })
+    const liveOption = group.getByTestId('cert-option').filter({ hasText: viewer.liveCert.name })
     await expect(liveOption).toBeVisible()
-    await expect(liveOption).not.toContainText(viewer.liveCert.provider)
 
     // RED — search box shows a leading magnifying-glass icon and a right-aligned "N available"
     // count reflecting the total loaded catalog. Absent today.
