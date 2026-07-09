@@ -47,13 +47,14 @@ export function useOverviewSessions(certificationId: MaybeRefOrGetter<string | n
 
       const sessions = sessionRows.map<RecentSessionEntry>((session) => {
         const summary = summaries.get(session.id)
+        const delta = summary?.readiness.delta
         return {
           id: session.id,
           date: session.startedAt,
           label: recentSessionLabel(session),
           accuracy: summary ? summary.accuracy : null,
           durationMinutes: session.durationMinutes ?? null,
-          delta: summary?.readiness.delta ?? null,
+          delta: delta == null ? null : Number(delta),
           kind: String(session.kind),
         }
       })

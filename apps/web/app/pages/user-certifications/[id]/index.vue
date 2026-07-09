@@ -4,7 +4,6 @@ import CertHeaderBar from '~/components/CertHeaderBar.vue'
 import ExamHistoryTab from '~/components/ExamHistoryTab.vue'
 import OverviewTab from '~/components/OverviewTab.vue'
 import SessionsTab from '~/components/SessionsTab.vue'
-import { progressPath } from '~/composables/runnerRoutes'
 import { useCertDetail } from '~/composables/useCertDetail'
 import { useQuickStartActions } from '~/composables/useQuickStartActions'
 
@@ -73,16 +72,6 @@ function selectTab(id: TabId) {
         Some details could not be loaded. Showing what we have.
       </p>
 
-      <div class="mt-3 flex justify-end">
-        <NuxtLink
-          data-testid="view-progress-link"
-          :to="progressPath(enrollmentId)"
-          class="inline-flex items-center text-readion-primary text-xs hover:underline"
-        >
-          View progress
-        </NuxtLink>
-      </div>
-
       <div
         role="tablist"
         class="mb-6 flex gap-6 border-readion-background-surface border-b"
@@ -117,6 +106,7 @@ function selectTab(id: TabId) {
           :enrollment-id="enrollmentId"
           :certification-id="certificationId"
           :domains="domains"
+          @view-all-sessions="selectTab('sessions')"
         />
         <SessionsTab v-if="tab.id === 'sessions'" :certification-id="certificationId" />
         <ExamHistoryTab v-if="tab.id === 'exam-history'" :enrollment-id="enrollmentId" />

@@ -70,4 +70,27 @@ describe('ProgressStatCard', () => {
     const value = wrapper.findAll('span').find((span) => span.text() === '5')
     expect(value?.classes()).toContain('text-slate-100')
   })
+
+  it('renders as its own bordered, rounded card (4.1/5.3)', () => {
+    const wrapper = mount(ProgressStatCard, {
+      props: { label: 'Sessions', value: '5' },
+    })
+    const classes = wrapper.find('[data-testid="progress-stat-card"]').classes()
+    expect(classes.some((c) => c.includes('border'))).toBe(true)
+    expect(classes.some((c) => c.includes('rounded'))).toBe(true)
+  })
+
+  it('shows the optional sub-caption beneath the value (4.1)', () => {
+    const wrapper = mount(ProgressStatCard, {
+      props: { label: 'Sessions', value: '14', subCaption: 'completed' },
+    })
+    expect(wrapper.text()).toContain('completed')
+  })
+
+  it('omits the sub-caption when not provided', () => {
+    const wrapper = mount(ProgressStatCard, {
+      props: { label: 'Sessions', value: '14' },
+    })
+    expect(wrapper.find('[data-testid="progress-stat-sub-caption"]').exists()).toBe(false)
+  })
 })

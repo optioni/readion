@@ -8,6 +8,7 @@ const makeCard = (
   certificationId: `cert-${overrides.enrollmentId}`,
   name: 'Cert',
   provider: 'AWS',
+  code: 'CLF-C02',
   readinessScore: null,
   enrolledAt: '2026-01-01T00:00:00.000Z',
   status: 'active',

@@ -154,6 +154,28 @@ describe('OverviewTab stat row', () => {
     expect(text).not.toMatch(/due reviews/i)
   })
 
+  it('renders each stat as its own bordered card with the design sub-captions (4.1)', () => {
+    stubSessions({
+      sessions: [],
+      totalSessions: 3,
+      nextFocusDomain: null,
+      questionsAnswered: 44,
+      accuracy: 0.7233,
+    })
+    const wrapper = mountTab([domain('Security')])
+    const statRow = wrapper.find('[data-testid="cert-detail-stat-row"]')
+    const cardChildren = Array.from(statRow.element.children)
+    expect(cardChildren).toHaveLength(4)
+    for (const child of cardChildren) {
+      expect(child.className).toContain('border')
+      expect(child.className).toContain('rounded')
+    }
+    const text = statRow.text()
+    expect(text).toContain('completed')
+    expect(text).toContain('answered')
+    expect(text).toContain('per session')
+  })
+
   it('shows Avg accuracy as its own status-coloured stat separate from Questions', () => {
     stubSessions({
       sessions: [],
@@ -184,6 +206,27 @@ describe('OverviewTab stat row', () => {
     )
     expect(accuracyStat.text()).toContain('—')
     expect(accuracyStat.text()).not.toContain('%')
+  })
+})
+
+describe('OverviewTab right column and links (4.2/4.3)', () => {
+  it('stacks Suggested-next above Recent-sessions in a fixed right column', () => {
+    const wrapper = mountTab([domain('Security')])
+    const rightColumn = wrapper.find('[data-testid="cert-detail-right-column"]')
+    expect(rightColumn.exists()).toBe(true)
+    const html = rightColumn.html()
+    expect(html.indexOf('suggested-next-focus')).toBeLessThan(html.indexOf('recent-sessions-panel'))
+  })
+
+  it('renders a "View all sessions" link below the recent-sessions panel', () => {
+    const wrapper = mountTab([domain('Security')])
+    expect(wrapper.text()).toContain('View all sessions')
+  })
+
+  it('labels the domain breakdown section "Domain scores"', () => {
+    const wrapper = mountTab([domain('Security')])
+    expect(wrapper.text()).toContain('Domain scores')
+    expect(wrapper.text()).not.toContain('Domain Breakdown')
   })
 })
 

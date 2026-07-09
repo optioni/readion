@@ -153,11 +153,9 @@ describe('Cert detail not-found state', () => {
   })
 })
 
-describe('Cert detail progress link', () => {
-  it('renders a link to the progress page in the header', () => {
+describe('Cert detail progress link (4.3)', () => {
+  it('does not render an extra "View progress" link between the header and the tab bar', () => {
     const wrapper = mountPage()
-    const progressLink = wrapper.find('[data-testid="view-progress-link"]')
-    expect(progressLink.exists()).toBe(true)
-    expect(progressLink.attributes('href')).toBe('/user-certifications/enr-1/progress')
+    expect(wrapper.find('[data-testid="view-progress-link"]').exists()).toBe(false)
   })
 })
