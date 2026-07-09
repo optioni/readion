@@ -138,6 +138,37 @@ describe('OnboardingCertSelect search', () => {
     expect(input.attributes('placeholder')).toMatch(/search certifications/i)
   })
 
+  it('renders a leading search icon and a count suffix reflecting the total loaded catalog', async () => {
+    stubCertifications([
+      certification({ id: 'cert-1', name: 'AWS SA' }),
+      certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' }),
+      certification({ id: 'cert-3', name: 'CKA', provider: 'CNCF' }),
+    ])
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="cert-search-icon"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="cert-search-count"]').text()).toBe('3 available')
+  })
+
+  it('keeps the count reflecting the total catalog size, not the filtered subset', async () => {
+    stubCertifications([
+      certification({ id: 'cert-1', name: 'AWS SA' }),
+      certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' }),
+      certification({ id: 'cert-3', name: 'CKA', provider: 'CNCF' }),
+    ])
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    await searchInput(wrapper).setValue('azure')
+    await flushPromises()
+
+    expect(wrapper.findAll('[data-testid="cert-option"]')).toHaveLength(1)
+    expect(wrapper.find('[data-testid="cert-search-count"]').text()).toBe('3 available')
+  })
+
   it('filters options by name as the query is typed', async () => {
     stubCertifications([
       certification({ id: 'cert-1', name: 'AWS Solutions Architect' }),
