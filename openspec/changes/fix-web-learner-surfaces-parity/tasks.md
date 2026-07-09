@@ -17,9 +17,9 @@
 
 ## 2. Dashboard — standard content width (`web-dashboard`)
 
-- [ ] 2.1 RED: component/e2e test asserting the dashboard content column uses the manifest `standard` width (centered, ~1100px), not `max-w-[720px]`
-- [ ] 2.2 GREEN: replace the `max-w-[720px]` wrapper with the standard content-width treatment in `pages/index.vue`
-- [ ] 2.3 REFACTOR: confirm hero + cards fill the widened pane per the design
+- [x] 2.1 RED: component/e2e test asserting the dashboard content column uses the manifest `standard` width (centered, ~1100px), not `max-w-[720px]`
+- [x] 2.2 GREEN: replace the `max-w-[720px]` wrapper with the standard content-width treatment in `pages/index.vue`
+- [x] 2.3 REFACTOR: confirm hero + cards fill the widened pane per the design
 
 ## 3. Cert detail — wired delta badges + accuracy coloring (`web-cert-detail`)
 
