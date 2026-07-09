@@ -63,11 +63,10 @@ describe('useReadinessTrend', () => {
     const sessions: SessionResponseDto[] = []
     const summaries = new Map<string, SessionSummaryResponseDto>()
     const readiness = makeReadiness(true, 72)
-    const now = new Date('2026-01-10T00:00:00Z')
 
-    const result = useReadinessTrend(sessions, summaries, readiness, now)
+    const result = useReadinessTrend(sessions, summaries, readiness)
 
-    expect(result).toEqual({ points: [{ score: 72, label: 'Today, Jan 10' }], hasData: true })
+    expect(result).toEqual({ points: [{ score: 72, label: 'Today' }], hasData: true })
   })
 
   it('builds points from session summaries in chronological order, ending at the current score', () => {
@@ -82,13 +81,12 @@ describe('useReadinessTrend', () => {
       ['s-3', makeSummary(74)],
     ])
     const readiness = makeReadiness(true, 78)
-    const now = new Date('2026-01-10T00:00:00Z')
 
-    const result = useReadinessTrend(sessions, summaries, readiness, now)
+    const result = useReadinessTrend(sessions, summaries, readiness)
 
     expect(result.hasData).toBe(true)
     expect(result.points.map((p) => p.score)).toEqual([60, 68, 74, 78])
-    expect(result.points.map((p) => p.label)).toEqual(['Jan 1', 'Jan 3', 'Jan 5', 'Today, Jan 10'])
+    expect(result.points.map((p) => p.label)).toEqual(['Jan 1', 'Jan 3', 'Jan 5', 'Today'])
   })
 
   it('excludes sessions without summaries from the trend points', () => {

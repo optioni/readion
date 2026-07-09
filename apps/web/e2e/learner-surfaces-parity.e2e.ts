@@ -5,14 +5,14 @@ import { mockProgressLoop, PROGRESS_IDS } from './support/progress-seed'
 import { gotoAuthenticated } from './support/session-view-seed'
 
 // ============================================================================
-// fix-web-learner-surfaces-parity — outer-loop RED (tasks 0.1-0.4).
+// fix-web-learner-surfaces-parity — outer-loop acceptance (tasks 0.1-0.4, 7.1).
 //
 // Drives the real apps/web against a fully mocked HTTP API (Playwright `route` fulfil), matching
 // the pattern already used by learner-surfaces-fidelity.e2e.ts / progress-seed.ts / cert-detail-
 // mock-seed.ts / dashboard-mock-seed.ts. No running NestJS API or Postgres is required.
 // ============================================================================
 
-test.describe('fix-web-learner-surfaces-parity — outer-loop acceptance (RED)', () => {
+test.describe('fix-web-learner-surfaces-parity — outer-loop acceptance', () => {
   test('0.1 — dashboard cert card shows a ReadinessBar, standard content width, hairline sections, and the code pill', async ({
     page,
   }) => {
@@ -101,9 +101,9 @@ test.describe('fix-web-learner-surfaces-parity — outer-loop acceptance (RED)',
     // shell's own nav links) unmounts/remounts ProgressDomainRow and forces the invalidated
     // review-queue query to refetch — a real browser `page.reload()` would instead hit Nuxt SSR on
     // the Node server, which Playwright's page-level route mocks cannot intercept (see
-    // support/progress-seed.ts's file-level comment for why this suite is mock-only).
-    // Mastering moves the row into the "Mastered" divider group, so it must be targeted by domain
-    // name rather than `.first()` — its position in the DOM legitimately changes once mastered.
+    // support/progress-seed.ts's file-level comment for why this suite is mock-only). The row is
+    // targeted by domain name rather than `.first()` since mastering moves it into the "Mastered"
+    // divider group, legitimately changing its DOM position.
     const domainRow = progressPage.getByTestId('progress-domain-row').filter({
       hasText: 'Secure Architectures',
     })

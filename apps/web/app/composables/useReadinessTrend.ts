@@ -22,7 +22,6 @@ export function useReadinessTrend(
   sessions: SessionResponseDto[],
   summaries: Map<string, SessionSummaryResponseDto>,
   currentReadiness: ReadinessResponseDto,
-  now: Date = new Date(),
 ): ReadinessTrend {
   if (!currentReadiness.calibrated || currentReadiness.score === null) {
     return EMPTY_TREND
@@ -43,10 +42,10 @@ export function useReadinessTrend(
   }
 
   return {
-    points: [
-      ...summaryPoints,
-      { score: currentReadiness.score, label: friendlyDate(now.toISOString(), now) },
-    ],
+    // The live point's label is a plain "Today" (not the longer "Today, Mon D" friendlyDate
+    // form) — the chart's last X-axis label sits at the right edge of a narrow SVG viewBox, and
+    // the longer form clips against it.
+    points: [...summaryPoints, { score: currentReadiness.score, label: 'Today' }],
     hasData: true,
   }
 }
