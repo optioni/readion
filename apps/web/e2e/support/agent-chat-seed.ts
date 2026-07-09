@@ -122,13 +122,14 @@ function buildConversationDetail(
  */
 export function mockAgentChat(
   page: Page,
-  options: { lastActivityAt?: string | null } = {},
+  options: { lastActivityAt?: string | null; messages?: unknown[] } = {},
 ): {
   ids: typeof AGENT_IDS
   streamEvents: unknown[]
 } {
   const lastActivityAt =
     'lastActivityAt' in options ? (options.lastActivityAt ?? null) : DEFAULT_LAST_ACTIVITY_AT
+  const seededMessages = options.messages ?? []
   const context = page.context()
 
   // Context-level safety net (page routes take precedence over context routes in Playwright).
@@ -150,7 +151,7 @@ export function mockAgentChat(
 
   // --- Standalone conversation create (POST /api/v1/agent-conversations, no body) ---
   mock(page, /\/api\/v1\/agent-conversations$/, async (route) => {
-    await fulfilJson(route, 201, buildConversationDetail([], lastActivityAt))
+    await fulfilJson(route, 201, buildConversationDetail(seededMessages, lastActivityAt))
   })
 
   // --- Agent turn stream: registered BEFORE the detail GET so the /messages$ pattern is
@@ -173,7 +174,7 @@ export function mockAgentChat(
     page,
     new RegExp(`/api/v1/agent-conversations/${AGENT_IDS.conversationId}(\\?|$)`),
     async (route) => {
-      await fulfilJson(route, 200, buildConversationDetail([], lastActivityAt))
+      await fulfilJson(route, 200, buildConversationDetail(seededMessages, lastActivityAt))
     },
   )
 
