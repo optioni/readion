@@ -32,6 +32,13 @@ export function extractMessageText(content: AgentMessageContent): string {
     .join('')
 }
 
+export function splitParagraphs(content: string): string[] {
+  return content
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter((paragraph) => paragraph.length > 0)
+}
+
 export function hydrateAgentMessages(raw: AgentMessageResponse[]): AgentPanelMessage[] {
   const messages: AgentPanelMessage[] = []
   for (const message of raw) {
