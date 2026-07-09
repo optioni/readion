@@ -1,8 +1,16 @@
 import { defineNuxtConfig } from 'nuxt/config'
+import { PUBLIC_AUTH_ROUTES } from './app/constants/publicRoutes'
 
 export default defineNuxtConfig({
-  modules: ['@nuxt/ui', '@pinia/nuxt', '@nuxtjs/color-mode', '@vite-pwa/nuxt'],
+  modules: ['@nuxt/ui', '@pinia/nuxt', '@nuxtjs/color-mode', '@vite-pwa/nuxt', '@nuxtjs/robots'],
   css: ['~/assets/css/main.css'],
+  // Defensive-only SEO posture: the whole app is behind auth, so crawlers are disallowed
+  // everywhere except the public auth routes, which stay fetchable so link-unfurl bots
+  // (Slackbot, Twitterbot) can render share cards for pasted /login and /register links.
+  robots: {
+    disallow: ['/'],
+    allow: [...PUBLIC_AUTH_ROUTES],
+  },
   colorMode: {
     preference: 'dark',
     fallback: 'dark',
