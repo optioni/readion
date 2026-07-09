@@ -149,13 +149,18 @@ function confirm() {
       </div>
     </div>
 
-    <button
-      type="button"
-      class="self-end rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
-      :disabled="selectedId === null"
-      @click="confirm"
+    <div
+      data-testid="cert-select-footer"
+      class="flex justify-end border-t border-readion-background-surface pt-5"
     >
-      Continue
-    </button>
+      <button
+        type="button"
+        class="rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+        :disabled="selectedId === null"
+        @click="confirm"
+      >
+        Continue →
+      </button>
+    </div>
   </div>
 </template>
