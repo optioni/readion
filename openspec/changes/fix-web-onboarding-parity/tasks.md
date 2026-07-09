@@ -25,8 +25,8 @@
 
 ## 4. Acceptance Test — Outer Loop GREEN
 
-- [ ] 4.1 Confirm the section-0 e2e passes end-to-end
-- [ ] 4.2 Visually diff step 1 against `Onboarding.html`; reconcile residual drift
+- [x] 4.1 Confirm the section-0 e2e passes end-to-end
+- [x] 4.2 Visually diff step 1 against `Onboarding.html`; reconcile residual drift
 
 ## 5. Change Review — Subagent Verification
 
