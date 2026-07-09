@@ -46,8 +46,8 @@
 
 ## 7. Change Review — Subagent Verification
 
-- [ ] 7.1 Dispatch a reviewer subagent against `proposal.md`, the two spec deltas, and the diff
-- [ ] 7.2 Triage findings; re-run affected tests
+- [x] 7.1 Dispatch a reviewer subagent against `proposal.md`, the two spec deltas, and the diff
+- [x] 7.2 Triage findings; re-run affected tests
 
 ## 8. Polish
 
