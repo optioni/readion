@@ -8,6 +8,14 @@ export default defineNuxtConfig({
   // Defensive-only SEO posture: the whole app is behind auth, so crawlers are disallowed
   // everywhere except the public auth routes, which stay fetchable so link-unfurl bots
   // (Slackbot, Twitterbot) can render share cards for pasted /login and /register links.
+  //
+  // This block is the declared policy, kept for documentation and in case any other part of
+  // the module ecosystem inspects it — but it is NOT what actually produces /robots.txt's
+  // response. A wildcard `Disallow: /` makes the module treat the site as "not indexable",
+  // and in that state it silently discards `allow` and emits a hardcoded blanket disallow.
+  // server/plugins/robots.ts overrides the final output via the module's own
+  // robots:robots-txt hook and is the source of truth; keep both in sync via
+  // PUBLIC_AUTH_ROUTES.
   robots: {
     disallow: ['/'],
     allow: [...PUBLIC_AUTH_ROUTES],

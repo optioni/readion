@@ -27,6 +27,24 @@ test.describe('seo-hygiene — defensive crawler exclusion', () => {
   })
 })
 
+test.describe('seo-hygiene — default title and description baseline', () => {
+  test('a public page with no page-specific title uses the site default', async ({ page }) => {
+    // /forgot-password sets no page title/description of its own — this exercises the
+    // titleTemplate/description fallback declared in nuxt.config.ts, not a per-page override.
+    await page.goto('/forgot-password')
+    await page.waitForLoadState('networkidle')
+
+    const title = await page.title()
+    expect(title.length).toBeGreaterThan(0)
+    expect(title).toMatch(/· Readion$/)
+
+    const description = await page
+      .locator('meta[name="description"]')
+      .getAttribute('content')
+    expect(description?.length ?? 0).toBeGreaterThan(0)
+  })
+})
+
 test.describe('seo-hygiene — global title and social share metadata', () => {
   for (const route of ['/login', '/register']) {
     test(`${route} renders a titled, described, and shareable document head`, async ({
