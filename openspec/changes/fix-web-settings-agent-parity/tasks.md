@@ -40,9 +40,9 @@
 
 ## 6. Acceptance Test — Outer Loop GREEN
 
-- [ ] 6.1 Confirm the section-0 e2e specs pass end-to-end
-- [ ] 6.2 Visually diff both surfaces against `Settings.html` / `AgentChat.html`; reconcile residual drift
-- [ ] 6.3 REFACTOR: clean up selectors and fixtures
+- [x] 6.1 Confirm the section-0 e2e specs pass end-to-end
+- [x] 6.2 Visually diff both surfaces against `Settings.html` / `AgentChat.html`; reconcile residual drift
+- [x] 6.3 REFACTOR: clean up selectors and fixtures
 
 ## 7. Change Review — Subagent Verification
 
