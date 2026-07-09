@@ -1,8 +1,8 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-- [ ] 0.1 Write a failing Playwright e2e (`apps/web/e2e`) for **Sign in** error styling: submit bad credentials on `/login`, assert the credential field(s) render the errored (danger-token) styling AND the global banner still shows the uniform "invalid email or password" message — with NO account-revealing per-field copy (e.g. "No account found")
-- [ ] 0.2 Write a failing Playwright e2e for **Reset password** confirm field: on a valid-token reset form, assert a "Confirm password" field renders, that a mismatch blocks submit with an inline "passwords do not match" message, and that a match shows the success indicator and allows submit
-- [ ] 0.3 Confirm both specs fail for the right reason (missing markup/behavior), not a selector/harness error
+- [x] 0.1 Write a failing Playwright e2e (`apps/web/e2e`) for **Sign in** error styling: submit bad credentials on `/login`, assert the credential field(s) render the errored (danger-token) styling AND the global banner still shows the uniform "invalid email or password" message — with NO account-revealing per-field copy (e.g. "No account found")
+- [x] 0.2 Write a failing Playwright e2e for **Reset password** confirm field: on a valid-token reset form, assert a "Confirm password" field renders, that a mismatch blocks submit with an inline "passwords do not match" message, and that a match shows the success indicator and allows submit
+- [x] 0.3 Confirm both specs fail for the right reason (missing markup/behavior), not a selector/harness error
 
 ## 1. Sign in — errored-field styling on failed login (`web-auth`)
 
