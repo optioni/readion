@@ -365,6 +365,7 @@ describe('OverviewTab recent sessions', () => {
           label: 'Security',
           accuracy: 0.82,
           durationMinutes: 20,
+          delta: 3,
         },
       ],
       totalSessions: 1,
@@ -374,7 +375,6 @@ describe('OverviewTab recent sessions', () => {
     expect(wrapper.find('[data-testid="recent-sessions-panel"]').exists()).toBe(true)
     const rows = wrapper.findAll('[data-testid="recent-session-row"]')
     expect(rows).toHaveLength(1)
-    expect(rows[0]!.text()).toContain('Security')
     expect(rows[0]!.text()).toContain('82%')
   })
 
@@ -384,5 +384,35 @@ describe('OverviewTab recent sessions', () => {
     expect(wrapper.find('[data-testid="recent-sessions-panel"]').text()).toContain(
       'No sessions yet',
     )
+  })
+
+  it('passes each session its own delta so every row shows a delta badge (3.1)', () => {
+    stubSessions({
+      sessions: [
+        {
+          id: 's1',
+          date: '2026-06-20T00:00:00Z',
+          label: 'Security',
+          accuracy: 0.82,
+          durationMinutes: 20,
+          delta: 3,
+        },
+        {
+          id: 's2',
+          date: '2026-06-19T00:00:00Z',
+          label: 'Storage',
+          accuracy: 0.6,
+          durationMinutes: 25,
+          delta: -2,
+        },
+      ],
+      totalSessions: 2,
+      nextFocusDomain: null,
+    })
+    const wrapper = mountTab([domain('Security')])
+    const rows = wrapper.findAll('[data-testid="recent-session-row"]')
+    expect(rows).toHaveLength(2)
+    expect(rows[0]!.find('[data-testid="delta-badge"]').exists()).toBe(true)
+    expect(rows[1]!.find('[data-testid="delta-badge"]').exists()).toBe(true)
   })
 })

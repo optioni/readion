@@ -14,6 +14,10 @@ export interface RecentSessionEntry {
   label: string
   accuracy: number | null
   durationMinutes: number | null
+  /** Per-session readiness delta (from the session summary), when the caller supplies it. */
+  delta?: number | null
+  /** Session kind (e.g. "study" | "mock"), when the caller supplies it. */
+  kind?: string
 }
 
 interface RecentSessionsData {

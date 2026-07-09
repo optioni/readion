@@ -96,6 +96,8 @@ describe('useOverviewSessions', () => {
         label: 'Study · Networking',
         accuracy: 0.8,
         durationMinutes: 30,
+        delta: null,
+        kind: 'study',
       },
       {
         id: 's2',
@@ -103,6 +105,8 @@ describe('useOverviewSessions', () => {
         label: 'Study · All domains',
         accuracy: null,
         durationMinutes: 30,
+        delta: null,
+        kind: 'study',
       },
     ])
     expect(result.totalSessions.value).toBe(7)

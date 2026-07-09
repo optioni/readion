@@ -119,9 +119,12 @@ describe('CertDetail Overview recent sessions (acceptance)', () => {
     })
     await flushPromises()
 
+    // fix-web-learner-surfaces-parity (3.2) removes the combined "Kind · focus" label from the
+    // row entirely (design: date, duration, accuracy, delta only) — so the focus-area domain
+    // ("IAM") is no longer rendered here at all. The regression this test guards against — a
+    // focus-area object stringifying to "[object Object]" — is still asserted below.
     const row = wrapper.find('[data-testid="recent-session-row"]')
     expect(row.text()).not.toContain('[object Object]')
     expect(row.text()).toContain('80%')
-    expect(row.text()).toContain('IAM')
   })
 })
