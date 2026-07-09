@@ -1,9 +1,11 @@
+import { friendlyDate } from '~/composables/friendlyDate'
 import { chronologicalByStartedAt, isCompletedSession } from '~/composables/sessionSummaryHelpers'
 import type { SessionResponseDto, SessionSummaryResponseDto } from '~~/src/api/model'
 
 export interface AccuracyPoint {
   sessionId: string
   accuracy: number
+  label: string
 }
 
 export function useAccuracySeries(
@@ -18,6 +20,8 @@ export function useAccuracySeries(
       if (!summary) {
         return []
       }
-      return [{ sessionId: session.id, accuracy: summary.accuracy }]
+      return [
+        { sessionId: session.id, accuracy: summary.accuracy, label: friendlyDate(session.startedAt) },
+      ]
     })
 }

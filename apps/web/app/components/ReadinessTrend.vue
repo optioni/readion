@@ -1,15 +1,23 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+export interface ReadinessTrendPoint {
+  score: number
+  label: string
+}
+
 const props = defineProps<{
-  points: number[]
+  points: ReadinessTrendPoint[]
   hasData: boolean
+  showProjection?: boolean
 }>()
 
 const WIDTH = 300
 const HEIGHT = 80
 const PAD_LEFT = 24
 const PAD = 8
+const PROJECTION_STEPS = 3
+const TARGET_SCORE = 80
 
 const GRID_YS = [25, 50, 75, 100] as const
 const TARGET_Y = 80
@@ -23,9 +31,10 @@ function yScale(v: number): number {
 }
 
 const pointCoords = computed(() =>
-  props.points.map((val, i) => ({
+  props.points.map((point, i) => ({
     x: xScale(i, props.points.length),
-    y: yScale(val),
+    y: yScale(point.score),
+    label: point.label,
     isLast: i === props.points.length - 1,
   })),
 )
@@ -34,7 +43,19 @@ const svgPoints = computed(() =>
   pointCoords.value.map(({ x, y }) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' '),
 )
 
-const currentValue = computed(() => props.points.at(-1) ?? null)
+const areaPath = computed(() => {
+  const coords = pointCoords.value
+  if (coords.length === 0) {
+    return ''
+  }
+  const first = coords[0] as (typeof coords)[number]
+  const last = coords[coords.length - 1] as (typeof coords)[number]
+  const baseline = HEIGHT - PAD
+  const linePart = coords.map(({ x, y }) => `L${x.toFixed(1)},${y.toFixed(1)}`).join(' ')
+  return `M${first.x.toFixed(1)},${baseline} ${linePart} L${last.x.toFixed(1)},${baseline} Z`
+})
+
+const currentValue = computed(() => props.points.at(-1)?.score ?? null)
 
 const tickLabels = computed(() =>
   GRID_YS.map((tickY) => ({
@@ -46,6 +67,39 @@ const tickLabels = computed(() =>
 
 const targetY = computed(() => yScale(TARGET_Y))
 const targetTopPct = computed(() => (targetY.value / HEIGHT) * 100)
+
+// X-axis labels — show only the first, middle, and last points (design: uncluttered ticks).
+const xLabelIndexes = computed(() => {
+  const total = props.points.length
+  if (total === 0) {
+    return []
+  }
+  return [...new Set([0, Math.floor(total / 2), total - 1])]
+})
+
+const xLabels = computed(() =>
+  xLabelIndexes.value.map((i) => ({
+    index: i,
+    x: pointCoords.value[i]?.x ?? 0,
+    text: pointCoords.value[i]?.label ?? '',
+  })),
+)
+
+// Projection: extend from the last point toward the 80% target line as if the last few sessions'
+// pace continued, matching openspec/design/Progress.html.
+const projectionPath = computed(() => {
+  const coords = pointCoords.value
+  const last = coords.at(-1)
+  if (!last) {
+    return ''
+  }
+  const projectedX = Math.min(
+    last.x + (PROJECTION_STEPS / Math.max(coords.length - 1, 1)) * (WIDTH - PAD_LEFT - PAD),
+    WIDTH - PAD - 4,
+  )
+  const projectedY = yScale(TARGET_SCORE)
+  return `M${last.x.toFixed(1)},${last.y.toFixed(1)} L${projectedX.toFixed(1)},${projectedY.toFixed(1)}`
+})
 </script>
 
 <template>
@@ -93,6 +147,24 @@ const targetTopPct = computed(() => (targetY.value / HEIGHT) * 100)
             class="text-readion-status-good/60"
           />
 
+          <path
+            data-testid="readiness-area-fill"
+            :d="areaPath"
+            fill="currentColor"
+            class="text-readion-primary/[0.07]"
+          />
+
+          <path
+            v-if="showProjection"
+            data-testid="readiness-projection"
+            :d="projectionPath"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-dasharray="5,4"
+            class="text-readion-status-good/70"
+          />
+
           <polyline
             :points="svgPoints"
             fill="none"
@@ -113,6 +185,18 @@ const targetTopPct = computed(() => (targetY.value / HEIGHT) * 100)
             stroke-width="1.5"
             class="text-readion-primary"
           />
+
+          <text
+            v-for="label in xLabels"
+            :key="label.index"
+            data-testid="readiness-x-label"
+            :x="label.x"
+            :y="HEIGHT - 2"
+            text-anchor="middle"
+            font-size="9"
+            fill="currentColor"
+            class="text-slate-500"
+          >{{ label.text }}</text>
         </svg>
 
         <div

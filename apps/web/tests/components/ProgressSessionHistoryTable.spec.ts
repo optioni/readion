@@ -155,6 +155,15 @@ describe('ProgressSessionHistoryTable — column-header row (6.3)', () => {
     expect(row.text()).not.toContain('1.6.2026')
   })
 
+  it('shows the session start time-of-day as a secondary line beneath the date (5.3)', () => {
+    const wrapper = mount(ProgressSessionHistoryTable, {
+      props: { rows: [makeRow({ startedAt: '2026-06-01T15:42:00.000Z' })] },
+    })
+    const time = wrapper.find('[data-testid="session-time-of-day"]')
+    expect(time.exists()).toBe(true)
+    expect(time.text()).toBe('3:42 PM')
+  })
+
   it('orders row columns with Date before the Type badge', () => {
     const wrapper = mount(ProgressSessionHistoryTable, {
       props: { rows: [makeRow({ startedAt: '2026-06-01T09:00:00.000Z', kind: 'study' })] },

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import DeltaBadge from '~/components/DeltaBadge.vue'
 import { friendlyDate } from '~/composables/friendlyDate'
+import { friendlyTime } from '~/composables/friendlyTime'
 import { mockExamRunPath, sessionRunPath } from '~/composables/runnerRoutes'
 import { statusColorForScore, statusTextColorClass } from '~/composables/statusColor'
 import type { MergedHistoryRow } from '~/composables/useSessionHistoryMerge'
@@ -52,9 +53,12 @@ function accuracyColorClass(accuracy: number): string {
             :href="rowPath(row)"
             class="flex flex-1 items-center gap-3 text-slate-200 hover:text-slate-100"
           >
-            <span class="flex-[1.6] text-slate-400 text-xs">{{
-              friendlyDate(row.startedAt)
-            }}</span>
+            <span class="flex-[1.6]">
+              <span class="block text-slate-400 text-xs">{{ friendlyDate(row.startedAt) }}</span>
+              <span data-testid="session-time-of-day" class="block text-[10px] text-slate-500">
+                {{ friendlyTime(row.startedAt) }}
+              </span>
+            </span>
 
             <span
               class="inline-flex items-center rounded px-1.5 py-0.5 font-medium text-[11px] uppercase tracking-wide"

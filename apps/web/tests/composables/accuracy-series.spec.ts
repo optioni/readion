@@ -49,9 +49,9 @@ describe('useAccuracySeries', () => {
     const result = useAccuracySeries(sessions, summaries)
 
     expect(result).toEqual([
-      { sessionId: 's-1', accuracy: 75 },
-      { sessionId: 's-2', accuracy: 82 },
-      { sessionId: 's-3', accuracy: 91 },
+      { sessionId: 's-1', accuracy: 75, label: 'Jan 1' },
+      { sessionId: 's-2', accuracy: 82, label: 'Jan 3' },
+      { sessionId: 's-3', accuracy: 91, label: 'Jan 5' },
     ])
   })
 
@@ -67,7 +67,7 @@ describe('useAccuracySeries', () => {
 
     const result = useAccuracySeries(sessions, summaries)
 
-    expect(result).toEqual([{ sessionId: 's-1', accuracy: 80 }])
+    expect(result).toEqual([{ sessionId: 's-1', accuracy: 80, label: 'Jan 1' }])
   })
 
   it('omits non-completed sessions even when a summary is present', () => {
@@ -84,7 +84,7 @@ describe('useAccuracySeries', () => {
 
     const result = useAccuracySeries(sessions, summaries)
 
-    expect(result).toEqual([{ sessionId: 's-1', accuracy: 80 }])
+    expect(result).toEqual([{ sessionId: 's-1', accuracy: 80, label: 'Jan 1' }])
   })
 
   it('sorts sessions chronologically even when provided out of order', () => {
@@ -102,9 +102,9 @@ describe('useAccuracySeries', () => {
     const result = useAccuracySeries(sessions, summaries)
 
     expect(result).toEqual([
-      { sessionId: 's-1', accuracy: 70 },
-      { sessionId: 's-2', accuracy: 78 },
-      { sessionId: 's-3', accuracy: 85 },
+      { sessionId: 's-1', accuracy: 70, label: 'Jan 1' },
+      { sessionId: 's-2', accuracy: 78, label: 'Jan 3' },
+      { sessionId: 's-3', accuracy: 85, label: 'Jan 5' },
     ])
   })
 
@@ -114,6 +114,6 @@ describe('useAccuracySeries', () => {
 
     const result = useAccuracySeries(sessions, summaries)
 
-    expect(result).toEqual([{ sessionId: 's-1', accuracy: 66 }])
+    expect(result).toEqual([{ sessionId: 's-1', accuracy: 66, label: 'Jan 1' }])
   })
 })

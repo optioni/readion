@@ -194,7 +194,7 @@ export function useProgressData(enrollmentId: string) {
     return traj?.weeksToReady ?? null
   })
 
-  const paceRate = computed(() => computePaceRate(trend.value.points))
+  const paceRate = computed(() => computePaceRate(trend.value.points.map((p) => p.score)))
 
   const switcher = computed<SwitcherEntry[]>(() => enrollmentsQuery.data.value ?? [])
 

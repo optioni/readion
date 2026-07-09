@@ -6,11 +6,15 @@ describe('ReadinessAccuracyCard', () => {
   it('composes readiness trend and accuracy bars into one surface card, not two side-by-side cards', () => {
     const wrapper = mount(ReadinessAccuracyCard, {
       props: {
-        points: [55, 62, 66],
+        points: [
+          { score: 55, label: 'Jun 1' },
+          { score: 62, label: 'Jun 10' },
+          { score: 66, label: 'Jun 20' },
+        ],
         hasData: true,
         series: [
-          { sessionId: 's1', accuracy: 60 },
-          { sessionId: 's2', accuracy: 70 },
+          { sessionId: 's1', accuracy: 60, label: 'Jun 10' },
+          { sessionId: 's2', accuracy: 70, label: 'Jun 20' },
         ],
       },
     })
@@ -30,9 +34,13 @@ describe('ReadinessAccuracyCard', () => {
   it('renders the readiness trend above a divider, and the accuracy bars below it', () => {
     const wrapper = mount(ReadinessAccuracyCard, {
       props: {
-        points: [55, 62, 66],
+        points: [
+          { score: 55, label: 'Jun 1' },
+          { score: 62, label: 'Jun 10' },
+          { score: 66, label: 'Jun 20' },
+        ],
         hasData: true,
-        series: [{ sessionId: 's1', accuracy: 60 }],
+        series: [{ sessionId: 's1', accuracy: 60, label: 'Jun 20' }],
       },
     })
 
@@ -49,9 +57,13 @@ describe('ReadinessAccuracyCard', () => {
   it('shows the 80% target line on the readiness portion', () => {
     const wrapper = mount(ReadinessAccuracyCard, {
       props: {
-        points: [55, 62, 66],
+        points: [
+          { score: 55, label: 'Jun 1' },
+          { score: 62, label: 'Jun 10' },
+          { score: 66, label: 'Jun 20' },
+        ],
         hasData: true,
-        series: [{ sessionId: 's1', accuracy: 60 }],
+        series: [{ sessionId: 's1', accuracy: 60, label: 'Jun 20' }],
       },
     })
     expect(wrapper.find('[data-testid="readiness-target-line"]').exists()).toBe(true)

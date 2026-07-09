@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import CardPanel from '~/components/CardPanel.vue'
 import CertTabs from '~/components/CertTabs.vue'
 import ProgressDomainRow from '~/components/ProgressDomainRow.vue'
 import ProgressSessionHistoryTable from '~/components/ProgressSessionHistoryTable.vue'
@@ -35,10 +34,11 @@ const {
 
 const activityStats = computed(() => useActivityStats(sessions.value, summariesMap.value))
 const streakUnit = computed(() => pluralizeUnit(activityStats.value.currentStreakDays, 'day'))
+const showProjection = computed(() => weeksToReady.value !== null)
 </script>
 
 <template>
-  <section data-testid="progress-page" class="mx-auto max-w-[720px]">
+  <section data-testid="progress-page" class="mx-auto max-w-[1100px]">
     <div
       v-if="notFound"
       data-testid="progress-not-found"
@@ -71,47 +71,65 @@ const streakUnit = computed(() => pluralizeUnit(activityStats.value.currentStrea
         <CertTabs :enrollments="switcher" :active-enrollment-id="enrollmentId" />
       </div>
 
-      <TrajectoryCallout :weeks-to-ready="weeksToReady" :pace-rate="paceRate" class="mb-6" />
-
-      <div class="mb-4 grid grid-cols-2 gap-3 rounded-md bg-black/25 p-4 sm:grid-cols-4">
-        <ProgressStatCard label="Sessions" :value="String(activityStats.sessionCount)" />
-        <ProgressStatCard
-          label="Questions answered"
-          :value="String(activityStats.questionsAnswered)"
-        />
-        <ProgressStatCard label="Study time" :value="activityStats.studyTimeLabel" />
-        <ProgressStatCard
-          label="Current streak"
-          :value="String(activityStats.currentStreakDays)"
-          :unit="streakUnit"
-        />
-      </div>
-
-      <ReadinessAccuracyCard
-        :points="trend.points"
-        :has-data="trend.hasData"
-        :series="accuracySeries"
-        class="mb-4"
-      />
-
-      <CardPanel label="Domain Breakdown" class="mb-4">
-        <div
-          v-for="row in domainScores"
-          :key="row.domain"
-          class="border-readion-background-surface border-b last:border-b-0"
-        >
-          <ProgressDomainRow
-            :domain="row.domain"
-            :score="row.score"
-            :status="row.status"
-            :has-data="row.hasData"
-            :delta="row.delta"
-            :enrollment-id="enrollmentId"
+      <div class="mb-6">
+        <div class="mb-2.5 text-[11px] uppercase tracking-wider opacity-70">This month</div>
+        <div class="flex gap-3">
+          <ProgressStatCard label="Sessions" :value="String(activityStats.sessionCount)" />
+          <ProgressStatCard
+            label="Questions answered"
+            :value="String(activityStats.questionsAnswered)"
+          />
+          <ProgressStatCard label="Study time" :value="activityStats.studyTimeLabel" />
+          <ProgressStatCard
+            label="Current streak"
+            :value="String(activityStats.currentStreakDays)"
+            :unit="streakUnit"
           />
         </div>
-      </CardPanel>
+      </div>
 
-      <ProgressSessionHistoryTable :rows="historyRows" />
+      <div class="mb-6">
+        <div class="mb-2.5 flex items-center justify-between">
+          <div class="text-[11px] uppercase tracking-wider opacity-70">Readiness over time</div>
+          <span class="text-[11px] opacity-50">{{ trend.points.length }} sessions</span>
+        </div>
+        <ReadinessAccuracyCard
+          :points="trend.points"
+          :has-data="trend.hasData"
+          :show-projection="showProjection"
+          :series="accuracySeries"
+          class="mb-2.5"
+        />
+        <TrajectoryCallout :weeks-to-ready="weeksToReady" :pace-rate="paceRate" />
+      </div>
+
+      <div class="mb-6">
+        <div class="mb-2.5 text-[11px] uppercase tracking-wider opacity-70">Domain scores</div>
+        <div class="rounded-xl border border-readion-background-surface bg-readion-background-surface/40 px-4 py-1">
+          <div
+            v-for="row in domainScores"
+            :key="row.domain"
+            class="border-readion-background-surface border-b last:border-b-0"
+          >
+            <ProgressDomainRow
+              :domain="row.domain"
+              :score="row.score"
+              :status="row.status"
+              :has-data="row.hasData"
+              :delta="row.delta"
+              :enrollment-id="enrollmentId"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="mb-2.5 flex items-center justify-between">
+          <div class="text-[11px] uppercase tracking-wider opacity-70">Session history</div>
+          <span class="text-[11px] opacity-50">{{ historyRows.length }} sessions total</span>
+        </div>
+        <ProgressSessionHistoryTable :rows="historyRows" />
+      </div>
     </template>
   </section>
 </template>

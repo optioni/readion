@@ -63,10 +63,11 @@ describe('useReadinessTrend', () => {
     const sessions: SessionResponseDto[] = []
     const summaries = new Map<string, SessionSummaryResponseDto>()
     const readiness = makeReadiness(true, 72)
+    const now = new Date('2026-01-10T00:00:00Z')
 
-    const result = useReadinessTrend(sessions, summaries, readiness)
+    const result = useReadinessTrend(sessions, summaries, readiness, now)
 
-    expect(result).toEqual({ points: [72], hasData: true })
+    expect(result).toEqual({ points: [{ score: 72, label: 'Today, Jan 10' }], hasData: true })
   })
 
   it('builds points from session summaries in chronological order, ending at the current score', () => {
@@ -81,11 +82,13 @@ describe('useReadinessTrend', () => {
       ['s-3', makeSummary(74)],
     ])
     const readiness = makeReadiness(true, 78)
+    const now = new Date('2026-01-10T00:00:00Z')
 
-    const result = useReadinessTrend(sessions, summaries, readiness)
+    const result = useReadinessTrend(sessions, summaries, readiness, now)
 
     expect(result.hasData).toBe(true)
-    expect(result.points).toEqual([60, 68, 74, 78])
+    expect(result.points.map((p) => p.score)).toEqual([60, 68, 74, 78])
+    expect(result.points.map((p) => p.label)).toEqual(['Jan 1', 'Jan 3', 'Jan 5', 'Today, Jan 10'])
   })
 
   it('excludes sessions without summaries from the trend points', () => {
@@ -101,7 +104,7 @@ describe('useReadinessTrend', () => {
 
     const result = useReadinessTrend(sessions, summaries, readiness)
 
-    expect(result.points).toEqual([60, 65])
+    expect(result.points.map((p) => p.score)).toEqual([60, 65])
   })
 
   it('sorts sessions chronologically even when provided out of order', () => {
@@ -119,7 +122,7 @@ describe('useReadinessTrend', () => {
 
     const result = useReadinessTrend(sessions, summaries, readiness)
 
-    expect(result.points).toEqual([60, 68, 74, 78])
+    expect(result.points.map((p) => p.score)).toEqual([60, 68, 74, 78])
   })
 
   it('ignores non-completed sessions when building the trend', () => {
@@ -137,7 +140,7 @@ describe('useReadinessTrend', () => {
 
     const result = useReadinessTrend(sessions, summaries, readiness)
 
-    expect(result.points).toEqual([60, 65])
+    expect(result.points.map((p) => p.score)).toEqual([60, 65])
   })
 
   it('handles a single completed session (single-session case)', () => {
@@ -147,7 +150,7 @@ describe('useReadinessTrend', () => {
 
     const result = useReadinessTrend(sessions, summaries, readiness)
 
-    expect(result.points).toEqual([55, 60])
+    expect(result.points.map((p) => p.score)).toEqual([55, 60])
     expect(result.hasData).toBe(true)
   })
 
@@ -164,6 +167,6 @@ describe('useReadinessTrend', () => {
 
     const result = useReadinessTrend(sessions, summaries, readiness)
 
-    expect(result.points).toEqual([70, 75])
+    expect(result.points.map((p) => p.score)).toEqual([70, 75])
   })
 })

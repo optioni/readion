@@ -23,16 +23,25 @@ function stubProgressData(overrides: Partial<Record<keyof ProgressData, unknown>
     domainScores: computed(() => (overrides.domainScores as unknown[]) ?? []),
     trend: computed(
       () =>
-        (overrides.trend as { points: number[]; hasData: boolean }) ?? {
-          points: [55, 62, 66],
+        (overrides.trend as {
+          points: { score: number; label: string }[]
+          hasData: boolean
+        }) ?? {
+          points: [
+            { score: 55, label: 'Jun 1' },
+            { score: 62, label: 'Jun 10' },
+            { score: 66, label: 'Jun 20' },
+          ],
           hasData: true,
         },
     ),
     accuracySeries: computed(
       () =>
-        (overrides.accuracySeries as Array<{ sessionId: string; accuracy: number }>) ?? [
-          { sessionId: 's1', accuracy: 60 },
-        ],
+        (overrides.accuracySeries as Array<{
+          sessionId: string
+          accuracy: number
+          label: string
+        }>) ?? [{ sessionId: 's1', accuracy: 60, label: 'Jun 20' }],
     ),
     weeksToReady: computed(() =>
       overrides.weeksToReady !== undefined ? (overrides.weeksToReady as number | null) : 3,
@@ -139,6 +148,50 @@ describe('Progress page — trajectory callout', () => {
     })
     const wrapper = mountPage()
     expect(wrapper.find('[data-testid="trajectory-callout"]').exists()).toBe(false)
+  })
+})
+
+describe('Progress page — trajectory placement (5.1)', () => {
+  it('renders the trajectory callout after the readiness chart and the stat cards', () => {
+    const wrapper = mountPage()
+    const html = wrapper.html()
+    const trajectoryIndex = html.indexOf('trajectory-callout')
+    const chartIndex = html.indexOf('readiness-trend')
+    const statsIndex = html.indexOf('progress-stat-card')
+    expect(trajectoryIndex).toBeGreaterThan(chartIndex)
+    expect(trajectoryIndex).toBeGreaterThan(statsIndex)
+  })
+})
+
+describe('Progress page — section labels, counters, and width (5.3/5.4)', () => {
+  it('shows the "This month" section label above the activity stat cards', () => {
+    const wrapper = mountPage()
+    expect(wrapper.text()).toContain('This month')
+  })
+
+  it('labels the readiness section "Readiness over time" with a live session count', () => {
+    const wrapper = mountPage()
+    expect(wrapper.text()).toContain('Readiness over time')
+    expect(wrapper.text()).toContain('3 sessions')
+  })
+
+  it('labels the session-history section with a live "N sessions total" count', () => {
+    stubProgressData({
+      historyRows: [
+        { id: 'h1' },
+        { id: 'h2' },
+      ],
+    })
+    const wrapper = mountPage()
+    expect(wrapper.text()).toContain('Session history')
+    expect(wrapper.text()).toContain('2 sessions total')
+  })
+
+  it('uses the standard (~1100px) content width, not the narrow max-w-[720px] column', () => {
+    const wrapper = mountPage()
+    const classes = wrapper.find('[data-testid="progress-page"]').classes()
+    expect(classes).not.toContain('max-w-[720px]')
+    expect(classes.join(' ')).toContain('max-w-[1100px]')
   })
 })
 

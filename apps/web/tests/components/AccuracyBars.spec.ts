@@ -7,8 +7,8 @@ describe('AccuracyBars', () => {
     const wrapper = mount(AccuracyBars, {
       props: {
         series: [
-          { sessionId: 's1', accuracy: 60 },
-          { sessionId: 's2', accuracy: 70 },
+          { sessionId: 's1', accuracy: 60, label: 'Jun 1' },
+          { sessionId: 's2', accuracy: 70, label: 'Jun 5' },
         ],
       },
     })
@@ -19,9 +19,9 @@ describe('AccuracyBars', () => {
     const wrapper = mount(AccuracyBars, {
       props: {
         series: [
-          { sessionId: 's1', accuracy: 60 },
-          { sessionId: 's2', accuracy: 70 },
-          { sessionId: 's3', accuracy: 75 },
+          { sessionId: 's1', accuracy: 60, label: 'Jun 1' },
+          { sessionId: 's2', accuracy: 70, label: 'Jun 5' },
+          { sessionId: 's3', accuracy: 75, label: 'Jun 9' },
         ],
       },
     })
@@ -29,21 +29,40 @@ describe('AccuracyBars', () => {
     expect(bars).toHaveLength(3)
   })
 
-  it('shows the accuracy percentage on each bar', () => {
+  it('shows the accuracy percentage only on the last (most recent) bar (5.4)', () => {
     const wrapper = mount(AccuracyBars, {
       props: {
-        series: [{ sessionId: 's1', accuracy: 60 }],
+        series: [
+          { sessionId: 's1', accuracy: 60, label: 'Jun 1' },
+          { sessionId: 's2', accuracy: 70, label: 'Jun 5' },
+        ],
       },
     })
-    expect(wrapper.find('[data-testid="accuracy-bars"]').text()).toContain('60')
+    const bars = wrapper.findAll('[data-testid="accuracy-bar"]')
+    expect(bars[0]!.find('[data-testid="accuracy-bar-percent"]').exists()).toBe(false)
+    expect(bars[1]!.find('[data-testid="accuracy-bar-percent"]').text()).toContain('70')
+  })
+
+  it('shows a short date caption beneath every bar (5.4)', () => {
+    const wrapper = mount(AccuracyBars, {
+      props: {
+        series: [
+          { sessionId: 's1', accuracy: 60, label: 'Jun 1' },
+          { sessionId: 's2', accuracy: 70, label: 'Jun 5' },
+        ],
+      },
+    })
+    const bars = wrapper.findAll('[data-testid="accuracy-bar"]')
+    expect(bars[0]!.find('[data-testid="accuracy-bar-caption"]').text()).toBe('Jun 1')
+    expect(bars[1]!.find('[data-testid="accuracy-bar-caption"]').text()).toBe('Jun 5')
   })
 
   it('renders one bar fill per series entry with positive accuracy-proportional pixel heights', () => {
     const wrapper = mount(AccuracyBars, {
       props: {
         series: [
-          { sessionId: 's1', accuracy: 60 },
-          { sessionId: 's2', accuracy: 75 },
+          { sessionId: 's1', accuracy: 60, label: 'Jun 1' },
+          { sessionId: 's2', accuracy: 75, label: 'Jun 5' },
         ],
       },
     })
@@ -69,9 +88,9 @@ describe('AccuracyBars', () => {
     const wrapper = mount(AccuracyBars, {
       props: {
         series: [
-          { sessionId: 's1', accuracy: 60 },
-          { sessionId: 's2', accuracy: 70 },
-          { sessionId: 's3', accuracy: 75 },
+          { sessionId: 's1', accuracy: 60, label: 'Jun 1' },
+          { sessionId: 's2', accuracy: 70, label: 'Jun 5' },
+          { sessionId: 's3', accuracy: 75, label: 'Jun 9' },
         ],
       },
     })

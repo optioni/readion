@@ -2,6 +2,7 @@
 export interface AccuracyPoint {
   sessionId: string
   accuracy: number
+  label: string
 }
 
 defineProps<{
@@ -11,8 +12,6 @@ defineProps<{
 
 <template>
   <div data-testid="accuracy-bars">
-    <div class="mb-2 text-[11px] uppercase tracking-wider opacity-70">Accuracy per Session</div>
-
     <!-- Fixed-height plot area (56px bars + 20px label row) so the per-bar percentage maps to a definite pixel height; matches openspec/design/Progress.html. -->
     <div v-if="series.length > 0" class="flex items-end gap-1" :style="{ height: '76px' }">
       <div
@@ -23,10 +22,9 @@ defineProps<{
         :title="`${point.accuracy}%`"
       >
         <span
-          class="text-[10px]"
-          :class="
-            index === series.length - 1 ? 'font-semibold text-readion-primary' : 'text-slate-400'
-          "
+          v-if="index === series.length - 1"
+          data-testid="accuracy-bar-percent"
+          class="font-semibold text-[10px] text-readion-primary"
         >{{ point.accuracy }}</span>
         <div
           data-testid="accuracy-bar-fill"
@@ -34,6 +32,7 @@ defineProps<{
           :class="index === series.length - 1 ? 'bg-readion-primary' : 'bg-readion-primary/40'"
           :style="{ height: `${Math.max(2, (point.accuracy / 100) * 56)}px` }"
         />
+        <span data-testid="accuracy-bar-caption" class="text-[8px] opacity-50">{{ point.label }}</span>
       </div>
     </div>
 
