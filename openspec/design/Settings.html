@@ -45,8 +45,14 @@ const CanvasSection = (p) => (
 );
 const Artboard = (p) => (
   <div className="artboard-wrap" style={{ width: p.width }}>
-    <div className="artboard-label">{p.label}</div>
-    <div className="artboard-frame" style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+    <div className="artboard-label" style={{ marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: '#2d2520', letterSpacing: '0.01em' }}>{p.screen || p.label}</span>
+        {p.state && <span style={{ fontSize: 10, fontWeight: 500, color: '#5f5349', background: 'rgba(0,0,0,0.055)', border: '1px solid rgba(0,0,0,0.09)', borderRadius: 999, padding: '1px 8px', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{p.state}</span>}
+      </div>
+      {p.route && <div style={{ fontSize: 11, color: '#94897f', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{p.route}</div>}
+    </div>
+    <div className="artboard-frame" data-screen={p.screen} data-state={p.state} data-route={p.route} data-screen-label={p.screen} style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
   </div>
 );
 
@@ -279,13 +285,13 @@ function App() {
   return (
     <Canvas>
       <CanvasSection title="Settings" subtitle="Three tabs. Sidebar stays visible throughout — Settings active. Max-width content column for comfortable reading.">
-        <Artboard label="Account" width={1100} height={760}>
+        <Artboard screen="Settings" state="account-tab" route="/settings" width={1100} height={760}>
           <AccountTab />
         </Artboard>
-        <Artboard label="Study defaults" width={1100} height={680}>
+        <Artboard screen="Settings" state="study-defaults-tab" route="/settings" width={1100} height={680}>
           <StudyDefaultsTab />
         </Artboard>
-        <Artboard label="Notifications" width={1100} height={640}>
+        <Artboard screen="Settings" state="notifications-tab" route="/settings" width={1100} height={640}>
           <NotificationsTab />
         </Artboard>
       </CanvasSection>

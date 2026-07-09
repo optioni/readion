@@ -70,8 +70,14 @@
   );
   const Artboard = (props) => (
     <div className="artboard-wrap" style={{ width: props.width }}>
-      <div className="artboard-label">{props.label}</div>
-      <div className="artboard-frame" style={{ width: props.width }}>{props.children}</div>
+      <div className="artboard-label" style={{ marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: '#2d2520', letterSpacing: '0.01em' }}>{props.screen || props.label}</span>
+          {props.state && <span style={{ fontSize: 10, fontWeight: 500, color: '#5f5349', background: 'rgba(0,0,0,0.055)', border: '1px solid rgba(0,0,0,0.09)', borderRadius: 999, padding: '1px 8px', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{props.state}</span>}
+        </div>
+        {props.route && <div style={{ fontSize: 11, color: '#94897f', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{props.route}</div>}
+      </div>
+      <div className="artboard-frame" data-screen={props.screen} data-state={props.state} data-route={props.route} data-screen-label={props.screen} style={{ width: props.width }}>{props.children}</div>
     </div>
   );
 

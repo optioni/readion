@@ -84,12 +84,12 @@ function App() {
       </div>
 
       <CanvasSection title="App chrome" subtitle="AppSidebar + AppFrame. One nav shell, configurable active item. The Admin panel link is role-gated (admin prop). The user card sits at the bottom.">
-        <Artboard label="active = Dashboard" width={760}><ChromeDemo active="Dashboard" /></Artboard>
-        <Artboard label="active = Progress · admin role" width={760}><ChromeDemo active="Progress" admin={true} /></Artboard>
+        <Artboard screen="App shell — sidebar" state="dashboard-active" width={760}><ChromeDemo active="Dashboard" /></Artboard>
+        <Artboard screen="App shell — sidebar" state="progress-active-admin" width={760}><ChromeDemo active="Progress" admin={true} /></Artboard>
       </CanvasSection>
 
       <CanvasSection title="Readiness — colour scale" subtitle="One function drives every score colour. <50 poor · 50–64 building · 65–74 on track · 75+ exam-ready. Null renders as ‘not assessed’.">
-        <Artboard label="ReadinessRing" width={620}>
+        <Artboard screen="Readiness — ring" state="score-scale" width={620}>
           <Frame>
             <Panel>
               <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'flex-start' }}>
@@ -105,7 +105,7 @@ function App() {
       </CanvasSection>
 
       <CanvasSection title="Readiness — inline" subtitle="ReadinessBar for compact contexts, DomainBadge for weak-area chips, DomainScoreRow for breakdowns (focus areas flagged).">
-        <Artboard label="ReadinessBar + DomainBadge" width={420}>
+        <Artboard screen="Readiness — inline" state="bar-and-badge" width={420}>
           <Frame>
             <Panel title="Bars">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 24 }}>
@@ -127,7 +127,7 @@ function App() {
           </Frame>
         </Artboard>
 
-        <Artboard label="DomainScoreRow breakdown" width={480}>
+        <Artboard screen="Readiness — breakdown" state="domain-score-rows" width={480}>
           <Frame>
             <Panel title="Domain breakdown">
               {DOMAINS.map(d => <DomainScoreRow key={d.label} label={d.label} pct={d.pct} focus={d.focus} labelWidth={170} />)}

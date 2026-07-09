@@ -46,8 +46,14 @@ const CanvasSection = (p) => (
 );
 const Artboard = (p) => (
   <div className="artboard-wrap" style={{ width: p.width }}>
-    <div className="artboard-label">{p.label}</div>
-    <div className="artboard-frame" style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+    <div className="artboard-label" style={{ marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: '#2d2520', letterSpacing: '0.01em' }}>{p.screen || p.label}</span>
+        {p.state && <span style={{ fontSize: 10, fontWeight: 500, color: '#5f5349', background: 'rgba(0,0,0,0.055)', border: '1px solid rgba(0,0,0,0.09)', borderRadius: 999, padding: '1px 8px', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{p.state}</span>}
+      </div>
+      {p.route && <div style={{ fontSize: 11, color: '#94897f', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{p.route}</div>}
+    </div>
+    <div className="artboard-frame" data-screen={p.screen} data-state={p.state} data-route={p.route} data-screen-label={p.screen} style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
   </div>
 );
 
@@ -104,7 +110,63 @@ const SetupHeader = ({ certCode, certName, step, totalSteps, stepLabel }) => (
   </div>
 );
 
-// ── Step 1: Source search & confirmation ──────────────────────────────────────
+// ── Step 1: Identify certification ────────────────────────────────────────────
+const IdentityField = ({ label, value, placeholder, hint, optional, mono }) => (
+  <div style={{ marginBottom: 18 }}>
+    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, color: T.tSecond, marginBottom: 6 }}>
+      {label}
+      {optional && <span style={{ fontSize: 10, color: T.tSubtle, fontWeight: 400 }}>Optional</span>}
+    </label>
+    <input readOnly defaultValue={value || ''} placeholder={placeholder}
+      style={{ width: '100%', padding: '9px 12px', background: T.base, border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 14, color: T.tPrimary, fontFamily: mono ? 'var(--readion-font-mono)' : 'inherit', outline: 'none' }} />
+    {hint && <div style={{ fontSize: 11, color: T.tSubtle, marginTop: 5, lineHeight: 1.5 }}>{hint}</div>}
+  </div>
+);
+
+const IdentifyCertScreen = () => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
+    <AdminSidebar active="Certifications" />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <SetupHeader certCode="" certName="New certification" step={1} totalSteps={5} stepLabel="Identify certification" />
+      <div style={{ flex: 1, padding: '28px 40px', overflowY: 'auto' }}>
+        <div style={{ maxWidth: 640 }}>
+          <div style={{ fontSize: 13, color: T.tMuted, marginBottom: 24, lineHeight: 1.6 }}>
+            Tell the setup agent which certification to build. It will search for the official exam guide and candidate handbook from these details in the next step.
+          </div>
+
+          <IdentityField label="Certification name" value="Certified Kubernetes Security Specialist" placeholder="e.g. Certified Kubernetes Security Specialist" />
+          <div style={{ display: 'flex', gap: 16 }}>
+            <div style={{ flex: 1 }}>
+              <IdentityField label="Exam code" value="CKS" placeholder="e.g. CKS" mono hint="Shown across the app and used to de-duplicate." />
+            </div>
+            <div style={{ flex: 1.4 }}>
+              <IdentityField label="Certifying body" value="CNCF / Linux Foundation" placeholder="e.g. Amazon Web Services" />
+            </div>
+          </div>
+          <IdentityField label="Known source URL" placeholder="https://…" optional mono
+            hint="Paste the official exam-guide URL if you have one. Otherwise the agent searches for candidate sources in the next step." />
+
+          {/* What happens next */}
+          <div style={{ display: 'flex', gap: 10, padding: '12px 14px', background: 'rgba(124,140,248,0.06)', border: '1px solid rgba(124,140,248,0.18)', borderRadius: T.rLg, marginTop: 4 }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+            <div style={{ fontSize: 12, color: T.tSecond, lineHeight: 1.6 }}>
+              Next, the agent searches official sources for <strong style={{ color: T.tPrimary }}>CKS</strong> and returns ranked candidates for you to confirm — no metadata is created until you approve a source.
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 28, paddingTop: 20, borderTop: '1px solid ' + T.border }}>
+            <button style={{ padding: '8px 18px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer' }}>Cancel</button>
+            <button style={{ padding: '8px 20px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+              Search for sources &#8594;
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Step 2: Source search & confirmation ──────────────────────────────────────
 const SourceResult = ({ url, title, type, updated, confidence, selected, alt }) => (
   <div style={{ padding: '14px 16px', background: selected ? 'rgba(29,78,216,0.08)' : T.elevated, border: '1px solid ' + (selected ? T.primary : T.border), borderRadius: T.rLg, marginBottom: 8, cursor: 'pointer' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
@@ -129,7 +191,7 @@ const SourceConfirmationScreen = () => (
   <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
     <AdminSidebar active="Certifications" />
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <SetupHeader certCode="CKS" certName="Certified Kubernetes Security Specialist" step={1} totalSteps={4} stepLabel="Source confirmation" />
+      <SetupHeader certCode="CKS" certName="Certified Kubernetes Security Specialist" step={2} totalSteps={5} stepLabel="Source confirmation" />
       <div style={{ flex: 1, padding: '28px 40px', overflowY: 'auto' }}>
         <div style={{ maxWidth: 640 }}>
           <div style={{ fontSize: 13, color: T.tMuted, marginBottom: 20, lineHeight: 1.6 }}>
@@ -224,7 +286,7 @@ const FieldExtractionScreen = () => (
   <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
     <AdminSidebar active="Certifications" />
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <SetupHeader certCode="CKS" certName="Certified Kubernetes Security Specialist" step={2} totalSteps={4} stepLabel="Field review" />
+      <SetupHeader certCode="CKS" certName="Certified Kubernetes Security Specialist" step={3} totalSteps={5} stepLabel="Field review" />
 
       {/* Summary strip */}
       <div style={{ borderBottom: '1px solid ' + T.border, padding: '8px 28px', background: T.surface, display: 'flex', gap: 20, flexShrink: 0 }}>
@@ -369,7 +431,7 @@ const ContentSourcesScreen = () => (
   <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
     <AdminSidebar active="Certifications" />
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <SetupHeader certCode="CKS" certName="Certified Kubernetes Security Specialist" step={3} totalSteps={4} stepLabel="Content sources" />
+      <SetupHeader certCode="CKS" certName="Certified Kubernetes Security Specialist" step={4} totalSteps={5} stepLabel="Content sources" />
       <div style={{ flex: 1, overflowY: 'auto', padding: '28px 40px' }}>
         <div style={{ display: 'flex', gap: 24 }}>
           {/* Left: sources */}
@@ -524,7 +586,7 @@ const ReviewPublishScreen = () => {
     <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%' }}>
       <AdminSidebar active="Certifications" />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <SetupHeader certCode="CKS" certName="Certified Kubernetes Security Specialist" step={4} totalSteps={4} stepLabel="Review & publish" />
+        <SetupHeader certCode="CKS" certName="Certified Kubernetes Security Specialist" step={5} totalSteps={5} stepLabel="Review & publish" />
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 36px' }}>
           {/* Verdict banner */}
           <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 16px', background: 'rgba(251,146,60,0.06)', border: '1px solid rgba(251,146,60,0.2)', borderRadius: T.rXl, marginBottom: 24 }}>
@@ -624,21 +686,24 @@ function App() {
     <Canvas>
       <CanvasSection
         title="Admin — Certification Setup"
-        subtitle="Step-by-step flow. Per-field citation panel, unverified fields carry warning state, coverage bars vs go-live threshold, then a final review & publish gate. Plus stale-cert re-verification diff."
+        subtitle="Five-step flow. Identify the certification, confirm the agent-found source, review extracted fields with per-field citations, ingest content against the go-live threshold, then a final review & publish gate. Plus stale-cert re-verification diff."
       >
-        <Artboard label="Step 1 — Source search &amp; confirmation" width={1050} height={780}>
+        <Artboard screen="Cert setup wizard" state="step-1-identify" route="/admin/certifications/new" width={1050} height={780}>
+          <IdentifyCertScreen />
+        </Artboard>
+        <Artboard screen="Cert setup wizard" state="step-2-source-confirmation" route="/admin/certifications/new" width={1050} height={780}>
           <SourceConfirmationScreen />
         </Artboard>
-        <Artboard label="Step 2 — Field extraction with citation panel" width={1050} height={780}>
+        <Artboard screen="Cert setup wizard" state="step-3-field-extraction" route="/admin/certifications/new" width={1050} height={780}>
           <FieldExtractionScreen />
         </Artboard>
-        <Artboard label="Step 3 — Content sources + coverage progress" width={1050} height={780}>
+        <Artboard screen="Cert setup wizard" state="step-4-content-sources" route="/admin/certifications/new" width={1050} height={780}>
           <ContentSourcesScreen />
         </Artboard>
-        <Artboard label="Step 4 — Review & publish" width={1050} height={780}>
+        <Artboard screen="Cert setup wizard" state="step-5-review-publish" route="/admin/certifications/new" width={1050} height={780}>
           <ReviewPublishScreen />
         </Artboard>
-        <Artboard label="Stale cert — re-verification diff view" width={1050} height={780}>
+        <Artboard screen="Cert re-verification" state="stale-diff" route="/admin/certifications/:code/re-verify" width={1050} height={780}>
           <StaleRecertScreen />
         </Artboard>
       </CanvasSection>

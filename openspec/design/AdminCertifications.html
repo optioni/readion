@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion Admin — Certifications</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui; background: #b8b4ac; }
+    a { color: var(--readion-accent-label); }
+    a:hover { color: var(--readion-accent-label-muted); }
+    .canvas-wrap { padding: 48px 56px; }
+    .canvas-section { margin-bottom: 56px; }
+    .canvas-section-head { margin-bottom: 20px; }
+    .canvas-section-title { font-size: 17px; font-weight: 600; color: #2d2520; }
+    .canvas-section-sub { font-size: 12px; color: #7a6e65; margin-top: 3px; max-width: 760px; line-height: 1.5; }
+    .canvas-row { display: flex; gap: 40px; flex-wrap: wrap; align-items: flex-start; }
+    .artboard-wrap { flex-shrink: 0; }
+    .artboard-label { font-size: 11px; color: #7a6e65; margin-bottom: 7px; font-weight: 500; letter-spacing: 0.02em; }
+    .artboard-frame { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.js"></script>
+<script type="text/babel" src="app-shell.jsx"></script>
+
+<script type="text/babel">
+// ── Canvas ────────────────────────────────────────────────────────────────────
+const Canvas = (p) => <div className="canvas-wrap">{p.children}</div>;
+const CanvasSection = (p) => (
+  <div className="canvas-section">
+    <div className="canvas-section-head">
+      <div className="canvas-section-title">{p.title}</div>
+      {p.subtitle && <div className="canvas-section-sub">{p.subtitle}</div>}
+    </div>
+    <div className="canvas-row">{p.children}</div>
+  </div>
+);
+const Artboard = (p) => (
+  <div className="artboard-wrap" style={{ width: p.width }}>
+    <div className="artboard-label" style={{ marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: '#2d2520', letterSpacing: '0.01em' }}>{p.screen || p.label}</span>
+        {p.state && <span style={{ fontSize: 10, fontWeight: 500, color: '#5f5349', background: 'rgba(0,0,0,0.055)', border: '1px solid rgba(0,0,0,0.09)', borderRadius: 999, padding: '1px 8px', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{p.state}</span>}
+      </div>
+      {p.route && <div style={{ fontSize: 11, color: '#94897f', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{p.route}</div>}
+    </div>
+    <div className="artboard-frame" data-screen={p.screen} data-state={p.state} data-route={p.route} data-screen-label={p.screen} style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+  </div>
+);
+
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const T = {
+  base:     'var(--readion-background-base)',
+  surface:  'var(--readion-background-surface)',
+  elevated: 'var(--readion-background-elevated)',
+  overlay:  'var(--readion-background-overlay)',
+  primary:  'var(--readion-primary)',
+  accent:   'var(--readion-accent-label)',
+  tPrimary: 'var(--readion-text-primary)',
+  tSecond:  'var(--readion-text-secondary)',
+  tMuted:   'var(--readion-text-muted)',
+  tSubtle:  'var(--readion-text-subtle)',
+  border:   'var(--readion-border-strong)',
+  borderDef:'var(--readion-border-default)',
+  poor:     'var(--readion-status-poor)',
+  warn:     'var(--readion-status-warning)',
+  good:     'var(--readion-status-good)',
+  rSm:      'var(--readion-rounded-sm)',
+  rMd:      'var(--readion-rounded-md)',
+  rLg:      'var(--readion-rounded-lg)',
+  rXl:      'var(--readion-rounded-xl)',
+  rFull:    'var(--readion-rounded-full)',
+};
+
+const Shell = window.Shell;
+const AdminSidebar = () => <Shell.AdminSidebar active="Certifications" />;
+
+// ── CertPageHeader — title + primary "New certification" (→ setup wizard) ──────
+const CertPageHeader = () => (
+  <div style={{ borderBottom: '1px solid ' + T.border, padding: '16px 28px', background: T.elevated, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div>
+      <div style={{ fontSize: 18, fontWeight: 600, color: T.tPrimary, lineHeight: 1.2 }}>Certifications</div>
+      <div style={{ fontSize: 12, color: T.tMuted, marginTop: 2 }}>Manage certifications and keep their metadata verified against source.</div>
+    </div>
+    <a href="AdminCertSetup.html" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 16px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: 'pointer', textDecoration: 'none' }}>
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="#fff" strokeWidth="1.6" strokeLinecap="round"/></svg>
+      New certification
+    </a>
+  </div>
+);
+
+// ── SectionLabel — uppercase caption above each table ──────────────────────────
+const SectionLabel = ({ children, count }) => (
+  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
+    <span style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted }}>{children}</span>
+    {count != null && <span style={{ fontSize: 11, color: T.tSubtle }}>{count}</span>}
+  </div>
+);
+
+// ── TableShell + THeadRow — shared table chrome ────────────────────────────────
+const TableShell = ({ children }) => (
+  <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, overflow: 'hidden' }}>{children}</div>
+);
+const THeadRow = ({ cols }) => (
+  <div style={{ display: 'flex', padding: '9px 18px', background: T.elevated, borderBottom: '1px solid ' + T.border }}>
+    {cols.map((c) => (
+      <div key={c.label} style={{ flex: c.flex || 1, textAlign: c.align || 'left', fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tSubtle }}>{c.label}</div>
+    ))}
+  </div>
+);
+
+// ── CodeChip — monospaced exam code pill ───────────────────────────────────────
+const CodeChip = ({ code }) => (
+  <span style={{ fontSize: 11, fontFamily: 'var(--readion-font-mono)', color: T.tSecond, background: T.elevated, border: '1px solid ' + T.border, borderRadius: T.rSm, padding: '2px 7px' }}>{code}</span>
+);
+
+// ── LinkAction — inline "Manage sources" link ──────────────────────────────────
+const LinkAction = ({ children, href }) => (
+  <a href={href || '#'} style={{ fontSize: 13, color: T.accent, textDecoration: 'none', cursor: 'pointer' }}>{children}</a>
+);
+
+// ── ExistingCertRow / ExistingCertsTable ───────────────────────────────────────
+const ExistingCertRow = ({ cert }) => (
+  <div style={{ display: 'flex', alignItems: 'center', padding: '13px 18px', borderBottom: '1px solid ' + T.borderDef }}>
+    <div style={{ flex: 2.4, fontSize: 13, color: T.tPrimary, fontWeight: 500 }}>{cert.name}</div>
+    <div style={{ flex: 1 }}><CodeChip code={cert.code} /></div>
+    <div style={{ flex: 1.8, fontSize: 13, color: T.tSecond }}>{cert.provider}</div>
+    <div style={{ flex: 1.2, textAlign: 'right' }}><LinkAction href="AdminSources.html">Manage sources</LinkAction></div>
+  </div>
+);
+
+const EmptyRow = ({ children }) => (
+  <div style={{ padding: '34px 18px', textAlign: 'center', fontSize: 13, color: T.tMuted }}>{children}</div>
+);
+
+const ExistingCertsTable = ({ certs }) => (
+  <TableShell>
+    <THeadRow cols={[{ label: 'Certification', flex: 2.4 }, { label: 'Code' }, { label: 'Provider', flex: 1.8 }, { label: 'Actions', flex: 1.2, align: 'right' }]} />
+    {certs.length === 0
+      ? <EmptyRow>No certifications have been set up yet.</EmptyRow>
+      : certs.map((c) => <ExistingCertRow key={c.code} cert={c} />)}
+  </TableShell>
+);
+
+// ── ReVerifyButton ──────────────────────────────────────────────────────────────
+const ReVerifyButton = ({ onClick }) => (
+  <button onClick={onClick} style={{ padding: '5px 13px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 12, color: T.tSecond, cursor: 'pointer' }}>Re-verify</button>
+);
+
+// ── DueRow / DueTable (three async states + populated) ──────────────────────────
+const DueRow = ({ cert, onReverify }) => (
+  <div style={{ display: 'flex', alignItems: 'center', padding: '13px 18px', borderBottom: '1px solid ' + T.borderDef }}>
+    <div style={{ flex: 2.4, fontSize: 13, color: T.tPrimary, fontWeight: 500 }}>{cert.name}</div>
+    <div style={{ flex: 1 }}><CodeChip code={cert.code} /></div>
+    <div style={{ flex: 1.8, fontSize: 13, color: cert.lastVerified === 'Never' ? T.tSubtle : T.tSecond }}>{cert.lastVerified}</div>
+    <div style={{ flex: 1.2, textAlign: 'right' }}><ReVerifyButton onClick={onReverify} /></div>
+  </div>
+);
+
+// Async placeholder shared by loading / error / empty
+const AsyncMessage = ({ kind, children }) => {
+  const color = kind === 'error' ? T.poor : T.tMuted;
+  return (
+    <div style={{ padding: '30px 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+      {kind === 'loading' && <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid ' + T.border, borderTopColor: T.accent, animation: 'spin 0.8s linear infinite' }} />}
+      {kind === 'error' && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-poor)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>}
+      <span style={{ fontSize: 13, color }}>{children}</span>
+      {kind === 'error' && <button style={{ marginLeft: 4, padding: '4px 11px', background: 'transparent', border: '1px solid rgba(248,113,113,0.35)', borderRadius: T.rMd, fontSize: 12, color: T.poor, cursor: 'pointer' }}>Retry</button>}
+    </div>
+  );
+};
+
+const DueTable = ({ status, certs, onReverify }) => (
+  <TableShell>
+    <THeadRow cols={[{ label: 'Certification', flex: 2.4 }, { label: 'Code' }, { label: 'Last verified', flex: 1.8 }, { label: 'Actions', flex: 1.2, align: 'right' }]} />
+    {status === 'loading' && <AsyncMessage kind="loading">Loading certifications…</AsyncMessage>}
+    {status === 'error' && <AsyncMessage kind="error">Could not load certifications. Please try again.</AsyncMessage>}
+    {status === 'empty' && <AsyncMessage kind="empty">No certifications are due for re-verification.</AsyncMessage>}
+    {status === 'populated' && certs.map((c) => <DueRow key={c.code} cert={c} onReverify={onReverify} />)}
+  </TableShell>
+);
+
+// ── DiffRow / DiffTable — Field / Current / Proposed ───────────────────────────
+const UnverifiedTag = () => (
+  <span style={{ fontSize: 10, color: T.tSubtle, fontStyle: 'italic', marginLeft: 6 }}>(unverified)</span>
+);
+
+const DiffRow = ({ field, current, proposed, changed, unverified }) => (
+  <div style={{ display: 'flex', borderBottom: '1px solid ' + T.borderDef }}>
+    <div style={{ width: 200, flexShrink: 0, padding: '11px 14px', fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase', color: T.tMuted, background: T.elevated, display: 'flex', alignItems: 'center' }}>
+      {field}{unverified && <UnverifiedTag />}
+    </div>
+    <div style={{ flex: 1, padding: '11px 14px', fontSize: 13, color: T.tSubtle }}>{current}</div>
+    <div style={{ flex: 1, padding: '11px 14px', fontSize: 13, color: changed ? T.primary : T.tSecond, fontWeight: changed ? 600 : 400 }}>{proposed}</div>
+  </div>
+);
+
+const DIFF_FIELDS = [
+  { field: 'Domain 1 weight', current: '30%', proposed: '26%', changed: true },
+  { field: 'Domain 3 name', current: 'Design Secure Applications', proposed: 'Design Secure & Compliant Architectures', changed: true },
+  { field: 'Validity period', current: '3 years', proposed: '2 years', changed: true },
+  { field: 'Passing score', current: '720 / 1000', proposed: '720 / 1000', changed: false },
+  { field: 'Exam cost', current: '$150 USD', proposed: '$150 USD', changed: false, unverified: true },
+  { field: 'Question count', current: '65', proposed: '65', changed: false, unverified: true },
+];
+
+// ── ReVerifyDiffPanel — modal panel over the list ──────────────────────────────
+const ReVerifyDiffPanel = ({ certName, submitting, error, onCancel }) => (
+  <div style={{ position: 'absolute', inset: 0, background: 'rgba(10,15,30,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32, zIndex: 20 }}>
+    <div style={{ width: 720, maxHeight: '100%', display: 'flex', flexDirection: 'column', background: T.overlay, border: '1px solid ' + T.border, borderRadius: T.rXl, boxShadow: '0 24px 64px rgba(0,0,0,0.45)', overflow: 'hidden' }}>
+      {/* Panel header */}
+      <div style={{ padding: '18px 22px', borderBottom: '1px solid ' + T.border }}>
+        <div style={{ fontSize: 16, fontWeight: 600, color: T.tPrimary }}>Proposed changes</div>
+        <div style={{ fontSize: 12, color: T.tMuted, marginTop: 3 }}>{certName} — re-verified against the latest source. Review before accepting.</div>
+      </div>
+
+      {/* Diff table */}
+      <div style={{ padding: '18px 22px', overflowY: 'auto' }}>
+        <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rLg, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', background: T.elevated, borderBottom: '1px solid ' + T.border }}>
+            <div style={{ width: 200, flexShrink: 0, padding: '8px 14px', fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tSubtle }}>Field</div>
+            <div style={{ flex: 1, padding: '8px 14px', fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.tSubtle }}>Current</div>
+            <div style={{ flex: 1, padding: '8px 14px', fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.accent }}>Proposed</div>
+          </div>
+          {DIFF_FIELDS.map((f) => <DiffRow key={f.field} {...f} />)}
+        </div>
+      </div>
+
+      {/* Footer: error line + actions */}
+      <div style={{ padding: '14px 22px', borderTop: '1px solid ' + T.border, display: 'flex', alignItems: 'center', gap: 12 }}>
+        {error && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: T.poor }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-poor)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            Re-verification failed. Please try again.
+          </div>
+        )}
+        <div style={{ flex: 1 }} />
+        <button onClick={onCancel} style={{ padding: '8px 16px', background: 'transparent', border: '1px solid ' + T.border, borderRadius: T.rMd, fontSize: 13, color: T.tSecond, cursor: 'pointer' }}>Cancel</button>
+        <button disabled={submitting} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 18px', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 13, fontWeight: 500, cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.55 : 1 }}>
+          {submitting && <div style={{ width: 13, height: 13, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#fff', animation: 'spin 0.8s linear infinite' }} />}
+          {submitting ? 'Re-verifying…' : 'Accept all & re-verify'}
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// ── CertificationsScreen — composes the page for a given data state ────────────
+const CertificationsScreen = ({ existing, dueStatus, due, diff }) => (
+  <div style={{ display: 'flex', fontFamily: 'Inter, ui-sans-serif, system-ui', background: T.base, height: '100%', position: 'relative' }}>
+    <AdminSidebar />
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <CertPageHeader />
+      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+        <div>
+          <SectionLabel count={existing.length ? existing.length + ' active' : null}>Existing certifications</SectionLabel>
+          <ExistingCertsTable certs={existing} />
+        </div>
+        <div>
+          <SectionLabel>Due for re-verification</SectionLabel>
+          <DueTable status={dueStatus} certs={due} />
+        </div>
+      </div>
+    </div>
+    {diff && <ReVerifyDiffPanel certName={diff.certName} submitting={diff.submitting} error={diff.error} />}
+  </div>
+);
+
+// ── Data ────────────────────────────────────────────────────────────────────────
+const EXISTING = [
+  { name: 'AWS Solutions Architect – Associate', code: 'SAA-C03', provider: 'Amazon Web Services' },
+  { name: 'Certified Kubernetes Administrator', code: 'CKA', provider: 'CNCF / Linux Foundation' },
+  { name: 'Google Professional Cloud Architect', code: 'PCA', provider: 'Google Cloud' },
+];
+const DUE = [
+  { name: 'AWS Solutions Architect – Associate', code: 'SAA-C03', lastVerified: 'Nov 12, 2024' },
+  { name: 'Certified Kubernetes Administrator', code: 'CKA', lastVerified: 'Never' },
+];
+
+const kf = document.createElement('style');
+kf.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(kf);
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <Canvas>
+      <CanvasSection
+        title="Admin — Certifications"
+        subtitle="Route /admin/certifications — the admin landing reached before the cert-setup wizard. Two tables: existing certifications (manage-sources only) and certifications due for re-verification (async: loading / error / empty). Re-verify opens a Field / Current / Proposed diff panel."
+      >
+        <Artboard screen="Admin Certifications" state="populated" route="/admin/certifications" width={1100} height={780}>
+          <CertificationsScreen existing={EXISTING} dueStatus="populated" due={DUE} />
+        </Artboard>
+
+        <Artboard screen="Admin Certifications" state="existing-empty" route="/admin/certifications" width={1100} height={780}>
+          <CertificationsScreen existing={[]} dueStatus="empty" due={[]} />
+        </Artboard>
+
+        <Artboard screen="Admin Certifications" state="due-loading" route="/admin/certifications" width={1100} height={780}>
+          <CertificationsScreen existing={EXISTING} dueStatus="loading" due={[]} />
+        </Artboard>
+
+        <Artboard screen="Admin Certifications" state="due-empty" route="/admin/certifications" width={1100} height={780}>
+          <CertificationsScreen existing={EXISTING} dueStatus="empty" due={[]} />
+        </Artboard>
+
+        <Artboard screen="Admin Certifications" state="error" route="/admin/certifications" width={1100} height={780}>
+          <CertificationsScreen existing={EXISTING} dueStatus="error" due={[]} />
+        </Artboard>
+
+        <Artboard screen="Admin Certifications" state="diff-panel-open" route="/admin/certifications" width={1100} height={780}>
+          <CertificationsScreen existing={EXISTING} dueStatus="populated" due={DUE}
+            diff={{ certName: 'AWS Solutions Architect – Associate', submitting: false, error: false }} />
+        </Artboard>
+      </CanvasSection>
+    </Canvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

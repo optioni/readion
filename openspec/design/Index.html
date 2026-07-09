@@ -83,6 +83,15 @@
   </style>
 </head>
 <body>
+<template id="__bundler_thumbnail" data-bg-color="#0f172a">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#0f172a"/>
+    <rect x="470" y="300" width="120" height="120" rx="28" fill="#7c8cf8"/>
+    <path d="M600 330l18 42 46 4-35 30 11 45-40-24-40 24 11-45-35-30 46-4z" fill="#0f172a"/>
+    <rect x="640" y="336" width="150" height="20" rx="10" fill="#e2e8f0"/>
+    <rect x="640" y="372" width="100" height="14" rx="7" fill="#64748b"/>
+  </svg>
+</template>
 <div class="page">
 
   <!-- Header -->
@@ -129,24 +138,86 @@
     <div class="group-label">Authentication</div>
     <div class="grid">
 
-      <a class="card" href="Login.html">
+      <a class="card" href="SignIn.html">
         <div class="card-top">
           <div class="card-icon" style="background: rgba(124,140,248,0.12); border: 1px solid rgba(124,140,248,0.2);">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/>
-            </svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
           </div>
           <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </div>
         <div>
-          <div class="card-name">Login flow</div>
-          <div class="card-desc">Sign in, register, forgot password, email sent, set new password.</div>
+          <div class="card-name">Sign in</div>
+          <div class="card-desc">Credentials sign-in with SSO option. /login — default and error states.</div>
         </div>
         <div class="card-meta">
-          <span class="chip">Sign in</span>
-          <span class="chip">Error state</span>
-          <span class="chip">Register</span>
-          <span class="chip">Reset flow</span>
+          <span class="chip">Default</span>
+          <span class="chip">Error</span>
+        </div>
+      </a>
+
+      <a class="card" href="Register.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(124,140,248,0.12); border: 1px solid rgba(124,140,248,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Register</div>
+          <div class="card-desc">Account creation — name, work email, password strength, terms. /register.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Default</span>
+        </div>
+      </a>
+
+      <a class="card" href="ForgotPassword.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(124,140,248,0.12); border: 1px solid rgba(124,140,248,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Forgot password</div>
+          <div class="card-desc">Reset-link request, then the sent-confirmation screen. /forgot-password.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Form</span>
+          <span class="chip">Email sent</span>
+        </div>
+      </a>
+
+      <a class="card" href="ResetPassword.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(124,140,248,0.12); border: 1px solid rgba(124,140,248,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Reset password</div>
+          <div class="card-desc">Set a new password from a valid reset link. /reset-password.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Set new password</span>
+        </div>
+      </a>
+
+      <a class="card" href="VerifyEmail.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(124,140,248,0.12); border: 1px solid rgba(124,140,248,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-accent-label)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Verify email</div>
+          <div class="card-desc">Post-registration verification — link sent, then activated. /verify-email.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Sent</span>
+          <span class="chip">Verified</span>
         </div>
       </a>
 
@@ -365,6 +436,25 @@
     <div class="group-label">Admin flows</div>
     <div class="grid">
 
+      <a class="card" href="AdminCertifications.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-warning)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Certifications</div>
+          <div class="card-desc">Admin landing. Existing certifications + due-for-re-verification, with the re-verify diff panel.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Populated</span>
+          <span class="chip">Empty</span>
+          <span class="chip">Diff panel</span>
+          <span class="chip">Error</span>
+        </div>
+      </a>
+
       <a class="card" href="AdminCertSetup.html">
         <div class="card-top">
           <div class="card-icon" style="background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2);">
@@ -386,25 +476,67 @@
         </div>
       </a>
 
-      <a class="card" href="AdminContentUsers.html">
+      <a class="card" href="AdminReviewQueue.html">
         <div class="card-top">
           <div class="card-icon" style="background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2);">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-warning)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
-            </svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-warning)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
           </div>
           <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </div>
         <div>
-          <div class="card-name">Content &amp; Users</div>
-          <div class="card-desc">Quarantine review with provenance, content sources, user table, append-only audit log.</div>
+          <div class="card-name">Review queue</div>
+          <div class="card-desc">Quarantine provenance review — verdict, recommended fix, paired source evidence.</div>
         </div>
         <div class="card-meta">
-          <span class="chip">Quarantine</span>
-          <span class="chip">Sources</span>
-          <span class="chip">Users</span>
-          <span class="chip">Audit log</span>
+          <span class="chip">Item selected</span>
+        </div>
+      </a>
+
+      <a class="card" href="AdminSources.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-warning)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Sources</div>
+          <div class="card-desc">Content source table + live ingestion jobs, per-source enable toggle.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Populated</span>
+        </div>
+      </a>
+
+      <a class="card" href="AdminUsers.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-warning)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 7a4 4 0 100 8 4 4 0 000-8M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Users</div>
+          <div class="card-desc">User table with role badges and promote / demote / remove actions.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Populated</span>
+        </div>
+      </a>
+
+      <a class="card" href="AdminAuditLog.html">
+        <div class="card-top">
+          <div class="card-icon" style="background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.2);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--readion-status-warning)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <svg class="card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <div>
+          <div class="card-name">Audit log</div>
+          <div class="card-desc">Append-only, read-only event log. Privileged actions flagged; CSV export.</div>
+        </div>
+        <div class="card-meta">
+          <span class="chip">Populated</span>
         </div>
       </a>
 
@@ -413,7 +545,7 @@
 
   <!-- Footer -->
   <div class="footer">
-    <div class="footer-left">15 views &middot; 56 artboards</div>
+    <div class="footer-left">23 views &middot; 64 artboards</div>
     <div class="footer-ds">
       <div class="ds-dot"></div>
       ReadionTokens design system

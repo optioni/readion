@@ -46,8 +46,14 @@ const CanvasSection = (p) => (
 );
 const Artboard = (p) => (
   <div className="artboard-wrap" style={{ width: p.width }}>
-    <div className="artboard-label">{p.label}</div>
-    <div className="artboard-frame" style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+    <div className="artboard-label" style={{ marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: '#2d2520', letterSpacing: '0.01em' }}>{p.screen || p.label}</span>
+        {p.state && <span style={{ fontSize: 10, fontWeight: 500, color: '#5f5349', background: 'rgba(0,0,0,0.055)', border: '1px solid rgba(0,0,0,0.09)', borderRadius: 999, padding: '1px 8px', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{p.state}</span>}
+      </div>
+      {p.route && <div style={{ fontSize: 11, color: '#94897f', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{p.route}</div>}
+    </div>
+    <div className="artboard-frame" data-screen={p.screen} data-state={p.state} data-route={p.route} data-screen-label={p.screen} style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
   </div>
 );
 
@@ -476,7 +482,7 @@ function App() {
         title="Progress view"
         subtitle="Historical performance. A cap-free activity summary up top, then readiness trend, domain bars (status colour scale), and full session history."
       >
-        <Artboard label="With history — 10 sessions, trajectory visible" width={1100} height={980}>
+        <Artboard screen="Progress" state="with-history" route="/progress" width={1100} height={980}>
           <ProgressPage
             readinessSessions={READINESS_FULL}
             showTrajectory={true}
@@ -489,7 +495,7 @@ function App() {
             usage={USAGE_FULL}
           />
         </Artboard>
-        <Artboard label="Early state — 3 sessions, no trajectory yet" width={1100} height={980}>
+        <Artboard screen="Progress" state="early" route="/progress" width={1100} height={980}>
           <ProgressPage
             readinessSessions={READINESS_EARLY}
             showTrajectory={false}

@@ -50,8 +50,14 @@ const CanvasSection = function(props) {
 const Artboard = function(props) {
   return (
     <div className="artboard-wrap" style={{ width: props.width }}>
-      <div className="artboard-label">{props.label}</div>
-      <div className="artboard-frame" style={{ width: props.width }}>{props.children}</div>
+      <div className="artboard-label" style={{ marginBottom: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: '#2d2520', letterSpacing: '0.01em' }}>{props.screen || props.label}</span>
+          {props.state && <span style={{ fontSize: 10, fontWeight: 500, color: '#5f5349', background: 'rgba(0,0,0,0.055)', border: '1px solid rgba(0,0,0,0.09)', borderRadius: 999, padding: '1px 8px', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{props.state}</span>}
+        </div>
+        {props.route && <div style={{ fontSize: 11, color: '#94897f', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{props.route}</div>}
+      </div>
+      <div className="artboard-frame" data-screen={props.screen} data-state={props.state} data-route={props.route} data-screen-label={props.screen} style={{ width: props.width }}>{props.children}</div>
     </div>
   );
 };
@@ -444,13 +450,13 @@ function App() {
         title="Dashboard"
         subtitle="Hero card (gradient) marks the lowest-readiness cert. Standard surface cards for all others. Status dot colors map directly to domain scores."
       >
-        <Artboard label="2 certifications" width={1100}>
+        <Artboard screen="Dashboard" state="two-certs" route="/dashboard" width={1100}>
           <Dashboard certs={CERT_2} />
         </Artboard>
-        <Artboard label="3 certifications" width={1100}>
+        <Artboard screen="Dashboard" state="three-certs" route="/dashboard" width={1100}>
           <Dashboard certs={CERT_3} />
         </Artboard>
-        <Artboard label="Day one — enrolled, no sessions yet" width={1100}>
+        <Artboard screen="Dashboard" state="day-one-empty" route="/dashboard" width={1100}>
           <DayOneDashboard />
         </Artboard>
       </CanvasSection>

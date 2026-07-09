@@ -48,10 +48,16 @@ const CanvasSection = ({ title, subtitle, children, preferred }) => (
     <div className="canvas-row">{children}</div>
   </div>
 );
-const Artboard = ({ label, width, children }) => (
+const Artboard = ({ label, screen, state, route, width, children }) => (
   <div className="artboard-wrap" style={{ width }}>
-    <div className="artboard-label">{label}</div>
-    <div className="artboard-frame" style={{ width }}>{children}</div>
+    <div className="artboard-label" style={{ marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: '#2d2520', letterSpacing: '0.01em' }}>{screen || label}</span>
+        {state && <span style={{ fontSize: 10, fontWeight: 500, color: '#5f5349', background: 'rgba(0,0,0,0.055)', border: '1px solid rgba(0,0,0,0.09)', borderRadius: 999, padding: '1px 8px', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{state}</span>}
+      </div>
+      {route && <div style={{ fontSize: 11, color: '#94897f', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{route}</div>}
+    </div>
+    <div className="artboard-frame" data-screen={screen} data-state={state} data-route={route} data-screen-label={screen} style={{ width }}>{children}</div>
   </div>
 );
 
@@ -727,17 +733,17 @@ function App() {
   return (
     <Canvas>
       <CanvasSection title="Onboarding flow" subtitle="Sidebar wizard nav, vendor-grouped cert list, slider for duration, adaptive-by-default difficulty.">
-        <Artboard label="Step 1 - Choose cert"    width={780}><V3Step1 /></Artboard>
-        <Artboard label="Step 2 - Preferences"    width={780}><V3Step2 /></Artboard>
-        <Artboard label="Step 3 - Diagnostic"     width={780}><V3Step3 /></Artboard>
+        <Artboard screen="Onboarding" state="step-1-choose-cert" route="/onboarding" width={780}><V3Step1 /></Artboard>
+        <Artboard screen="Onboarding" state="step-2-preferences" route="/onboarding" width={780}><V3Step2 /></Artboard>
+        <Artboard screen="Onboarding" state="step-3-diagnostic" route="/onboarding" width={780}><V3Step3 /></Artboard>
       </CanvasSection>
       <CanvasSection title="Setup complete" subtitle="Where the flow lands. Took the diagnostic - baseline readiness handoff. Skipped it - completion summary with a nudge.">
-        <Artboard label="Took diagnostic - baseline result" width={920}><V3DiagnosticResult /></Artboard>
-        <Artboard label="Skipped - completion summary"       width={780}><V3Complete /></Artboard>
+        <Artboard screen="Onboarding" state="complete-with-diagnostic" route="/onboarding" width={920}><V3DiagnosticResult /></Artboard>
+        <Artboard screen="Onboarding" state="complete-skipped" route="/onboarding" width={780}><V3Complete /></Artboard>
       </CanvasSection>
       <CanvasSection title="Edge Cases" subtitle="States that bypass the main flow.">
-        <Artboard label="No certs - regular user" width={500}><EmptyStateUser /></Artboard>
-        <Artboard label="No certs - first admin"  width={500}><EmptyStateAdmin /></Artboard>
+        <Artboard screen="Dashboard" state="empty-no-certs-user" route="/dashboard" width={500}><EmptyStateUser /></Artboard>
+        <Artboard screen="Dashboard" state="empty-no-certs-admin" route="/dashboard" width={500}><EmptyStateAdmin /></Artboard>
       </CanvasSection>
     </Canvas>
   );

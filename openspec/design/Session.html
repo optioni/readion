@@ -46,8 +46,14 @@ const CanvasSection = (p) => (
 );
 const Artboard = (p) => (
   <div className="artboard-wrap" style={{ width: p.width }}>
-    <div className="artboard-label">{p.label}</div>
-    <div className="artboard-frame" style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+    <div className="artboard-label" style={{ marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: '#2d2520', letterSpacing: '0.01em' }}>{p.screen || p.label}</span>
+        {p.state && <span style={{ fontSize: 10, fontWeight: 500, color: '#5f5349', background: 'rgba(0,0,0,0.055)', border: '1px solid rgba(0,0,0,0.09)', borderRadius: 999, padding: '1px 8px', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{p.state}</span>}
+      </div>
+      {p.route && <div style={{ fontSize: 11, color: '#94897f', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{p.route}</div>}
+    </div>
+    <div className="artboard-frame" data-screen={p.screen} data-state={p.state} data-route={p.route} data-screen-label={p.screen} style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
   </div>
 );
 
@@ -419,7 +425,7 @@ function App() {
         subtitle="Split-panel study interface. Left: alternating reading + quiz blocks. Right: AI agent with tool results. Status colors on quiz options appear only after submission."
       >
         {/* State 1: reading block + quiz unanswered */}
-        <Artboard label="Answering — option selected (not submitted)" width={1200} height={820}>
+        <Artboard screen="Study session" state="answering-unsubmitted" route="/session/:id" width={1200} height={820}>
           <SessionLayout
             current={3} total={12} elapsed="18:42"
             leftContent={[
@@ -444,7 +450,7 @@ function App() {
         </Artboard>
 
         {/* State 2: submitted — wrong answer, agent explaining */}
-        <Artboard label="Submitted — incorrect + agent explanation tool card" width={1200} height={820}>
+        <Artboard screen="Study session" state="submitted-incorrect" route="/session/:id" width={1200} height={820}>
           <SessionLayout
             current={3} total={12} elapsed="19:15"
             leftContent={[
@@ -463,7 +469,7 @@ function App() {
         </Artboard>
 
         {/* State 3: reading expanded, agent collapsed */}
-        <Artboard label="Reading expanded — agent collapsed to rail" width={1200} height={820}>
+        <Artboard screen="Study session" state="reading-expanded-agent-collapsed" route="/session/:id" width={1200} height={820}>
           <SessionLayout
             current={4} total={12} elapsed="21:08"
             leftContent={[
