@@ -6,10 +6,10 @@
 
 ## 1. Sign in — errored-field styling on failed login (`web-auth`)
 
-- [ ] 1.1 RED: component test asserting the credential inputs render the errored styling (Readion danger/error token border) when the form is in the login-failed state, and neutral styling otherwise
-- [ ] 1.2 RED: component test asserting the failure message remains the uniform banner "invalid email or password" and NO per-field, account-revealing message is rendered
-- [ ] 1.3 GREEN: bind an `error` state to the credential field component on `401` in `login.vue`; style the input border via the Readion error token
-- [ ] 1.4 REFACTOR: share the errored-field styling with the reset/register credential fields if they use the same primitive; keep the uniform-message behavior intact
+- [x] 1.1 RED: component test asserting the credential inputs render the errored styling (Readion danger/error token border) when the form is in the login-failed state, and neutral styling otherwise
+- [x] 1.2 RED: component test asserting the failure message remains the uniform banner "invalid email or password" and NO per-field, account-revealing message is rendered
+- [x] 1.3 GREEN: bind an `error` state to the credential field component on `401` in `login.vue`; style the input border via the Readion error token
+- [x] 1.4 REFACTOR: share the errored-field styling with the reset/register credential fields if they use the same primitive; keep the uniform-message behavior intact
 
 ## 2. Reset password — confirm field + match validation (`web-auth`)
 

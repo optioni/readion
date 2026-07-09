@@ -31,7 +31,9 @@ test.describe('web-auth — sign-in error styling (SignIn.html)', () => {
 
     // The credential inputs must render the errored (danger-token) styling — a red border, not the
     // neutral default.
-    const emailBorder = await page.locator('#login-email').evaluate((el) => getComputedStyle(el).borderColor)
+    const emailBorder = await page
+      .locator('#login-email')
+      .evaluate((el) => getComputedStyle(el).borderColor)
     const passwordBorder = await page
       .locator('#login-password')
       .evaluate((el) => getComputedStyle(el).borderColor)
@@ -48,7 +50,9 @@ test.describe('web-auth — sign-in error styling (SignIn.html)', () => {
     await page.goto('/login')
     await page.waitForLoadState('networkidle')
 
-    const emailBorder = await page.locator('#login-email').evaluate((el) => getComputedStyle(el).borderColor)
+    const emailBorder = await page
+      .locator('#login-email')
+      .evaluate((el) => getComputedStyle(el).borderColor)
     expect(emailBorder).not.toBe('rgb(248, 113, 113)')
   })
 })

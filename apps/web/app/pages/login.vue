@@ -39,7 +39,10 @@
           placeholder="you@example.com"
           autocomplete="email"
           required
-          class="w-full px-3 py-2 bg-readion-background-base border border-slate-700 rounded-md text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+          :class="[
+            'w-full px-3 py-2 bg-readion-background-base border rounded-md text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500',
+            credentialBorderClass,
+          ]"
         />
       </div>
 
@@ -57,7 +60,10 @@
             placeholder="••••••••"
             autocomplete="current-password"
             required
-            class="w-full px-3 py-2 pr-10 bg-readion-background-base border border-slate-700 rounded-md text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+            :class="[
+              'w-full px-3 py-2 pr-10 bg-readion-background-base border rounded-md text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500',
+              credentialBorderClass,
+            ]"
           />
           <button
             type="button"
@@ -97,6 +103,7 @@ import { createReadionFetch, ReadionProblemDetailsError } from '~/api/mutator'
 import { useTrack } from '~/composables/useTrack'
 import type { AuthUser } from '~/stores/auth'
 import { useAuthStore } from '~/stores/auth'
+import { credentialFieldBorderClass } from '~/utils/credentialFieldStyles'
 import { buildPageSeoMeta } from '~/utils/seo'
 
 definePageMeta({ layout: 'auth' })
@@ -119,6 +126,7 @@ const showPassword = ref(false)
 const loading = ref(false)
 const loginError = ref<string | null>(null)
 const resetSuccess = computed(() => route.query?.reset === 'success')
+const credentialBorderClass = computed(() => credentialFieldBorderClass(!!loginError.value))
 
 type LoginResponse = { data: { data: { accessToken: string } }; status: number; headers: Headers }
 type MeResponse = { data: { data: AuthUser }; status: number; headers: Headers }

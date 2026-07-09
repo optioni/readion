@@ -138,4 +138,46 @@ describe('/login page', () => {
     expect(wrapper.html()).not.toContain('No account found')
     expect(wrapper.html()).not.toContain('no account')
   })
+
+  it('renders the errored (danger-token) border on the credential fields on 401, and neutral otherwise', async () => {
+    const wrapper = mountLogin()
+
+    expect(wrapper.find('#login-email').classes()).not.toContain('border-readion-status-poor')
+    expect(wrapper.find('#login-password').classes()).not.toContain('border-readion-status-poor')
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ title: 'Unauthorized', status: 401 }), {
+        status: 401,
+        headers: { 'content-type': 'application/problem+json' },
+      }),
+    )
+
+    await wrapper.find('input[type="email"]').setValue('x@y.com')
+    await wrapper.find('input[type="password"]').setValue('bad')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.find('#login-email').classes()).toContain('border-readion-status-poor')
+    expect(wrapper.find('#login-password').classes()).toContain('border-readion-status-poor')
+  })
+
+  it('keeps the failure message as a single uniform banner alongside the errored-field styling', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ title: 'Unauthorized', status: 401 }), {
+        status: 401,
+        headers: { 'content-type': 'application/problem+json' },
+      }),
+    )
+
+    const wrapper = mountLogin()
+    await wrapper.find('input[type="email"]').setValue('x@y.com')
+    await wrapper.find('input[type="password"]').setValue('bad')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.findAll('[data-testid="login-error"]')).toHaveLength(1)
+    expect(wrapper.find('#login-email').classes()).toContain('border-readion-status-poor')
+    expect(wrapper.find('[data-testid="login-email-error"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="login-password-error"]').exists()).toBe(false)
+  })
 })
