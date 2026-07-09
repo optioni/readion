@@ -33,10 +33,10 @@
 
 ## 5. Agent chat — bubble roles, avatar, cursor, paragraphs (`web-agent-chat`)
 
-- [ ] 5.1 RED: component test asserting user bubbles use surface + secondary-text styling and assistant bubbles use primary + white (the corrected, un-swapped roles)
-- [ ] 5.2 RED: component test asserting each assistant bubble renders a per-message sparkle avatar, the streaming cursor renders inline at the end of the last paragraph in white-on-primary (not a muted sibling block after the list), and assistant content renders as discrete paragraphs
-- [ ] 5.3 GREEN: swap the bubble color roles; add the per-message avatar; move the cursor inline; split the stored assistant turn into paragraphs for rendering
-- [ ] 5.4 REFACTOR: keep persistence unchanged (paragraph split is a render concern)
+- [x] 5.1 RED: component test asserting user bubbles use surface + secondary-text styling and assistant bubbles use primary + white (the corrected, un-swapped roles)
+- [x] 5.2 RED: component test asserting each assistant bubble renders a per-message sparkle avatar, the streaming cursor renders inline at the end of the last paragraph in white-on-primary (not a muted sibling block after the list), and assistant content renders as discrete paragraphs
+- [x] 5.3 GREEN: swap the bubble color roles; add the per-message avatar; move the cursor inline; split the stored assistant turn into paragraphs for rendering
+- [x] 5.4 REFACTOR: keep persistence unchanged (paragraph split is a render concern)
 
 ## 6. Acceptance Test — Outer Loop GREEN
 
