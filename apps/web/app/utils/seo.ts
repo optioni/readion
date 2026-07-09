@@ -11,3 +11,24 @@ export const buildTitle = (pageTitle?: string): string => {
   const chunk = pageTitle && pageTitle.length > 0 ? pageTitle : DEFAULT_PAGE_TITLE
   return TITLE_TEMPLATE.replace('%s', chunk)
 }
+
+export type PageSeoMeta = {
+  title: string
+  description: string
+  ogTitle: string
+  ogDescription: string
+  ogSiteName: string
+  twitterCard: string
+}
+
+// Shared Open Graph / Twitter defaults so per-page callers only decide title + description —
+// used by the public auth pages so a pasted /login or /register link unfurls into a product
+// card instead of a bare URL.
+export const buildPageSeoMeta = (page: { title: string; description: string }): PageSeoMeta => ({
+  title: page.title,
+  description: page.description,
+  ogTitle: page.title,
+  ogDescription: page.description,
+  ogSiteName: SITE_NAME,
+  twitterCard: DEFAULT_TWITTER_CARD,
+})

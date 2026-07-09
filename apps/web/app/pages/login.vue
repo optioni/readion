@@ -97,8 +97,16 @@ import { createReadionFetch, ReadionProblemDetailsError } from '~/api/mutator'
 import { useTrack } from '~/composables/useTrack'
 import type { AuthUser } from '~/stores/auth'
 import { useAuthStore } from '~/stores/auth'
+import { buildPageSeoMeta } from '~/utils/seo'
 
 definePageMeta({ layout: 'auth' })
+
+useSeoMeta(
+  buildPageSeoMeta({
+    title: 'Sign in',
+    description: 'Sign in to your Readion account to continue your certification exam prep.',
+  }),
+)
 
 const auth = useAuthStore()
 const router = useRouter()

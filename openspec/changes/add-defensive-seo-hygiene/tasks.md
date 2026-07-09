@@ -18,9 +18,9 @@
 
 ## 3. Social share metadata on public auth pages
 
-- [ ] 3.1 RED: Write component/page tests asserting `/login` and `/register` emit `og:title`, `og:description`, and `twitter:card` with non-empty content
-- [ ] 3.2 GREEN: Add `useSeoMeta({ title, description, ogTitle, ogDescription, twitterCard, ... })` to `app/pages/login.vue` and `app/pages/register.vue`; wire an existing icon as `ogImage` only if a raster asset exists, otherwise omit per design.md non-goals
-- [ ] 3.3 REFACTOR: Factor shared OG defaults (site name, card type) so per-page blocks only set title/description
+- [x] 3.1 RED: Write component/page tests asserting `/login` and `/register` emit `og:title`, `og:description`, and `twitter:card` with non-empty content
+- [x] 3.2 GREEN: Add `useSeoMeta({ title, description, ogTitle, ogDescription, twitterCard, ... })` to `app/pages/login.vue` and `app/pages/register.vue`; wire an existing icon as `ogImage` only if a raster asset exists, otherwise omit per design.md non-goals
+- [x] 3.3 REFACTOR: Factor shared OG defaults (site name, card type) so per-page blocks only set title/description
 
 ## 4. Acceptance Test — Outer Loop GREEN
 

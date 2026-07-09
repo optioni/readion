@@ -98,8 +98,16 @@ import { useCredentialForm } from '~/composables/useCredentialForm'
 import { useTrack } from '~/composables/useTrack'
 import type { AuthUser } from '~/stores/auth'
 import { useAuthStore } from '~/stores/auth'
+import { buildPageSeoMeta } from '~/utils/seo'
 
 definePageMeta({ layout: 'auth' })
+
+useSeoMeta(
+  buildPageSeoMeta({
+    title: 'Create your account',
+    description: 'Create a Readion account to start personalized certification exam prep.',
+  }),
+)
 
 const auth = useAuthStore()
 const router = useRouter()
