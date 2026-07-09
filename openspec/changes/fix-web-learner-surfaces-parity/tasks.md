@@ -60,8 +60,8 @@
 
 ## 8. Change Review — Subagent Verification
 
-- [ ] 8.1 Dispatch a reviewer subagent against `proposal.md`, the three spec deltas, and the diff
-- [ ] 8.2 Triage: fix CRITICAL, resolve/accept WARNING (one-line reason each), note SUGGESTIONs; re-run affected tests
+- [x] 8.1 Dispatch a reviewer subagent against `proposal.md`, the three spec deltas, and the diff
+- [x] 8.2 Triage: fix CRITICAL, resolve/accept WARNING (one-line reason each), note SUGGESTIONs; re-run affected tests
 
 ## 9. Polish
 
