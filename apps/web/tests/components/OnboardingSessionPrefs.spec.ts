@@ -2,9 +2,12 @@ import type { SessionDefaults } from '@readion/shared'
 import {
   DEFAULT_SESSION_DEFAULTS,
   sessionDefaultContentMixes,
+  sessionDefaultContentMixLabels,
   sessionDefaultDifficulties,
+  sessionDefaultDifficultyLabels,
   sessionDefaultDurations,
   sessionDefaultFocusAreas,
+  sessionDefaultLearningStyleLabels,
   sessionDefaultLearningStyles,
 } from '@readion/shared'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
@@ -76,6 +79,55 @@ describe('OnboardingSessionPrefs options', () => {
     for (const value of sessionDefaultLearningStyles) {
       expect(wrapper.find(`[data-testid="learning-style-${value}"]`).exists()).toBe(true)
     }
+  })
+
+  it('renders the mapped human-readable label as pill text, never the raw enum slug', async () => {
+    stubProfile(DEFAULT_SESSION_DEFAULTS)
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    for (const value of sessionDefaultDifficulties) {
+      const pill = wrapper.find(`[data-testid="difficulty-${value}"]`)
+      expect(pill.text()).toBe(sessionDefaultDifficultyLabels[value])
+      expect(pill.text()).not.toBe(value)
+    }
+    for (const value of sessionDefaultContentMixes) {
+      const pill = wrapper.find(`[data-testid="content-mix-${value}"]`)
+      expect(pill.text()).toBe(sessionDefaultContentMixLabels[value])
+      expect(pill.text()).not.toBe(value)
+    }
+    for (const value of sessionDefaultLearningStyles) {
+      const pill = wrapper.find(`[data-testid="learning-style-${value}"]`)
+      expect(pill.text()).toBe(sessionDefaultLearningStyleLabels[value])
+      expect(pill.text()).not.toBe(value)
+    }
+  })
+
+  it('keeps every enum value selectable and unchanged even though the label is humanized', async () => {
+    stubProfile(DEFAULT_SESSION_DEFAULTS)
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    // The full set of options per field is unchanged at the value level — the reconciliation
+    // decision keeps the authoritative packages/shared enums instead of the design's reduced set.
+    expect(sessionDefaultDifficulties).toHaveLength(4)
+    expect(sessionDefaultLearningStyles).toHaveLength(3)
+
+    for (const value of sessionDefaultDifficulties) {
+      expect(wrapper.find(`[data-testid="difficulty-${value}"]`).exists()).toBe(true)
+    }
+    for (const value of sessionDefaultLearningStyles) {
+      expect(wrapper.find(`[data-testid="learning-style-${value}"]`).exists()).toBe(true)
+    }
+
+    await wrapper.find('[data-testid="difficulty-advanced"]').trigger('click')
+    await confirmButton(wrapper)?.trigger('click')
+
+    expect(wrapper.emitted('confirm')?.at(-1)).toEqual([
+      { ...DEFAULT_SESSION_DEFAULTS, difficulty: 'advanced' },
+    ])
   })
 
   it('exposes the prefs container', async () => {

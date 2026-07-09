@@ -3,9 +3,12 @@ import type { SessionDefaults } from '@readion/shared'
 import {
   DEFAULT_SESSION_DEFAULTS,
   sessionDefaultContentMixes,
+  sessionDefaultContentMixLabels,
   sessionDefaultDifficulties,
+  sessionDefaultDifficultyLabels,
   sessionDefaultDurations,
   sessionDefaultFocusAreas,
+  sessionDefaultLearningStyleLabels,
   sessionDefaultLearningStyles,
   sessionDefaultsSchema,
 } from '@readion/shared'
@@ -80,6 +83,16 @@ const fields = [
   },
 ]
 
+const optionLabels: Partial<Record<keyof SessionDefaults, Record<string, string>>> = {
+  contentMix: sessionDefaultContentMixLabels,
+  difficulty: sessionDefaultDifficultyLabels,
+  learningStyle: sessionDefaultLearningStyleLabels,
+}
+
+function labelFor(key: keyof SessionDefaults, option: SessionDefaults[keyof SessionDefaults]) {
+  return optionLabels[key]?.[String(option)] ?? String(option)
+}
+
 function isSelected(key: keyof SessionDefaults, value: SessionDefaults[keyof SessionDefaults]) {
   return selected[key] === value
 }
@@ -114,7 +127,7 @@ function confirm() {
           "
           @click="select(field.key, option)"
         >
-          {{ option }}
+          {{ labelFor(field.key, option) }}
         </button>
       </div>
     </div>

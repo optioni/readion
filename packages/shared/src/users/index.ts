@@ -18,6 +18,34 @@ export const sessionDefaultLearningStyles = [
   'scenario-based',
 ] as const
 
+export const sessionDefaultDifficultyLabels: Record<
+  (typeof sessionDefaultDifficulties)[number],
+  string
+> = {
+  beginner: 'Beginner',
+  intermediate: 'Intermediate',
+  advanced: 'Advanced',
+  adaptive: 'Adaptive',
+}
+
+export const sessionDefaultContentMixLabels: Record<
+  (typeof sessionDefaultContentMixes)[number],
+  string
+> = {
+  balanced: 'Balanced',
+  'reading-heavy': 'Reading-heavy',
+  'quiz-heavy': 'Quiz-heavy',
+}
+
+export const sessionDefaultLearningStyleLabels: Record<
+  (typeof sessionDefaultLearningStyles)[number],
+  string
+> = {
+  'weak-area-focus': 'Weak-area focus',
+  'spaced-repetition': 'Spaced repetition',
+  'scenario-based': 'Scenario-based',
+}
+
 export const DEFAULT_SESSION_DEFAULTS = {
   duration: 30,
   contentMix: 'balanced',

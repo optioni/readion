@@ -3,9 +3,12 @@ import {
   DEFAULT_SESSION_DEFAULTS,
   type SessionDefaults,
   sessionDefaultContentMixes,
+  sessionDefaultContentMixLabels,
   sessionDefaultDifficulties,
+  sessionDefaultDifficultyLabels,
   sessionDefaultDurations,
   sessionDefaultFocusAreas,
+  sessionDefaultLearningStyleLabels,
   sessionDefaultLearningStyles,
   type UpdateUserProfileRequest,
   type UserProfileResponse,
@@ -108,6 +111,39 @@ describe('users shared contracts', () => {
     })
     expect(updateUserProfileRequestSchema.parse({}).digestOptOut).toBeUndefined()
     expect(updateUserProfileRequestSchema.safeParse({ digestOptOut: 'yes' }).success).toBe(false)
+  })
+
+  it('maps every difficulty/content-mix/learning-style enum value to a human-readable label', () => {
+    for (const value of sessionDefaultDifficulties) {
+      expect(sessionDefaultDifficultyLabels[value]).toEqual(expect.any(String))
+      expect(sessionDefaultDifficultyLabels[value]).not.toBe(value)
+    }
+    expect(sessionDefaultDifficultyLabels).toEqual({
+      beginner: 'Beginner',
+      intermediate: 'Intermediate',
+      advanced: 'Advanced',
+      adaptive: 'Adaptive',
+    })
+
+    for (const value of sessionDefaultContentMixes) {
+      expect(sessionDefaultContentMixLabels[value]).toEqual(expect.any(String))
+      expect(sessionDefaultContentMixLabels[value]).not.toBe(value)
+    }
+    expect(sessionDefaultContentMixLabels).toEqual({
+      balanced: 'Balanced',
+      'reading-heavy': 'Reading-heavy',
+      'quiz-heavy': 'Quiz-heavy',
+    })
+
+    for (const value of sessionDefaultLearningStyles) {
+      expect(sessionDefaultLearningStyleLabels[value]).toEqual(expect.any(String))
+      expect(sessionDefaultLearningStyleLabels[value]).not.toBe(value)
+    }
+    expect(sessionDefaultLearningStyleLabels).toEqual({
+      'weak-area-focus': 'Weak-area focus',
+      'spaced-repetition': 'Spaced repetition',
+      'scenario-based': 'Scenario-based',
+    })
   })
 
   it('rejects invalid IANA timezones and out-of-set preference values', () => {
