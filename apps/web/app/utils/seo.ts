@@ -5,7 +5,7 @@ export const DEFAULT_PAGE_TITLE = 'App'
 export const TITLE_TEMPLATE = `%s · ${SITE_NAME}`
 export const SITE_DESCRIPTION =
   'Readion — personalized certification exam preparation and study tracking.'
-export const DEFAULT_TWITTER_CARD = 'summary'
+export const DEFAULT_TWITTER_CARD = 'summary' as const
 
 export const buildTitle = (pageTitle?: string): string => {
   const chunk = pageTitle && pageTitle.length > 0 ? pageTitle : DEFAULT_PAGE_TITLE
@@ -18,7 +18,7 @@ export type PageSeoMeta = {
   ogTitle: string
   ogDescription: string
   ogSiteName: string
-  twitterCard: string
+  twitterCard: typeof DEFAULT_TWITTER_CARD
 }
 
 // Shared Open Graph / Twitter defaults so per-page callers only decide title + description —

@@ -30,9 +30,10 @@ describe('web SEO head config', () => {
         : undefined
     expect(resolvedDefault).toMatch(/· Readion$/)
 
-    const descriptionMeta = head?.meta?.find((m) => 'name' in m && m.name === 'description')
-    expect(descriptionMeta?.content).toBe(SITE_DESCRIPTION)
-    expect(descriptionMeta?.content.length).toBeGreaterThan(0)
+    const descriptionMeta = head?.meta?.find((m) => m && 'name' in m && m.name === 'description')
+    const descriptionContent = descriptionMeta?.content ? String(descriptionMeta.content) : ''
+    expect(descriptionContent).toBe(SITE_DESCRIPTION)
+    expect(descriptionContent.length).toBeGreaterThan(0)
   })
 
   it('still declares the manifest link, theme-color, and viewport meta', async () => {

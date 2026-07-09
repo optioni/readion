@@ -35,7 +35,7 @@
 
 ## 6. Polish
 
-- [ ] 6.1 Run linter and fix all errors (`yarn lint`)
-- [ ] 6.2 Run formatter and apply fixes (`yarn format:fix`)
-- [ ] 6.3 Run type checker with zero errors (`yarn workspace @readion/web typecheck`)
-- [ ] 6.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn workspace @readion/web test:coverage`)
+- [x] 6.1 Run linter and fix all errors (`yarn lint`)
+- [x] 6.2 Run formatter and apply fixes (`yarn format:fix`)
+- [x] 6.3 Run type checker with zero errors (`yarn workspace @readion/web typecheck`)
+- [x] 6.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn workspace @readion/web test:coverage`)
