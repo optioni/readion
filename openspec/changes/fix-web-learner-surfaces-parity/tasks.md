@@ -30,11 +30,11 @@
 
 ## 4. Cert detail — stat cards, right column, links, labels (`web-cert-detail`)
 
-- [ ] 4.1 RED: component test asserting each of the four stats renders as its own bordered card with the design's sub-caption ("completed" / "answered" / "per session")
-- [ ] 4.2 RED: component test asserting Suggested-next and Recent-sessions stack in a fixed right column beside the domain-scores column, with a "View all sessions →" link below Recent sessions
-- [ ] 4.3 RED: component test asserting the domain section label reads "Domain scores" and no extra "View progress" link sits between the header and the tab bar
-- [ ] 4.4 GREEN: implement the bordered stat cards + sub-captions, the right-column stacking + View-all link, the label rename, and remove the extra link
-- [ ] 4.5 REFACTOR: keep the trajectory stat sub-label as-is (reaffirmed); tidy grid markup
+- [x] 4.1 RED: component test asserting each of the four stats renders as its own bordered card with the design's sub-caption ("completed" / "answered" / "per session")
+- [x] 4.2 RED: component test asserting Suggested-next and Recent-sessions stack in a fixed right column beside the domain-scores column, with a "View all sessions →" link below Recent sessions
+- [x] 4.3 RED: component test asserting the domain section label reads "Domain scores" and no extra "View progress" link sits between the header and the tab bar
+- [x] 4.4 GREEN: implement the bordered stat cards + sub-captions, the right-column stacking + View-all link, the label rename, and remove the extra link
+- [x] 4.5 REFACTOR: keep the trajectory stat sub-label as-is (reaffirmed); tidy grid markup
 
 ## 5. Progress — trajectory placement, chart, This-month, history (`web-progress`)
 
