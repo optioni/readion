@@ -23,10 +23,10 @@
 
 ## 3. Cert detail — wired delta badges + accuracy coloring (`web-cert-detail`)
 
-- [ ] 3.1 RED: component test asserting `OverviewTab` passes per-session delta data to `RecentSessionsPanel` so a delta badge renders on each row (verify the session data exposes the delta; surface it if missing)
-- [ ] 3.2 RED: component test asserting recent-session accuracy is color-coded by score band and rows are separated by dividers; row content matches the design (date, duration + · Mock, accuracy, delta) without the "Kind · focus" label
-- [ ] 3.3 GREEN: bind the delta, apply score-band color, add dividers, adjust row content
-- [ ] 3.4 REFACTOR: share the score-band color helper with other readiness surfaces if present
+- [x] 3.1 RED: component test asserting `OverviewTab` passes per-session delta data to `RecentSessionsPanel` so a delta badge renders on each row (verify the session data exposes the delta; surface it if missing)
+- [x] 3.2 RED: component test asserting recent-session accuracy is color-coded by score band and rows are separated by dividers; row content matches the design (date, duration + · Mock, accuracy, delta) without the "Kind · focus" label
+- [x] 3.3 GREEN: bind the delta, apply score-band color, add dividers, adjust row content
+- [x] 3.4 REFACTOR: share the score-band color helper with other readiness surfaces if present
 
 ## 4. Cert detail — stat cards, right column, links, labels (`web-cert-detail`)
 
