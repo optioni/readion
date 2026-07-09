@@ -1,8 +1,8 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-- [ ] 0.1 Set up the e2e harness for logged-out access in `apps/web/e2e/` (no API/DB dependency — public auth pages render without auth; see design.md Test Boundaries)
-- [ ] 0.2 RED: Write failing acceptance test `seo-hygiene.e2e.spec.ts` covering all spec scenarios: `GET /robots.txt` returns `text/plain` with `User-agent: *` + `Disallow: /`; `/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify-email` are `Allow`ed while `/agent` and `/onboarding` are disallowed; `/login` and `/register` render a `<title>` ending in `· Readion` plus `og:title`, `og:description`, `twitter:card` meta
-- [ ] 0.3 Confirm it fails for the right reason (`/robots.txt` 404 / missing meta), not a harness/setup error
+- [x] 0.1 Set up the e2e harness for logged-out access in `apps/web/e2e/` (no API/DB dependency — public auth pages render without auth; see design.md Test Boundaries)
+- [x] 0.2 RED: Write failing acceptance test `seo-hygiene.e2e.spec.ts` covering all spec scenarios: `GET /robots.txt` returns `text/plain` with `User-agent: *` + `Disallow: /`; `/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify-email` are `Allow`ed while `/agent` and `/onboarding` are disallowed; `/login` and `/register` render a `<title>` ending in `· Readion` plus `og:title`, `og:description`, `twitter:card` meta
+- [x] 0.3 Confirm it fails for the right reason (`/robots.txt` 404 / missing meta), not a harness/setup error
 
 ## 1. Robots directives (module + config)
 
