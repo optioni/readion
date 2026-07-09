@@ -61,7 +61,11 @@ const cardStyle = computed(() =>
         <h2 class="font-semibold text-base leading-snug">{{ props.card.name }}</h2>
         <p class="mt-1 text-[11px] opacity-70">{{ props.card.provider }}</p>
       </NuxtLink>
-      <CardReadiness :display="readinessDisplay" class="flex-shrink-0 text-right" />
+      <CardReadiness
+        :display="readinessDisplay"
+        :hero="isHero"
+        class="flex-shrink-0 text-right"
+      />
     </div>
     <div class="grid grid-cols-2 gap-3">
       <WeakAreasPanel :weak-areas="weakAreas" :hero="isHero" />

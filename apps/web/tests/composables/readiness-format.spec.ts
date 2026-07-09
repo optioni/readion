@@ -8,6 +8,7 @@ describe('formatReadiness', () => {
       label: 'not yet calibrated',
       percent: null,
       delta: null,
+      score: null,
     })
   })
 
@@ -17,6 +18,7 @@ describe('formatReadiness', () => {
       label: 'not yet calibrated',
       percent: null,
       delta: null,
+      score: null,
     })
   })
 
@@ -26,6 +28,7 @@ describe('formatReadiness', () => {
       label: null,
       percent: '75%',
       delta: '+3%',
+      score: 75,
     })
   })
 
@@ -35,6 +38,7 @@ describe('formatReadiness', () => {
       label: null,
       percent: '64%',
       delta: '-2%',
+      score: 64,
     })
   })
 
@@ -44,6 +48,7 @@ describe('formatReadiness', () => {
       label: null,
       percent: '50%',
       delta: null,
+      score: 50,
     })
   })
 
@@ -53,6 +58,7 @@ describe('formatReadiness', () => {
       label: null,
       percent: '70%',
       delta: '+0%',
+      score: 70,
     })
   })
 })

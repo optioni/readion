@@ -8,6 +8,7 @@ export interface ReadinessDisplay {
   label: string | null
   percent: string | null
   delta: string | null
+  score: number | null
 }
 
 const NOT_CALIBRATED: ReadinessDisplay = {
@@ -15,6 +16,7 @@ const NOT_CALIBRATED: ReadinessDisplay = {
   label: 'not yet calibrated',
   percent: null,
   delta: null,
+  score: null,
 }
 
 const formatDelta = (delta: number | null): string | null => {
@@ -34,5 +36,6 @@ export function formatReadiness(readiness: ReadinessValue, delta: number | null)
     label: null,
     percent: `${readiness.score}%`,
     delta: formatDelta(delta),
+    score: readiness.score,
   }
 }

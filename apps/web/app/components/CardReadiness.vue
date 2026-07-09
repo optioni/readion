@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import ReadinessBar from '~/components/ReadinessBar.vue'
 import type { ReadinessDisplay } from '~/composables/readinessFormat'
 
-defineProps<{ display: ReadinessDisplay }>()
+defineProps<{ display: ReadinessDisplay; hero?: boolean }>()
 </script>
 
 <template>
@@ -19,5 +20,6 @@ defineProps<{ display: ReadinessDisplay }>()
     >
       {{ display.delta }} since last session
     </div>
+    <ReadinessBar :score="display.score" :hero="hero" />
   </div>
 </template>
