@@ -1,15 +1,15 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-- [ ] 0.1 Failing Playwright e2e (`apps/web/e2e`) for **Settings → Study defaults**: assert Difficulty/Content mix/Learning style render human-readable labels (no raw slugs like "beginner"/"reading-heavy"), that Session length renders as a slider with a live "N min" readout, that all five fields (incl. Focus area) are present, and that a "Session preferences" section title + intro copy render
-- [ ] 0.2 Failing Playwright e2e for **Agent chat**: assert the page uses the full-height layout (header pinned, only the message list scrolls, composer pinned to the bottom), that user bubbles use the surface/secondary treatment and assistant bubbles the primary/white treatment (not swapped), and that the Send button is disabled/greyed while the textarea is empty
-- [ ] 0.3 Confirm both fail for the right reason
+- [x] 0.1 Failing Playwright e2e (`apps/web/e2e`) for **Settings → Study defaults**: assert Difficulty/Content mix/Learning style render human-readable labels (no raw slugs like "beginner"/"reading-heavy"), that Session length renders as a slider with a live "N min" readout, that all five fields (incl. Focus area) are present, and that a "Session preferences" section title + intro copy render
+- [x] 0.2 Failing Playwright e2e for **Agent chat**: assert the page uses the full-height layout (header pinned, only the message list scrolls, composer pinned to the bottom), that user bubbles use the surface/secondary treatment and assistant bubbles the primary/white treatment (not swapped), and that the Send button is disabled/greyed while the textarea is empty
+- [x] 0.3 Confirm both fail for the right reason
 
 ## 1. Settings — human-readable option labels (`web-settings`)
 
-- [ ] 1.1 RED: unit test for a value→label map covering every difficulty/content-mix/learning-style enum value; component test asserting pills render the mapped labels, never the raw slug
-- [ ] 1.2 RED: component test asserting the enum value *sets* are unchanged (all difficulty/content-mix/learning-style options still render; none dropped or renamed at the value level)
-- [ ] 1.3 GREEN: add the label map and render mapped labels in `OnboardingSessionPrefs`
-- [ ] 1.4 REFACTOR: colocate the map (or place in `packages/shared` beside the enums); ensure the persisted value remains the enum slug
+- [x] 1.1 RED: unit test for a value→label map covering every difficulty/content-mix/learning-style enum value; component test asserting pills render the mapped labels, never the raw slug
+- [x] 1.2 RED: component test asserting the enum value *sets* are unchanged (all difficulty/content-mix/learning-style options still render; none dropped or renamed at the value level)
+- [x] 1.3 GREEN: add the label map and render mapped labels in `OnboardingSessionPrefs`
+- [x] 1.4 REFACTOR: colocate the map (or place in `packages/shared` beside the enums); ensure the persisted value remains the enum slug
 
 ## 2. Settings — duration slider (`web-settings`)
 
