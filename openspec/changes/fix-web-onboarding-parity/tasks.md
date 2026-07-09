@@ -13,9 +13,9 @@
 
 ## 2. Search box count suffix + leading icon (`web-onboarding`)
 
-- [ ] 2.1 RED: component test asserting the search box renders a right-aligned "N available" suffix reflecting the total loaded cert count, and a leading magnifying-glass icon
-- [ ] 2.2 GREEN: add the count suffix + leading icon to the search input
-- [ ] 2.3 REFACTOR: confirm the count reflects total catalog size, not the filtered subset (per design)
+- [x] 2.1 RED: component test asserting the search box renders a right-aligned "N available" suffix reflecting the total loaded cert count, and a leading magnifying-glass icon
+- [x] 2.2 GREEN: add the count suffix + leading icon to the search input
+- [x] 2.3 REFACTOR: confirm the count reflects total catalog size, not the filtered subset (per design)
 
 ## 3. Footer divider + arrow glyph (`web-onboarding`)
 
