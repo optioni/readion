@@ -96,14 +96,28 @@ test.describe('fix-web-learner-surfaces-parity — outer-loop acceptance (RED)',
     // "This month" section label over the per-stat bordered cards.
     await expect(progressPage.getByText('This month', { exact: true })).toBeVisible()
 
-    // Mastering a domain persists across a reload — derived from fetched data, not a local ref.
-    const domainRow = progressPage.getByTestId('progress-domain-row').first()
+    // Mastering a domain persists across navigation — derived from fetched data, not a local ref
+    // that resets when the component remounts. Navigating away and back (client-side, via the app
+    // shell's own nav links) unmounts/remounts ProgressDomainRow and forces the invalidated
+    // review-queue query to refetch — a real browser `page.reload()` would instead hit Nuxt SSR on
+    // the Node server, which Playwright's page-level route mocks cannot intercept (see
+    // support/progress-seed.ts's file-level comment for why this suite is mock-only).
+    // Mastering moves the row into the "Mastered" divider group, so it must be targeted by domain
+    // name rather than `.first()` — its position in the DOM legitimately changes once mastered.
+    const domainRow = progressPage.getByTestId('progress-domain-row').filter({
+      hasText: 'Secure Architectures',
+    })
     await domainRow.getByTestId('mark-mastered-button').click()
     await expect(domainRow).toHaveAttribute('data-state', 'mastered')
 
-    await page.reload()
+    await page.getByRole('link', { name: 'Dashboard' }).click()
+    await expect(page.getByTestId('dashboard-list')).toBeVisible()
+    await page.getByRole('link', { name: 'Progress' }).click()
+
     await expect(page.getByTestId('progress-page')).toBeVisible()
-    const reloadedRow = page.getByTestId('progress-domain-row').first()
+    const reloadedRow = page.getByTestId('progress-domain-row').filter({
+      hasText: 'Secure Architectures',
+    })
     await expect(reloadedRow).toHaveAttribute('data-state', 'mastered')
     // Design treatment: struck-through name, "Mastered" pill, no functional Unretire control.
     await expect(reloadedRow.getByTestId('mastered-pill')).toBeVisible()

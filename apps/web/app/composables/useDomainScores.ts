@@ -8,12 +8,14 @@ import type {
 
 export interface DomainScoreWithDeltaRow extends DomainScoreRow {
   delta: number | null
+  mastered: boolean
 }
 
 export function useDomainScores(
   domains: CertificationDomainDto[],
   weakAreas: WeakAreaResponseDto[],
   latestSummary: SessionSummaryResponseDto | null,
+  suppressedDomains: string[] = [],
 ): DomainScoreWithDeltaRow[] {
   const base = joinDomainScores(domains, weakAreas)
 
@@ -24,8 +26,11 @@ export function useDomainScores(
     }
   }
 
+  const masteredSet = new Set(suppressedDomains)
+
   return base.map((row) => ({
     ...row,
     delta: deltaMap.has(row.domain) ? (deltaMap.get(row.domain) as number) : null,
+    mastered: masteredSet.has(row.domain),
   }))
 }

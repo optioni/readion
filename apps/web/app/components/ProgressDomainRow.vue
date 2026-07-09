@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQueryClient } from '@tanstack/vue-query'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import DomainScoreBar from '~/components/DomainScoreBar.vue'
 import { suppressDomain } from '~/composables/progressApi'
 import { progressQueryKeys } from '~/composables/progressQueryKeys'
@@ -13,14 +13,22 @@ const props = defineProps<{
   hasData: boolean
   delta: number | null
   enrollmentId: string
+  mastered: boolean
 }>()
 
 const queryClient = useQueryClient()
-const mastered = ref(false)
+
+// Optimistic-only flag: gives instant feedback after the mutation resolves, in this same mount,
+// without waiting on the invalidated queries to refetch. The authoritative source of truth is the
+// `mastered` prop (derived from a fresh fetch by the parent) — this flag never survives a reload,
+// which is exactly the behaviour fixed here (the old bug was a local ref used as the *only* source
+// of truth, so it silently reset on reload instead of reflecting fetched data).
+const justMastered = ref(false)
+const isMastered = computed(() => props.mastered || justMastered.value)
 
 async function markMastered() {
   await suppressDomain(props.enrollmentId, { domain: props.domain })
-  mastered.value = true
+  justMastered.value = true
   await queryClient.invalidateQueries({ queryKey: progressQueryKeys.weakAreas(props.enrollmentId) })
   await queryClient.invalidateQueries({
     queryKey: progressQueryKeys.reviewQueue(props.enrollmentId),
@@ -31,7 +39,7 @@ async function markMastered() {
 <template>
   <div
     data-testid="progress-domain-row"
-    :data-state="mastered ? 'mastered' : undefined"
+    :data-state="isMastered ? 'mastered' : undefined"
     class="flex items-center justify-between gap-3 py-2"
   >
     <DomainScoreBar
@@ -41,10 +49,11 @@ async function markMastered() {
       :status="status"
       :has-data="hasData"
       :delta="delta"
+      :mastered="isMastered"
     />
 
     <button
-      v-if="!mastered"
+      v-if="!isMastered"
       type="button"
       data-testid="mark-mastered-button"
       class="rounded px-2 py-1 text-slate-400 text-xs transition-colors hover:text-slate-200"
@@ -52,6 +61,5 @@ async function markMastered() {
     >
       Mark mastered
     </button>
-    <span v-else class="text-slate-500 text-xs">Mastered</span>
   </div>
 </template>

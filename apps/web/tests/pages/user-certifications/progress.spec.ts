@@ -80,8 +80,9 @@ function mountPage() {
           props: ['weeksToReady'],
         },
         ProgressDomainRow: {
-          template: '<div data-testid="progress-domain-row"><slot /></div>',
-          props: ['domain', 'score', 'status', 'hasData', 'delta', 'enrollmentId'],
+          template:
+            '<div data-testid="progress-domain-row" :data-mastered="mastered"><slot /></div>',
+          props: ['domain', 'score', 'status', 'hasData', 'delta', 'enrollmentId', 'mastered'],
         },
         ProgressSessionHistoryTable: {
           template: '<div data-testid="progress-session-history-table" />',
@@ -205,6 +206,43 @@ describe('Progress page — domain rows', () => {
     })
     const wrapper = mountPage()
     expect(wrapper.findAll('[data-testid="progress-domain-row"]')).toHaveLength(2)
+  })
+})
+
+describe('Progress page — mastered domain grouping (6.2/6.3)', () => {
+  it('renders every domain row, tagging mastered ones via the mastered prop', () => {
+    stubProgressData({
+      domainScores: [
+        { domain: 'Security', score: 41, status: 'poor', hasData: true, delta: null, mastered: false },
+        { domain: 'Storage', score: 88, status: 'good', hasData: true, delta: null, mastered: true },
+      ],
+    })
+    const wrapper = mountPage()
+    const rows = wrapper.findAll('[data-testid="progress-domain-row"]')
+    expect(rows).toHaveLength(2)
+    expect(rows[0]?.attributes('data-mastered')).toBe('false')
+    expect(rows[1]?.attributes('data-mastered')).toBe('true')
+  })
+
+  it('shows a "Mastered" divider group label when at least one domain is mastered', () => {
+    stubProgressData({
+      domainScores: [
+        { domain: 'Security', score: 41, status: 'poor', hasData: true, delta: null, mastered: false },
+        { domain: 'Storage', score: 88, status: 'good', hasData: true, delta: null, mastered: true },
+      ],
+    })
+    const wrapper = mountPage()
+    expect(wrapper.text()).toContain('Mastered')
+  })
+
+  it('omits the "Mastered" divider when no domain is mastered', () => {
+    stubProgressData({
+      domainScores: [
+        { domain: 'Security', score: 41, status: 'poor', hasData: true, delta: null, mastered: false },
+      ],
+    })
+    const wrapper = mountPage()
+    expect(wrapper.text()).not.toContain('Mastered')
   })
 })
 

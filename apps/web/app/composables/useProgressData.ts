@@ -17,6 +17,7 @@ import { useAccuracySeries } from '~/composables/useAccuracySeries'
 import { useDomainScores } from '~/composables/useDomainScores'
 import { useReadinessTrend } from '~/composables/useReadinessTrend'
 import { useSessionHistoryMerge } from '~/composables/useSessionHistoryMerge'
+import { useSuppressedDomains } from '~/composables/useSuppressedDomains'
 import type { SessionSummaryResponseDto } from '~~/src/api/model'
 
 export interface SwitcherEntry {
@@ -60,6 +61,11 @@ export function useProgressData(enrollmentId: string) {
     queryKey: progressQueryKeys.weakAreas(enrollmentId),
     queryFn: () => fetchWeakAreas(enrollmentId),
   })
+
+  // 4b. Suppressed domains — derives the mastered state from fetched data (not a local-only ref
+  // that resets on reload); shares progressQueryKeys.reviewQueue with ProgressDomainRow's mutation
+  // invalidation, so marking a domain mastered refetches this.
+  const { suppressedDomains } = useSuppressedDomains(enrollmentId)
 
   // 5. Sessions + summary fan-out combined in one query (per useSessionsHistory pattern)
   const sessionsQuery = useQuery({
@@ -177,7 +183,12 @@ export function useProgressData(enrollmentId: string) {
   )
 
   const domainScores = computed(() =>
-    useDomainScores(domains.value, scaledWeakAreas.value, scaledLatestSummary.value),
+    useDomainScores(
+      domains.value,
+      scaledWeakAreas.value,
+      scaledLatestSummary.value,
+      suppressedDomains.value,
+    ),
   )
 
   const historyRows = computed(() =>

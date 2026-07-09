@@ -35,6 +35,9 @@ const {
 const activityStats = computed(() => useActivityStats(sessions.value, summariesMap.value))
 const streakUnit = computed(() => pluralizeUnit(activityStats.value.currentStreakDays, 'day'))
 const showProjection = computed(() => weeksToReady.value !== null)
+
+const activeDomainRows = computed(() => domainScores.value.filter((row) => !row.mastered))
+const masteredDomainRows = computed(() => domainScores.value.filter((row) => row.mastered))
 </script>
 
 <template>
@@ -107,9 +110,10 @@ const showProjection = computed(() => weeksToReady.value !== null)
         <div class="mb-2.5 text-[11px] uppercase tracking-wider opacity-70">Domain scores</div>
         <div class="rounded-xl border border-readion-background-surface bg-readion-background-surface/40 px-4 py-1">
           <div
-            v-for="row in domainScores"
+            v-for="(row, index) in activeDomainRows"
             :key="row.domain"
-            class="border-readion-background-surface border-b last:border-b-0"
+            class="border-readion-background-surface border-b"
+            :class="{ 'border-b-0': index === activeDomainRows.length - 1 && masteredDomainRows.length === 0 }"
           >
             <ProgressDomainRow
               :domain="row.domain"
@@ -118,8 +122,33 @@ const showProjection = computed(() => weeksToReady.value !== null)
               :has-data="row.hasData"
               :delta="row.delta"
               :enrollment-id="enrollmentId"
+              :mastered="row.mastered"
             />
           </div>
+
+          <template v-if="masteredDomainRows.length > 0">
+            <div class="flex items-center gap-2 py-2">
+              <div class="h-px flex-1 bg-readion-background-surface" />
+              <span class="text-[10px] text-slate-500 uppercase tracking-wider">Mastered</span>
+              <div class="h-px flex-1 bg-readion-background-surface" />
+            </div>
+            <div
+              v-for="(row, index) in masteredDomainRows"
+              :key="row.domain"
+              class="border-readion-background-surface border-b"
+              :class="{ 'border-b-0': index === masteredDomainRows.length - 1 }"
+            >
+              <ProgressDomainRow
+                :domain="row.domain"
+                :score="row.score"
+                :status="row.status"
+                :has-data="row.hasData"
+                :delta="row.delta"
+                :enrollment-id="enrollmentId"
+                :mastered="row.mastered"
+              />
+            </div>
+          </template>
         </div>
       </div>
 

@@ -22,6 +22,7 @@ function mountRow(
     hasData?: boolean
     delta?: number | null
     enrollmentId?: string
+    mastered?: boolean
   } = {},
 ) {
   return mount(ProgressDomainRow, {
@@ -32,6 +33,7 @@ function mountRow(
       hasData: options.hasData ?? true,
       delta: options.delta ?? null,
       enrollmentId: options.enrollmentId ?? 'enr-1',
+      mastered: options.mastered ?? false,
     },
   })
 }
@@ -105,13 +107,18 @@ describe('ProgressDomainRow — delta badge', () => {
   })
 })
 
-describe('ProgressDomainRow — mark mastered', () => {
-  it('renders the mark-mastered-button', () => {
-    const wrapper = mountRow()
+describe('ProgressDomainRow — mark mastered (6.1)', () => {
+  it('renders the mark-mastered-button when not mastered', () => {
+    const wrapper = mountRow({ mastered: false })
     expect(wrapper.find('[data-testid="mark-mastered-button"]').exists()).toBe(true)
   })
 
-  it('calls suppressDomain and sets mastered state on click', async () => {
+  it('does not render the mark-mastered-button when already mastered', () => {
+    const wrapper = mountRow({ mastered: true })
+    expect(wrapper.find('[data-testid="mark-mastered-button"]').exists()).toBe(false)
+  })
+
+  it('calls suppressDomain with the enrollment and domain on click', async () => {
     const wrapper = mountRow({ domain: 'Secure Architectures', enrollmentId: 'enr-1' })
     await wrapper.find('[data-testid="mark-mastered-button"]').trigger('click')
     await wrapper.vm.$nextTick()
@@ -119,17 +126,19 @@ describe('ProgressDomainRow — mark mastered', () => {
     expect(vi.mocked(suppressDomain)).toHaveBeenCalledWith('enr-1', {
       domain: 'Secure Architectures',
     })
+  })
+
+  it('reflects the mastered state optimistically right after the mutation resolves', async () => {
+    const wrapper = mountRow({ mastered: false })
+    await wrapper.find('[data-testid="mark-mastered-button"]').trigger('click')
+    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick()
     expect(wrapper.find('[data-testid="progress-domain-row"]').attributes('data-state')).toBe(
       'mastered',
     )
   })
 
-  it('does not render unretire-button', () => {
-    const wrapper = mountRow()
-    expect(wrapper.find('[data-testid="unretire-button"]').exists()).toBe(false)
-  })
-
-  it('invalidates both weak-areas and review-queue queries after suppress-domain (W3)', async () => {
+  it('invalidates both weak-areas and review-queue queries after suppress-domain', async () => {
     const wrapper = mountRow({ domain: 'Secure Architectures', enrollmentId: 'enr-1' })
     await wrapper.find('[data-testid="mark-mastered-button"]').trigger('click')
     await wrapper.vm.$nextTick()
@@ -140,5 +149,31 @@ describe('ProgressDomainRow — mark mastered', () => {
     expect(mockInvalidateQueries).toHaveBeenCalledWith({
       queryKey: progressQueryKeys.reviewQueue('enr-1'),
     })
+  })
+
+  it('reflects the mastered state from the prop alone (no click), simulating a page reload', () => {
+    const wrapper = mountRow({ mastered: true })
+    expect(wrapper.find('[data-testid="progress-domain-row"]').attributes('data-state')).toBe(
+      'mastered',
+    )
+  })
+})
+
+describe('ProgressDomainRow — mastered design treatment (6.2)', () => {
+  it('shows the "Mastered" pill and struck-through name when mastered', () => {
+    const wrapper = mountRow({ mastered: true, domain: 'Secure Architectures' })
+    expect(wrapper.find('[data-testid="mastered-pill"]').exists()).toBe(true)
+    const name = wrapper.find('[data-testid="domain-score-bar"] span')
+    expect(name.classes()).toContain('line-through')
+  })
+
+  it('dims the score bar when mastered', () => {
+    const wrapper = mountRow({ mastered: true })
+    expect(wrapper.find('[data-testid="domain-score-bar-fill"]').classes()).toContain('opacity-40')
+  })
+
+  it('does not render a functional unretire-button (one-way contract)', () => {
+    const wrapper = mountRow({ mastered: true })
+    expect(wrapper.find('[data-testid="unretire-button"]').exists()).toBe(false)
   })
 })

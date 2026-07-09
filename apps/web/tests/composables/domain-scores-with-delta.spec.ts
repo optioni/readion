@@ -101,6 +101,28 @@ describe('useDomainScores', () => {
     expect(row!.delta).toBe(null)
   })
 
+  it('marks a domain mastered when it appears in suppressedDomains (6.3)', () => {
+    const rows = useDomainScores(
+      [domain('Networking'), domain('Security')],
+      [weakArea({ domain: 'Networking', score: 72 }), weakArea({ domain: 'Security', score: 55 })],
+      null,
+      ['Security'],
+    )
+
+    expect(rows[0]!.mastered).toBe(false)
+    expect(rows[1]!.mastered).toBe(true)
+  })
+
+  it('defaults every domain to not mastered when suppressedDomains is omitted', () => {
+    const rows = useDomainScores(
+      [domain('Networking'), domain('Security')],
+      [weakArea({ domain: 'Networking', score: 72 })],
+      null,
+    )
+
+    expect(rows.every((r) => r.mastered === false)).toBe(true)
+  })
+
   it('keeps the existing joinDomainScores tests green — correct score and status', () => {
     const rows = useDomainScores(
       [domain('A'), domain('B'), domain('C'), domain('D')],

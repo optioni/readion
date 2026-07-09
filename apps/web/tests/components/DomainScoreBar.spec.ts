@@ -85,6 +85,28 @@ describe('DomainScoreBar — accessibility', () => {
   })
 })
 
+describe('DomainScoreBar — mastered treatment (6.2)', () => {
+  it('dims the bar fill when mastered', () => {
+    const wrapper = mount(DomainScoreBar, {
+      props: {
+        domain: 'Networking',
+        score: 70,
+        status: 'medium',
+        hasData: true,
+        mastered: true,
+      },
+    })
+    expect(wrapper.find('[data-testid="domain-score-bar-fill"]').classes()).toContain('opacity-40')
+  })
+
+  it('does not dim the bar fill when not mastered', () => {
+    const wrapper = mountBar({ score: 70 })
+    expect(wrapper.find('[data-testid="domain-score-bar-fill"]').classes()).not.toContain(
+      'opacity-40',
+    )
+  })
+})
+
 describe('DomainScoreBar — no data state', () => {
   it('renders a neutral no-data state without percentage, trend or status colour', () => {
     const wrapper = mountBar({ hasData: false, score: null, status: null, delta: undefined })
