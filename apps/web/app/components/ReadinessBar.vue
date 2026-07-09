@@ -4,14 +4,10 @@ import { statusColorForScore } from '~/composables/statusColor'
 
 const props = defineProps<{ score: number | null; hero?: boolean }>()
 
-const trackClass = computed(() =>
-  props.hero ? 'bg-white/15' : 'bg-readion-background-surface',
-)
+const trackClass = computed(() => (props.hero ? 'bg-white/15' : 'bg-readion-background-surface'))
 
 const fillClass = computed(() =>
-  props.hero
-    ? 'bg-white/85'
-    : `bg-readion-status-${statusColorForScore(props.score ?? 0)}`,
+  props.hero ? 'bg-white/85' : `bg-readion-status-${statusColorForScore(props.score ?? 0)}`,
 )
 </script>
 

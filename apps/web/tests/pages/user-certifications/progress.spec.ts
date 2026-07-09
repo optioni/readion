@@ -178,10 +178,7 @@ describe('Progress page — section labels, counters, and width (5.3/5.4)', () =
 
   it('labels the session-history section with a live "N sessions total" count', () => {
     stubProgressData({
-      historyRows: [
-        { id: 'h1' },
-        { id: 'h2' },
-      ],
+      historyRows: [{ id: 'h1' }, { id: 'h2' }],
     })
     const wrapper = mountPage()
     expect(wrapper.text()).toContain('Session history')
@@ -213,8 +210,22 @@ describe('Progress page — mastered domain grouping (6.2/6.3)', () => {
   it('renders every domain row, tagging mastered ones via the mastered prop', () => {
     stubProgressData({
       domainScores: [
-        { domain: 'Security', score: 41, status: 'poor', hasData: true, delta: null, mastered: false },
-        { domain: 'Storage', score: 88, status: 'good', hasData: true, delta: null, mastered: true },
+        {
+          domain: 'Security',
+          score: 41,
+          status: 'poor',
+          hasData: true,
+          delta: null,
+          mastered: false,
+        },
+        {
+          domain: 'Storage',
+          score: 88,
+          status: 'good',
+          hasData: true,
+          delta: null,
+          mastered: true,
+        },
       ],
     })
     const wrapper = mountPage()
@@ -227,8 +238,22 @@ describe('Progress page — mastered domain grouping (6.2/6.3)', () => {
   it('shows a "Mastered" divider group label when at least one domain is mastered', () => {
     stubProgressData({
       domainScores: [
-        { domain: 'Security', score: 41, status: 'poor', hasData: true, delta: null, mastered: false },
-        { domain: 'Storage', score: 88, status: 'good', hasData: true, delta: null, mastered: true },
+        {
+          domain: 'Security',
+          score: 41,
+          status: 'poor',
+          hasData: true,
+          delta: null,
+          mastered: false,
+        },
+        {
+          domain: 'Storage',
+          score: 88,
+          status: 'good',
+          hasData: true,
+          delta: null,
+          mastered: true,
+        },
       ],
     })
     const wrapper = mountPage()
@@ -238,7 +263,14 @@ describe('Progress page — mastered domain grouping (6.2/6.3)', () => {
   it('omits the "Mastered" divider when no domain is mastered', () => {
     stubProgressData({
       domainScores: [
-        { domain: 'Security', score: 41, status: 'poor', hasData: true, delta: null, mastered: false },
+        {
+          domain: 'Security',
+          score: 41,
+          status: 'poor',
+          hasData: true,
+          delta: null,
+          mastered: false,
+        },
       ],
     })
     const wrapper = mountPage()

@@ -21,7 +21,11 @@ export function useAccuracySeries(
         return []
       }
       return [
-        { sessionId: session.id, accuracy: summary.accuracy, label: friendlyDate(session.startedAt) },
+        {
+          sessionId: session.id,
+          accuracy: summary.accuracy,
+          label: friendlyDate(session.startedAt),
+        },
       ]
     })
 }

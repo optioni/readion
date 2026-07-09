@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest'
 import RecentSessionsPanel from '~/components/RecentSessionsPanel.vue'
 import type { RecentSessionEntry } from '~/composables/useCardRecentSessions'
 
-const mountPanel = (sessions: RecentSessionEntry[]) => mount(RecentSessionsPanel, { props: { sessions } })
+const mountPanel = (sessions: RecentSessionEntry[]) =>
+  mount(RecentSessionsPanel, { props: { sessions } })
 
 describe('RecentSessionsPanel', () => {
   it('renders a compact row with a friendly "when" label and the accuracy', () => {
@@ -93,7 +94,14 @@ describe('RecentSessionsPanel', () => {
 
   it('colours the accuracy figure by score band (3.2)', () => {
     const wrapper = mountPanel([
-      { id: 's1', date: '2026-06-20T00:00:00Z', label: '', accuracy: 0.9, durationMinutes: 20, delta: null },
+      {
+        id: 's1',
+        date: '2026-06-20T00:00:00Z',
+        label: '',
+        accuracy: 0.9,
+        durationMinutes: 20,
+        delta: null,
+      },
     ])
     const accuracy = wrapper.find('[data-testid="recent-session-accuracy"]')
     expect(accuracy.classes()).toContain('text-readion-status-good')
@@ -101,8 +109,22 @@ describe('RecentSessionsPanel', () => {
 
   it('shows a delta badge on every row that has a delta (3.1/3.2)', () => {
     const wrapper = mountPanel([
-      { id: 's1', date: '2026-06-20T00:00:00Z', label: '', accuracy: 0.8, durationMinutes: 20, delta: 5 },
-      { id: 's2', date: '2026-06-19T00:00:00Z', label: '', accuracy: 0.6, durationMinutes: 25, delta: -4 },
+      {
+        id: 's1',
+        date: '2026-06-20T00:00:00Z',
+        label: '',
+        accuracy: 0.8,
+        durationMinutes: 20,
+        delta: 5,
+      },
+      {
+        id: 's2',
+        date: '2026-06-19T00:00:00Z',
+        label: '',
+        accuracy: 0.6,
+        durationMinutes: 25,
+        delta: -4,
+      },
     ])
 
     const rows = wrapper.findAll('[data-testid="recent-session-row"]')
@@ -114,15 +136,36 @@ describe('RecentSessionsPanel', () => {
 
   it('omits the delta badge for a row with no delta', () => {
     const wrapper = mountPanel([
-      { id: 's1', date: '2026-06-20T00:00:00Z', label: '', accuracy: 0.8, durationMinutes: 20, delta: null },
+      {
+        id: 's1',
+        date: '2026-06-20T00:00:00Z',
+        label: '',
+        accuracy: 0.8,
+        durationMinutes: 20,
+        delta: null,
+      },
     ])
     expect(wrapper.find('[data-testid="delta-badge"]').exists()).toBe(false)
   })
 
   it('separates rows with a hairline divider (3.2)', () => {
     const wrapper = mountPanel([
-      { id: 's1', date: '2026-06-20T00:00:00Z', label: '', accuracy: 0.8, durationMinutes: 20, delta: null },
-      { id: 's2', date: '2026-06-19T00:00:00Z', label: '', accuracy: 0.6, durationMinutes: 25, delta: null },
+      {
+        id: 's1',
+        date: '2026-06-20T00:00:00Z',
+        label: '',
+        accuracy: 0.8,
+        durationMinutes: 20,
+        delta: null,
+      },
+      {
+        id: 's2',
+        date: '2026-06-19T00:00:00Z',
+        label: '',
+        accuracy: 0.6,
+        durationMinutes: 25,
+        delta: null,
+      },
     ])
     expect(wrapper.findAll('[data-testid="recent-session-divider"]')).toHaveLength(1)
   })

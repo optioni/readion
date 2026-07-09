@@ -53,7 +53,9 @@ test.describe('fix-web-learner-surfaces-parity — outer-loop acceptance', () =>
     await expect(overview).toBeVisible()
 
     // Every recent-session row shows a delta badge — OverviewTab currently never passes one.
-    await expect(overview.getByTestId('recent-session-row').first().getByTestId('delta-badge')).toBeVisible()
+    await expect(
+      overview.getByTestId('recent-session-row').first().getByTestId('delta-badge'),
+    ).toBeVisible()
 
     // Sub-captions ("completed"/"answered"/"per session") on the bordered stat cards.
     await expect(overview.getByText('completed', { exact: true })).toBeVisible()
