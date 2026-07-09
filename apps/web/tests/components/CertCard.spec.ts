@@ -168,6 +168,19 @@ describe('CertCard title + readiness', () => {
   })
 })
 
+describe('CertCard flat hairline-divided sections', () => {
+  it('separates the header, weak-areas, recent-sessions, and review sections with hairline dividers', () => {
+    const wrapper = mountCard()
+    expect(wrapper.findAll('[data-testid="card-section-divider"]').length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('renders weak areas as a flat section, not a boxed CardPanel', () => {
+    const wrapper = mountCard()
+    const panel = wrapper.find('[data-testid="weak-areas-panel"]')
+    expect(panel.classes()).not.toContain('bg-black/25')
+  })
+})
+
 describe('CertCard weak areas', () => {
   it('renders up to three weak areas as status-coloured DomainBadge chips', () => {
     stubWeakAreas([
@@ -243,8 +256,8 @@ describe('CertCard action row placement', () => {
   })
 })
 
-describe('CertCard recent sessions', () => {
-  it('renders a completed session as domain label plus accuracy', () => {
+describe('CertCard recent sessions — multi-column split', () => {
+  it('renders one column per recent session with a friendly date and duration', () => {
     stubRecentSessions(
       [
         {
@@ -254,19 +267,6 @@ describe('CertCard recent sessions', () => {
           accuracy: 0.82,
           durationMinutes: 20,
         },
-      ],
-      3,
-    )
-    const wrapper = mountCard()
-    const rows = wrapper.findAll('[data-testid="recent-session-row"]')
-    expect(rows).toHaveLength(1)
-    expect(rows[0]!.text()).toContain('Security')
-    expect(rows[0]!.text()).toContain('82%')
-  })
-
-  it('falls back to date plus focus area with no accuracy when a session has no summary', () => {
-    stubRecentSessions(
-      [
         {
           id: 's2',
           date: '2026-06-19T00:00:00Z',
@@ -275,19 +275,45 @@ describe('CertCard recent sessions', () => {
           durationMinutes: null,
         },
       ],
-      null,
+      3,
     )
     const wrapper = mountCard()
-    const row = wrapper.find('[data-testid="recent-session-row"]')
-    expect(row.text()).toContain('Storage')
-    expect(row.text()).toContain('Jun 19')
-    expect(row.text()).not.toContain('%')
+    const columns = wrapper.findAll('[data-testid="recent-session-column"]')
+    expect(columns).toHaveLength(2)
+    expect(columns[0]!.text()).toContain('Jun 20')
+    expect(columns[0]!.text()).toContain('20m')
+  })
+
+  it('shows the readiness delta only on the most recent column', () => {
+    stubRecentSessions(
+      [
+        {
+          id: 's1',
+          date: '2026-06-20T00:00:00Z',
+          label: 'Security',
+          accuracy: 0.82,
+          durationMinutes: 20,
+        },
+        {
+          id: 's2',
+          date: '2026-06-19T00:00:00Z',
+          label: 'Storage',
+          accuracy: 0.6,
+          durationMinutes: 25,
+        },
+      ],
+      3,
+    )
+    const wrapper = mountCard()
+    const columns = wrapper.findAll('[data-testid="recent-session-column"]')
+    expect(columns[0]!.find('[data-testid="delta-badge"]').exists()).toBe(true)
+    expect(columns[1]!.find('[data-testid="delta-badge"]').exists()).toBe(false)
   })
 
   it('shows a "No sessions yet" placeholder when there are no recent sessions', () => {
     stubRecentSessions([], null)
     const wrapper = mountCard()
-    expect(wrapper.findAll('[data-testid="recent-session-row"]')).toHaveLength(0)
+    expect(wrapper.findAll('[data-testid="recent-session-column"]')).toHaveLength(0)
     expect(wrapper.find('[data-testid="recent-sessions-panel"]').text()).toContain(
       'No sessions yet',
     )

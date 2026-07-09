@@ -61,6 +61,7 @@ describe('useEnrollments', () => {
       certificationId: 'cert-1',
       name: 'AWS Solutions Architect',
       provider: 'AWS',
+      code: 'SAA-C03',
       readinessScore: 72,
       enrolledAt: '2026-06-01T00:00:00.000Z',
       status: 'active',
@@ -85,6 +86,7 @@ describe('useEnrollments', () => {
 
     expect(result.cards.value[0]?.name).toBe('')
     expect(result.cards.value[0]?.provider).toBe('')
+    expect(result.cards.value[0]?.code).toBe('')
   })
 
   it('exposes an error state and empty cards when the enrollment request fails', async () => {

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import CardReadiness from '~/components/CardReadiness.vue'
+import CardSessionColumns from '~/components/CardSessionColumns.vue'
 import QuickStartButtons from '~/components/QuickStartButtons.vue'
-import RecentSessionsPanel from '~/components/RecentSessionsPanel.vue'
 import ReviewQuickStart from '~/components/ReviewQuickStart.vue'
 import WeakAreasPanel from '~/components/WeakAreasPanel.vue'
 import { formatReadiness } from '~/composables/readinessFormat'
@@ -77,11 +77,24 @@ const cardStyle = computed(() =>
         class="flex-shrink-0 text-right"
       />
     </div>
-    <div class="grid grid-cols-2 gap-3">
-      <WeakAreasPanel :weak-areas="weakAreas" :hero="isHero" />
-      <RecentSessionsPanel :sessions="sessions" :readiness-delta="readinessDelta" />
-    </div>
-    <div class="mt-4 flex items-center justify-between gap-3">
+    <div
+      data-testid="card-section-divider"
+      class="mb-4 h-px"
+      :class="isHero ? 'bg-white/10' : 'bg-readion-background-surface'"
+    />
+    <WeakAreasPanel class="mb-4" :weak-areas="weakAreas" :hero="isHero" />
+    <div
+      data-testid="card-section-divider"
+      class="mb-4 h-px"
+      :class="isHero ? 'bg-white/10' : 'bg-readion-background-surface'"
+    />
+    <CardSessionColumns class="mb-4" :sessions="sessions" :readiness-delta="readinessDelta" />
+    <div
+      data-testid="card-section-divider"
+      class="mb-4 h-px"
+      :class="isHero ? 'bg-white/10' : 'bg-readion-background-surface'"
+    />
+    <div class="flex items-center justify-between gap-3">
       <ReviewQuickStart
         v-if="dueCount > 0"
         :enrollment-id="props.card.enrollmentId"
