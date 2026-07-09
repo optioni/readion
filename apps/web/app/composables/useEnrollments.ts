@@ -9,6 +9,7 @@ export interface EnrollmentCard {
   certificationId: string
   name: string
   provider: string
+  code: string
   readinessScore: number | null
   enrolledAt: string
   status: string
@@ -47,6 +48,7 @@ export function useEnrollments() {
         certificationId: enrollment.certificationId,
         name: certification?.name ?? '',
         provider: certification?.provider ?? '',
+        code: certification?.code ?? '',
         readinessScore: enrollment.readinessScore,
         enrolledAt: enrollment.enrolledAt,
         status: enrollment.status,

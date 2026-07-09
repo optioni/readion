@@ -26,6 +26,7 @@ const card: EnrollmentCard = {
   certificationId: 'cert-1',
   name: 'AWS Cloud Practitioner',
   provider: 'AWS',
+  code: 'CLF-C02',
   readinessScore: 75,
   enrolledAt: '2026-06-01T00:00:00Z',
   status: 'active',
@@ -123,6 +124,13 @@ describe('CertCard title + readiness', () => {
     const wrapper = mountCard()
     expect(wrapper.find('[data-testid="cert-title"]').text()).toContain('AWS Cloud Practitioner')
     expect(wrapper.find('[data-testid="cert-title"]').text()).toContain('AWS')
+  })
+
+  it('renders the certification code pill beside the provider', () => {
+    const wrapper = mountCard()
+    const pill = wrapper.find('[data-testid="cert-code-pill"]')
+    expect(pill.exists()).toBe(true)
+    expect(pill.text()).toBe('CLF-C02')
   })
 
   it('links the title to the enrollment detail page', () => {

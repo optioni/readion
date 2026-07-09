@@ -59,7 +59,17 @@ const cardStyle = computed(() =>
           NEEDS ATTENTION
         </p>
         <h2 class="font-semibold text-base leading-snug">{{ props.card.name }}</h2>
-        <p class="mt-1 text-[11px] opacity-70">{{ props.card.provider }}</p>
+        <div class="mt-1 flex items-center gap-2">
+          <p class="text-[11px] opacity-70">{{ props.card.provider }}</p>
+          <span
+            v-if="props.card.code"
+            data-testid="cert-code-pill"
+            class="rounded px-1.5 py-0.5 font-mono text-[10px] tracking-wide"
+            :class="isHero ? 'bg-white/10 opacity-35' : 'bg-readion-background-elevated opacity-70'"
+          >
+            {{ props.card.code }}
+          </span>
+        </div>
       </NuxtLink>
       <CardReadiness
         :display="readinessDisplay"

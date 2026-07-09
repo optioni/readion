@@ -38,6 +38,7 @@ function card(overrides: Partial<EnrollmentCard> & { name: string }): Enrollment
     certificationId: overrides.certificationId ?? `${overrides.name}-cert`,
     name: overrides.name,
     provider: overrides.provider ?? 'AWS',
+    code: overrides.code ?? 'CLF-C02',
     readinessScore: overrides.readinessScore ?? null,
     enrolledAt: overrides.enrolledAt ?? '2026-06-01T00:00:00Z',
     status: overrides.status ?? 'active',
