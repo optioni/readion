@@ -97,7 +97,7 @@
                 required
                 :class="[
                   'w-full px-3 py-2 pr-10 bg-readion-background-base border rounded-md text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500',
-                  credentialFieldBorderClass(passwordsMismatch),
+                  confirmBorderClass,
                 ]"
               />
               <div
@@ -154,6 +154,7 @@ const passwordsMismatch = computed(
   () => confirmPassword.value.length > 0 && confirmPassword.value !== password.value,
 )
 const canSubmit = computed(() => password.value.length >= 8 && passwordsMatch.value)
+const confirmBorderClass = computed(() => credentialFieldBorderClass(passwordsMismatch.value))
 
 type TokenState = 'loading' | 'valid' | 'invalid'
 const tokenState = ref<TokenState>('loading')

@@ -27,9 +27,9 @@
 
 ## 4. Acceptance Test — Outer Loop GREEN
 
-- [ ] 4.1 Confirm the section-0 e2e specs now pass end-to-end
-- [ ] 4.2 Visually diff `/login` (error state) and `/reset-password` against `SignIn.html` / `ResetPassword.html`; reconcile residual spacing/token drift
-- [ ] 4.3 REFACTOR: clean up test selectors and shared fixtures
+- [x] 4.1 Confirm the section-0 e2e specs now pass end-to-end
+- [x] 4.2 Visually diff `/login` (error state) and `/reset-password` against `SignIn.html` / `ResetPassword.html`; reconcile residual spacing/token drift
+- [x] 4.3 REFACTOR: clean up test selectors and shared fixtures
 
 ## 5. Change Review — Subagent Verification
 

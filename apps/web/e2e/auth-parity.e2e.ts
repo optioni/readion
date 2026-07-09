@@ -84,14 +84,14 @@ test.describe('web-auth — reset-password confirm field (ResetPassword.html)', 
       /passwords do not match/i,
     )
 
+    // A mismatch blocks submission — the submit control is disabled.
     const submitButton = page.getByRole('button', { name: /set new password/i })
-    await submitButton.click()
-    // A mismatch blocks submission — the page stays put, no navigation to /login.
-    await expect(page).toHaveURL(/\/reset-password/)
+    await expect(submitButton).toBeDisabled()
 
     await confirmInput.fill('correct-horse-battery')
     await expect(page.getByTestId('confirm-password-mismatch')).toHaveCount(0)
     await expect(page.getByTestId('confirm-password-success')).toBeVisible()
+    await expect(submitButton).toBeEnabled()
 
     await submitButton.click()
     await expect(page).toHaveURL(/\/login/)
