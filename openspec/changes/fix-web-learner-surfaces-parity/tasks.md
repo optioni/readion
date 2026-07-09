@@ -54,9 +54,9 @@
 
 ## 7. Acceptance Test — Outer Loop GREEN
 
-- [ ] 7.1 Confirm the section-0 e2e specs pass end-to-end
-- [ ] 7.2 Visually diff each surface against its artboard; reconcile residual drift
-- [ ] 7.3 REFACTOR: clean up selectors and shared fixtures
+- [x] 7.1 Confirm the section-0 e2e specs pass end-to-end
+- [x] 7.2 Visually diff each surface against its artboard; reconcile residual drift
+- [x] 7.3 REFACTOR: clean up selectors and shared fixtures
 
 ## 8. Change Review — Subagent Verification
 
