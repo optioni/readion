@@ -38,12 +38,12 @@
 
 ## 5. Progress — trajectory placement, chart, This-month, history (`web-progress`)
 
-- [ ] 5.1 RED: component test asserting the TrajectoryCallout renders at the bottom of the readiness section (after the chart + accuracy bars), not before the stats
-- [ ] 5.2 RED: component test asserting the readiness chart renders X-axis date labels (first/middle/last), an area fill under the line, and a dashed projection segment toward the target when trajectory data exists
-- [ ] 5.3 RED: component test asserting a "This month" section label renders with each stat in its own bordered card, section headers show live counts, and history rows show a time-of-day sub-line
-- [ ] 5.4 RED: component test asserting only the last accuracy bar shows its % with a short date caption beneath each bar; section labels read "Readiness over time" / "Domain scores"; content uses the `standard` width
-- [ ] 5.5 GREEN: implement the reorder, chart enrichments, This-month cards, counters, history time, accuracy-bar polish, labels, width
-- [ ] 5.6 REFACTOR: reconcile chart geometry against `openspec/design/Progress.html`
+- [x] 5.1 RED: component test asserting the TrajectoryCallout renders at the bottom of the readiness section (after the chart + accuracy bars), not before the stats
+- [x] 5.2 RED: component test asserting the readiness chart renders X-axis date labels (first/middle/last), an area fill under the line, and a dashed projection segment toward the target when trajectory data exists
+- [x] 5.3 RED: component test asserting a "This month" section label renders with each stat in its own bordered card, section headers show live counts, and history rows show a time-of-day sub-line
+- [x] 5.4 RED: component test asserting only the last accuracy bar shows its % with a short date caption beneath each bar; section labels read "Readiness over time" / "Domain scores"; content uses the `standard` width
+- [x] 5.5 GREEN: implement the reorder, chart enrichments, This-month cards, counters, history time, accuracy-bar polish, labels, width
+- [x] 5.6 REFACTOR: reconcile chart geometry against `openspec/design/Progress.html`
 
 ## 6. Progress — persist mastering with the design treatment (`web-progress`)
 
