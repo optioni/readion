@@ -175,6 +175,75 @@ describe('OnboardingSessionPrefs settings layout — duration slider', () => {
   })
 })
 
+describe('OnboardingSessionPrefs settings layout — FieldRow, hint, and pill shape', () => {
+  it('renders each field as a two-column FieldRow with the label to the left of the control', async () => {
+    stubProfile(DEFAULT_SESSION_DEFAULTS)
+
+    const { wrapper } = mountStep({ layout: 'settings' })
+    await flushPromises()
+
+    const label = wrapper.find('label')
+    expect(label.exists()).toBe(true)
+
+    // SettingsFieldRow's fixed-width label column sits beside the control (Group 3 design.md /
+    // apps/web/tests/components/SettingsFieldRow.spec.ts pins the w-40 shrink-0 contract).
+    const labelColumn = label.element.parentElement
+    if (!labelColumn) {
+      throw new Error('missing label column parent element')
+    }
+    expect(Array.from(labelColumn.classList)).toContain('w-40')
+    expect(Array.from(labelColumn.classList)).toContain('shrink-0')
+  })
+
+  it('shows the "Default duration per session" hint under the Session length label', async () => {
+    stubProfile(DEFAULT_SESSION_DEFAULTS)
+
+    const { wrapper } = mountStep({ layout: 'settings' })
+    await flushPromises()
+
+    const hint = wrapper.find('[data-testid="field-row-hint"]')
+    expect(hint.exists()).toBe(true)
+    expect(hint.text()).toBe('Default duration per session')
+  })
+
+  it('renders pill chips fully rounded with a solid-primary selected state, not rounded-lg bordered buttons', async () => {
+    stubProfile(DEFAULT_SESSION_DEFAULTS) // difficulty: intermediate (selected)
+
+    const { wrapper } = mountStep({ layout: 'settings' })
+    await flushPromises()
+
+    const selected = wrapper.find('[data-testid="difficulty-intermediate"]')
+    expect(selected.classes()).toContain('rounded-full')
+    expect(selected.classes()).not.toContain('rounded-lg')
+    expect(selected.classes()).toContain('bg-readion-primary')
+
+    const unselected = wrapper.find('[data-testid="difficulty-beginner"]')
+    expect(unselected.classes()).toContain('rounded-full')
+    expect(unselected.classes()).not.toContain('bg-readion-primary')
+  })
+
+  it('still renders all five fields, including Focus area, in the settings layout', async () => {
+    stubProfile(DEFAULT_SESSION_DEFAULTS)
+
+    const { wrapper } = mountStep({ layout: 'settings' })
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="duration-slider"]').exists()).toBe(true)
+    for (const value of sessionDefaultContentMixes) {
+      expect(wrapper.find(`[data-testid="content-mix-${value}"]`).exists()).toBe(true)
+    }
+    for (const value of sessionDefaultDifficulties) {
+      expect(wrapper.find(`[data-testid="difficulty-${value}"]`).exists()).toBe(true)
+    }
+    for (const value of sessionDefaultFocusAreas) {
+      expect(wrapper.find(`[data-testid="focus-area-${value}"]`).exists()).toBe(true)
+    }
+    for (const value of sessionDefaultLearningStyles) {
+      expect(wrapper.find(`[data-testid="learning-style-${value}"]`).exists()).toBe(true)
+    }
+  })
+})
+
 describe('OnboardingSessionPrefs default (onboarding) layout — duration stays pill buttons', () => {
   it('keeps duration as clickable pill buttons with no slider', async () => {
     stubProfile(DEFAULT_SESSION_DEFAULTS)

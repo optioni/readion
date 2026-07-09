@@ -14,6 +14,7 @@ import {
 } from '@readion/shared'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, reactive, watch } from 'vue'
+import SettingsFieldRow from '~/components/SettingsFieldRow.vue'
 import { onboardingQueryKeys } from '~/composables/onboardingQueryKeys'
 import { readProfileEnvelope } from '~/composables/useOnboardingGate'
 import { usersControllerGetMe } from '~~/src/api/users/users'
@@ -59,30 +60,35 @@ const fields = [
     label: 'Session length',
     testidPrefix: 'duration-option',
     options: sessionDefaultDurations,
+    settingsHint: 'Default duration per session',
   },
   {
     key: 'contentMix' as const,
     label: 'Content mix',
     testidPrefix: 'content-mix',
     options: sessionDefaultContentMixes,
+    settingsHint: undefined,
   },
   {
     key: 'difficulty' as const,
     label: 'Difficulty',
     testidPrefix: 'difficulty',
     options: sessionDefaultDifficulties,
+    settingsHint: undefined,
   },
   {
     key: 'focusArea' as const,
     label: 'Focus area',
     testidPrefix: 'focus-area',
     options: sessionDefaultFocusAreas,
+    settingsHint: undefined,
   },
   {
     key: 'learningStyle' as const,
     label: 'Learning style',
     testidPrefix: 'learning-style',
     options: sessionDefaultLearningStyles,
+    settingsHint: undefined,
   },
 ]
 
@@ -126,48 +132,76 @@ function confirm() {
 
 <template>
   <div data-testid="onboarding-session-prefs" class="flex flex-col gap-6">
-    <div v-for="field in fields" :key="field.key" class="flex flex-col gap-2">
-      <span class="font-mono text-slate-400 text-xs uppercase tracking-wide">
-        {{ field.label }}
-      </span>
-
-      <div v-if="field.key === 'duration' && isSettingsLayout" class="flex flex-col gap-2">
-        <div class="flex items-center justify-between">
-          <span class="text-readion-text-muted text-xs">Duration</span>
-          <span data-testid="duration-readout" class="font-medium text-readion-accent-label text-sm">
-            {{ selected.duration }} min
-          </span>
+    <template v-if="isSettingsLayout">
+      <SettingsFieldRow v-for="field in fields" :key="field.key" :label="field.label" :hint="field.settingsHint">
+        <div v-if="field.key === 'duration'" class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-readion-text-muted text-xs">Duration</span>
+            <span
+              data-testid="duration-readout"
+              class="font-medium text-readion-accent-label text-sm"
+            >
+              {{ selected.duration }} min
+            </span>
+          </div>
+          <input
+            v-model.number="durationIndex"
+            data-testid="duration-slider"
+            type="range"
+            min="0"
+            :max="sessionDefaultDurations.length - 1"
+            step="1"
+            class="w-full accent-readion-primary"
+          />
         </div>
-        <input
-          v-model.number="durationIndex"
-          data-testid="duration-slider"
-          type="range"
-          min="0"
-          :max="sessionDefaultDurations.length - 1"
-          step="1"
-          class="w-full accent-readion-primary"
-        />
-      </div>
 
-      <div v-else class="flex flex-wrap gap-2">
-        <button
-          v-for="option in field.options"
-          :key="String(option)"
-          type="button"
-          :data-testid="`${field.testidPrefix}-${option}`"
-          :aria-pressed="isSelected(field.key, option)"
-          class="rounded-lg border px-4 py-2 text-sm transition-colors"
-          :class="
-            isSelected(field.key, option)
-              ? 'border-readion-primary bg-readion-primary text-white'
-              : 'border-readion-background-surface bg-readion-background-elevated text-slate-200 hover:border-readion-primary'
-          "
-          @click="select(field.key, option)"
-        >
-          {{ labelFor(field.key, option) }}
-        </button>
+        <div v-else class="flex flex-wrap gap-2">
+          <button
+            v-for="option in field.options"
+            :key="String(option)"
+            type="button"
+            :data-testid="`${field.testidPrefix}-${option}`"
+            :aria-pressed="isSelected(field.key, option)"
+            class="rounded-full border px-4 py-1.5 font-medium text-sm transition-colors"
+            :class="
+              isSelected(field.key, option)
+                ? 'border-readion-primary bg-readion-primary text-white'
+                : 'border-readion-border-strong bg-transparent text-readion-text-secondary hover:border-readion-primary'
+            "
+            @click="select(field.key, option)"
+          >
+            {{ labelFor(field.key, option) }}
+          </button>
+        </div>
+      </SettingsFieldRow>
+    </template>
+
+    <template v-else>
+      <div v-for="field in fields" :key="field.key" class="flex flex-col gap-2">
+        <span class="font-mono text-slate-400 text-xs uppercase tracking-wide">
+          {{ field.label }}
+        </span>
+
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="option in field.options"
+            :key="String(option)"
+            type="button"
+            :data-testid="`${field.testidPrefix}-${option}`"
+            :aria-pressed="isSelected(field.key, option)"
+            class="rounded-lg border px-4 py-2 text-sm transition-colors"
+            :class="
+              isSelected(field.key, option)
+                ? 'border-readion-primary bg-readion-primary text-white'
+                : 'border-readion-background-surface bg-readion-background-elevated text-slate-200 hover:border-readion-primary'
+            "
+            @click="select(field.key, option)"
+          >
+            {{ labelFor(field.key, option) }}
+          </button>
+        </div>
       </div>
-    </div>
+    </template>
 
     <button
       v-if="showConfirm"

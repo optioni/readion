@@ -40,6 +40,16 @@ async function saveDefaults() {
 
 <template>
   <div class="flex flex-col gap-6">
+    <div>
+      <h2 data-testid="study-defaults-title" class="mb-1 font-medium text-slate-100 text-sm">
+        Session preferences
+      </h2>
+      <p data-testid="study-defaults-intro" class="mb-5 text-readion-text-muted text-sm leading-relaxed">
+        These are your default starting values for each new session. Readion adjusts them over
+        time based on your performance.
+      </p>
+    </div>
+
     <OnboardingSessionPrefs
       :show-confirm="false"
       layout="settings"

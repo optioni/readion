@@ -106,6 +106,21 @@ describe('StudyDefaultsTab renders all five session defaults', () => {
   })
 })
 
+describe('StudyDefaultsTab section framing', () => {
+  it('renders the "Session preferences" title and the adaptive-defaults intro copy', async () => {
+    stubProfile()
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="study-defaults-title"]').text()).toBe(
+      'Session preferences',
+    )
+    expect(wrapper.find('[data-testid="study-defaults-intro"]').text()).toBe(
+      'These are your default starting values for each new session. Readion adjusts them over time based on your performance.',
+    )
+  })
+})
+
 describe('StudyDefaultsTab save defaults', () => {
   it('PATCHes the chosen sessionDefaults and invalidates the profile query', async () => {
     stubProfile()
