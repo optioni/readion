@@ -24,9 +24,9 @@
 
 ## 4. Acceptance Test — Outer Loop GREEN
 
-- [ ] 4.1 Confirm the `seo-hygiene` acceptance test passes end-to-end
-- [ ] 4.2 Verify `apps/web` starts in the local environment (smoke test) — boot the app and confirm no startup/config errors from the new module and head config; confirm `/robots.txt` responds and the PWA manifest still loads
-- [ ] 4.3 REFACTOR: Clean up test setup and any duplicated selectors/assertions
+- [x] 4.1 Confirm the `seo-hygiene` acceptance test passes end-to-end
+- [x] 4.2 Verify `apps/web` starts in the local environment (smoke test) — boot the app and confirm no startup/config errors from the new module and head config; confirm `/robots.txt` responds and the PWA manifest still loads
+- [x] 4.3 REFACTOR: Clean up test setup and any duplicated selectors/assertions
 
 ## 5. Change Review — Subagent Verification
 

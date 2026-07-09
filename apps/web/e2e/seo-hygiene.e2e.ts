@@ -1,12 +1,5 @@
 import { expect, test } from '@playwright/test'
-
-const PUBLIC_AUTH_ROUTES = [
-  '/login',
-  '/register',
-  '/forgot-password',
-  '/reset-password',
-  '/verify-email',
-]
+import { PUBLIC_AUTH_ROUTES } from '../app/constants/publicRoutes'
 
 const DISALLOWED_APP_ROUTES = ['/agent', '/onboarding']
 
