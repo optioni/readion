@@ -13,9 +13,9 @@
 
 ## 2. Settings — duration slider (`web-settings`)
 
-- [ ] 2.1 RED: component test asserting Session length renders as a slider with a live "N min" readout, snapping to the real options `[15,30,60,90]` (not free values or the design's 5/15/30/45/60 ticks)
-- [ ] 2.2 GREEN: replace the duration pill row with the slider control bound to the same field value
-- [ ] 2.3 REFACTOR: keep the persisted value one of the allowed durations
+- [x] 2.1 RED: component test asserting Session length renders as a slider with a live "N min" readout, snapping to the real options `[15,30,60,90]` (not free values or the design's 5/15/30/45/60 ticks)
+- [x] 2.2 GREEN: replace the duration pill row with the slider control bound to the same field value
+- [x] 2.3 REFACTOR: keep the persisted value one of the allowed durations
 
 ## 3. Settings — FieldRow layout, section framing, pill shape (`web-settings`)
 
