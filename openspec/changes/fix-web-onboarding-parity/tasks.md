@@ -30,8 +30,8 @@
 
 ## 5. Change Review — Subagent Verification
 
-- [ ] 5.1 Dispatch a reviewer subagent against `proposal.md`, the `web-onboarding` spec delta, and the diff (reports findings only)
-- [ ] 5.2 Triage findings; re-run affected tests
+- [x] 5.1 Dispatch a reviewer subagent against `proposal.md`, the `web-onboarding` spec delta, and the diff (reports findings only)
+- [x] 5.2 Triage findings; re-run affected tests
 
 ## 6. Polish
 
