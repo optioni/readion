@@ -1,9 +1,9 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-- [ ] 0.1 Failing Playwright e2e (`apps/web/e2e`) for **Dashboard**: assert each cert card renders a ReadinessBar track under the readiness %, the content column uses the standard width (not the narrow 720 column), the card's inner sections are flat hairline-divided (not boxed panels), and the cert code pill + sentence-case "Mock exam" / "5-min review" render
-- [ ] 0.2 Failing Playwright e2e for **Cert detail**: assert recent-session rows each show a delta badge, the four stats render as individually-bordered cards with sub-captions, the "View all sessions →" link renders, the "Domain scores" label is used, and no extra "View progress" link sits between the header and tabs
-- [ ] 0.3 Failing Playwright e2e for **Progress**: assert the TrajectoryCallout renders at the bottom of the readiness section (after the chart), the chart shows X-axis date labels + area fill, a "This month" section with per-stat bordered cards renders, and mastering a domain persists across a reload (with the Mastered divider/strikethrough treatment and NO Unretire control)
-- [ ] 0.4 Confirm all three specs fail for the right reason
+- [x] 0.1 Failing Playwright e2e (`apps/web/e2e`) for **Dashboard**: assert each cert card renders a ReadinessBar track under the readiness %, the content column uses the standard width (not the narrow 720 column), the card's inner sections are flat hairline-divided (not boxed panels), and the cert code pill + sentence-case "Mock exam" / "5-min review" render
+- [x] 0.2 Failing Playwright e2e for **Cert detail**: assert recent-session rows each show a delta badge, the four stats render as individually-bordered cards with sub-captions, the "View all sessions →" link renders, the "Domain scores" label is used, and no extra "View progress" link sits between the header and tabs
+- [x] 0.3 Failing Playwright e2e for **Progress**: assert the TrajectoryCallout renders at the bottom of the readiness section (after the chart), the chart shows X-axis date labels + area fill, a "This month" section with per-stat bordered cards renders, and mastering a domain persists across a reload (with the Mastered divider/strikethrough treatment and NO Unretire control)
+- [x] 0.4 Confirm all three specs fail for the right reason
 
 ## 1. Dashboard — ReadinessBar + card polish (`web-dashboard`)
 
