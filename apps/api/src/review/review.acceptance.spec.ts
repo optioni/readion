@@ -305,6 +305,47 @@ describe('Review (spaced repetition)', () => {
       expect(byState).toHaveLength(2)
     })
 
+    it('surfaces a fully-suppressed domain in the queue meta so the frontend can derive mastered state from fetched data (fix-web-learner-surfaces-parity 6.1)', async () => {
+      const sec1 = await h.seedChunk(certId, 'Security')
+      const sec2 = await h.seedChunk(certId, 'Security')
+      const net = await h.seedChunk(certId, 'Networking')
+      await h.seedReviewItem(enrollmentId, sec1, { dueInDays: -1 })
+      await h.seedReviewItem(enrollmentId, sec2, { dueInDays: -1 })
+      await h.seedReviewItem(enrollmentId, net, { dueInDays: -1 })
+
+      // Before suppressing, the queue meta lists no suppressed domains at all.
+      const before = await h
+        .getRequest()
+        .get(`/api/v1/user-certifications/${enrollmentId}/review`)
+        .set('Authorization', `Bearer ${token}`)
+      expect(before.body.meta.suppressedDomains).toEqual([])
+
+      await h
+        .getRequest()
+        .post(`/api/v1/user-certifications/${enrollmentId}/review/suppress-domain`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ domain: 'Security' })
+
+      const after = await h
+        .getRequest()
+        .get(`/api/v1/user-certifications/${enrollmentId}/review`)
+        .set('Authorization', `Bearer ${token}`)
+      expect(after.body.meta.suppressedDomains).toEqual(['Security'])
+    })
+
+    it('does not report a domain as suppressed when it has no review items at all', async () => {
+      // Regression guard: a domain that was never reviewed must not vacuously satisfy "every
+      // review item in this domain is suppressed" (there are zero items, not zero non-suppressed
+      // ones) — that would falsely mark every never-studied domain as mastered.
+      await h.seedChunk(certId, 'Networking')
+
+      const res = await h
+        .getRequest()
+        .get(`/api/v1/user-certifications/${enrollmentId}/review`)
+        .set('Authorization', `Bearer ${token}`)
+      expect(res.body.meta.suppressedDomains).toEqual([])
+    })
+
     it('rejects a suppress-domain request with an empty domain', async () => {
       const res = await h
         .getRequest()

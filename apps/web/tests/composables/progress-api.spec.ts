@@ -198,7 +198,7 @@ describe('fetchReviewQueue', () => {
         lastReviewedAt: null,
       },
     ]
-    const meta: ReviewQueueMeta = { dueCount: 1, total: 5 }
+    const meta: ReviewQueueMeta = { dueCount: 1, total: 5, suppressedDomains: [] }
     // The queue endpoint returns { items, meta } directly without a data-envelope wrapper.
     vi.mocked(enrollmentReviewControllerQueue).mockResolvedValue(ok({ items, meta }))
 

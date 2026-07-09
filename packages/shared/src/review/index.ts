@@ -24,6 +24,8 @@ export interface ReviewItemResponse {
 export interface ReviewQueueMeta {
   dueCount: number
   total: number
+  /** Domains where every review item has been suppressed (derived, not client-only state). */
+  suppressedDomains: string[]
 }
 
 export type StartReviewResponse =

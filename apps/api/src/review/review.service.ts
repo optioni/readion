@@ -30,6 +30,10 @@ type ReviewQueueRow = {
   last_reviewed_at: string | null
 }
 
+type SuppressedDomainRow = {
+  domain: string
+}
+
 @Injectable()
 export class ReviewService {
   constructor(
@@ -63,8 +67,24 @@ export class ReviewService {
     )
     const total = Number.parseInt(totalRows[0]!.count, 10)
 
+    // Domains where every review item is suppressed — i.e. `suppressDomain` (or masterItem on
+    // every item) has fully retired the domain. Requires at least one review item to exist for
+    // the domain (a never-studied domain must not vacuously read as "mastered"). Lets the frontend
+    // derive the mastered state from fetched data instead of a client-only ref (fix-web-learner-
+    // surfaces-parity 6.1).
+    const suppressedRows = await em.getConnection().execute<SuppressedDomainRow[]>(
+      `SELECT c.primary_domain AS domain
+       FROM review_items r
+       JOIN content_chunks c ON c.id = r.anchor_chunk_id
+       WHERE r.user_certification_id = ? AND c.primary_domain IS NOT NULL
+       GROUP BY c.primary_domain
+       HAVING COUNT(*) FILTER (WHERE r.state != 'suppressed') = 0`,
+      [enrollmentId],
+    )
+    const suppressedDomains = suppressedRows.map((row: SuppressedDomainRow) => row.domain)
+
     const items = dueRows.map(mapRowToDto)
-    return { items, meta: { dueCount: items.length, total } }
+    return { items, meta: { dueCount: items.length, total, suppressedDomains } }
   }
 
   async masterItem(userId: string, reviewItemId: string): Promise<ReviewItemResponse> {
