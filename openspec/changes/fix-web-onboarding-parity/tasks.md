@@ -19,9 +19,9 @@
 
 ## 3. Footer divider + arrow glyph (`web-onboarding`)
 
-- [ ] 3.1 RED: component test asserting the footer Continue action is separated from the list by a top-border divider with the design's spacing, right-aligned, labeled "Continue →"
-- [ ] 3.2 GREEN: move Continue into a divided footer row (border-top + spacing, justify-end) and add the trailing arrow
-- [ ] 3.3 REFACTOR: reconcile spacing against `openspec/design/Onboarding.html`
+- [x] 3.1 RED: component test asserting the footer Continue action is separated from the list by a top-border divider with the design's spacing, right-aligned, labeled "Continue →"
+- [x] 3.2 GREEN: move Continue into a divided footer row (border-top + spacing, justify-end) and add the trailing arrow
+- [x] 3.3 REFACTOR: reconcile spacing against `openspec/design/Onboarding.html`
 
 ## 4. Acceptance Test — Outer Loop GREEN
 
