@@ -7,13 +7,13 @@
 
 ## 1. Dashboard — ReadinessBar + card polish (`web-dashboard`)
 
-- [ ] 1.1 RED: component test asserting `CardReadiness` renders a progress track filled to the readiness %, white-tinted on the hero card and status-colored on standard cards
-- [ ] 1.2 RED: component test asserting the cert code pill renders beside the vendor name (verify the enrollment card exposes `code`; if not, surface it via a minimal include first)
-- [ ] 1.3 RED: component test asserting the card's inner sections render as full-width hairline-divided stacks (not boxed `CardPanel` grid), and recent sessions as the multi-column split
-- [ ] 1.4 RED: component test asserting the review button shows the play icon and buttons read "Mock exam" / "5-min review" (sentence case)
-- [ ] 1.5 GREEN: implement the ReadinessBar, code pill, flat sections, multi-column sessions, button icon/copy
-- [ ] 1.6 REFACTOR: token the bar/divider colors per `openspec/design/Dashboard.html`; keep the reviews-due hide-when-zero behavior intact (do NOT always-render)
-- [ ] 1.7 RED→green guard: assert the diagnostic re-prompt nudge remains mounted on the dashboard (shown/hidden by its own query) — reaffirmed as a conditional feature, not removed by the widening/flattening work
+- [x] 1.1 RED: component test asserting `CardReadiness` renders a progress track filled to the readiness %, white-tinted on the hero card and status-colored on standard cards
+- [x] 1.2 RED: component test asserting the cert code pill renders beside the vendor name (verify the enrollment card exposes `code`; if not, surface it via a minimal include first)
+- [x] 1.3 RED: component test asserting the card's inner sections render as full-width hairline-divided stacks (not boxed `CardPanel` grid), and recent sessions as the multi-column split
+- [x] 1.4 RED: component test asserting the review button shows the play icon and buttons read "Mock exam" / "5-min review" (sentence case)
+- [x] 1.5 GREEN: implement the ReadinessBar, code pill, flat sections, multi-column sessions, button icon/copy
+- [x] 1.6 REFACTOR: token the bar/divider colors per `openspec/design/Dashboard.html`; keep the reviews-due hide-when-zero behavior intact (do NOT always-render)
+- [x] 1.7 RED→green guard: assert the diagnostic re-prompt nudge remains mounted on the dashboard (shown/hidden by its own query) — reaffirmed as a conditional feature, not removed by the widening/flattening work
 
 ## 2. Dashboard — standard content width (`web-dashboard`)
 
