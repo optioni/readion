@@ -19,7 +19,7 @@ function openAddCert() {
 </script>
 
 <template>
-  <section class="mx-auto max-w-[720px]">
+  <section class="mx-auto max-w-[1100px]">
     <PageHeader eyebrow="DASHBOARD" title="Your certifications" :active-count="cards.length" />
 
     <div

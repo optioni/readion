@@ -70,6 +70,16 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
+describe('Dashboard content width', () => {
+  it('uses the standard (~1100px) content width, not the narrow max-w-[720px] column', () => {
+    stubEnrollments({ cards: [card({ name: 'A', readinessScore: 50 })] })
+    const wrapper = mountPage()
+    const classes = wrapper.find('section').classes()
+    expect(classes).not.toContain('max-w-[720px]')
+    expect(classes.join(' ')).toContain('max-w-[1100px]')
+  })
+})
+
 describe('Dashboard list', () => {
   it('renders the shared PageHeader with the DASHBOARD eyebrow and "Your certifications" h1', () => {
     stubEnrollments({ cards: [card({ name: 'A', readinessScore: 50 })] })
