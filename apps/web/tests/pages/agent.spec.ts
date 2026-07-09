@@ -7,6 +7,9 @@ import AgentPage from '~/pages/agent.vue'
 
 const { streamTurnMock } = vi.hoisted(() => ({ streamTurnMock: vi.fn() }))
 
+const definePageMetaMock = vi.fn()
+vi.stubGlobal('definePageMeta', definePageMetaMock)
+
 vi.mock('~/composables/agentChatApi', () => ({
   createStandaloneAgentConversation: vi.fn(),
 }))
@@ -108,6 +111,66 @@ describe('Agent chat page scaffold', () => {
   })
 })
 
+describe('Agent chat full-height shell', () => {
+  it('opts into the minimal/full-height layout', async () => {
+    await mountPage()
+    expect(definePageMetaMock).toHaveBeenCalledWith({ layout: 'minimal' })
+  })
+
+  it('marks the header, message list, and composer regions with dedicated testids', async () => {
+    const wrapper = await mountPage()
+    expect(wrapper.find('[data-testid="agent-header"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="agent-message-list"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="agent-composer"]').exists()).toBe(true)
+  })
+})
+
+describe('Agent chat composer conditional send state', () => {
+  it('disables Send while the textarea is empty and enables it once text is entered', async () => {
+    const wrapper = await mountPage()
+
+    expect(
+      (wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled,
+    ).toBe(true)
+
+    await wrapper.find('[data-testid="agent-input"]').setValue('Hello there')
+
+    expect(
+      (wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled,
+    ).toBe(false)
+  })
+
+  it('disables Send again once the textarea is cleared back to whitespace-only', async () => {
+    const wrapper = await mountPage()
+
+    await wrapper.find('[data-testid="agent-input"]').setValue('Hello there')
+    await wrapper.find('[data-testid="agent-input"]').setValue('   ')
+
+    expect(
+      (wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled,
+    ).toBe(true)
+  })
+
+  it('uses the ellipsis character in the input placeholder', async () => {
+    const wrapper = await mountPage()
+    expect(wrapper.find('[data-testid="agent-input"]').attributes('placeholder')).toBe(
+      'Ask anything…',
+    )
+  })
+})
+
+describe('Agent chat TTL/new-chat icons', () => {
+  it('renders a clock icon inside the TTL chip', async () => {
+    const wrapper = await mountPage()
+    expect(wrapper.find('[data-testid="agent-ttl-chip"] svg').exists()).toBe(true)
+  })
+
+  it('renders a refresh icon inside the New-chat button', async () => {
+    const wrapper = await mountPage()
+    expect(wrapper.find('[data-testid="agent-new-chat-button"] svg').exists()).toBe(true)
+  })
+})
+
 describe('Agent chat header identity', () => {
   it('renders a circular star avatar beside the "Study assistant" title, preserving the subtitle', async () => {
     const wrapper = await mountPage()
@@ -205,9 +268,11 @@ describe('Agent chat page SSE turn streaming', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-testid="agent-streaming-cursor"]').exists()).toBe(false)
+    // Sending clears the textarea, so once streaming ends the button goes back to disabled —
+    // empty input, not the streaming flag, now gates it.
     expect(
       (wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled,
-    ).toBe(false)
+    ).toBe(true)
   })
 
   it('does not call streamTurn when input is whitespace-only', async () => {
@@ -420,7 +485,7 @@ describe('Agent chat TTL chip and expiry banner', () => {
 })
 
 describe('Agent chat page error handling', () => {
-  it('renders error from error SSE event on assistant message and re-enables send', async () => {
+  it('renders error from error SSE event on assistant message and re-enables send once text is entered again', async () => {
     emitEvents([
       { type: 'text-delta', textDelta: 'Partial answer' },
       { type: 'error', error: 'upstream model timeout' },
@@ -433,6 +498,13 @@ describe('Agent chat page error handling', () => {
 
     expect(wrapper.find('[data-testid="agent-error"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('upstream model timeout')
+    // No longer blocked by streaming, but the textarea was cleared on send — empty input still
+    // disables the button until the user types again.
+    expect(
+      (wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled,
+    ).toBe(true)
+
+    await wrapper.find('[data-testid="agent-input"]').setValue('Try again')
     expect(
       (wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled,
     ).toBe(false)
@@ -450,7 +522,7 @@ describe('Agent chat page error handling', () => {
     expect(wrapper.text()).toContain('Agent request failed (503)')
     expect(
       (wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled,
-    ).toBe(false)
+    ).toBe(true)
   })
 
   it('panel stays usable after error — next successful send works', async () => {

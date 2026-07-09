@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-screen flex-col bg-readion-background-base text-slate-100 antialiased">
+  <div class="flex h-screen flex-col bg-readion-background-base text-slate-100 antialiased">
     <header
       class="flex h-13 flex-shrink-0 items-center border-readion-border-strong border-b bg-readion-background-elevated px-8"
     >
@@ -12,7 +12,7 @@
       </NuxtLink>
     </header>
 
-    <main class="flex flex-1 flex-col">
+    <main class="flex min-h-0 flex-1 flex-col">
       <slot />
     </main>
   </div>
