@@ -1,7 +1,7 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-- [ ] 0.1 Write a failing Playwright e2e (`apps/web/e2e`): on `/onboarding` step 1, assert certs render under uppercase vendor group headers (not a flat list), that the search box shows an "N available" count and a leading search icon, and that the footer Continue action is separated by a top-border divider and reads "Continue →"
-- [ ] 0.2 Confirm it fails for the right reason (flat list / missing affordances), not a selector error
+- [x] 0.1 Write a failing Playwright e2e (`apps/web/e2e`): on `/onboarding` step 1, assert certs render under uppercase vendor group headers (not a flat list), that the search box shows an "N available" count and a leading search icon, and that the footer Continue action is separated by a top-border divider and reads "Continue →"
+- [x] 0.2 Confirm it fails for the right reason (flat list / missing affordances), not a selector error
 
 ## 1. Vendor-grouped cert list (`web-onboarding`)
 
