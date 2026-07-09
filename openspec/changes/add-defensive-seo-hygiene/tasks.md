@@ -12,9 +12,9 @@
 
 ## 2. Global head baseline (title template + description)
 
-- [ ] 2.1 RED: Write a test asserting a page with no explicit title renders a non-empty `<title>` ending in `· Readion` and a non-empty `<meta name="description">`, and that a page setting `Sign in` renders `Sign in · Readion`
-- [ ] 2.2 GREEN: Add `titleTemplate: '%s · Readion'`, a default `title`, and a default `meta` description to `nuxt.config.ts` `app.head` (or `site` config); set `site.url` from the public site-URL env/config source for absolute OG URLs
-- [ ] 2.3 REFACTOR: Ensure the manifest link, `theme-color`, and viewport meta still render alongside the new head entries
+- [x] 2.1 RED: Write a test asserting a page with no explicit title renders a non-empty `<title>` ending in `· Readion` and a non-empty `<meta name="description">`, and that a page setting `Sign in` renders `Sign in · Readion`
+- [x] 2.2 GREEN: Add `titleTemplate: '%s · Readion'`, a default `title`, and a default `meta` description to `nuxt.config.ts` `app.head` (or `site` config); set `site.url` from the public site-URL env/config source for absolute OG URLs
+- [x] 2.3 REFACTOR: Ensure the manifest link, `theme-color`, and viewport meta still render alongside the new head entries
 
 ## 3. Social share metadata on public auth pages
 
