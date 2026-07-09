@@ -9,12 +9,14 @@ vi.mock('~/composables/useAuthBootstrap', () => ({ runAuthBootstrap: vi.fn() }))
 
 const mockRouterPush = vi.fn()
 const mockRoute = { query: {} }
+const mockUseSeoMeta = vi.fn()
 vi.stubGlobal('useRouter', () => ({ push: mockRouterPush }))
 vi.stubGlobal('useRoute', () => mockRoute)
 vi.stubGlobal('definePageMeta', vi.fn())
 vi.stubGlobal('useRuntimeConfig', () => ({
   public: { apiBaseUrl: 'http://localhost:3001' },
 }))
+vi.stubGlobal('useSeoMeta', mockUseSeoMeta)
 
 let pinia: Pinia
 
@@ -29,10 +31,22 @@ describe('/register page', () => {
     pinia = createPinia()
     setActivePinia(pinia)
     mockRouterPush.mockReset()
+    mockUseSeoMeta.mockReset()
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
+  })
+
+  it('emits Open Graph and Twitter Card metadata for the register page', () => {
+    mountRegister()
+
+    expect(mockUseSeoMeta).toHaveBeenCalledTimes(1)
+    const [meta] = mockUseSeoMeta.mock.calls[0] as [Record<string, string | undefined>]
+    expect(meta.title).toBe('Create your account')
+    expect((meta.ogTitle?.length ?? 0) > 0).toBe(true)
+    expect((meta.ogDescription?.length ?? 0) > 0).toBe(true)
+    expect((meta.twitterCard?.length ?? 0) > 0).toBe(true)
   })
 
   it('blocks submission when password is fewer than 8 characters', async () => {
