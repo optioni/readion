@@ -1,0 +1,52 @@
+# Parity — Review queue
+
+12 findings — 5 high · 3 medium · 4 low
+
+- **[high] FlagBadge (Auto-flagged / User-reported / Duplicate) + report count** — missing/composition
+  - design: Every queue item (list row and detail identity row) carries a colored FlagBadge distinguishing why it was quarantined (auto-flagged / user-reported / duplicate), plus a report count ('5 user reports', poor-colored) in the detail identity row.
+  - app: absent — neither the list rows nor the detail pane render any flag-type badge or report count; the underlying QuarantinedItemListItem/Detail types have no flag-type or report-count field at all
+  - evidence: `design: openspec/design/admin-content.jsx:62-70 (FlagBadge), :109 (list usage), :138-139 (detail identity row) vs app: apps/web/app/components/admin/AdminReviewQueueList.vue:57-87, apps/web/app/components/admin/AdminReviewQueueDetail.vue:69-80 (no flag badge rendered anywhere), packages/shared/src/admin/index.ts:69-100 (no flag/report fields in the type)`
+- **[high] VerdictBadge taxonomy (Answer confirmed / disputed / Ambiguous result / Answer key error)** — simplified/composition
+  - design: Four distinct, narrative verdict states each drive a different recommended action ('Answer key error' → edit key; 'Ambiguous result' → discard; 'Answer confirmed' → approve, etc.)
+  - app: Collapsed to a generic binary Passed/Failed + score% derived from `provenance.verdict.pass`, losing the specific taxonomy that the design uses to decide the recommended fix
+  - evidence: `design: openspec/design/admin-content.jsx:73-82 (VerdictBadge cfg) vs app: apps/web/app/utils/formatVerdict.ts:8-11,26-35 (only 'Passed'/'Failed'), used in apps/web/app/components/admin/AdminReviewQueueDetail.vue:25-30,71-72`
+- **[high] Recommended-fix primary action ('Edit key → C')** — missing/behavioral
+  - design: Description explicitly states the screen 'leads with the verdict + recommended fix'. Decision panel's primary CTA is a contextual quick-fix that edits the stored answer key to the source-correct option, plus a distinct 'Discard' and a muted tertiary 'Approve as-is'.
+  - app: Only two generic actions exist: 'Approve' and 'Reject'. There is no contextual 'edit key to X' quick-fix action anywhere, and no separate discard-vs-reject semantics
+  - evidence: `design: openspec/design/admin-content.jsx:156-161 (three buttons) vs app: apps/web/app/components/admin/AdminReviewQueueDetail.vue:116-135 (approve/reject only), apps/web/app/components/admin/AdminReviewQueue.vue:56-81 (only approve/reject mutations exist)`
+- **[high] Source evidence card (quoted excerpt, highlighted phrase, source name, clickable URL)** — missing/composition
+  - design: Right-hand 'Source' card shows an eyebrow label, a monospace source reference ('AWS Docs: S3 · #2841'), a quoted excerpt of the source text with the relevant phrase highlighted (`<mark>`), and a clickable source URL with a link icon.
+  - app: Only renders 'Source chunks: <id1>, <id2>' — raw chunk IDs as plain text. `supportingSpans` (the actual quoted excerpt text in the shared type) is fetched but never rendered; there is no source name, no highlighting, and no link
+  - evidence: `design: openspec/design/admin-content.jsx:180-192 vs app: apps/web/app/components/admin/AdminReviewQueueDetail.vue:21-23,77-79 (only `provenanceChunks` joining IDs); packages/shared/src/admin/index.ts:85,94 (`supportingSpans` defined but unused in the component)`
+- **[high] Question options: source-correct vs stored-key-marked-correct distinction** — divergent/behavioral
+  - design: For a key-error item, the option list marks the source-verified-correct choice green ('Per source') and the (wrong) stored answer key red ('Marked correct'), so the discrepancy is visually obvious at a glance.
+  - app: Only ever highlights whichever option equals `detail.content.answerKey` in green/good with the label 'Marked correct' — there is no independent 'per source' signal, so on a key-error item the app would render the actually-wrong stored answer as if it were verified-correct, inverting the design's intended warning
+  - evidence: `design: openspec/design/admin-content.jsx:170-177 (dual mark: 'source' vs 'key') vs app: apps/web/app/components/admin/AdminReviewQueueDetail.vue:94-110 (single `option === detail.content.answerKey` check, always styled as status-good)`
+- **[medium] Detail identity row (ID + cert badge + flag + report count + 'Item X of Y')** — missing/composition
+  - design: A dedicated identity row sits above the decision panel: mono ID, cert chip, FlagBadge, report count, and a right-aligned queue position indicator ('Item 2 of 4').
+  - app: None of this exists in the detail pane; the detail starts directly with the verdict/reason block, and there is no position-in-queue indicator anywhere
+  - evidence: `design: openspec/design/admin-content.jsx:135-142 vs app: apps/web/app/components/admin/AdminReviewQueueDetail.vue:69-80 (detail body begins at the toned verdict box, no identity row)`
+- **[medium] Queue item snippet (question preview text)** — divergent/composition
+  - design: List row shows a 2-line-clamped snippet of the actual question text so admins can triage by content.
+  - app: Shows `item.domain` (e.g. a category tag) as the headline and `item.reason` (the verifier's rejection reason) as the clamped text — never the question text itself
+  - evidence: `design: openspec/design/admin-content.jsx:111 vs app: apps/web/app/components/admin/AdminReviewQueueList.vue:67,76`
+- **[medium] Full-bleed split-panel shell vs centered max-width page** — divergent/layout
+  - design: The whole screen is a single edge-to-edge app shell: sidebar + full-height content column with a bordered top header bar, and the queue/detail split panel fills all remaining vertical space.
+  - app: Content sits inside `AdminConsole`'s `mx-auto max-w-7xl px-4 py-8` centered container alongside the sidebar; there is no distinct bordered top header bar for the screen (just an inline `h1`), and the split panel does not fill the viewport height
+  - evidence: `design: openspec/design/admin-content.jsx:124-131 vs app: apps/web/app/components/admin/AdminConsole.vue:83-87, apps/web/app/components/admin/AdminReviewQueue.vue:85-95,148`
+- **[low] QueueList section label 'Quarantined items'** — missing/composition
+  - design: List panel has a header row with the label 'Quarantined items' plus the filter chips inline beneath it.
+  - app: No such label exists; the list simply starts with items, and filter chips are relocated outside the list entirely
+  - evidence: `design: openspec/design/admin-content.jsx:94-101 vs app: apps/web/app/components/admin/AdminReviewQueueList.vue:41-56`
+- **[low] Cert filter chips placement** — divergent/layout
+  - design: Filter chips ('All'/cert codes) live inside the queue-list panel's header, scoped visually to the list.
+  - app: Chips are rendered as a page-level row above the entire split list+detail panel, not scoped inside the list panel
+  - evidence: `design: openspec/design/admin-content.jsx:96-100 vs app: apps/web/app/components/admin/AdminReviewQueue.vue:113-146`
+- **[low] Decision panel warning icon** — missing/composition
+  - design: Decision panel title is preceded by a colored triangle-warning SVG icon next to the verdict text.
+  - app: No icon precedes the verdict text in the toned box
+  - evidence: `design: openspec/design/admin-content.jsx:147-148 vs app: apps/web/app/components/admin/AdminReviewQueueDetail.vue:70-73`
+- **[low] Relative date formatting in queue list ('Today'/'Yesterday')** — divergent/behavioral
+  - design: Dates shown as relative labels: Today, Yesterday, Jun 21.
+  - app: Always formats as an absolute date via `Intl.DateTimeFormat` (e.g. 'Jul 8, 2026'), never relative
+  - evidence: `design: openspec/design/admin-content.jsx:86-90,114 vs app: apps/web/app/components/admin/AdminReviewQueueList.vue:21-29,64`

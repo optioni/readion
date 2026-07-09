@@ -1,0 +1,122 @@
+{
+  "screen_id": "admin-certifications",
+  "screen": "Admin Certifications",
+  "totalFindings": 11,
+  "bySeverity": {
+    "high": 2,
+    "medium": 4,
+    "low": 5
+  },
+  "findings": [
+    {
+      "element": "ReVerifyDiffPanel (Proposed changes modal)",
+      "class": "divergent",
+      "axis": "layout",
+      "severity": "high",
+      "design": "ReVerifyDiffPanel renders as a centered modal overlay (position: absolute, inset 0, rgba(10,15,30,0.6) backdrop, z-index 20) with its own header/diff-table/footer sections and a box-shadow, blocking interaction with the rest of the screen while re-verifying a cert.",
+      "app": "The diff is rendered as an ordinary inline section appended at the bottom of the same scrollable page (`v-if=\"diff\"` block), with no backdrop, no centering, no overlay/blocking behavior \u2014 the tables above remain fully interactive underneath it.",
+      "evidence": "openspec/design/AdminCertifications.html:218-256 (ReVerifyDiffPanel) vs apps/web/app/components/admin/AdminCertifications.vue:250-306",
+      "screen": "Admin Certifications \u2014 populated"
+    },
+    {
+      "element": "AsyncMessage error 'Retry' button",
+      "class": "missing",
+      "axis": "composition",
+      "severity": "high",
+      "design": "Error state shows an alert icon plus inline 'Retry' button (border, poor-color text) next to 'Could not load certifications. Please try again.'",
+      "app": "Error state renders only plain red text 'Could not load certifications. Please try again.' with no icon and no retry affordance \u2014 the user has no way to re-trigger the query from the UI.",
+      "evidence": "openspec/design/AdminCertifications.html:176-179 (AsyncMessage kind=\"error\") vs apps/web/app/components/admin/AdminCertifications.vue:205-207",
+      "screen": "Admin Certifications \u2014 populated"
+    },
+    {
+      "element": "Re-verify submit button submitting state",
+      "class": "missing",
+      "axis": "behavioral",
+      "severity": "medium",
+      "design": "While submitting, the 'Accept all & re-verify' button shows a spinning loader plus its label changes to 'Re-verifying\u2026', in addition to being disabled.",
+      "app": "Button only gets `disabled` + `opacity-50`; the label always reads 'Accept all & re-verify' and there is no spinner during submission.",
+      "evidence": "openspec/design/AdminCertifications.html:249-252 vs apps/web/app/components/admin/AdminCertifications.vue:288-296",
+      "screen": "Admin Certifications \u2014 populated"
+    },
+    {
+      "element": "Existing certifications section label + active count",
+      "class": "divergent",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "SectionLabel renders an uppercase, letter-spaced caption 'EXISTING CERTIFICATIONS' with a muted count badge (e.g. '3 active') next to it.",
+      "app": "Second heading duplicates the page title verbatim ('Certifications' \u2014 identical text to the h1 above it) as a plain h2, with no 'Existing' qualifier and no active-count badge.",
+      "evidence": "openspec/design/AdminCertifications.html:103-108, 266 vs apps/web/app/components/admin/AdminCertifications.vue:157",
+      "screen": "Admin Certifications \u2014 populated"
+    },
+    {
+      "element": "CertPageHeader subtitle",
+      "class": "missing",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "Header includes a descriptive subtitle: 'Manage certifications and keep their metadata verified against source.' beneath the title.",
+      "app": "Only the h1 'Certifications' is rendered; no subtitle text.",
+      "evidence": "openspec/design/AdminCertifications.html:92-94 vs apps/web/app/components/admin/AdminCertifications.vue:146-155",
+      "screen": "Admin Certifications \u2014 populated"
+    },
+    {
+      "element": "Table shell (card chrome around Existing/Due tables)",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "TableShell wraps each table in a bordered, rounded (rXl) surface card visually distinct from the page background, with an elevated-background header row.",
+      "app": "Plain HTML `<table>` with only a bottom border under the header row \u2014 no card container, background, border, or corner radius.",
+      "evidence": "openspec/design/AdminCertifications.html:111-120 vs apps/web/app/components/admin/AdminCertifications.vue:167-198, 212-244",
+      "screen": "Admin Certifications \u2014 populated"
+    },
+    {
+      "element": "CodeChip (exam code pill)",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "low",
+      "design": "Exam code (e.g. 'SAA-C03') is rendered as a monospaced pill with its own background, border, and radius (CodeChip).",
+      "app": "Code is rendered as plain text in a `<td>` with no monospace font or pill/chip styling.",
+      "evidence": "openspec/design/AdminCertifications.html:123-125 vs apps/web/app/components/admin/AdminCertifications.vue:185, 230",
+      "screen": "Admin Certifications \u2014 populated"
+    },
+    {
+      "element": "AsyncMessage loading spinner",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "low",
+      "design": "Loading state shows a spinning ring indicator next to 'Loading certifications\u2026'.",
+      "app": "Loading state renders only the text 'Loading certifications\u2026' with no spinner.",
+      "evidence": "openspec/design/AdminCertifications.html:175, 186 vs apps/web/app/components/admin/AdminCertifications.vue:202-204",
+      "screen": "Admin Certifications \u2014 populated"
+    },
+    {
+      "element": "'New certification' button plus-icon",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "low",
+      "design": "Primary action button includes a leading '+' SVG icon alongside the label.",
+      "app": "NuxtLink renders only the text 'New certification', no icon.",
+      "evidence": "openspec/design/AdminCertifications.html:95-98 vs apps/web/app/components/admin/AdminCertifications.vue:148-154",
+      "screen": "Admin Certifications \u2014 populated"
+    },
+    {
+      "element": "Content-region width/layout",
+      "class": "divergent",
+      "axis": "layout",
+      "severity": "low",
+      "design": "Sidebar + content fill the full artboard width edge-to-edge (no outer max-width constraint on the admin shell itself); content region scrolls independently of a fixed header bar.",
+      "app": "AdminConsole wraps sidebar+content in `mx-auto max-w-7xl ... px-4 py-8`, centering the whole console with side gutters on wide viewports, and there is no distinct sticky/bordered header bar \u2014 the title row scrolls with the rest of the content.",
+      "evidence": "openspec/design/AdminCertifications.html:260-264 vs apps/web/app/components/admin/AdminConsole.vue:83-87",
+      "screen": "Admin Certifications \u2014 populated"
+    },
+    {
+      "element": "Re-verify error message placement",
+      "class": "divergent",
+      "axis": "behavioral",
+      "severity": "low",
+      "design": "A re-verification failure is shown inside the diff panel's own footer, scoped to that modal, alongside the Cancel/Accept actions.",
+      "app": "`reverifyError` is rendered as a standalone paragraph between the Due table and the diff section, outside/above the diff block rather than inside its footer.",
+      "evidence": "openspec/design/AdminCertifications.html:241-246 vs apps/web/app/components/admin/AdminCertifications.vue:246-249",
+      "screen": "Admin Certifications \u2014 populated"
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "screen_id": "admin-users",
+  "screen": "Users",
+  "totalFindings": 10,
+  "bySeverity": {
+    "high": 3,
+    "medium": 3,
+    "low": 4
+  },
+  "findings": [
+    {
+      "element": "Name column (user display name)",
+      "class": "missing",
+      "axis": "composition",
+      "severity": "high",
+      "design": "Combined Name cell shows an avatar with initials derived from the person's name (e.g. 'JD') next to the actual full name ('Jamie Delacroix'), in a dedicated Name column.",
+      "app": "A separate 'Name' <td> exists but is hardcoded to the placeholder em-dash '\u2014' for every row; there is no `name` field on `AdminUserListItem` at all, so it can never be populated.",
+      "evidence": "openspec/design/admin-content.jsx:314-315 (UsersScreen row, u.name) vs apps/web/app/components/admin/AdminUsers.vue:124 (`<td data-testid=\"user-name\">\u2014</td>`) and packages/shared/src/admin/index.ts:38-43 (AdminUserListItem has no name field)",
+      "screen": "Users \u2014 populated"
+    },
+    {
+      "element": "Last active column",
+      "class": "missing",
+      "axis": "composition",
+      "severity": "high",
+      "design": "Last active column shows relative activity timestamps per user (e.g. 'Today', 'Yesterday', '3 days ago', '1 week ago').",
+      "app": "Column header exists but the cell is hardcoded to '\u2014' for every row; `AdminUserListItem` has no last-active/lastLoginAt field to source this from.",
+      "evidence": "openspec/design/admin-content.jsx:282-288,319 (u.lastActive) vs apps/web/app/components/admin/AdminUsers.vue:152 (`<td data-testid=\"user-last-active\">\u2014</td>`)",
+      "screen": "Users \u2014 populated"
+    },
+    {
+      "element": "Remove user action",
+      "class": "divergent",
+      "axis": "behavioral",
+      "severity": "high",
+      "design": "Remove button is rendered as a fully active, clickable destructive action (red border/text, no disabled styling) alongside Promote/Demote.",
+      "app": "Remove button is permanently `disabled`, styled muted/`cursor-not-allowed`, and has no click handler at all \u2014 the action is not implemented.",
+      "evidence": "openspec/design/admin-content.jsx:321 (Remove button, red border rgba(248,113,113,0.25), no disabled state) vs apps/web/app/components/admin/AdminUsers.vue:176-183 (`disabled` attribute, `cursor-not-allowed`, `text-red-500/60`)",
+      "screen": "Users \u2014 populated"
+    },
+    {
+      "element": "Invite user action",
+      "class": "divergent",
+      "axis": "behavioral",
+      "severity": "medium",
+      "design": "Invite user button is rendered as a normal active affordance (bordered button, standard text color) in the toolbar.",
+      "app": "Invite user button is permanently `disabled` with muted styling and `cursor-not-allowed` \u2014 no invite flow is wired up.",
+      "evidence": "openspec/design/admin-content.jsx:308 (Invite user button, no disabled state) vs apps/web/app/components/admin/AdminUsers.vue:93-100 (`disabled` attribute, text-slate-500)",
+      "screen": "Users \u2014 populated"
+    },
+    {
+      "element": "Search users input",
+      "class": "simplified",
+      "axis": "behavioral",
+      "severity": "medium",
+      "design": "Search field is depicted for filtering the user table (readOnly only because it's a static mockup).",
+      "app": "Search input renders but has no `v-model`, no `@input` handler, and no filtering logic wired to the users list \u2014 it is decorative only.",
+      "evidence": "openspec/design/admin-content.jsx:307 (input readOnly, mockup placeholder) vs apps/web/app/components/admin/AdminUsers.vue:83-88 (plain `<input type=\"search\">` with no binding)",
+      "screen": "Users \u2014 populated"
+    },
+    {
+      "element": "Avatar styling and initials source",
+      "class": "divergent",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "Avatar is a neutral circle (elevated background, bordered) with accent-colored initials derived from the user's name (e.g. split on space, first letters).",
+      "app": "Avatar is a solid `bg-readion-primary` circle with white text, and initials are derived from the email address (`emailInitials(user.email)`) since no name field exists.",
+      "evidence": "openspec/design/admin-content.jsx:315 (T.elevated bg, T.accent text, name.split(' ')) vs apps/web/app/components/admin/AdminUsers.vue:126-132 (bg-readion-primary, emailInitials(user.email))",
+      "screen": "Users \u2014 populated"
+    },
+    {
+      "element": "Toolbar layout order (summary vs. search/invite)",
+      "class": "divergent",
+      "axis": "layout",
+      "severity": "low",
+      "design": "Summary text ('12 users \u00b7 2 admins') sits on the left; search input + Invite button are grouped together on the right.",
+      "app": "Search input sits on the left; summary text + Invite button are grouped together on the right \u2014 the two groups are transposed relative to the design.",
+      "evidence": "openspec/design/admin-content.jsx:304-310 (summary span first, then search+invite div) vs apps/web/app/components/admin/AdminUsers.vue:82-102 (input first, then summary+invite div)",
+      "screen": "Users \u2014 populated"
+    },
+    {
+      "element": "Role badge color for Admin",
+      "class": "divergent",
+      "axis": "composition",
+      "severity": "low",
+      "design": "Admin role badge uses a warning/amber color scheme (orange background+border+text) to visually distinguish privileged accounts.",
+      "app": "Admin role badge uses the primary/blue brand color (`bg-readion-primary/15 text-readion-primary`) instead of an amber/warning tone.",
+      "evidence": "openspec/design/admin-content.jsx:290-294 (RoleBadge: T.warn amber for admin) vs apps/web/app/components/admin/AdminUsers.vue:136-148 (bg-readion-primary/15 text-readion-primary)",
+      "screen": "Users \u2014 populated"
+    },
+    {
+      "element": "Page header bar",
+      "class": "simplified",
+      "axis": "layout",
+      "severity": "low",
+      "design": "Screen title 'Users' sits in a distinct header bar with its own elevated background and bottom border, separating it from the scrollable content region below.",
+      "app": "Title is a plain `<h1>` inline with the rest of the content in one flex column, with no distinct header bar/background/border treatment.",
+      "evidence": "openspec/design/admin-content.jsx:300-302 (header div with T.elevated bg + border-bottom, padding 14px 28px) vs apps/web/app/components/admin/AdminUsers.vue:67-68 (`<section class=\"flex flex-col gap-6\">` + plain `<h1>`)",
+      "screen": "Users \u2014 populated"
+    },
+    {
+      "element": "Email column header label",
+      "class": "divergent",
+      "axis": "composition",
+      "severity": "low",
+      "design": "Column is labeled 'Email' and shown as its own dedicated column (mono font) separate from Name.",
+      "app": "Column is labeled 'User' (not 'Email') and combines the avatar + email together, filling the role that 'Name' should have played.",
+      "evidence": "openspec/design/admin-content.jsx:312 (THead label 'Email') vs apps/web/app/components/admin/AdminUsers.vue:108 (`<th>User</th>`)",
+      "screen": "Users \u2014 populated"
+    }
+  ]
+}

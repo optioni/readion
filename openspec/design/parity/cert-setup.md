@@ -1,0 +1,48 @@
+# Parity — Cert setup wizard
+
+11 findings — 3 high · 4 medium · 4 low
+
+- **[high] Standalone 'Identify certification' step** — divergent/behavioral
+  - design: 5-step wizard where step 1 (IdentifyCertScreen) is a dedicated screen for entering name/code/certifying body/known URL, with 'Search for sources →' advancing to a separate step-2 screen (SourceConfirmationScreen) that lists ranked candidates for confirmation.
+  - app: 4-step wizard (Source search, Field extraction, Content sources, Review & publish) where identify fields and source discovery/candidate selection/confirmation are all collapsed into a single step-1 component with no distinct 'identify' screen.
+  - evidence: `openspec/design/AdminCertSetup.html:126-167 (IdentifyCertScreen) vs :190-252 (SourceConfirmationScreen) as separate wizard steps; apps/web/app/components/admin/CertSetupSourceStep.vue:1-145 merges both; apps/web/app/composables/certSetupSteps.ts:6-11 defines only 4 steps total, 'Source search' being step 1`
+- **[high] Certifying body field** — missing/composition
+  - design: IdentityField 'Certifying body' (e.g. 'CNCF / Linux Foundation') is one of four required identify inputs.
+  - app: Step 1 form only has 'Certification name' and 'Code (optional)' inputs; no certifying-body/provider field exists anywhere in the step. `state.identity.provider` is declared but never written from any step-1 form control.
+  - evidence: `openspec/design/AdminCertSetup.html:143; apps/web/app/components/admin/CertSetupSourceStep.vue:59-93; apps/web/app/composables/useCertSetupWizard.ts:78 (identity.provider initialized to '' and unused by step 1)`
+- **[high] 'What happens next' explainer callout** — missing/composition
+  - design: Search-icon callout below the fields explaining that the agent will next search official sources for the entered exam code and return ranked candidates, and that no metadata is created until approval.
+  - app: No equivalent explanatory callout present anywhere in the step-1 markup.
+  - evidence: `openspec/design/AdminCertSetup.html:150-155; apps/web/app/components/admin/CertSetupSourceStep.vue:55-144 (no callout)`
+- **[medium] Known source URL identify field** — divergent/behavioral
+  - design: Optional 'Known source URL' input is offered upfront alongside the identify fields, letting the admin pre-supply a known exam-guide URL before the agent search runs.
+  - app: The equivalent manual-URL input only renders after `discover()` has already returned candidates (`v-if="candidates.length"`), so it cannot be used to seed/skip the search the way the design intends — it only overrides which already-discovered candidate is confirmed.
+  - evidence: `openspec/design/AdminCertSetup.html:146-147; apps/web/app/components/admin/CertSetupSourceStep.vue:95,122-131`
+- **[medium] Intro explainer paragraph** — missing/composition
+  - design: Paragraph: 'Tell the setup agent which certification to build. It will search for the official exam guide and candidate handbook from these details in the next step.'
+  - app: No descriptive paragraph precedes the form fields.
+  - evidence: `openspec/design/AdminCertSetup.html:133-135; apps/web/app/components/admin/CertSetupSourceStep.vue:56-93`
+- **[medium] Exam code field detail** — simplified/composition
+  - design: Monospace-styled required field with hint 'Shown across the app and used to de-duplicate.'
+  - app: Plain (non-mono) input labeled 'Code (optional)' with no hint text — also flips the field from required to explicitly optional.
+  - evidence: `openspec/design/AdminCertSetup.html:140; apps/web/app/components/admin/CertSetupSourceStep.vue:70-78`
+- **[medium] Primary CTA transition behavior** — divergent/behavioral
+  - design: 'Search for sources →' navigates the wizard to a distinct step-2 screen showing an agent-status banner and ranked SourceResult cards.
+  - app: 'Discover sources' toggles an inline candidate list within the same step (no screen/step change); a second 'Confirm source & extract' button then appears in-place before the wizard actually advances.
+  - evidence: `openspec/design/AdminCertSetup.html:159-161 (→ SourceConfirmationScreen); apps/web/app/components/admin/CertSetupSourceStep.vue:30-43,80-88,95-142; apps/web/app/composables/useCertSetupWizard.ts:86-90`
+- **[low] Footer action bar (Cancel + primary CTA)** — divergent/layout
+  - design: Cancel and the primary CTA are paired, right-aligned in a bordered footer bar at the bottom of the content column.
+  - app: Cancel lives in the sticky page header (next to the step indicator); the primary 'Discover sources' button is left-aligned inline within the form, not in a shared footer bar.
+  - evidence: `openspec/design/AdminCertSetup.html:157-162; apps/web/app/components/admin/SetupHeader.vue:28-35; apps/web/app/components/admin/CertSetupSourceStep.vue:80-88`
+- **[low] Breadcrumb content** — divergent/composition
+  - design: 'Certifications › New › {certCode || "Setup"}' — dynamic, reflects the cert code once entered.
+  - app: Static 'Admin › Certifications › New' text that never reflects the entered cert code.
+  - evidence: `openspec/design/AdminCertSetup.html:94-100; apps/web/app/components/admin/SetupHeader.vue:21-23`
+- **[low] Cert/page title placement** — divergent/layout
+  - design: 16px bold cert/step title ('New certification') sits in the persistent header bar beside the breadcrumb.
+  - app: 'New certification' is rendered as an `<h1>` inside the step body content, not in the shared SetupHeader (which has no title slot at all).
+  - evidence: `openspec/design/AdminCertSetup.html:101; apps/web/app/components/admin/CertSetupSourceStep.vue:57; apps/web/app/components/admin/SetupHeader.vue:19-49`
+- **[low] Content column width/centering** — divergent/layout
+  - design: Step content is capped at maxWidth 640px with 28/40px padding inside a full-height sidebar+content shell.
+  - app: Wizard content has no max-width cap and instead sits inside a page-level `max-w-7xl mx-auto` centered container, so column proportions don't match the design's narrower, left-aligned content column.
+  - evidence: `openspec/design/AdminCertSetup.html:131-132; apps/web/app/components/admin/CertSetupWizard.vue:23; apps/web/app/components/admin/AdminConsole.vue:86`

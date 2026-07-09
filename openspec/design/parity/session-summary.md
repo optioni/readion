@@ -1,0 +1,44 @@
+# Parity — Session summary
+
+10 findings — 3 high · 5 medium · 2 low
+
+- **[high] Weak area movement — before/after values** — simplified/composition
+  - design: WeakAreasCard shows, per weak area, the before% → after% transition (with a small arrow glyph) plus the delta badge, e.g. '38% → 45%  ↑7%'.
+  - app: Only the area label and the delta badge are rendered; the before/after percentages and arrow are entirely absent. This traces back to the shared DTO (WeakAreaDelta = {domain, delta}) which never carried before/after values.
+  - evidence: `design: openspec/design/Summary.html:205-231 (WeakAreasCard); app: apps/web/app/components/SessionSummaryBody.vue:230-245; type: packages/shared/src/session-summary/index.ts:8-11`
+- **[high] Question highlight cards (strongest/weakest) — icon + answer metadata** — simplified/composition
+  - design: QuestionHighlight shows a status icon (check/x circle svg), the question text, and an answer-metadata line ('Answered correctly in 38s · Selected B' / 'Selected C · Correct was B').
+  - app: Renders only the 'Strongest'/'Weakest' text label and the question paragraph; there is no icon and no answer/timing metadata line at all. SessionQuestionRef only carries {responseId, question} in the shared type, so chosen/correct/timeSec have no backing data.
+  - evidence: `design: openspec/design/Summary.html:234-280; app: apps/web/app/components/SessionSummaryBody.vue:248-284; type: packages/shared/src/session-summary/index.ts:19-22`
+- **[high] Domains covered — progress bar and question-count column** — simplified/composition
+  - design: Each domain row has a colored progress bar sized to accuracy%, a right-aligned 'correct/total' count (e.g. '8/10'), the accuracy%, and a delta badge.
+  - app: Each row only shows the domain name, the accuracy% (color-coded), and the delta badge — no progress bar and no correct/total count. SessionSummaryDomainStat only carries {domain, accuracy}, so the count data doesn't exist.
+  - evidence: `design: openspec/design/Summary.html:166-202; app: apps/web/app/components/SessionSummaryBody.vue:210-228; type: packages/shared/src/session-summary/index.ts:3-6`
+- **[medium] Next-session suggestion — icon and reasoning text** — simplified/composition
+  - design: NextSessionCard shows an icon in a circular chip, the 'Suggested focus next session' label, the domain, and an explanatory reason (e.g. 'Your Networking score (43%) is your largest gap from passing...').
+  - app: Only the label and domain name render; there is no icon and no reason text. The shared type's nextFocus is {domain} only.
+  - evidence: `design: openspec/design/Summary.html:283-296; app: apps/web/app/components/SessionSummaryBody.vue:286-293; type: packages/shared/src/session-summary/index.ts:32`
+- **[medium] Primary CTA — miss count and icon** — simplified/composition
+  - design: CTA button reads 'Drill my misses · 4 questions →' with a leading play-triangle icon, previewing how many questions will be drilled.
+  - app: Button reads only 'Drill my misses →' with no icon and no miss-count preview; the count is only discovered after the click (drill() call), and the empty-state message is shown post-hoc instead of being previewed.
+  - evidence: `design: openspec/design/Summary.html:299-309; app: apps/web/app/components/SessionSummaryBody.vue:296-303`
+- **[medium] Readiness change bar — gradient fill and directional arrow marker** — simplified/composition
+  - design: The readiness track has an inset gradient fill (indigo→green) plus a triangular arrow marker at the end, visually depicting the improvement direction.
+  - app: The track is a flat, empty bg-readion-border-strong bar with no fill and no arrow marker — purely a spacer between the two numbers.
+  - evidence: `design: openspec/design/Summary.html:142-163 (ReadinessChange, lines 150-153); app: apps/web/app/components/SessionSummaryBody.vue:189-208 (line 197)`
+- **[medium] Header timestamp — placement and format** — divergent/layout
+  - design: 'Today at 3:42 PM' is right-aligned at the top of the header, opposite the title block (justify-content: space-between).
+  - app: completedAtLabel renders as its own left-aligned line stacked under cert name/time, using an absolute medium-date format (e.g. 'Jul 8, 2026, 3:42 PM') rather than a relative 'Today at' label, and is not positioned opposite the title.
+  - evidence: `design: openspec/design/Summary.html:317-332; app: apps/web/app/components/SessionSummaryBody.vue:102-139 (lines 136-138), composable apps/web/app/components/SessionSummaryBody.vue:84-97`
+- **[medium] Streak stat — metric semantics** — divergent/behavioral
+  - design: Streak stat = '4' with sub-label 'sessions in a row' — a consecutive-session counter.
+  - app: Streak stat sources streakDays from useActivityStats().currentStreakDays and labels it 'day streak' — a calendar-day metric, not a consecutive-session count.
+  - evidence: `design: openspec/design/Summary.html:372 (STUDY_SESSION.stats[3]); app: apps/web/app/components/SessionSummaryBody.vue:182-186, apps/web/app/components/SessionSummaryContent.vue:29-34`
+- **[low] Accuracy stat — primary value vs. sub-value order** — divergent/composition
+  - design: Accuracy cell's large primary number is the raw fraction '8/12'; the smaller sub-line is '67% correct'.
+  - app: Primary number is the percentage (e.g. '67%'); the fraction is relegated to the sub-line ('8/12 correct') — the emphasis is inverted relative to the design.
+  - evidence: `design: openspec/design/Summary.html:369; app: apps/web/app/components/SessionSummaryBody.vue:153-157`
+- **[low] Content region width** — divergent/layout
+  - design: Content column is full-bleed within the sidebar layout (flex:1, padding 28px 36px) — cards stretch to fill all available width next to the sidebar.
+  - app: Content is wrapped in `mx-auto w-full max-w-4xl px-9 py-7` inside the shell's own `main` padding, centering and capping the summary at a fixed width rather than filling the available area.
+  - evidence: `design: openspec/design/Summary.html:312-316; app: apps/web/app/pages/sessions/[id]/summary.vue:92`

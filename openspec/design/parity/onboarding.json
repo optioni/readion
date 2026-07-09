@@ -1,0 +1,62 @@
+{
+  "screen_id": "onboarding",
+  "screen": "Onboarding",
+  "totalFindings": 5,
+  "bySeverity": {
+    "high": 1,
+    "medium": 2,
+    "low": 2
+  },
+  "findings": [
+    {
+      "element": "Vendor-grouped certification list",
+      "class": "missing",
+      "axis": "composition",
+      "severity": "high",
+      "design": "V3Step1 renders CERT_GROUPS: certifications are bucketed under uppercase vendor headers (Amazon Web Services, Google Cloud, Microsoft Azure, Linux Foundation / CompTIA), each group preceded by a label row, with the cert row itself showing only the cert name + code badge (vendor is implied by the group). The CanvasSection subtitle explicitly calls this out as a defining feature: 'vendor-grouped cert list'.",
+      "app": "OnboardingCertSelect.vue renders a single flat <ul> of all certifications with no grouping or vendor section headers; each row instead repeats the provider name inline under the cert name.",
+      "evidence": "openspec/design/Onboarding.html:423-441 (CERT_GROUPS.map / group.vendor header) vs apps/web/app/components/OnboardingCertSelect.vue:57-101 (flat filteredOptions loop, option.provider shown per-item instead of a group header)",
+      "screen": "Onboarding \u2014 step-1-choose-cert"
+    },
+    {
+      "element": "Search box result-count suffix ('7 available')",
+      "class": "missing",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "SearchBox on step 1 shows a right-aligned pill suffix 'N available' reflecting the total certification count.",
+      "app": "The search input has no trailing count/suffix element of any kind.",
+      "evidence": "openspec/design/Onboarding.html:166-175 (SearchBox suffix prop), :422 (suffix=\"7 available\") vs apps/web/app/components/OnboardingCertSelect.vue:49-55 (bare <input>, no suffix element)",
+      "screen": "Onboarding \u2014 step-1-choose-cert"
+    },
+    {
+      "element": "Footer divider + spacing above Continue button",
+      "class": "divergent",
+      "axis": "layout",
+      "severity": "medium",
+      "design": "Step footer nav is visually separated from the list with a top border and 24/20px top margin/padding before the right-aligned Continue button ('display:flex, justifyContent:flex-end, marginTop:24, paddingTop:20, borderTop:1px solid').",
+      "app": "The Continue button sits as just another flex item in the same `flex flex-col gap-6` stack as the search input and list \u2014 no border-top divider or distinct top spacing separates it from the cert list.",
+      "evidence": "openspec/design/Onboarding.html:442-444 vs apps/web/app/components/OnboardingCertSelect.vue:47-48,103-110 (button inside the same gap-6 column, no border-t)",
+      "screen": "Onboarding \u2014 step-1-choose-cert"
+    },
+    {
+      "element": "Search box magnifying-glass icon",
+      "class": "missing",
+      "axis": "composition",
+      "severity": "low",
+      "design": "SearchBox includes an inline SVG magnifying-glass icon to the left of the placeholder text.",
+      "app": "Plain `<input type=\"search\">` with no custom leading icon (relies on browser default, if any).",
+      "evidence": "openspec/design/Onboarding.html:166-175 (svg circle/path) vs apps/web/app/components/OnboardingCertSelect.vue:49-55",
+      "screen": "Onboarding \u2014 step-1-choose-cert"
+    },
+    {
+      "element": "Continue button arrow glyph",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "low",
+      "design": "Footer Continue button reads 'Continue \u2192' with a trailing arrow glyph.",
+      "app": "Button label is plain 'Continue' with no arrow.",
+      "evidence": "openspec/design/Onboarding.html:443 vs apps/web/app/components/OnboardingCertSelect.vue:103-110",
+      "screen": "Onboarding \u2014 step-1-choose-cert"
+    }
+  ]
+}

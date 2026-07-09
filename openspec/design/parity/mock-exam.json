@@ -1,0 +1,82 @@
+{
+  "screen_id": "mock-exam",
+  "screen": "Mock exam",
+  "totalFindings": 7,
+  "bySeverity": {
+    "high": 2,
+    "medium": 2,
+    "low": 3
+  },
+  "findings": [
+    {
+      "element": "Full-screen exam chrome (single header)",
+      "class": "divergent",
+      "axis": "layout",
+      "severity": "high",
+      "design": "The artboard description explicitly states 'Full-screen, no agent, no sidebar nav' \u2014 the ExamHeader (52px) is the only chrome above the question/nav-panel split; the SAA-C03 badge and logo mark live inside that single bar.",
+      "app": "The page uses layouts/minimal.vue, which renders its own 52px ('h-13') header with a 'Readion' wordmark and a 'Back to dashboard' link, stacked directly above MockExamActiveScene's own ExamHeader \u2014 two header bars instead of one.",
+      "evidence": "design: openspec/design/MockExam.html:529 (subtitle) + ExamHeader lines 85-133; app: apps/web/app/layouts/minimal.vue:1-19 wrapping apps/web/app/components/MockExamActiveScene.vue:82-91 (ExamHeader)",
+      "screen": "Mock exam \u2014 active-unsubmitted"
+    },
+    {
+      "element": "Flag toggle \u2014 per-question state",
+      "class": "divergent",
+      "axis": "behavioral",
+      "severity": "high",
+      "design": "Flagging a question marks that specific question's square 'flagged' (orange) in the NavPanel grid, independent of which question is currently displayed (design shows Q12 as 'current' and Q13 as 'flagged' simultaneously) \u2014 implying flags are tracked per-question and surfaced in the nav grid.",
+      "app": "`flagged` is a single local `ref(false)` inside ExamHeader.vue, not keyed by question index and never passed to MockExamNavPanel/examNavSquares. Toggling Flag on one question does not change per-question state, is not reflected in any nav square, and the code comment confirms it is 'session-local and intentionally lost on reload' with no backing field.",
+      "evidence": "design: openspec/design/MockExam.html:118-126 (header flag button), 174 & 203-206 (flagged square state/legend), 303-308 (activeSquares with distinct flagged index 12); app: apps/web/app/components/ExamHeader.vue:39-40,91-105 and apps/web/app/composables/examNavSquares.ts:1-47 (no 'flagged' state exists)",
+      "screen": "Mock exam \u2014 active-unsubmitted"
+    },
+    {
+      "element": "NavPanel 'Flagged' square state + legend entry",
+      "class": "missing",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "Active-mode NavPanel legend has two swatches: 'Answered' (primary) and 'Flagged' (warning/orange); the square-state palette includes a distinct 'flagged' color and the grid renders a flagged square (idx 12) alongside the current square (idx 11).",
+      "app": "MockExamNavPanel's active-mode legend shows 'Answered' and 'Current' instead of 'Answered' and 'Flagged'; NavSquareState type has no 'flagged' variant at all, so a flagged question can never render distinctly in the grid.",
+      "evidence": "design: openspec/design/MockExam.html:203-206 (active legend), 174 (flagged color); app: apps/web/app/components/MockExamNavPanel.vue:70-73 (legend), apps/web/app/composables/examNavSquares.ts:5 (NavSquareState)",
+      "screen": "Mock exam \u2014 active-unsubmitted"
+    },
+    {
+      "element": "Header brand/logo mark",
+      "class": "missing",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "ExamHeader includes a small accent-colored rounded-square logo mark with a star SVG icon next to the cert code, establishing brand identity within the exam chrome itself.",
+      "app": "ExamHeader.vue renders only the cert code chip (and optional cert name) \u2014 no logo mark icon; the only 'Readion' branding lives in the separate outer minimal-layout header as plain text, not as the icon+badge design depicts.",
+      "evidence": "design: openspec/design/MockExam.html:88-93; app: apps/web/app/components/ExamHeader.vue:48-56",
+      "screen": "Mock exam \u2014 active-unsubmitted"
+    },
+    {
+      "element": "Flag button icon",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "low",
+      "design": "Flag button shows a flag-shaped SVG icon (filled/stroked based on flagged state) alongside the 'Flag' text label.",
+      "app": "Flag button renders only the text 'Flag' with color/border state changes \u2014 no icon.",
+      "evidence": "design: openspec/design/MockExam.html:120-125; app: apps/web/app/components/ExamHeader.vue:91-105",
+      "screen": "Mock exam \u2014 active-unsubmitted"
+    },
+    {
+      "element": "Timer clock icon",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "low",
+      "design": "Timer pill includes a small clock SVG icon before the time string, color-matched to the urgent/neutral state.",
+      "app": "Timer span renders only the mono time string (or paused placeholder) with border/text color changes \u2014 no icon.",
+      "evidence": "design: openspec/design/MockExam.html:113-116; app: apps/web/app/components/ExamHeader.vue:74-89",
+      "screen": "Mock exam \u2014 active-unsubmitted"
+    },
+    {
+      "element": "Header cert identity text",
+      "class": "divergent",
+      "axis": "composition",
+      "severity": "low",
+      "design": "Header shows only the uppercase cert code (e.g. 'SAA-C03') next to the logo mark, nothing else.",
+      "app": "ExamHeader additionally renders the full cert name text next to the code chip when available, an element not present in the design's active-state header.",
+      "evidence": "design: openspec/design/MockExam.html:92; app: apps/web/app/components/ExamHeader.vue:55",
+      "screen": "Mock exam \u2014 active-unsubmitted"
+    }
+  ]
+}

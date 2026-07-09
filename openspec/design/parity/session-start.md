@@ -1,0 +1,16 @@
+# Parity — Session start
+
+3 findings — 1 high · 1 medium · 1 low
+
+- **[high] Cert identity pill (code + name) above main card** — missing/composition
+  - design: A centered pill above the 'Ready to start?' card showing the cert's mono code (e.g. 'SAA-C03') and full name ('Solutions Architect – Associate'), so the user confirms which certification the session is for.
+  - app: absent — SessionStartQuickStart.vue renders only the MinimalHeader and the main card; no cert code/name element exists anywhere on the page for the given enrollmentId.
+  - evidence: `design: openspec/design/SessionStart.html:109-114 (Cert pill block in QuickStartScreen) vs app: apps/web/app/components/SessionStartQuickStart.vue:62-119 (no cert badge markup) and apps/web/app/pages/user-certifications/[id]/session/start.vue:14-30 (page passes only enrollmentId, never fetches/display cert code).`
+- **[medium] Defaults summary values (Content mix / Difficulty / Learning style)** — simplified/composition
+  - design: Values are humanized/enumerated display labels distinct from raw enum keys, e.g. 'Mixed', 'Adaptive', 'Spaced rep.'
+  - app: Values are bound directly to raw SessionDefaults enum strings with no formatting, so they would render as e.g. 'balanced'/'reading-heavy', 'beginner'/'intermediate'/'exam-ready', 'weak-area-focus'/'spaced-repetition'/'cram' instead of user-friendly labels (note 'Adaptive'/'Mixed' as design terms don't even correspond to any value in the shared enum).
+  - evidence: `design: openspec/design/SessionStart.html:122-137 (defaults rows array with polished labels) vs app: apps/web/app/components/SessionStartQuickStart.vue:24-35 (summaryRows maps value.contentMix/difficulty/learningStyle with no format function) and packages/shared/src/sessions/index.ts:6-18 (raw enum values: 'balanced', 'beginner', 'spaced-repetition', etc.).`
+- **[low] MinimalHeader brand mark icon** — simplified/composition
+  - design: Header shows a 22x22 rounded accent-colored icon chip with a star glyph next to the 'Readion' wordmark.
+  - app: Header renders only the 'Readion' text wordmark with no icon/logo chip.
+  - evidence: `design: openspec/design/SessionStart.html:84-89 (MinimalHeader icon block) vs app: apps/web/app/layouts/minimal.vue:6-8 (NuxtLink contains only a span with 'Readion' text, no icon element).`

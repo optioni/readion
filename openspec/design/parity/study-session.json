@@ -1,0 +1,112 @@
+{
+  "screen_id": "study-session",
+  "screen": "Study session",
+  "totalFindings": 10,
+  "bySeverity": {
+    "high": 3,
+    "medium": 4,
+    "low": 3
+  },
+  "findings": [
+    {
+      "element": "Persistent app sidebar (AppSidebar, active=Sessions)",
+      "class": "missing",
+      "axis": "layout",
+      "severity": "high",
+      "design": "SessionLayout renders Shell.AppSidebar (active='Sessions') as a permanent left nav rail alongside the header/content/agent split, per the design's 'Split-panel study interface' description.",
+      "app": "The page uses `definePageMeta({ layout: 'minimal' })`, which renders only a thin top bar (logo + 'Back to dashboard' link) with no sidebar/nav at all during a session.",
+      "evidence": "openspec/design/Session.html:84-85,367-382 (AppSidebar in SessionLayout); apps/web/app/pages/sessions/[id]/index.vue:18; apps/web/app/layouts/minimal.vue:1-19",
+      "screen": "Study session \u2014 answering-unsubmitted"
+    },
+    {
+      "element": "Simultaneous Reading + Quiz cards in content column",
+      "class": "divergent",
+      "axis": "composition",
+      "severity": "high",
+      "design": "For the 'answering-unsubmitted' state, leftContent stacks a ReadingBlock and a QuizCard together in the same viewport (reading context directly above its related question).",
+      "app": "The content column renders a single `currentItem` at a time via `v-if=\"type==='quiz'\" / v-else\", driven by one `currentPos` index \u2014 a ReadingBlock and QuizCard are never shown together; the user must advance through discrete reading-only or quiz-only screens.",
+      "evidence": "openspec/design/Session.html:428-450 (leftContent array with ReadingBlock+QuizCard); apps/web/app/pages/sessions/[id]/index.vue:139-154",
+      "screen": "Study session \u2014 answering-unsubmitted"
+    },
+    {
+      "element": "Confidence rating placement and gating",
+      "class": "divergent",
+      "axis": "behavioral",
+      "severity": "high",
+      "design": "ConfidenceRating is its own leftContent card that appears only after submission (state 'submitted-incorrect'), alongside the now-submitted QuizCard. In 'answering-unsubmitted', no confidence UI exists and the Submit button has no extra precondition beyond selecting an option.",
+      "app": "ConfidenceRating is embedded inside QuizCard and shown BEFORE submission (`v-if=\"result === null\"`); `canSubmit` requires both an option AND a confidence value, so the Submit button stays disabled until confidence is rated pre-submission \u2014 inverting the design's submit-then-rate flow.",
+      "evidence": "openspec/design/Session.html:240-255,395-465 (ConfidenceRating only in submitted state); apps/web/app/components/QuizCard.vue:29-31,124-128",
+      "screen": "Study session \u2014 answering-unsubmitted"
+    },
+    {
+      "element": "Confidence rating prompt copy (topic-specific)",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "Prompt reads \"How confident do you feel about **IAM & SCPs**?\" \u2014 bolded, topic-specific context.",
+      "app": "Generic prompt \"How confident do you feel?\" with no topic/domain interpolation.",
+      "evidence": "openspec/design/Session.html:242; apps/web/app/components/ConfidenceRating.vue:15",
+      "screen": "Study session \u2014 answering-unsubmitted"
+    },
+    {
+      "element": "ReadingBlock domain label ('IAM & Security')",
+      "class": "missing",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "Reading pill is followed by a domain label (e.g. 'IAM & Security') for context.",
+      "app": "ReadingBlock renders the domain span only `v-if=\"domain\"`, but the page never passes a `domain` prop when invoking `<ReadingBlock>`, so the label never renders.",
+      "evidence": "openspec/design/Session.html:131,434; apps/web/app/components/ReadingBlock.vue:13-14,55; apps/web/app/pages/sessions/[id]/index.vue:148-153",
+      "screen": "Study session \u2014 answering-unsubmitted"
+    },
+    {
+      "element": "ReadingBlock 'Continue' advance button",
+      "class": "divergent",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "The ReadingBlock component has no advance/continue affordance \u2014 it ends with the citation chips, since (per finding above) the related quiz is shown directly beneath it.",
+      "app": "ReadingBlock adds its own bottom 'Continue \u2192' button to advance the single-item sequence, a control not present in the design component.",
+      "evidence": "openspec/design/Session.html:125-169 (no button); apps/web/app/components/ReadingBlock.vue:88-95",
+      "screen": "Study session \u2014 answering-unsubmitted"
+    },
+    {
+      "element": "Collapsed agent rail affordance",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "Collapsed AgentPanel shows a chat-bubble icon button plus a vertical 'Ask AI' label alongside the expand control.",
+      "app": "Collapsed state (`w-11`) keeps only the header row's toggle arrow button; no icon or 'Ask AI' label is rendered.",
+      "evidence": "openspec/design/Session.html:313-325; apps/web/app/components/SessionLayout.vue:23-46",
+      "screen": "Study session \u2014 answering-unsubmitted"
+    },
+    {
+      "element": "Agent panel header online-status dot",
+      "class": "missing",
+      "axis": "composition",
+      "severity": "low",
+      "design": "Header shows a small green dot next to 'Study assistant' indicating live/online status.",
+      "app": "Header shows only the 'Study assistant' text and the collapse/close button \u2014 no status dot.",
+      "evidence": "openspec/design/Session.html:331-337; apps/web/app/components/SessionLayout.vue:29-41",
+      "screen": "Study session \u2014 answering-unsubmitted"
+    },
+    {
+      "element": "Agent bubble avatar icon",
+      "class": "missing",
+      "axis": "composition",
+      "severity": "low",
+      "design": "Non-user bubbles show a small circular sparkle-icon avatar before the 'Study assistant' label.",
+      "app": "AgentBubble renders only the 'Study assistant' text label, no avatar icon.",
+      "evidence": "openspec/design/Session.html:294-301; apps/web/app/components/AgentBubble.vue:28-30",
+      "screen": "Study session \u2014 answering-unsubmitted"
+    },
+    {
+      "element": "Question position label spacing",
+      "class": "divergent",
+      "axis": "composition",
+      "severity": "low",
+      "design": "Label reads 'Q3 of 12' with no space between 'Q' and the number.",
+      "app": "Template inserts a literal space: \"Q {{ displayNumber(item.index) }} of {{ total }}\", rendering 'Q 3 of 12'.",
+      "evidence": "openspec/design/Session.html:212; apps/web/app/components/QuizCard.vue:107",
+      "screen": "Study session \u2014 answering-unsubmitted"
+    }
+  ]
+}

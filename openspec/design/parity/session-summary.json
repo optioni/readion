@@ -1,0 +1,112 @@
+{
+  "screen_id": "session-summary",
+  "screen": "Session summary",
+  "totalFindings": 10,
+  "bySeverity": {
+    "high": 3,
+    "medium": 5,
+    "low": 2
+  },
+  "findings": [
+    {
+      "element": "Weak area movement \u2014 before/after values",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "high",
+      "design": "WeakAreasCard shows, per weak area, the before% \u2192 after% transition (with a small arrow glyph) plus the delta badge, e.g. '38% \u2192 45%  \u21917%'.",
+      "app": "Only the area label and the delta badge are rendered; the before/after percentages and arrow are entirely absent. This traces back to the shared DTO (WeakAreaDelta = {domain, delta}) which never carried before/after values.",
+      "evidence": "design: openspec/design/Summary.html:205-231 (WeakAreasCard); app: apps/web/app/components/SessionSummaryBody.vue:230-245; type: packages/shared/src/session-summary/index.ts:8-11",
+      "screen": "Session summary \u2014 after-study-session"
+    },
+    {
+      "element": "Question highlight cards (strongest/weakest) \u2014 icon + answer metadata",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "high",
+      "design": "QuestionHighlight shows a status icon (check/x circle svg), the question text, and an answer-metadata line ('Answered correctly in 38s \u00b7 Selected B' / 'Selected C \u00b7 Correct was B').",
+      "app": "Renders only the 'Strongest'/'Weakest' text label and the question paragraph; there is no icon and no answer/timing metadata line at all. SessionQuestionRef only carries {responseId, question} in the shared type, so chosen/correct/timeSec have no backing data.",
+      "evidence": "design: openspec/design/Summary.html:234-280; app: apps/web/app/components/SessionSummaryBody.vue:248-284; type: packages/shared/src/session-summary/index.ts:19-22",
+      "screen": "Session summary \u2014 after-study-session"
+    },
+    {
+      "element": "Domains covered \u2014 progress bar and question-count column",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "high",
+      "design": "Each domain row has a colored progress bar sized to accuracy%, a right-aligned 'correct/total' count (e.g. '8/10'), the accuracy%, and a delta badge.",
+      "app": "Each row only shows the domain name, the accuracy% (color-coded), and the delta badge \u2014 no progress bar and no correct/total count. SessionSummaryDomainStat only carries {domain, accuracy}, so the count data doesn't exist.",
+      "evidence": "design: openspec/design/Summary.html:166-202; app: apps/web/app/components/SessionSummaryBody.vue:210-228; type: packages/shared/src/session-summary/index.ts:3-6",
+      "screen": "Session summary \u2014 after-study-session"
+    },
+    {
+      "element": "Next-session suggestion \u2014 icon and reasoning text",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "NextSessionCard shows an icon in a circular chip, the 'Suggested focus next session' label, the domain, and an explanatory reason (e.g. 'Your Networking score (43%) is your largest gap from passing...').",
+      "app": "Only the label and domain name render; there is no icon and no reason text. The shared type's nextFocus is {domain} only.",
+      "evidence": "design: openspec/design/Summary.html:283-296; app: apps/web/app/components/SessionSummaryBody.vue:286-293; type: packages/shared/src/session-summary/index.ts:32",
+      "screen": "Session summary \u2014 after-study-session"
+    },
+    {
+      "element": "Primary CTA \u2014 miss count and icon",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "CTA button reads 'Drill my misses \u00b7 4 questions \u2192' with a leading play-triangle icon, previewing how many questions will be drilled.",
+      "app": "Button reads only 'Drill my misses \u2192' with no icon and no miss-count preview; the count is only discovered after the click (drill() call), and the empty-state message is shown post-hoc instead of being previewed.",
+      "evidence": "design: openspec/design/Summary.html:299-309; app: apps/web/app/components/SessionSummaryBody.vue:296-303",
+      "screen": "Session summary \u2014 after-study-session"
+    },
+    {
+      "element": "Readiness change bar \u2014 gradient fill and directional arrow marker",
+      "class": "simplified",
+      "axis": "composition",
+      "severity": "medium",
+      "design": "The readiness track has an inset gradient fill (indigo\u2192green) plus a triangular arrow marker at the end, visually depicting the improvement direction.",
+      "app": "The track is a flat, empty bg-readion-border-strong bar with no fill and no arrow marker \u2014 purely a spacer between the two numbers.",
+      "evidence": "design: openspec/design/Summary.html:142-163 (ReadinessChange, lines 150-153); app: apps/web/app/components/SessionSummaryBody.vue:189-208 (line 197)",
+      "screen": "Session summary \u2014 after-study-session"
+    },
+    {
+      "element": "Header timestamp \u2014 placement and format",
+      "class": "divergent",
+      "axis": "layout",
+      "severity": "medium",
+      "design": "'Today at 3:42 PM' is right-aligned at the top of the header, opposite the title block (justify-content: space-between).",
+      "app": "completedAtLabel renders as its own left-aligned line stacked under cert name/time, using an absolute medium-date format (e.g. 'Jul 8, 2026, 3:42 PM') rather than a relative 'Today at' label, and is not positioned opposite the title.",
+      "evidence": "design: openspec/design/Summary.html:317-332; app: apps/web/app/components/SessionSummaryBody.vue:102-139 (lines 136-138), composable apps/web/app/components/SessionSummaryBody.vue:84-97",
+      "screen": "Session summary \u2014 after-study-session"
+    },
+    {
+      "element": "Streak stat \u2014 metric semantics",
+      "class": "divergent",
+      "axis": "behavioral",
+      "severity": "medium",
+      "design": "Streak stat = '4' with sub-label 'sessions in a row' \u2014 a consecutive-session counter.",
+      "app": "Streak stat sources streakDays from useActivityStats().currentStreakDays and labels it 'day streak' \u2014 a calendar-day metric, not a consecutive-session count.",
+      "evidence": "design: openspec/design/Summary.html:372 (STUDY_SESSION.stats[3]); app: apps/web/app/components/SessionSummaryBody.vue:182-186, apps/web/app/components/SessionSummaryContent.vue:29-34",
+      "screen": "Session summary \u2014 after-study-session"
+    },
+    {
+      "element": "Accuracy stat \u2014 primary value vs. sub-value order",
+      "class": "divergent",
+      "axis": "composition",
+      "severity": "low",
+      "design": "Accuracy cell's large primary number is the raw fraction '8/12'; the smaller sub-line is '67% correct'.",
+      "app": "Primary number is the percentage (e.g. '67%'); the fraction is relegated to the sub-line ('8/12 correct') \u2014 the emphasis is inverted relative to the design.",
+      "evidence": "design: openspec/design/Summary.html:369; app: apps/web/app/components/SessionSummaryBody.vue:153-157",
+      "screen": "Session summary \u2014 after-study-session"
+    },
+    {
+      "element": "Content region width",
+      "class": "divergent",
+      "axis": "layout",
+      "severity": "low",
+      "design": "Content column is full-bleed within the sidebar layout (flex:1, padding 28px 36px) \u2014 cards stretch to fill all available width next to the sidebar.",
+      "app": "Content is wrapped in `mx-auto w-full max-w-4xl px-9 py-7` inside the shell's own `main` padding, centering and capping the summary at a fixed width rather than filling the available area.",
+      "evidence": "design: openspec/design/Summary.html:312-316; app: apps/web/app/pages/sessions/[id]/summary.vue:92",
+      "screen": "Session summary \u2014 after-study-session"
+    }
+  ]
+}
