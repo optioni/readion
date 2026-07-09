@@ -7,7 +7,16 @@ export const meta = {
 
 // args is the manifest's artboard list (workflow scripts have no filesystem access,
 // so the caller reads openspec/design/manifest.json and passes { artboards: [...] } or the array itself).
-const specs = Array.isArray(args) ? args : (args?.artboards ?? [])
+// Accept a parsed object/array OR a JSON string of either (arg plumbing sometimes stringifies).
+let parsedArgs = args
+if (typeof parsedArgs === 'string') {
+  try {
+    parsedArgs = JSON.parse(parsedArgs)
+  } catch {
+    parsedArgs = null
+  }
+}
+const specs = Array.isArray(parsedArgs) ? parsedArgs : (parsedArgs?.artboards ?? [])
 
 if (!specs.length) {
   log('No screen specs in args. Pass the manifest artboards as args: { artboards: [{ id, screen, route, state, file }, ...] }.')
