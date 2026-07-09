@@ -3,7 +3,6 @@ import {
   DEFAULT_SESSION_DEFAULTS,
   sessionDefaultContentMixes,
   sessionDefaultDifficulties,
-  sessionDefaultDurations,
   sessionDefaultFocusAreas,
   sessionDefaultLearningStyles,
 } from '@readion/shared'
@@ -61,9 +60,7 @@ describe('StudyDefaultsTab renders all five session defaults', () => {
     const { wrapper } = mountTab()
     await flushPromises()
 
-    for (const value of sessionDefaultDurations) {
-      expect(wrapper.find(`[data-testid="duration-option-${value}"]`).exists()).toBe(true)
-    }
+    expect(wrapper.find('[data-testid="duration-slider"]').exists()).toBe(true)
     for (const value of sessionDefaultContentMixes) {
       expect(wrapper.find(`[data-testid="content-mix-${value}"]`).exists()).toBe(true)
     }
@@ -90,9 +87,8 @@ describe('StudyDefaultsTab renders all five session defaults', () => {
     const { wrapper } = mountTab()
     await flushPromises()
 
-    expect(wrapper.find('[data-testid="duration-option-90"]').attributes('aria-pressed')).toBe(
-      'true',
-    )
+    // duration: 90 is sessionDefaultDurations[3] — the slider's readout reflects the pre-fill.
+    expect(wrapper.find('[data-testid="duration-readout"]').text()).toBe('90 min')
     expect(
       wrapper.find('[data-testid="learning-style-scenario-based"]').attributes('aria-pressed'),
     ).toBe('true')
@@ -121,7 +117,8 @@ describe('StudyDefaultsTab save defaults', () => {
     const { wrapper, invalidateSpy } = mountTab()
     await flushPromises()
 
-    await wrapper.find('[data-testid="duration-option-60"]').trigger('click')
+    // Index 2 → sessionDefaultDurations[2] === 60.
+    await wrapper.find('[data-testid="duration-slider"]').setValue(2)
     await wrapper.find('[data-testid="learning-style-spaced-repetition"]').trigger('click')
     await wrapper.find('[data-testid="save-defaults-btn"]').trigger('click')
     await flushPromises()
@@ -152,14 +149,12 @@ describe('StudyDefaultsTab save defaults', () => {
     const { wrapper, invalidateSpy } = mountTab()
     await flushPromises()
 
-    await wrapper.find('[data-testid="duration-option-60"]').trigger('click')
+    await wrapper.find('[data-testid="duration-slider"]').setValue(2)
     await wrapper.find('[data-testid="save-defaults-btn"]').trigger('click')
     await flushPromises()
 
     expect(wrapper.find('[data-testid="study-defaults-error"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="duration-option-60"]').attributes('aria-pressed')).toBe(
-      'true',
-    )
+    expect(wrapper.find('[data-testid="duration-readout"]').text()).toBe('60 min')
     expect(invalidateSpy).not.toHaveBeenCalled()
   })
 

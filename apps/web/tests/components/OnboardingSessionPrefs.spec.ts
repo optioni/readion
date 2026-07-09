@@ -40,11 +40,12 @@ function stubProfile(sessionDefaults: SessionDefaults) {
   )
 }
 
-function mountStep() {
+function mountStep(props: Record<string, unknown> = {}) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   })
   const wrapper = mount(OnboardingSessionPrefs, {
+    props,
     global: { plugins: [[VueQueryPlugin, { queryClient }]] },
   })
   return { wrapper, queryClient }
@@ -137,6 +138,54 @@ describe('OnboardingSessionPrefs options', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-testid="onboarding-session-prefs"]').exists()).toBe(true)
+  })
+})
+
+describe('OnboardingSessionPrefs settings layout — duration slider', () => {
+  it('renders Session length as a slider with a live "N min" readout snapping to the real options', async () => {
+    stubProfile(DEFAULT_SESSION_DEFAULTS) // duration: 30
+
+    const { wrapper } = mountStep({ layout: 'settings' })
+    await flushPromises()
+
+    const slider = wrapper.find('[data-testid="duration-slider"]')
+    expect(slider.exists()).toBe(true)
+    expect(slider.attributes('type')).toBe('range')
+    expect(slider.attributes('min')).toBe('0')
+    expect(slider.attributes('max')).toBe(String(sessionDefaultDurations.length - 1))
+    expect(slider.attributes('step')).toBe('1')
+
+    expect(wrapper.find('[data-testid="duration-readout"]').text()).toBe('30 min')
+
+    // Index 2 → sessionDefaultDurations[2] === 60 — snaps to a real option, not a free value.
+    await slider.setValue(2)
+    expect(wrapper.find('[data-testid="duration-readout"]').text()).toBe('60 min')
+    expect(wrapper.emitted('update')?.at(-1)?.[0]).toMatchObject({ duration: 60 })
+  })
+
+  it('does not render the duration pill buttons in the settings layout', async () => {
+    stubProfile(DEFAULT_SESSION_DEFAULTS)
+
+    const { wrapper } = mountStep({ layout: 'settings' })
+    await flushPromises()
+
+    for (const value of sessionDefaultDurations) {
+      expect(wrapper.find(`[data-testid="duration-option-${value}"]`).exists()).toBe(false)
+    }
+  })
+})
+
+describe('OnboardingSessionPrefs default (onboarding) layout — duration stays pill buttons', () => {
+  it('keeps duration as clickable pill buttons with no slider', async () => {
+    stubProfile(DEFAULT_SESSION_DEFAULTS)
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="duration-slider"]').exists()).toBe(false)
+    for (const value of sessionDefaultDurations) {
+      expect(wrapper.find(`[data-testid="duration-option-${value}"]`).exists()).toBe(true)
+    }
   })
 })
 

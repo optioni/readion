@@ -13,12 +13,15 @@ import {
   sessionDefaultsSchema,
 } from '@readion/shared'
 import { useQuery } from '@tanstack/vue-query'
-import { reactive, watch } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import { onboardingQueryKeys } from '~/composables/onboardingQueryKeys'
 import { readProfileEnvelope } from '~/composables/useOnboardingGate'
 import { usersControllerGetMe } from '~~/src/api/users/users'
 
-withDefaults(defineProps<{ showConfirm?: boolean }>(), { showConfirm: true })
+const props = withDefaults(
+  defineProps<{ showConfirm?: boolean; layout?: 'onboarding' | 'settings' }>(),
+  { showConfirm: true, layout: 'onboarding' },
+)
 
 const emit = defineEmits<{
   confirm: [defaults: SessionDefaults]
@@ -93,6 +96,21 @@ function labelFor(key: keyof SessionDefaults, option: SessionDefaults[keyof Sess
   return optionLabels[key]?.[String(option)] ?? String(option)
 }
 
+const durationIndex = computed<number>({
+  get: () => {
+    const index = sessionDefaultDurations.indexOf(selected.duration)
+    return index === -1 ? 0 : index
+  },
+  set: (index) => {
+    const duration = sessionDefaultDurations[index]
+    if (duration !== undefined) {
+      selected.duration = duration
+    }
+  },
+})
+
+const isSettingsLayout = computed(() => props.layout === 'settings')
+
 function isSelected(key: keyof SessionDefaults, value: SessionDefaults[keyof SessionDefaults]) {
   return selected[key] === value
 }
@@ -112,7 +130,26 @@ function confirm() {
       <span class="font-mono text-slate-400 text-xs uppercase tracking-wide">
         {{ field.label }}
       </span>
-      <div class="flex flex-wrap gap-2">
+
+      <div v-if="field.key === 'duration' && isSettingsLayout" class="flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <span class="text-readion-text-muted text-xs">Duration</span>
+          <span data-testid="duration-readout" class="font-medium text-readion-accent-label text-sm">
+            {{ selected.duration }} min
+          </span>
+        </div>
+        <input
+          v-model.number="durationIndex"
+          data-testid="duration-slider"
+          type="range"
+          min="0"
+          :max="sessionDefaultDurations.length - 1"
+          step="1"
+          class="w-full accent-readion-primary"
+        />
+      </div>
+
+      <div v-else class="flex flex-wrap gap-2">
         <button
           v-for="option in field.options"
           :key="String(option)"

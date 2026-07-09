@@ -40,7 +40,11 @@ async function saveDefaults() {
 
 <template>
   <div class="flex flex-col gap-6">
-    <OnboardingSessionPrefs :show-confirm="false" @update="trackSelection" />
+    <OnboardingSessionPrefs
+      :show-confirm="false"
+      layout="settings"
+      @update="trackSelection"
+    />
 
     <p v-if="errorMessage" data-testid="study-defaults-error" class="text-red-400 text-sm">
       {{ errorMessage }}

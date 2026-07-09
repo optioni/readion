@@ -52,8 +52,9 @@ async function expectActionRightAligned(
 //                    current-password-error, new-password-error, confirm-password-error,
 //                    delete-account-btn, delete-account-modal, delete-password-input,
 //                    confirm-delete-btn, delete-account-error
-//   Study defaults : reuses OnboardingSessionPrefs option buttons (duration-option-60,
-//                    learning-style-spaced-repetition, …) + save-defaults-btn
+//   Study defaults : reuses OnboardingSessionPrefs's settings layout — duration-slider +
+//                    duration-readout for Session length, option buttons for the other four
+//                    fields (learning-style-spaced-repetition, …) + save-defaults-btn
 //   Notifications  : digest-toggle (role="switch" weekly-digest opt-out, two-way; ON = subscribed =
 //                    !digestOptOut, OFF sends digestOptOut: true; digest-error on failure); NO toggles
 //                    for review reminders / streak alerts / exam countdown / in-app (those testids MUST
@@ -116,13 +117,17 @@ test.describe('web-settings — settings page', () => {
     await expect(page.getByTestId('study-defaults-panel')).toBeVisible()
 
     // Profile-seeded defaults (settings-seed.ts fixture: duration 30, weak-area-focus) are pre-selected.
-    await expect(page.getByTestId('duration-option-30')).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByTestId('duration-readout')).toHaveText('30 min')
     await expect(page.getByTestId('learning-style-weak-area-focus')).toHaveAttribute(
       'aria-pressed',
       'true',
     )
 
-    await page.getByTestId('duration-option-60').click()
+    // Session length is a slider snapping to the real [15,30,60,90] options — one ArrowRight
+    // step moves from 30 (index 1) to 60 (index 2).
+    await page.getByTestId('duration-slider').focus()
+    await page.keyboard.press('ArrowRight')
+    await expect(page.getByTestId('duration-readout')).toHaveText('60 min')
     await page.getByTestId('learning-style-spaced-repetition').click()
     await page.getByTestId('save-defaults-btn').click()
 
