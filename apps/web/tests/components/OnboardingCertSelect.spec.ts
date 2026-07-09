@@ -59,8 +59,8 @@ afterEach(() => {
 describe('OnboardingCertSelect grouping', () => {
   it('groups options under an uppercase provider header and shows name + code on each row', async () => {
     stubCertifications([
-      certification({ id: 'cert-1', name: 'AWS Solutions Architect', provider: 'AWS' }),
-      certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure', code: 'AZ-900' }),
+      certification({ id: 'cert-1', name: 'Solutions Architect - Associate', provider: 'AWS' }),
+      certification({ id: 'cert-2', name: 'Fundamentals', provider: 'Azure', code: 'AZ-900' }),
     ])
 
     const { wrapper } = mountStep()
@@ -74,10 +74,10 @@ describe('OnboardingCertSelect grouping', () => {
 
     const optionEls = wrapper.findAll('[data-testid="cert-option"]')
     expect(optionEls).toHaveLength(2)
-    expect(optionEls[0]?.text()).toContain('AWS Solutions Architect')
+    expect(optionEls[0]?.text()).toContain('Solutions Architect - Associate')
     expect(optionEls[0]?.text()).toContain('SAA-C03')
     expect(optionEls[0]?.text()).not.toContain('AWS')
-    expect(optionEls[1]?.text()).toContain('Azure Fundamentals')
+    expect(optionEls[1]?.text()).toContain('Fundamentals')
     expect(optionEls[1]?.text()).toContain('AZ-900')
   })
 
