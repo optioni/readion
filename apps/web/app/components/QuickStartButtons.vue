@@ -31,7 +31,7 @@ const mockClass = computed(() =>
       :disabled="props.isStartingMockExam"
       @click="emit('mock-exam')"
     >
-      Mock Exam
+      Mock exam
     </button>
     <button
       type="button"

@@ -96,10 +96,10 @@ test.describe('web-dashboard — vertical cert list, hero, quick-starts, add cer
     await expect(heroCard.getByText(/weak areas/i)).toBeVisible()
     await expect(heroCard.getByText(/recent sessions/i)).toBeVisible()
 
-    // The 5-minute review quick-start appears only where reviews are due. The seed writes a
+    // The 5-min review quick-start appears only where reviews are due. The seed writes a
     // real due ReviewItem for one enrollment (seed.dueReviewEnrollment), so this exercises the
     // SPEC-mandated conditional control against a genuine dueCount > 0.
-    await expect(page.getByRole('button', { name: /5-minute review/i }).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: /5-min review/i }).first()).toBeVisible()
 
     // Each card offers the Start Session and Mock Exam quick-starts.
     await expect(heroCard.getByRole('button', { name: /start session/i })).toBeVisible()

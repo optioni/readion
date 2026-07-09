@@ -29,7 +29,17 @@ function startReview() {
       :class="pillClass"
       @click="startReview"
     >
-      5-minute review
+      <svg
+        data-testid="review-play-icon"
+        width="10"
+        height="10"
+        viewBox="0 0 12 12"
+        fill="none"
+        aria-hidden="true"
+      >
+        <polygon points="4,2 10,6 4,10" fill="currentColor" />
+      </svg>
+      5-min review
     </button>
   </div>
 </template>
