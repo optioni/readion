@@ -278,6 +278,25 @@ describe('OnboardingCertSelect search', () => {
   })
 })
 
+describe('OnboardingCertSelect footer', () => {
+  it('separates Continue from the list with a top-border divider footer, right-aligned', async () => {
+    stubCertifications([certification({ id: 'cert-1', name: 'AWS SA' })])
+
+    const { wrapper } = mountStep()
+    await flushPromises()
+
+    const footer = wrapper.find('[data-testid="cert-select-footer"]')
+    expect(footer.exists()).toBe(true)
+    expect(footer.classes()).toEqual(
+      expect.arrayContaining(['border-t', 'justify-end']),
+    )
+
+    const button = footer.find('button')
+    expect(button.exists()).toBe(true)
+    expect(button.text()).toBe('Continue →')
+  })
+})
+
 describe('OnboardingCertSelect selection', () => {
   it('disables Continue until a certification is selected', async () => {
     stubCertifications([certification({ id: 'cert-1', name: 'AWS SA' })])
