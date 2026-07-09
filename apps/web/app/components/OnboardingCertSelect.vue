@@ -66,13 +66,35 @@ function confirm() {
 
 <template>
   <div class="flex flex-col gap-6">
-    <input
-      v-model="query"
-      data-testid="cert-search-input"
-      type="search"
-      placeholder="Search certifications…"
-      class="w-full rounded-lg border border-readion-background-surface bg-readion-background-elevated px-4 py-2.5 text-slate-200 text-sm placeholder:text-slate-500 focus:border-readion-primary focus:outline-none"
-    />
+    <div
+      class="flex items-center gap-2 rounded-lg border border-readion-background-surface bg-readion-background-base px-3 py-2 focus-within:border-readion-primary"
+    >
+      <svg
+        data-testid="cert-search-icon"
+        width="13"
+        height="13"
+        viewBox="0 0 16 16"
+        fill="none"
+        aria-hidden="true"
+        class="shrink-0 text-slate-500"
+      >
+        <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" />
+        <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+      </svg>
+      <input
+        v-model="query"
+        data-testid="cert-search-input"
+        type="search"
+        placeholder="Search certifications…"
+        class="w-full flex-1 bg-transparent text-slate-200 text-sm placeholder:text-slate-500 focus:outline-none"
+      />
+      <span
+        data-testid="cert-search-count"
+        class="shrink-0 rounded bg-readion-background-elevated px-1.5 py-0.5 text-slate-500 text-xs"
+      >
+        {{ options.length }} available
+      </span>
+    </div>
 
     <div class="flex flex-col gap-1">
       <div v-for="group in groupedOptions" :key="group.provider" data-testid="cert-group">
