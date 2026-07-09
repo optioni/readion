@@ -51,7 +51,7 @@
 
 ## 8. Polish
 
-- [ ] 8.1 `yarn lint`
-- [ ] 8.2 `yarn format`
-- [ ] 8.3 `yarn workspace apps/web typecheck` (zero errors)
-- [ ] 8.4 `yarn workspace apps/web test:coverage` (≥80% for touched components)
+- [x] 8.1 `yarn lint`
+- [x] 8.2 `yarn format`
+- [x] 8.3 `yarn workspace apps/web typecheck` (zero errors)
+- [x] 8.4 `yarn workspace apps/web test:coverage` (≥80% for touched components)
