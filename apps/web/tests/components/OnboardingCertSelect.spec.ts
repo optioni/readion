@@ -85,7 +85,12 @@ describe('OnboardingCertSelect grouping', () => {
     stubCertifications([
       certification({ id: 'cert-1', name: 'Solutions Architect - Associate', code: 'SAA-C03' }),
       certification({ id: 'cert-2', name: 'Developer - Associate', code: 'DVA-C02' }),
-      certification({ id: 'cert-3', name: 'Azure Fundamentals', provider: 'Azure', code: 'AZ-900' }),
+      certification({
+        id: 'cert-3',
+        name: 'Azure Fundamentals',
+        provider: 'Azure',
+        code: 'AZ-900',
+      }),
     ])
 
     const { wrapper } = mountStep()
@@ -99,9 +104,19 @@ describe('OnboardingCertSelect grouping', () => {
 
   it('renders groups in the stable order providers first appear in the catalog', async () => {
     stubCertifications([
-      certification({ id: 'cert-1', name: 'Azure Fundamentals', provider: 'Azure', code: 'AZ-900' }),
+      certification({
+        id: 'cert-1',
+        name: 'Azure Fundamentals',
+        provider: 'Azure',
+        code: 'AZ-900',
+      }),
       certification({ id: 'cert-2', name: 'AWS Solutions Architect', provider: 'AWS' }),
-      certification({ id: 'cert-3', name: 'Azure Administrator', provider: 'Azure', code: 'AZ-104' }),
+      certification({
+        id: 'cert-3',
+        name: 'Azure Administrator',
+        provider: 'Azure',
+        code: 'AZ-104',
+      }),
     ])
 
     const { wrapper } = mountStep()
@@ -210,7 +225,12 @@ describe('OnboardingCertSelect search', () => {
     stubCertifications([
       certification({ id: 'cert-1', name: 'AWS Solutions Architect' }),
       certification({ id: 'cert-2', name: 'AWS Developer', code: 'DVA-C02' }),
-      certification({ id: 'cert-3', name: 'Azure Fundamentals', provider: 'Azure', code: 'AZ-900' }),
+      certification({
+        id: 'cert-3',
+        name: 'Azure Fundamentals',
+        provider: 'Azure',
+        code: 'AZ-900',
+      }),
     ])
 
     const { wrapper } = mountStep()
@@ -287,9 +307,7 @@ describe('OnboardingCertSelect footer', () => {
 
     const footer = wrapper.find('[data-testid="cert-select-footer"]')
     expect(footer.exists()).toBe(true)
-    expect(footer.classes()).toEqual(
-      expect.arrayContaining(['border-t', 'justify-end']),
-    )
+    expect(footer.classes()).toEqual(expect.arrayContaining(['border-t', 'justify-end']))
 
     const button = footer.find('button')
     expect(button.exists()).toBe(true)

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
-import type { CertificationResponseDto } from '~~/src/api/model'
 import { computed, ref } from 'vue'
 import { onboardingQueryKeys } from '~/composables/onboardingQueryKeys'
 import { certificationsControllerList } from '~~/src/api/certifications/certifications'
+import type { CertificationResponseDto } from '~~/src/api/model'
 
 const emit = defineEmits<{ continue: [certificationId: string] }>()
 
