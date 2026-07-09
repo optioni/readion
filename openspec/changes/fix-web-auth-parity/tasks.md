@@ -13,11 +13,11 @@
 
 ## 2. Reset password — confirm field + match validation (`web-auth`)
 
-- [ ] 2.1 RED: component test asserting the reset form renders a second "Confirm password" field beneath the new-password field
-- [ ] 2.2 RED: component test asserting submit is blocked with an inline "passwords do not match" message when the two entries differ, and enabled when they match (in addition to the existing ≥8-char rule)
-- [ ] 2.3 RED: component test asserting the confirm field shows the success (check) indicator when the values match
-- [ ] 2.4 GREEN: add the confirm-password field + client-side match check to `reset-password.vue`; gate submit on match; keep the POST payload (token + new password) unchanged
-- [ ] 2.5 REFACTOR: ensure the strength rule and match rule compose cleanly; tidy validation state
+- [x] 2.1 RED: component test asserting the reset form renders a second "Confirm password" field beneath the new-password field
+- [x] 2.2 RED: component test asserting submit is blocked with an inline "passwords do not match" message when the two entries differ, and enabled when they match (in addition to the existing ≥8-char rule)
+- [x] 2.3 RED: component test asserting the confirm field shows the success (check) indicator when the values match
+- [x] 2.4 GREEN: add the confirm-password field + client-side match check to `reset-password.vue`; gate submit on match; keep the POST payload (token + new password) unchanged
+- [x] 2.5 REFACTOR: ensure the strength rule and match rule compose cleanly; tidy validation state
 
 ## 3. Reaffirm deliberate divergences — guard tests (`web-auth`)
 

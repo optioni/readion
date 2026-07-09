@@ -85,9 +85,40 @@
           </div>
           <div v-else class="mb-5" />
 
+          <div class="mb-5">
+            <label class="block text-xs font-medium text-slate-400 mb-1.5">Confirm password</label>
+            <div class="relative">
+              <input
+                data-testid="confirm-password-input"
+                v-model="confirmPassword"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Re-enter your password"
+                autocomplete="new-password"
+                required
+                :class="[
+                  'w-full px-3 py-2 pr-10 bg-readion-background-base border rounded-md text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500',
+                  credentialFieldBorderClass(passwordsMismatch),
+                ]"
+              />
+              <div
+                v-if="passwordsMatch"
+                data-testid="confirm-password-success"
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-readion-status-good"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="7" fill="rgba(52,211,153,0.12)" stroke="currentColor" stroke-width="1.2" />
+                  <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+            </div>
+            <p v-if="passwordsMismatch" data-testid="confirm-password-mismatch" class="mt-1.5 text-xs text-readion-status-poor">
+              Passwords do not match
+            </p>
+          </div>
+
           <button
             type="submit"
-            :disabled="loading"
+            :disabled="loading || !canSubmit"
             class="w-full py-2.5 bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold rounded-md transition-colors disabled:opacity-60"
           >
             <span v-if="loading">Setting password…</span>
@@ -100,9 +131,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useCredentialForm } from '~/composables/useCredentialForm'
 import { useTrack } from '~/composables/useTrack'
+import { credentialFieldBorderClass } from '~/utils/credentialFieldStyles'
 
 definePageMeta({ layout: 'auth' })
 
@@ -113,6 +145,15 @@ const { track } = useTrack()
 const { password, showPassword, loading, passwordStrength, strengthLabel, strengthColor } =
   useCredentialForm()
 const token = route.query?.token as string | undefined
+
+const confirmPassword = ref('')
+const passwordsMatch = computed(
+  () => confirmPassword.value.length > 0 && confirmPassword.value === password.value,
+)
+const passwordsMismatch = computed(
+  () => confirmPassword.value.length > 0 && confirmPassword.value !== password.value,
+)
+const canSubmit = computed(() => password.value.length >= 8 && passwordsMatch.value)
 
 type TokenState = 'loading' | 'valid' | 'invalid'
 const tokenState = ref<TokenState>('loading')
@@ -138,7 +179,7 @@ onMounted(async () => {
 })
 
 async function handleSubmit() {
-  if (password.value.length < 8) return
+  if (!canSubmit.value) return
 
   loading.value = true
   try {
