@@ -145,6 +145,41 @@ test.describe('web-onboarding — first-run flow (cert-select, defaults, diagnos
     await expect(liveOption).toBeVisible()
   })
 
+  test('parity: step 1 groups certs under an uppercase vendor header, shows a search count + icon, and a divided arrow footer', async ({
+    page,
+  }) => {
+    // Fresh user so this does not depend on (or mutate) the happy-path enrollment.
+    const viewer = await seedOnboardingNewUser(api, mailpit)
+    await signIn(page, viewer)
+
+    await expect(page).toHaveURL('/onboarding')
+    await expect(page.getByTestId('onboarding-page')).toBeVisible()
+
+    // RED — vendor-grouped list (`openspec/design/Onboarding.html` V3Step1 CERT_GROUPS): the seeded
+    // live cert's provider renders as an uppercase group header, not repeated inline on the row.
+    const groupHeader = page
+      .getByTestId('cert-group-header')
+      .filter({ hasText: viewer.liveCert.provider })
+    await expect(groupHeader).toBeVisible()
+    await expect(groupHeader).toHaveCSS('text-transform', 'uppercase')
+
+    const liveOption = page.getByTestId('cert-option').filter({ hasText: viewer.liveCert.name })
+    await expect(liveOption).toBeVisible()
+    await expect(liveOption).not.toContainText(viewer.liveCert.provider)
+
+    // RED — search box shows a leading magnifying-glass icon and a right-aligned "N available"
+    // count reflecting the total loaded catalog. Absent today.
+    await expect(page.getByTestId('cert-search-icon')).toBeVisible()
+    await expect(page.getByTestId('cert-search-count')).toHaveText(/\d+ available/i)
+
+    // RED — footer Continue is separated from the list by a top-border divider and reads
+    // "Continue →" (plain "Continue" today, no divider).
+    const footer = page.getByTestId('cert-select-footer')
+    await expect(footer).toBeVisible()
+    await expect(footer).toHaveCSS('border-top-width', '1px')
+    await expect(footer.getByRole('button', { name: 'Continue →' })).toBeVisible()
+  })
+
   test('already-enrolled user is redirected away from /onboarding to the dashboard', async ({
     page,
   }) => {
