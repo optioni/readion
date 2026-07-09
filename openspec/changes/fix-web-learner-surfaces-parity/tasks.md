@@ -65,7 +65,7 @@
 
 ## 9. Polish
 
-- [ ] 9.1 `yarn lint`
-- [ ] 9.2 `yarn format`
-- [ ] 9.3 `yarn workspace apps/web typecheck` (zero errors)
-- [ ] 9.4 `yarn workspace apps/web test:coverage` (≥80% for touched components)
+- [x] 9.1 `yarn lint`
+- [x] 9.2 `yarn format`
+- [x] 9.3 `yarn workspace apps/web typecheck` (zero errors)
+- [x] 9.4 `yarn workspace apps/web test:coverage` (≥80% for touched components)
