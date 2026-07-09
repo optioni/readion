@@ -23,7 +23,9 @@ describe('AgentBubble color roles', () => {
   })
 
   it('renders the assistant bubble with primary background and white text, not surface', () => {
-    const wrapper = mount(AgentBubble, { props: { message: assistantMessage('Sure, here it is.') } })
+    const wrapper = mount(AgentBubble, {
+      props: { message: assistantMessage('Sure, here it is.') },
+    })
 
     const bubble = wrapper.find('[data-testid="agent-message-bubble"]')
     expect(bubble.classes()).toContain('bg-readion-primary')

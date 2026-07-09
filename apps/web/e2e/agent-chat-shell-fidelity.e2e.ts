@@ -56,9 +56,7 @@ test.describe('web-agent-chat — full-height shell design fidelity (AgentChat.h
 
     // The message list must actually need to scroll internally (its content overflows its box) —
     // otherwise the assertions below would trivially pass on a short page.
-    const overflows = await messageList.evaluate(
-      (el) => el.scrollHeight > el.clientHeight + 4,
-    )
+    const overflows = await messageList.evaluate((el) => el.scrollHeight > el.clientHeight + 4)
     expect(overflows).toBe(true)
 
     // RED: agent.vue currently inherits the default padded layout (no `definePageMeta({ layout

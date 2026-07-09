@@ -112,9 +112,7 @@ describe('StudyDefaultsTab section framing', () => {
     const { wrapper } = mountTab()
     await flushPromises()
 
-    expect(wrapper.find('[data-testid="study-defaults-title"]').text()).toBe(
-      'Session preferences',
-    )
+    expect(wrapper.find('[data-testid="study-defaults-title"]').text()).toBe('Session preferences')
     expect(wrapper.find('[data-testid="study-defaults-intro"]').text()).toBe(
       'These are your default starting values for each new session. Readion adjusts them over time based on your performance.',
     )

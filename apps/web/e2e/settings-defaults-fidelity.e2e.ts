@@ -86,8 +86,6 @@ test.describe('web-settings — Study defaults design fidelity (Settings.html)',
 
     // RED: neither the section title nor the intro copy exist yet.
     await expect(page.getByTestId('study-defaults-title')).toHaveText('Session preferences')
-    await expect(page.getByTestId('study-defaults-intro')).toContainText(
-      'default starting values',
-    )
+    await expect(page.getByTestId('study-defaults-intro')).toContainText('default starting values')
   })
 })
