@@ -1,12 +1,7 @@
+import { PUBLIC_AUTH_ROUTES } from '~/constants/publicRoutes'
 import { useAuthStore } from '~/stores/auth'
 
-const PUBLIC_ROUTES = new Set([
-  '/login',
-  '/register',
-  '/forgot-password',
-  '/verify-email',
-  '/reset-password',
-])
+const PUBLIC_ROUTES = new Set<string>(PUBLIC_AUTH_ROUTES)
 
 const postLoginRedirect = (intendedPath: string) => ({
   path: '/login',

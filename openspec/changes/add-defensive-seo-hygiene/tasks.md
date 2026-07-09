@@ -6,9 +6,9 @@
 
 ## 1. Robots directives (module + config)
 
-- [ ] 1.1 RED: Write a focused test asserting `/robots.txt` is served and its rules match — `Disallow: /` for `*`, explicit `Allow:` for the five public auth routes (Vitest + `@nuxt/test-utils`, or a thin Playwright fetch if head-less render is impractical)
-- [ ] 1.2 GREEN: Add and register `@nuxtjs/robots` in `apps/web/nuxt.config.ts`; configure `disallow: ['/']` with `allow: ['/login','/register','/forgot-password','/reset-password','/verify-email']` for user-agent `*`; confirm no route collision with `@vite-pwa/nuxt`
-- [ ] 1.3 REFACTOR: Extract the public-route list to a single shared constant so robots `allow` and any future auth-route logic stay in sync
+- [x] 1.1 RED: Write a focused test asserting `/robots.txt` is served and its rules match — `Disallow: /` for `*`, explicit `Allow:` for the five public auth routes (Vitest + `@nuxt/test-utils`, or a thin Playwright fetch if head-less render is impractical)
+- [x] 1.2 GREEN: Add and register `@nuxtjs/robots` in `apps/web/nuxt.config.ts`; configure `disallow: ['/']` with `allow: ['/login','/register','/forgot-password','/reset-password','/verify-email']` for user-agent `*`; confirm no route collision with `@vite-pwa/nuxt`
+- [x] 1.3 REFACTOR: Extract the public-route list to a single shared constant so robots `allow` and any future auth-route logic stay in sync
 
 ## 2. Global head baseline (title template + description)
 
