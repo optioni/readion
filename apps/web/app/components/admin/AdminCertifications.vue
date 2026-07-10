@@ -291,65 +291,86 @@ function formatVerifiedAt(verifiedAt: string | null): string {
     </table>
     </AdminTableShell>
 
-    <p v-if="reverifyError" data-testid="reverify-error" class="text-red-400 text-sm">
+    <p v-if="reverifyError && !diff" data-testid="reverify-error" class="text-red-400 text-sm">
       {{ reverifyError }}
     </p>
 
     <div
       v-if="diff"
-      data-testid="reverify-diff"
-      class="flex flex-col gap-4 rounded-lg border border-readion-background-surface bg-readion-background-elevated px-4 py-5"
+      data-testid="reverify-diff-backdrop"
+      class="fixed inset-0 z-20 flex items-center justify-center bg-black/60 p-8"
     >
-      <h2 class="font-semibold text-base text-white">Proposed changes</h2>
-      <table class="w-full border-collapse text-left text-sm">
-        <thead>
-          <tr class="border-readion-background-surface border-b text-slate-400">
-            <th class="px-3 py-2 font-medium">Field</th>
-            <th class="px-3 py-2 font-medium">Current</th>
-            <th class="px-3 py-2 font-medium">Proposed</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="row in diff.rows"
-            :key="row.key"
-            :data-testid="`reverify-diff-row-${row.key}`"
-            :data-changed="row.changed ? 'true' : 'false'"
-            class="border-readion-background-surface/60 border-b"
-          >
-            <td class="px-3 py-3 text-slate-300">
-              {{ row.label }}
-              <span v-if="row.unverified" class="ml-1 text-slate-500 text-xs">(unverified)</span>
-            </td>
-            <td class="px-3 py-3 text-slate-300">{{ row.current }}</td>
-            <td
-              class="px-3 py-3"
-              :class="row.changed ? 'text-readion-primary' : 'text-slate-300'"
-            >
-              {{ row.proposed }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div
+        data-testid="reverify-diff-modal"
+        class="flex max-h-full w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-readion-border-strong bg-readion-background-overlay shadow-2xl"
+      >
+        <div data-testid="reverify-diff" class="flex flex-col gap-4 overflow-y-auto px-5 py-5">
+          <div>
+            <h2 class="font-semibold text-base text-white">Proposed changes</h2>
+            <p class="mt-0.5 text-slate-400 text-xs">
+              Re-verified against the latest source. Review before accepting.
+            </p>
+          </div>
+          <table class="w-full border-collapse text-left text-sm">
+            <thead>
+              <tr class="border-readion-background-surface border-b text-slate-400">
+                <th class="px-3 py-2 font-medium">Field</th>
+                <th class="px-3 py-2 font-medium">Current</th>
+                <th class="px-3 py-2 font-medium">Proposed</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="row in diff.rows"
+                :key="row.key"
+                :data-testid="`reverify-diff-row-${row.key}`"
+                :data-changed="row.changed ? 'true' : 'false'"
+                class="border-readion-background-surface/60 border-b"
+              >
+                <td class="px-3 py-3 text-slate-300">
+                  {{ row.label }}
+                  <span v-if="row.unverified" class="ml-1 text-slate-500 text-xs">(unverified)</span>
+                </td>
+                <td class="px-3 py-3 text-slate-300">{{ row.current }}</td>
+                <td
+                  class="px-3 py-3"
+                  :class="row.changed ? 'text-readion-primary' : 'text-slate-300'"
+                >
+                  {{ row.proposed }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <div class="flex gap-2">
-        <button
-          type="button"
-          data-testid="reverify-submit-btn"
-          :disabled="submitting"
-          class="rounded-lg bg-readion-primary px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-50"
-          @click="submitReverify"
-        >
-          Accept all &amp; re-verify
-        </button>
-        <button
-          type="button"
-          data-testid="reverify-cancel-btn"
-          class="rounded-lg border border-readion-background-surface px-4 py-2 font-medium text-slate-100 text-sm transition-colors hover:bg-readion-background-surface"
-          @click="cancelReverify"
-        >
-          Cancel
-        </button>
+        <div class="flex items-center gap-3 border-readion-border-strong border-t px-5 py-4">
+          <p v-if="reverifyError" data-testid="reverify-error" class="text-red-400 text-sm">
+            {{ reverifyError }}
+          </p>
+          <div class="flex-1" />
+          <button
+            type="button"
+            data-testid="reverify-cancel-btn"
+            class="rounded-lg border border-readion-background-surface px-4 py-2 font-medium text-slate-100 text-sm transition-colors hover:bg-readion-background-surface"
+            @click="cancelReverify"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            data-testid="reverify-submit-btn"
+            :disabled="submitting"
+            class="inline-flex items-center gap-2 rounded-lg bg-readion-primary px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-50"
+            @click="submitReverify"
+          >
+            <span
+              v-if="submitting"
+              data-testid="reverify-submitting-spinner"
+              class="size-3.5 animate-spin rounded-full border-2 border-white/35 border-t-white"
+            />
+            {{ submitting ? 'Re-verifying…' : 'Accept all & re-verify' }}
+          </button>
+        </div>
       </div>
     </div>
   </section>
