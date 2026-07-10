@@ -88,6 +88,7 @@ async function demote(id: string) {
       kind="error"
       message="Could not load users. Please try again."
       data-testid="admin-users-error"
+      @retry="usersQuery.refetch()"
     />
 
     <template v-else>

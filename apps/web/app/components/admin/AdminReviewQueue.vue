@@ -106,6 +106,7 @@ function reject(id: string) {
       kind="error"
       message="Could not load the review queue. Please try again."
       data-testid="admin-review-queue-error"
+      @retry="quarantineQuery.refetch()"
     />
 
     <template v-else>

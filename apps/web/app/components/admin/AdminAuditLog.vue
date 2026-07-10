@@ -44,6 +44,7 @@ function afterLabel(after: Record<string, unknown> | null): string {
       kind="error"
       message="Could not load the audit log. Please try again."
       data-testid="admin-audit-log-error"
+      @retry="auditLogsQuery.refetch()"
     />
 
     <template v-else>

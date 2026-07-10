@@ -236,7 +236,6 @@ function formatVerifiedAt(verifiedAt: string | null): string {
               >
                 <td class="px-3 py-3 text-slate-300">
                   {{ row.label }}
-                  <span v-if="row.unverified" class="ml-1 text-slate-500 text-xs">(unverified)</span>
                 </td>
                 <td class="px-3 py-3 text-slate-300">{{ row.current }}</td>
                 <td

@@ -2,6 +2,7 @@
 import {
   type ContentSourceType,
   contentSourceTypes,
+  type IngestionJobStatus,
   registerSourceRequestSchema,
 } from '@readion/shared'
 import { useQueryClient } from '@tanstack/vue-query'
@@ -59,19 +60,22 @@ function statusFor(source: { id: string; enabled: boolean }) {
 
 const runningJobs = computed(() =>
   sources.value
-    .map((source) => latestJobFor(source.id))
-    .filter((job): job is NonNullable<typeof job> => isJobInFlight(job)),
+    .map((source) => ({ source, job: latestJobFor(source.id) }))
+    .filter(
+      (entry): entry is { source: (typeof sources.value)[number]; job: IngestionJobStatus } =>
+        isJobInFlight(entry.job),
+    ),
 )
 const hasRunningJobs = computed(() => runningJobs.value.length > 0)
 
 function jobBannerLabel(): string {
-  const job = runningJobs.value[0]
-  if (!job) return ''
+  const entry = runningJobs.value[0]
+  if (!entry) return ''
   const count = runningJobs.value.length
   const noun = count === 1 ? 'job' : 'jobs'
-  const eta = estimateRemainingMinutes(job)
+  const eta = estimateRemainingMinutes(entry.job)
   const etaLabel = eta === null ? '' : ` · ~${eta} min remaining`
-  return `${count} ingestion ${noun} running — ${job.progress}%${etaLabel}`
+  return `${count} ingestion ${noun} running — ${entry.source.url} (${entry.job.progress}%${etaLabel})`
 }
 
 function lastIngestedLabel(source: { id: string; lastFetchedAt: string | null }): string {
@@ -263,6 +267,7 @@ async function toggleEnabled(source: { id: string; enabled: boolean }) {
         kind="error"
         message="Could not load sources. Please try again."
         data-testid="admin-sources-error"
+        @retry="sourcesQuery.refetch()"
       />
 
       <AdminTableShell v-else>

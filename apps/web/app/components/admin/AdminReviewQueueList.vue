@@ -119,6 +119,10 @@ function verdictFor(item: QuarantinedItemListItem) {
             {{ formatDate(item.createdAt) }}
           </span>
         </div>
+        <!-- Design calls for a question-text snippet here, but QuarantinedItemListItem (the list
+             DTO) carries no question/content field — quarantine-admin.service.ts's
+             LIST_ITEM_FIELDS excludes generatedContent. `reason` is the closest existing
+             free-text field; a literal question snippet needs a backend field addition. -->
         <p
           data-testid="review-queue-item-snippet"
           class="mt-1.5 line-clamp-2 text-slate-300 text-xs leading-relaxed"
