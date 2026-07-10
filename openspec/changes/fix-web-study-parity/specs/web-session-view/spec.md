@@ -16,13 +16,34 @@ The session view SHALL render within the **app shell** (the global sidebar with 
 
 ### Requirement: Confidence rating is required and uses a 1–5 scale
 
-Quiz cards SHALL require a confidence rating on a 1–5 scale before the answer is submitted (rate-then-submit) — the Submit control stays disabled until an option and a confidence value are both chosen. This gating is deliberate and is NOT changed to the artboard's submit-then-rate ordering. The confidence prompt SHALL interpolate the item's topic/domain (e.g. "How confident do you feel about **IAM & SCPs**?"), not a generic prompt.
+Quiz cards SHALL require a confidence rating on a 1–5 scale before the answer is submitted (rate-then-submit) — the Submit control stays disabled until an option and a confidence value are both chosen. This gating is deliberate and is NOT changed to the artboard's submit-then-rate ordering. The confidence prompt SHALL interpolate the item's topic/domain (e.g. "How confident do you feel about **IAM & SCPs**?"), sourced from the item's persisted `domain` field, not a generic prompt.
 
 #### Scenario: Confidence is required before submit with a topic-specific prompt
 
 - **WHEN** a quiz card renders in the answering state
 - **THEN** the confidence prompt names the item's topic/domain
 - **AND** Submit remains disabled until both an option and a 1–5 confidence value are selected
+
+### Requirement: Reading blocks render Markdown TL;DR with go-deeper expansion and citation chips
+
+A reading-block item SHALL render its `content` as Markdown (the LLM-formatted TL;DR). It MUST provide a "Read full explanation" affordance that calls `POST /api/v1/sessions/:id/items/:index/go-deeper` and renders the returned `expandedContent` Markdown inline; once expanded the affordance MUST NOT re-fetch. It MUST render source citation chips derived from the item's provenance (`supportingSpans` / `sourceChunkIds`), and each chip MUST display a **human-readable source label**. A raw content-chunk id/UUID MUST NEVER be used as a chip label; when no human title can be resolved for a `sourceChunkId` the chip MUST fall back to a generic "Source" label rather than exposing the id. Advancing past a reading block MUST mark it complete via `POST /api/v1/sessions/:id/items/:index/complete`. The block SHALL render a **domain label** (e.g. "IAM & Security") beside the "Reading" pill, sourced from the item's persisted `domain` field (`SessionItemResponse.domain`) — this supersedes the prior deferred note; the domain is now real per-item data, not a placeholder.
+
+#### Scenario: TL;DR renders and expands on demand
+
+- **WHEN** a reading block is shown and the user presses "Read full explanation"
+- **THEN** `POST /api/v1/sessions/:id/items/:index/go-deeper` is called and the returned `expandedContent` is rendered as Markdown below the TL;DR
+- **AND** pressing it again does not trigger a second request
+
+#### Scenario: Citation chips show human labels, never raw chunk ids
+
+- **WHEN** a reading block carries `sourceChunkIds` containing a raw UUID and `supportingSpans`
+- **THEN** the block renders one citation chip per cited source with a human-readable label
+- **AND** no chip label is a raw content-chunk UUID
+
+#### Scenario: Reading block shows its domain label
+
+- **WHEN** a reading block item with a non-empty `domain` renders
+- **THEN** its domain is shown as a label beside the "Reading" pill
 
 ### Requirement: Session start screen offers a one-tap quick start from saved defaults
 

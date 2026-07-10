@@ -8,11 +8,13 @@
 
 ## 1. Study session — app-shell layout + reading/confidence fidelity (`web-session-view`)
 
-- [ ] 1.1 RED: e2e/component test asserting the session page renders within the app shell (sidebar, Sessions active), not the bare minimal layout
-- [ ] 1.2 RED: component tests for the ReadingBlock domain label (passed from the page), the topic-specific confidence prompt, the collapsed agent-rail icon + "Ask AI" label, the header online dot, the per-message avatar, and "Q3 of 12" (no stray space)
-- [ ] 1.3 RED: guard test asserting confidence is still required before submit (rate-then-submit) and the sequential one-item model + ReadingBlock "Continue" affordance are preserved
-- [ ] 1.4 GREEN: switch the session layout to the app shell; pass the domain prop; interpolate the confidence prompt; add the rail/dot/avatar affordances; fix the Q spacing
-- [ ] 1.5 REFACTOR: token colors per `openspec/design/Session.html`; keep the item model + confidence gating intact
+- [x] 1.1 RED (backend, added mid-flight — see design.md amendment): NestJS integration assertion (`sessions.acceptance.spec.ts`) that `GET /api/v1/sessions/:id?include=items` surfaces a per-item `domain`; unit assertions in `sessions.service.spec.ts` (API sync item generation) and `session-item-generator.service.spec.ts` (worker async fill-queue generation) that created `SessionItem`s carry `domain: itemPlan.domain`
+- [x] 1.2 GREEN (backend): add `SessionItem.domain` (entity + hand-written migration `Migration20260710000000`, `text NOT NULL DEFAULT ''`); persist `itemPlan.domain` at all `SessionItem` creation sites in both `apps/api/src/sessions/sessions.service.ts` and `apps/worker/src/sessions/session-item-generator.service.ts`; add `domain` to `SessionItemResponse` (`packages/shared`) and `SessionItemResponseDto`/`mapItemToDto` (`apps/api`); run `yarn codegen` and commit the regenerated web client
+- [ ] 1.3 RED: e2e/component test asserting the session page renders within the app shell (sidebar, Sessions active), not the bare minimal layout
+- [ ] 1.4 RED: component tests for the ReadingBlock domain label (passed from the page via the new `SessionItemResponse.domain`), the topic-specific confidence prompt (same field), the collapsed agent-rail icon + "Ask AI" label, the header online dot, the per-message avatar, and "Q3 of 12" (no stray space)
+- [ ] 1.5 RED: guard test asserting confidence is still required before submit (rate-then-submit) and the sequential one-item model + ReadingBlock "Continue" affordance are preserved
+- [ ] 1.6 GREEN: switch the session layout to the app shell; pass the domain prop from `currentItem.domain`; interpolate the confidence prompt from the same field; add the rail/dot/avatar affordances; fix the Q spacing
+- [ ] 1.7 REFACTOR: token colors per `openspec/design/Session.html`; keep the item model + confidence gating intact
 
 ## 2. Session start — cert pill + humanized defaults (`web-session-view`)
 
