@@ -25,9 +25,9 @@
 
 ## 3. Session summary — presentational polish (`web-session-view`)
 
-- [ ] 3.1 RED: component test asserting the readiness-change bar renders the gradient fill + directional arrow, the header timestamp is a right-aligned relative "Today at h:mm A", the content uses the standard width, and the Drill-my-misses CTA has its leading icon
-- [ ] 3.2 GREEN: implement the readiness bar, timestamp format/placement, width, and CTA icon
-- [ ] 3.3 REFACTOR: keep the day-streak metric as-is (reaffirmed); leave the data-carried fields (before/after, question metadata, domain counts, next-focus reason, miss count) for the follow-up contract change — do NOT fabricate them
+- [x] 3.1 RED: component test asserting the readiness-change bar renders the gradient fill + directional arrow, the header timestamp is a right-aligned relative "Today at h:mm A", the content uses the standard width, and the Drill-my-misses CTA has its leading icon
+- [x] 3.2 GREEN: implement the readiness bar, timestamp format/placement, width, and CTA icon
+- [x] 3.3 REFACTOR: keep the day-streak metric as-is (reaffirmed); leave the data-carried fields (before/after, question metadata, domain counts, next-focus reason, miss count) for the follow-up contract change — do NOT fabricate them (confirmed: no summary DTO fields were touched)
 
 ## 4. Mock exam — single header + per-question flagging (`web-mock-exam`)
 
