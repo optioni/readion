@@ -27,6 +27,7 @@ const OTHER_USER_ID = 'a0000000-0000-0000-0000-000000000003'
 
 // A live certification whose sources are managed and which is due for re-verification.
 export const CERT_ID = 'c0000000-0000-0000-0000-000000000001'
+export const CERT_CODE = 'SAA-C03'
 // The DRAFT created by the cert-setup wizard.
 const NEW_CERT_ID = 'c0000000-0000-0000-0000-000000000002'
 
@@ -344,15 +345,18 @@ const UUID = '[0-9a-f-]{36}'
  * Auth-bootstrap endpoints are mocked so the app is authenticated without a real sign-in; pass
  * `{ role: 'user' }` to seed a signed-in non-admin for the /admin role-gate test. Pass
  * `{ manyPages: true }` to report a `meta.total` beyond one page for Users and Audit Log, so the
- * pagination-control acceptance assertions have something to render against. A context-level
- * catch-all keeps any unforeseen /api/v1 call from hitting the (absent) backend; page-level mocks win.
+ * pagination-control acceptance assertions have something to render against. `{ activeIngestion:
+ * true }` reports an in-flight ingestion job (72% · running) for `SOURCE_ENABLED_ID` so the
+ * Sources running-job progress banner has something to render. A context-level catch-all keeps
+ * any unforeseen /api/v1 call from hitting the (absent) backend; page-level mocks win.
  */
 export function mockAdmin(
   page: Page,
-  options: { role?: Role; manyPages?: boolean } = {},
+  options: { role?: Role; manyPages?: boolean; activeIngestion?: boolean } = {},
 ): AdminMockHandles {
   const role: Role = options.role ?? 'admin'
   const manyPages = options.manyPages ?? false
+  const activeIngestion = options.activeIngestion ?? false
   const context = page.context()
 
   const profile: Profile = {
@@ -539,6 +543,24 @@ export function mockAdmin(
     })
   })
   mock(page, new RegExp(`/api/v1/admin/content-sources/${UUID}/jobs$`), async (route) => {
+    const id = pathSegment(route, 5)
+    if (activeIngestion && id === SOURCE_ENABLED_ID) {
+      await fulfilJson(route, 200, {
+        data: [
+          {
+            jobId: REINGEST_JOB_ID,
+            state: 'active',
+            progress: 72,
+            attemptsMade: 1,
+            failedReason: null,
+            timestamp: '2026-06-25T07:55:00.000Z',
+            processedOn: '2026-06-25T07:56:00.000Z',
+            finishedOn: null,
+          },
+        ],
+      })
+      return
+    }
     await fulfilJson(route, 200, {
       data: [
         {

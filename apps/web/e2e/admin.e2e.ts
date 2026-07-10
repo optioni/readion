@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test'
 import {
   ADMIN_USER_ID,
+  AUDIT_LOG_ROLE_CHANGE_ID,
+  CERT_CODE,
   CERT_ID,
   mockAdmin,
   PROMOTE_USER_ID,
@@ -246,7 +248,7 @@ test.describe('web-admin — admin console', () => {
     await expect.poll(() => handles.disabledSourceIds.at(-1)).toBe(SOURCE_ENABLED_ID)
   })
 
-  test('cert setup wizard: discover → confirm source → grounded+unverified extraction → draft → coverage', async ({
+  test('cert setup wizard: identify → confirm source → grounded+unverified extraction → draft → coverage (5 steps)', async ({
     page,
   }) => {
     const handles = mockAdmin(page)
@@ -255,17 +257,28 @@ test.describe('web-admin — admin console', () => {
 
     await expect(page.getByTestId('admin-cert-setup-page')).toBeVisible()
 
-    // Step 1 — discover sources.
+    // Step 1 — standalone Identify certification screen: name, required mono code + hint,
+    // certifying body, optional known URL, then "Search for sources →" kicks off discovery.
+    await expect(page.getByTestId('cert-identify-step')).toBeVisible()
+    await expect(page.getByTestId('setup-header-step-indicator')).toContainText('Step 1 of 5')
     await page
-      .getByTestId('discover-name-input')
+      .getByTestId('identify-name-input')
       .fill('AWS Certified Solutions Architect — Associate')
-    await page.getByTestId('discover-code-input').fill('SAA-C03')
-    await page.getByTestId('discover-submit-btn').click()
+    await page.getByTestId('identify-code-input').fill('SAA-C03')
+    await page.getByTestId('identify-provider-input').fill('Amazon Web Services')
+    await expect(page.getByTestId('identify-code-hint')).toBeVisible()
+    await expect(page.getByTestId('identify-search-btn')).toBeDisabled()
+    await page.getByTestId('identify-provider-input').fill('Amazon Web Services')
+    await expect(page.getByTestId('identify-search-btn')).toBeEnabled()
+    await page.getByTestId('identify-search-btn').click()
     await expect
       .poll(() => handles.discoverBodies.at(-1))
       .toMatchObject({ name: 'AWS Certified Solutions Architect — Associate', code: 'SAA-C03' })
 
-    // Candidates render selectable; confirm exactly one (no confidence badge).
+    // Step 2 — a SEPARATE source-confirmation step (not the identify screen).
+    await expect(page.getByTestId('cert-confirm-step')).toBeVisible()
+    await expect(page.getByTestId('cert-identify-step')).toHaveCount(0)
+    await expect(page.getByTestId('setup-header-step-indicator')).toContainText('Step 2 of 5')
     const candidate = page.getByTestId('source-candidate').first()
     await expect(candidate).toBeVisible()
     await candidate.click()
@@ -278,16 +291,20 @@ test.describe('web-admin — admin console', () => {
           'https://aws.amazon.com/certification/certified-solutions-architect-associate/',
       })
 
-    // Step 2 — poll extraction: one grounded field (passingScore) + one unverified (questionCount).
+    // Step 3 — field extraction (kept intact): one grounded field (passingScore) + one
+    // unverified (questionCount).
+    await expect(page.getByTestId('setup-header-step-indicator')).toContainText('Step 3 of 5')
     await expect(page.getByTestId('extraction-field-passingScore')).toContainText('67')
     await expect(page.getByTestId('extraction-field-questionCount')).toContainText(
       /confirm manually/i,
     )
 
-    // Admin enters identity fields (no invented fields).
-    await page.getByTestId('cert-name-input').fill('AWS Certified Solutions Architect — Associate')
+    // Identity fields arrive pre-filled from step 1 (no re-entry needed); code stays untouched.
+    await expect(page.getByTestId('cert-name-input')).toHaveValue(
+      'AWS Certified Solutions Architect — Associate',
+    )
+    await expect(page.getByTestId('cert-provider-input')).toHaveValue('Amazon Web Services')
     await page.getByTestId('cert-provider-input').fill('AWS')
-    await page.getByTestId('cert-code-input').fill('SAA-C03')
 
     // No Publish button — submitting creates a DRAFT only.
     await expect(page.getByTestId('publish-cert-btn')).toHaveCount(0)
@@ -300,7 +317,8 @@ test.describe('web-admin — admin console', () => {
         code: 'SAA-C03',
       })
 
-    // Coverage renders read-only after the draft is created.
+    // Coverage renders read-only after the draft is created — step 4 of 5.
+    await expect(page.getByTestId('setup-header-step-indicator')).toContainText('Step 4 of 5')
     await expect(page.getByTestId('cert-coverage')).toBeVisible()
   })
 
@@ -388,5 +406,142 @@ test.describe('web-admin — admin console', () => {
     await expect(page.getByTestId('review-queue-item')).toHaveCount(0)
     await expect(page.getByTestId('review-queue-empty')).toBeVisible()
     await expect(page.getByTestId('review-queue-detail-empty')).toBeVisible()
+  })
+})
+
+// ============================================================================
+// fix-web-admin-parity — acceptance test (outer-loop RED/GREEN).
+//
+// Section 0 of design.md: presentational + one flow-restructure fixes across the seven admin
+// surfaces, reconciled against the app's real data (no API/DB changes). See design.md's
+// reconciliation table for what's fixed here vs descoped to a named backend/contract follow-up.
+// ============================================================================
+
+test.describe('fix-web-admin-parity — acceptance', () => {
+  test('certifications list: surface cards, error Retry, and the re-verify modal overlay', async ({
+    page,
+  }) => {
+    mockAdmin(page)
+
+    await gotoAuthenticated(page, '/admin/certifications')
+
+    await expect(page.getByTestId('admin-certifications-page')).toBeVisible()
+    // Tables render inside surface cards, not bare <table> elements.
+    await expect(page.getByTestId('admin-table-shell').first()).toBeVisible()
+    await expect(page.getByTestId('existing-certs-section-label')).toContainText(
+      'Existing certifications',
+    )
+
+    const dueRow = page.locator(`[data-testid="due-reverification-row"][data-cert-id="${CERT_ID}"]`)
+    await dueRow.getByTestId('reverify-btn').click()
+
+    // The diff opens as a CENTERED MODAL OVERLAY over a dimmed list, not an inline appended
+    // section — the list stays present underneath the backdrop.
+    await expect(page.getByTestId('reverify-diff-backdrop')).toBeVisible()
+    await expect(page.getByTestId('reverify-diff-modal')).toBeVisible()
+    await expect(page.getByTestId('admin-certifications-page')).toBeVisible()
+  })
+
+  test('cert-setup: a distinct Identify step with a certifying-body field and an upfront known URL', async ({
+    page,
+  }) => {
+    const handles = mockAdmin(page)
+
+    await gotoAuthenticated(page, '/admin/certifications/new')
+
+    await expect(page.getByTestId('cert-identify-step')).toBeVisible()
+    await expect(page.getByTestId('identify-provider-input')).toBeVisible()
+    await expect(page.getByTestId('identify-known-url-input')).toBeVisible()
+
+    await page.getByTestId('identify-name-input').fill('Certified Kubernetes Security Specialist')
+    await page.getByTestId('identify-code-input').fill('CKS')
+    await page.getByTestId('identify-provider-input').fill('CNCF / Linux Foundation')
+    await page
+      .getByTestId('identify-known-url-input')
+      .fill('https://training.linuxfoundation.org/certification/cks/')
+    await page.getByTestId('identify-search-btn').click()
+
+    await expect
+      .poll(() => handles.discoverBodies.at(-1))
+      .toMatchObject({ name: 'Certified Kubernetes Security Specialist', code: 'CKS' })
+
+    // Advances to a SEPARATE source-confirmation step — 5 steps total.
+    await expect(page.getByTestId('cert-identify-step')).toHaveCount(0)
+    await expect(page.getByTestId('cert-confirm-step')).toBeVisible()
+    await expect(page.getByTestId('setup-header-step-indicator')).toContainText('of 5')
+  })
+
+  test('cert re-verification: the dedicated route renders a full-height screen with the stale pill and a colored diff', async ({
+    page,
+  }) => {
+    mockAdmin(page)
+
+    await gotoAuthenticated(page, `/admin/certifications/${CERT_CODE}/re-verify`)
+
+    await expect(page.getByTestId('admin-cert-reverify-page')).toBeVisible()
+    await expect(page.getByTestId('reverify-stale-pill')).toContainText(/stale/i)
+    await expect(page.getByTestId('reverify-breadcrumb')).toContainText(CERT_CODE)
+
+    const changedRow = page.getByTestId(/^reverify-diff-row-/).first()
+    await expect(changedRow).toBeVisible()
+    await expect(page.getByTestId('reverify-col-current')).toContainText(/outdated/i)
+    await expect(page.getByTestId('reverify-col-proposed')).toContainText(/new guide/i)
+    // The stray extraction-step "(unverified)" annotation does not leak into this diff.
+    await expect(page.locator('body')).not.toContainText('(unverified)')
+  })
+
+  test('review queue: the detail pane renders source evidence quoted from supportingSpans', async ({
+    page,
+  }) => {
+    mockAdmin(page)
+
+    await gotoAuthenticated(page, '/admin/review-queue')
+
+    const rowA = page.locator(
+      `[data-testid="review-queue-item"][data-item-id="${QUARANTINE_ITEM_A_ID}"]`,
+    )
+    await rowA.click()
+
+    const evidence = page.getByTestId('review-queue-evidence-card')
+    await expect(evidence).toBeVisible()
+    await expect(evidence).toContainText('Amazon EC2 provides scalable computing capacity')
+    // The list row shows the question-text snippet, not the domain tag.
+    await expect(rowA).toContainText('Which AWS service provides scalable object storage?')
+  })
+
+  test('sources: the running-job banner renders live percentage and ETA from the progress field', async ({
+    page,
+  }) => {
+    mockAdmin(page, { activeIngestion: true })
+
+    await gotoAuthenticated(page, `/admin/sources?certificationId=${CERT_ID}`)
+
+    const banner = page.getByTestId('source-jobs-banner')
+    await expect(banner).toBeVisible()
+    await expect(banner).toContainText('72%')
+  })
+
+  test('users: the search field filters the loaded list client-side', async ({ page }) => {
+    mockAdmin(page)
+
+    await gotoAuthenticated(page, '/admin/users')
+
+    await expect(page.getByTestId('admin-user-row')).toHaveCount(3)
+    await page.getByTestId('user-search').fill('casey')
+    await expect(page.getByTestId('admin-user-row')).toHaveCount(1)
+    await expect(page.getByTestId('user-email')).toContainText('casey@org.io')
+  })
+
+  test('audit log: separate Before/After columns and the append-only caption', async ({ page }) => {
+    mockAdmin(page)
+
+    await gotoAuthenticated(page, '/admin/audit-logs')
+
+    await expect(page.getByTestId('admin-audit-log-caption')).toContainText('Append-only')
+    const row = page.locator(
+      `[data-testid="audit-log-row"][data-audit-id="${AUDIT_LOG_ROLE_CHANGE_ID}"]`,
+    )
+    await expect(row.getByTestId('audit-before')).toContainText('user')
+    await expect(row.getByTestId('audit-after')).toContainText('admin')
   })
 })
