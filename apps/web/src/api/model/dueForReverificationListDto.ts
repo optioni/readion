@@ -4,9 +4,8 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
-import type { CollectionMetaDto } from './collectionMetaDto'
 import type { DueForReverificationItemDto } from './dueForReverificationItemDto'
+import type { CollectionMetaDto } from './collectionMetaDto'
 
 export interface DueForReverificationListDto {
   data: DueForReverificationItemDto[]

@@ -4,9 +4,8 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
-import type { AuditLogEntryDtoAfter } from './auditLogEntryDtoAfter'
 import type { AuditLogEntryDtoBefore } from './auditLogEntryDtoBefore'
+import type { AuditLogEntryDtoAfter } from './auditLogEntryDtoAfter'
 
 export interface AuditLogEntryDto {
   id: string

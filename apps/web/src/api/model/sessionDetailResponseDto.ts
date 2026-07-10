@@ -4,9 +4,8 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
-import type { SessionRelationshipsDto } from './sessionRelationshipsDto'
 import type { SessionResponseDto } from './sessionResponseDto'
+import type { SessionRelationshipsDto } from './sessionRelationshipsDto'
 
 export interface SessionDetailResponseDto {
   data: SessionResponseDto

@@ -62,6 +62,8 @@ class SessionItemResponseDto {
   @ApiProperty()
   type!: string
   @ApiProperty()
+  domain!: string
+  @ApiProperty()
   content!: string
   @ApiProperty()
   completed!: boolean

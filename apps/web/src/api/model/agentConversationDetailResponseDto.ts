@@ -4,9 +4,8 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
-import type { AgentConversationRelationshipsDto } from './agentConversationRelationshipsDto'
 import type { AgentConversationResponseDto } from './agentConversationResponseDto'
+import type { AgentConversationRelationshipsDto } from './agentConversationRelationshipsDto'
 
 export interface AgentConversationDetailResponseDto {
   data: AgentConversationResponseDto

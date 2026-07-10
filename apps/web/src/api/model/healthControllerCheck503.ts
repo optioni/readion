@@ -4,10 +4,9 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
-import type { HealthControllerCheck503Details } from './healthControllerCheck503Details'
-import type { HealthControllerCheck503Error } from './healthControllerCheck503Error'
 import type { HealthControllerCheck503Info } from './healthControllerCheck503Info'
+import type { HealthControllerCheck503Error } from './healthControllerCheck503Error'
+import type { HealthControllerCheck503Details } from './healthControllerCheck503Details'
 
 export type HealthControllerCheck503 = {
   status?: string

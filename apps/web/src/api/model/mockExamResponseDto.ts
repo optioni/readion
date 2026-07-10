@@ -4,17 +4,16 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
-import type { MockExamQuestionResponseDto } from './mockExamQuestionResponseDto'
-import type { MockExamResponseDtoDeadline } from './mockExamResponseDtoDeadline'
-import type { MockExamResponseDtoDomainBreakdown } from './mockExamResponseDtoDomainBreakdown'
+import type { MockExamResponseDtoType } from './mockExamResponseDtoType'
+import type { MockExamResponseDtoStatus } from './mockExamResponseDtoStatus'
 import type { MockExamResponseDtoGeneration } from './mockExamResponseDtoGeneration'
-import type { MockExamResponseDtoPassed } from './mockExamResponseDtoPassed'
+import type { MockExamResponseDtoStartedAt } from './mockExamResponseDtoStartedAt'
+import type { MockExamResponseDtoDeadline } from './mockExamResponseDtoDeadline'
 import type { MockExamResponseDtoRemainingSeconds } from './mockExamResponseDtoRemainingSeconds'
 import type { MockExamResponseDtoScore } from './mockExamResponseDtoScore'
-import type { MockExamResponseDtoStartedAt } from './mockExamResponseDtoStartedAt'
-import type { MockExamResponseDtoStatus } from './mockExamResponseDtoStatus'
-import type { MockExamResponseDtoType } from './mockExamResponseDtoType'
+import type { MockExamResponseDtoPassed } from './mockExamResponseDtoPassed'
+import type { MockExamResponseDtoDomainBreakdown } from './mockExamResponseDtoDomainBreakdown'
+import type { MockExamQuestionResponseDto } from './mockExamQuestionResponseDto'
 
 export interface MockExamResponseDto {
   id: string

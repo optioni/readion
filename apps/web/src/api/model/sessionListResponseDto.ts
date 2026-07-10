@@ -4,9 +4,8 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
-import type { SessionListMetaDto } from './sessionListMetaDto'
 import type { SessionResponseDto } from './sessionResponseDto'
+import type { SessionListMetaDto } from './sessionListMetaDto'
 
 export interface SessionListResponseDto {
   data: SessionResponseDto[]

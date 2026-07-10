@@ -4,9 +4,8 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
-import type { WeakAreaListMetaDto } from './weakAreaListMetaDto'
 import type { WeakAreaResponseDto } from './weakAreaResponseDto'
+import type { WeakAreaListMetaDto } from './weakAreaListMetaDto'
 
 export interface WeakAreaListResponseDto {
   data: WeakAreaResponseDto[]

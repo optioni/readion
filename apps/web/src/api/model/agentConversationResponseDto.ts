@@ -4,10 +4,9 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
-import type { AgentConversationResponseDtoCertificationId } from './agentConversationResponseDtoCertificationId'
 import type { AgentConversationResponseDtoMode } from './agentConversationResponseDtoMode'
 import type { AgentConversationResponseDtoStudySessionId } from './agentConversationResponseDtoStudySessionId'
+import type { AgentConversationResponseDtoCertificationId } from './agentConversationResponseDtoCertificationId'
 
 export interface AgentConversationResponseDto {
   id: string

@@ -8,6 +8,7 @@
 export interface SessionItemResponseDto {
   index: number
   type: string
+  domain: string
   content: string
   completed: boolean
   sourceChunkIds: string[]

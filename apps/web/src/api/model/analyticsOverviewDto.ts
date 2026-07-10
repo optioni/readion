@@ -6,8 +6,8 @@
  */
 import type { AnalyticsMetricDto } from './analyticsMetricDto'
 import type { AnalyticsTargetedMetricDto } from './analyticsTargetedMetricDto'
-import type { PassRateMetricDto } from './passRateMetricDto'
 import type { RetentionMetricDto } from './retentionMetricDto'
+import type { PassRateMetricDto } from './passRateMetricDto'
 
 export interface AnalyticsOverviewDto {
   activeUsers: AnalyticsMetricDto

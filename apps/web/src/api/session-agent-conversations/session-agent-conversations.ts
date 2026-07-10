@@ -4,15 +4,16 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
+import { useMutation } from '@tanstack/vue-query'
 import type {
   MutationFunction,
   UseMutationOptions,
   UseMutationReturnType,
 } from '@tanstack/vue-query'
-import { useMutation } from '@tanstack/vue-query'
-import { readionFetch } from '../../../app/api/mutator'
+
 import type { AgentConversationDetailResponseDto } from '.././model'
+
+import { readionFetch } from '../../../app/api/mutator'
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 

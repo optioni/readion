@@ -4,9 +4,8 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-
-import type { DiscoverSourcesDetailDtoRelationships } from './discoverSourcesDetailDtoRelationships'
 import type { DiscoverSourcesResponseDto } from './discoverSourcesResponseDto'
+import type { DiscoverSourcesDetailDtoRelationships } from './discoverSourcesDetailDtoRelationships'
 
 export interface DiscoverSourcesDetailDto {
   data: DiscoverSourcesResponseDto

@@ -54,6 +54,7 @@ export interface SessionConfig {
 export interface SessionItemResponse {
   index: number
   type: SessionItemType
+  domain: string
   content: string
   completed: boolean
   sourceChunkIds: string[]
