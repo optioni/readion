@@ -1,13 +1,20 @@
 <script setup lang="ts">
-import type { CertExtractionFields, ExtractedField } from '@readion/shared'
-import { useQuery } from '@tanstack/vue-query'
-import { computed, reactive, watch } from 'vue'
+import type {
+  CertExtractionFields,
+  CertExtractionResult,
+  ExtractedField,
+  JobProgressEvent,
+} from '@readion/shared'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import CertFieldRow from '~/components/admin/CertFieldRow.vue'
 import { readExtractionStatusEnvelope } from '~/composables/adminEnvelope'
-import { adminQueryKeys } from '~/composables/adminQueryKeys'
-import { isTerminalWithoutFields, nextRefetchInterval } from '~/composables/certExtractionPoll'
+import { isTerminalWithoutFields } from '~/composables/certExtractionPoll'
 import type { CertExtractionFieldKey, CertSetupWizardState } from '~/composables/useCertSetupWizard'
-import { certSetupControllerReadExtraction } from '~~/src/api/cert-setup/cert-setup'
+import { useReadionEventSource } from '~/composables/useReadionEventSource'
+import {
+  certSetupControllerReadExtraction,
+  getCertSetupControllerStreamExtractionEventsUrl,
+} from '~~/src/api/cert-setup/cert-setup'
 
 const props = defineProps<{
   state: CertSetupWizardState
@@ -37,29 +44,46 @@ const FIELD_LABELS: Record<CertExtractionFieldKey, string> = {
 
 const reviewState = reactive<Partial<Record<CertExtractionFieldKey, 'confirmed' | 'flagged'>>>({})
 
-const extractionQuery = useQuery({
-  queryKey: computed(() => adminQueryKeys.extraction(props.state.extractionJobId ?? '')),
-  queryFn: async () =>
-    readExtractionStatusEnvelope(
-      await certSetupControllerReadExtraction(props.state.extractionJobId as string),
-    ),
-  // Gated on the extraction job existing rather than a specific wizard step number: this
-  // component is only ever rendered by the wizard once it has reached the extraction phase (its
-  // own step-number label is the wizard's concern, not this component's).
-  enabled: computed(() => Boolean(props.state.extractionJobId)),
-  refetchInterval: (query) => nextRefetchInterval(query.state.data, query.state.fetchFailureCount),
-})
+const jobId = computed(() => props.state.extractionJobId ?? '')
+const failed = ref(false)
+
+// The wizard learns of completion over a server-pushed SSE stream instead of polling. The stream
+// emits the terminal `completed`/`failed` event and the server closes; we also close the
+// EventSource on that event so it does not auto-reconnect to the closed stream.
+const { latestMessage, close } = useReadionEventSource<JobProgressEvent<CertExtractionResult>>(
+  () => (jobId.value ? getCertSetupControllerStreamExtractionEventsUrl(jobId.value) : ''),
+)
 
 watch(
-  () => extractionQuery.data.value,
-  (data) => {
-    if (data?.fields) props.applyExtraction(data.fields)
+  latestMessage,
+  (message) => {
+    if (!message) return
+    if (message.state === 'completed') {
+      if (message.result?.fields) props.applyExtraction(message.result.fields)
+      close()
+    } else if (message.state === 'failed') {
+      failed.value = true
+      close()
+    }
   },
   { immediate: true },
 )
 
+async function fetchStatusOnce(): Promise<void> {
+  if (!jobId.value) return
+  const status = readExtractionStatusEnvelope(await certSetupControllerReadExtraction(jobId.value))
+  if (status.fields) props.applyExtraction(status.fields)
+  else if (isTerminalWithoutFields(status)) failed.value = true
+}
+
+// A single status GET fallback: covers the initial paint, a job that finished before the stream
+// connected, and proxies/browsers that drop SSE. It is not polled on an interval.
+onMounted(() => {
+  if (!props.state.fields) void fetchStatusOnce()
+})
+
 const ready = computed(() => Boolean(props.state.fields))
-const errored = computed(() => isTerminalWithoutFields(extractionQuery.data.value ?? undefined))
+const errored = computed(() => failed.value && !ready.value)
 const loading = computed(() => !ready.value && !errored.value)
 
 function fieldOf(key: CertExtractionFieldKey): ExtractedField<unknown> {
@@ -85,7 +109,8 @@ function flag(key: CertExtractionFieldKey): void {
 }
 
 function retry(): void {
-  extractionQuery.refetch()
+  failed.value = false
+  void fetchStatusOnce()
 }
 </script>
 

@@ -236,15 +236,15 @@ describe('AdminCertifications reverify flow', () => {
     wrapper.unmount()
   })
 
-  it('polls through an in-flight extraction before composing the diff', async () => {
-    vi.mocked(certSetupControllerReadExtraction)
-      .mockResolvedValueOnce(envelope({ state: 'active', fields: null }))
-      .mockResolvedValue(envelope({ state: 'completed', fields: EXTRACTION_FIELDS }))
+  it('composes the diff from a single fallback status fetch, without polling', async () => {
+    // Re-verification now learns of completion over SSE; the status GET is a one-shot fallback (the
+    // stream is unavailable in jsdom, so the fallback carries the fields here). It must not be polled.
+    vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
+      envelope({ state: 'completed', fields: EXTRACTION_FIELDS }),
+    )
     const wrapper = mountComponent()
 
     await wrapper.find('[data-testid="reverify-btn"]').trigger('click')
-    await flush()
-    expect(wrapper.find('[data-testid="reverify-diff"]').exists()).toBe(false)
 
     await vi.waitFor(
       () => {
@@ -253,7 +253,7 @@ describe('AdminCertifications reverify flow', () => {
       { timeout: 4000, interval: 100 },
     )
 
-    expect(certSetupControllerReadExtraction).toHaveBeenCalledTimes(2)
+    expect(certSetupControllerReadExtraction).toHaveBeenCalledTimes(1)
     wrapper.unmount()
   })
 

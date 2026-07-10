@@ -1,16 +1,16 @@
-import type { CertExtractionFields } from '@readion/shared'
+import type { CertExtractionFields, CertExtractionResult, JobProgressEvent } from '@readion/shared'
 import { reverifyCertificationRequestSchema } from '@readion/shared'
-import { useQuery } from '@tanstack/vue-query'
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import { readDataEnvelope, readExtractionStatusEnvelope } from '~/composables/adminEnvelope'
-import { adminQueryKeys } from '~/composables/adminQueryKeys'
-import { isTerminalWithoutFields, nextRefetchInterval } from '~/composables/certExtractionPoll'
+import { isTerminalWithoutFields } from '~/composables/certExtractionPoll'
 import { buildCertDiff, buildReverifyBody, type CertDiff } from '~/composables/certReverifyDiff'
 import { discoverCertSources, enqueueCertExtraction } from '~/composables/certSetupKickoff'
+import { useReadionEventSource } from '~/composables/useReadionEventSource'
 import {
   certSetupControllerReadExtraction,
   certSetupControllerReverify,
+  getCertSetupControllerStreamExtractionEventsUrl,
 } from '~~/src/api/cert-setup/cert-setup'
 import { certificationsControllerDetail } from '~~/src/api/certifications/certifications'
 import type { CertificationResponseDto } from '~~/src/api/model/certificationResponseDto'
@@ -47,29 +47,40 @@ export function useCertReverifyFlow(onSubmitted?: () => void | Promise<void>): C
   const reverifyError = ref<string | null>(null)
   const submitting = ref(false)
 
-  const extractionQuery = useQuery({
-    queryKey: computed(() => adminQueryKeys.extraction(jobId.value ?? '')),
-    queryFn: async () =>
-      readExtractionStatusEnvelope(await certSetupControllerReadExtraction(jobId.value as string)),
-    enabled: computed(() => Boolean(jobId.value)),
-    refetchInterval: (query) =>
-      nextRefetchInterval(query.state.data, query.state.fetchFailureCount),
+  // Re-verification runs the same cert-extraction job as the setup wizard, so it consumes the same
+  // server-pushed SSE stream instead of polling. The job id arrives asynchronously from start(), so
+  // the stream is opened reactively once it is known, then closed on the terminal event.
+  const { latestMessage, close: closeStream } = useReadionEventSource<
+    JobProgressEvent<CertExtractionResult>
+  >(() => (jobId.value ? getCertSetupControllerStreamExtractionEventsUrl(jobId.value) : ''))
+
+  function applyFields(fields: CertExtractionFields): void {
+    if (!currentCert.value) return
+    extractionFields.value = fields
+    diff.value = buildCertDiff(currentCert.value, fields)
+  }
+
+  watch(latestMessage, (message) => {
+    if (!message || !currentCert.value) return
+    if (message.state === 'completed') {
+      if (message.result?.fields) applyFields(message.result.fields)
+      closeStream()
+    } else if (message.state === 'failed') {
+      reverifyError.value = 'Extraction did not produce any fields. Please try again.'
+      closeStream()
+    }
   })
 
-  watch(
-    () => extractionQuery.data.value,
-    (data) => {
-      if (!data || !currentCert.value) return
-      if (data.fields) {
-        extractionFields.value = data.fields
-        diff.value = buildCertDiff(currentCert.value, data.fields)
-        return
-      }
-      if (isTerminalWithoutFields(data)) {
-        reverifyError.value = 'Extraction did not produce any fields. Please try again.'
-      }
-    },
-  )
+  // Single status GET fallback: covers a job that finished before the stream connected and
+  // proxies/browsers that drop SSE. Fires once when the job id is set, not on an interval.
+  watch(jobId, async (id) => {
+    if (!id) return
+    const status = readExtractionStatusEnvelope(await certSetupControllerReadExtraction(id))
+    if (status.fields) applyFields(status.fields)
+    else if (isTerminalWithoutFields(status)) {
+      reverifyError.value = 'Extraction did not produce any fields. Please try again.'
+    }
+  })
 
   function reset(): void {
     activeCertId.value = null

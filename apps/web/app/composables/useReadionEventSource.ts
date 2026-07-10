@@ -1,4 +1,4 @@
-import { onScopeDispose, ref, shallowRef } from 'vue'
+import { type MaybeRefOrGetter, onScopeDispose, ref, shallowRef, toValue, watch } from 'vue'
 
 export type ReadionEventSourceStatus = 'closed' | 'open'
 export type ReadionStreamMessage<TPayload = unknown> = TPayload
@@ -22,8 +22,12 @@ export const createReadionEventSourceUrl = (apiBaseUrl: string, path: string) =>
   return `${normalizedBaseUrl}${normalizedPath}`
 }
 
+// `path` may be reactive: an empty resolved path opens nothing (the stream target is not known yet),
+// and a change re-opens against the new path. This lets a caller whose job id arrives asynchronously
+// (e.g. the re-verification flow) subscribe once the id is known, while a static string path opens
+// immediately.
 export const useReadionEventSource = <TPayload>(
-  path: string,
+  path: MaybeRefOrGetter<string>,
   options: ReadionEventSourceOptions = {},
 ) => {
   const latestMessage = ref<ReadionStreamMessage<TPayload>>()
@@ -31,8 +35,18 @@ export const useReadionEventSource = <TPayload>(
   const source = shallowRef<EventSource>()
   const apiBaseUrl = options.apiBaseUrl ?? getRuntimeApiBaseUrl()
 
-  if (typeof EventSource !== 'undefined' && apiBaseUrl) {
-    source.value = new EventSource(createReadionEventSourceUrl(apiBaseUrl, path), {
+  const close = () => {
+    source.value?.close()
+    source.value = undefined
+    status.value = 'closed'
+  }
+
+  const open = (resolvedPath: string) => {
+    if (typeof EventSource === 'undefined' || !apiBaseUrl || !resolvedPath) {
+      return
+    }
+
+    source.value = new EventSource(createReadionEventSourceUrl(apiBaseUrl, resolvedPath), {
       withCredentials: true,
     })
     status.value = 'open'
@@ -42,10 +56,14 @@ export const useReadionEventSource = <TPayload>(
     })
   }
 
-  const close = () => {
-    source.value?.close()
-    status.value = 'closed'
-  }
+  watch(
+    () => toValue(path),
+    (resolvedPath) => {
+      close()
+      open(resolvedPath)
+    },
+    { immediate: true },
+  )
 
   onScopeDispose(close)
 

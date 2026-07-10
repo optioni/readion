@@ -1,8 +1,6 @@
 import type { ExtractionStatusResponse } from '@readion/shared'
 import { describe, expect, it } from 'vitest'
-import { isTerminalWithoutFields, nextRefetchInterval } from '~/composables/certExtractionPoll'
-
-const POLL_MS = 1500
+import { isTerminalWithoutFields } from '~/composables/certExtractionPoll'
 
 function status(
   state: string,
@@ -17,36 +15,6 @@ const GROUNDED_FIELDS: ExtractionStatusResponse['fields'] = {
   passingScore: { value: 67, citation: { url: 'u', passage: 'p' } },
   timeLimitMinutes: { value: 130, citation: { url: 'u', passage: 'p' } },
 }
-
-describe('nextRefetchInterval', () => {
-  it('keeps polling while no data has arrived yet', () => {
-    expect(nextRefetchInterval(undefined)).toBe(POLL_MS)
-  })
-
-  it('keeps polling on a non-terminal state without fields', () => {
-    expect(nextRefetchInterval(status('active'))).toBe(POLL_MS)
-    expect(nextRefetchInterval(status('waiting'))).toBe(POLL_MS)
-    expect(nextRefetchInterval(status('delayed'))).toBe(POLL_MS)
-  })
-
-  it('stops polling the instant fields are present', () => {
-    expect(nextRefetchInterval(status('completed', GROUNDED_FIELDS))).toBe(false)
-  })
-
-  it('stops polling on a terminal state that produced no fields', () => {
-    expect(nextRefetchInterval(status('failed'))).toBe(false)
-    expect(nextRefetchInterval(status('completed'))).toBe(false)
-  })
-
-  it('keeps polling through a few transient failures', () => {
-    expect(nextRefetchInterval(undefined, 4)).toBe(POLL_MS)
-  })
-
-  it('stops polling after too many consecutive failures', () => {
-    expect(nextRefetchInterval(undefined, 5)).toBe(false)
-    expect(nextRefetchInterval(status('active'), 6)).toBe(false)
-  })
-})
 
 describe('isTerminalWithoutFields', () => {
   it('is false when no data has arrived', () => {

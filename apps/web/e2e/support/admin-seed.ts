@@ -87,6 +87,9 @@ export interface AdminMockHandles {
   disabledSourceIds: string[]
   discoverBodies: Array<Record<string, unknown>>
   extractBodies: Array<Record<string, unknown>>
+  // How many times the status GET (the SSE fallback) was hit. The wizard now learns of completion
+  // over SSE, so this must stay at most 1 (initial paint) rather than growing on an interval.
+  extractionStatusGetCount: number
   certificationCreates: Array<Record<string, unknown>>
   reverifyBodies: Array<{ id: string; body: Record<string, unknown> }>
   approvedQuarantineIds: string[]
@@ -392,9 +395,6 @@ export function mockAdmin(
       chunkCount: 0,
     },
   ]
-  // Extraction polling: first poll is still running, the second resolves with grounded + unverified
-  // fields so the wizard exercises a real poll loop.
-  let extractionPolls = 0
 
   const handles: AdminMockHandles = {
     promotedUserIds: [],
@@ -405,6 +405,7 @@ export function mockAdmin(
     disabledSourceIds: [],
     discoverBodies: [],
     extractBodies: [],
+    extractionStatusGetCount: 0,
     certificationCreates: [],
     reverifyBodies: [],
     approvedQuarantineIds: [],
@@ -610,16 +611,31 @@ export function mockAdmin(
   })
   mock(page, /\/api\/v1\/admin\/certifications\/extract$/, async (route) => {
     handles.extractBodies.push(readJsonBody(route))
-    extractionPolls = 0
     await fulfilJson(route, 202, { data: { jobId: EXTRACT_JOB_ID, state: 'active' } })
   })
+  // SSE push: the wizard opens this stream and receives the terminal `completed` event carrying the
+  // grounded fields, per the job-progress-events contract. `route.fulfill` returns the full event
+  // body and closes; the wizard closes its `EventSource` on the terminal event so it does not
+  // reconnect. Registered separately from the `$`-anchored status route below, which it does not match.
+  mock(
+    page,
+    new RegExp(`/api/v1/admin/certifications/extractions/${UUID}/events$`),
+    async (route) => {
+      const jobId = pathSegment(route, 6)
+      const payload = { jobId, state: 'completed', result: { fields: EXTRACTION_FIELDS } }
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        headers: { ...CORS_HEADERS, 'cache-control': 'no-cache' },
+        body: `data: ${JSON.stringify(payload)}\n\n`,
+      })
+    },
+  )
+  // Status GET retained only as the SSE fallback / initial paint. It reports in-progress so the
+  // terminal fields can only arrive over SSE; the counter proves the wizard no longer polls it.
   mock(page, new RegExp(`/api/v1/admin/certifications/extractions/${UUID}$`), async (route) => {
-    extractionPolls += 1
-    if (extractionPolls < 2) {
-      await fulfilJson(route, 200, { data: { state: 'active', fields: null } })
-      return
-    }
-    await fulfilJson(route, 200, { data: { state: 'completed', fields: EXTRACTION_FIELDS } })
+    handles.extractionStatusGetCount += 1
+    await fulfilJson(route, 200, { data: { state: 'active', fields: null } })
   })
   mock(page, /\/api\/v1\/admin\/certifications\/due-for-reverification$/, async (route) => {
     await fulfilJson(route, 200, {

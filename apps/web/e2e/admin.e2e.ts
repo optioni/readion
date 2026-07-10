@@ -322,6 +322,37 @@ test.describe('web-admin — admin console', () => {
     await expect(page.getByTestId('cert-coverage')).toBeVisible()
   })
 
+  test('cert setup wizard: extraction fields arrive over an SSE push, not interval polling', async ({
+    page,
+  }) => {
+    const handles = mockAdmin(page)
+
+    await gotoAuthenticated(page, '/admin/certifications/new')
+
+    // Walk to the extraction step: identify → confirm source.
+    await page
+      .getByTestId('identify-name-input')
+      .fill('AWS Certified Solutions Architect — Associate')
+    await page.getByTestId('identify-code-input').fill('SAA-C03')
+    await page.getByTestId('identify-provider-input').fill('Amazon Web Services')
+    await page.getByTestId('identify-search-btn').click()
+
+    await expect(page.getByTestId('cert-confirm-step')).toBeVisible()
+    await page.getByTestId('source-candidate').first().click()
+    await page.getByTestId('confirm-source-btn').click()
+
+    // The grounded field renders from the pushed `completed` SSE event — the status GET never
+    // delivers fields (it reports `active`), so this can only come from the stream.
+    await expect(page.getByTestId('extraction-field-passingScore')).toContainText('67')
+    await expect(page.getByTestId('extraction-field-questionCount')).toContainText(
+      /confirm manually/i,
+    )
+
+    // The wizard learns of completion over SSE, so the status GET fallback is hit at most once
+    // (initial paint) rather than on a 1.5s interval.
+    expect(handles.extractionStatusGetCount).toBeLessThanOrEqual(1)
+  })
+
   test('re-verification: pick a due cert, diff client-side, reverify', async ({ page }) => {
     const handles = mockAdmin(page)
 
