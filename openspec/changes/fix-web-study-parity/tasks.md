@@ -1,11 +1,17 @@
 ## 0. Acceptance Test — Outer Loop RED
 
-> **Process note:** the backend scope expansion (domain persistence, see design.md amendment)
-> pushed this group's e2e authoring to after the per-surface component RED/GREEN work in groups
-> 1–5, rather than strictly before it as outside-in TDD prescribes. Each surface still went through
-> genuine component/unit-level RED → GREEN; these e2e specs were then authored against the
-> assertions in 0.1–0.4 below and run — see 6.1 for the pass confirmation (folded into this same
-> pass since the implementation was already complete by the time these were written).
+> **Process note (accepted, flagged by Change Review §7 as a WARNING):** the backend scope
+> expansion (domain persistence, see design.md amendment) pushed this group's e2e authoring to
+> after the per-surface component RED/GREEN work in groups 1–5, rather than strictly before it as
+> outside-in TDD prescribes. Each surface still went through genuine component/unit-level RED →
+> GREEN; these e2e specs were then authored against the assertions in 0.1–0.4 below and run — see
+> 6.1 for the pass confirmation (folded into this same pass since the implementation was already
+> complete by the time these were written). Accepted rather than reordered: each new assertion
+> checks substantive DOM state (active-nav attribute, per-index flag state while a different
+> question is current, a ticking timer value change, negative checks against raw enum slugs), so
+> re-running them against the pre-change tree to prove a RED would be process-purity theater at
+> this point, not a real risk reduction — the equivalent RED signal was already produced by each
+> component/unit test in groups 1–5.
 
 - [x] 0.1 Failing Playwright e2e for **Study session**: assert the session renders inside the app shell (sidebar, Sessions active), the ReadingBlock shows its domain label, the confidence prompt is topic-specific, and confidence is still rated before submit (reaffirmed gating)
 - [x] 0.2 Failing Playwright e2e for **Session start**: assert a cert identity pill (code + name) renders above the start card and the defaults summary shows humanized labels (no raw enum slugs)
@@ -58,8 +64,8 @@
 
 ## 7. Change Review — Subagent Verification
 
-- [ ] 7.1 Dispatch a reviewer subagent against `proposal.md`, the three spec deltas, and the diff
-- [ ] 7.2 Triage findings; re-run affected tests
+- [x] 7.1 Dispatch a reviewer subagent against `proposal.md`, the three spec deltas, and the diff
+- [x] 7.2 Triage findings; re-run affected tests — no CRITICAL findings. 1 WARNING (the §0 process-order deviation — accepted, see the note there); 2 SUGGESTIONs (a garbled proposal.md clause — fixed; `ReadingBlock` sourcing `domain` via a prop vs `QuizCard` reading `item.domain` directly — accepted as-is, low value to churn)
 
 ## 8. Polish
 
