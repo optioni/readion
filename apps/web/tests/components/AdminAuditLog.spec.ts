@@ -81,19 +81,28 @@ describe('AdminAuditLog table render', () => {
     expect(wrapper.findAll('[data-testid="audit-log-row"]')).toHaveLength(2)
   })
 
-  it('renders action, target label, a scalar before → after diff, timestamp and actorEmail', () => {
+  it('renders action, target label, separate Before/After columns, timestamp and actorEmail', () => {
     stubAuditLogs()
     const wrapper = mountAuditLog()
 
     const row = rowFor(wrapper, 'audit-1')
     expect(row.find('[data-testid="audit-action"]').text()).toContain('user.promote')
     expect(row.find('[data-testid="audit-target"]').text()).toBe('casey@org.io')
-    expect(row.find('[data-testid="audit-change"]').text()).toBe('user → admin')
+    expect(row.find('[data-testid="audit-before"]').text()).toBe('user')
+    expect(row.find('[data-testid="audit-after"]').text()).toBe('admin')
     expect(row.find('[data-testid="audit-timestamp"]').text().length).toBeGreaterThan(0)
     expect(row.find('[data-testid="audit-actor"]').text()).toBe('root@readion.io')
   })
 
-  it('renders a System/— fallback for a null actor, — for a null diff, and the target label', () => {
+  it('the six columns render in Timestamp · Actor · Action · Target · Before · After order', () => {
+    stubAuditLogs()
+    const wrapper = mountAuditLog()
+
+    const headers = wrapper.findAll('th').map((th) => th.text())
+    expect(headers).toEqual(['Timestamp', 'Actor', 'Action', 'Target', 'Before', 'After'])
+  })
+
+  it('renders a System/— fallback (italic/muted) for a null actor, — for a null before/after, and the target label', () => {
     stubAuditLogs()
     const wrapper = mountAuditLog()
 
@@ -103,10 +112,25 @@ describe('AdminAuditLog table render', () => {
     expect(actor.exists()).toBe(true)
     expect(actor.text()).not.toContain('@')
     expect(['System', '—']).toContain(actor.text())
-    expect(row.find('[data-testid="audit-change"]').text()).toBe('—')
+    expect(actor.classes().join(' ')).toContain('italic')
+    expect(row.find('[data-testid="audit-before"]').text()).toBe('—')
+    expect(row.find('[data-testid="audit-after"]').text()).toBe('—')
     expect(row.find('[data-testid="audit-target"]').text()).toBe(
       'AWS Certified Solutions Architect — Associate',
     )
+  })
+
+  it('renders relative monospace timestamps and the append-only/★ caption', () => {
+    stubAuditLogs()
+    const wrapper = mountAuditLog()
+
+    const caption = wrapper.find('[data-testid="admin-audit-log-caption"]')
+    expect(caption.text()).toContain('Append-only')
+    expect(caption.text()).toContain('read-only')
+    expect(caption.text()).toContain('★')
+
+    const timestamp = rowFor(wrapper, 'audit-1').find('[data-testid="audit-timestamp"]')
+    expect(timestamp.classes().join(' ')).toContain('font-mono')
   })
 
   it('never renders raw JSON braces or raw UUIDs in a row', () => {

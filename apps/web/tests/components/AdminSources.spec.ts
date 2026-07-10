@@ -231,15 +231,59 @@ describe('AdminSources render', () => {
       '142',
     )
     expect(rowFor(wrapper, DISABLED_ID).find('[data-testid="source-chunk-count"]').text()).toBe('0')
+    // Last-ingested renders relative now, not the old absolute "Jun 25, 2026" format.
     expect(
       rowFor(wrapper, ENABLED_ID).find('[data-testid="source-last-ingested"]').text(),
-    ).toContain('Jun 25, 2026')
+    ).not.toContain('Jun 25, 2026')
+    expect(
+      rowFor(wrapper, ENABLED_ID).find('[data-testid="source-last-ingested"]').text().length,
+    ).toBeGreaterThan(0)
     expect(
       rowFor(wrapper, DISABLED_ID).find('[data-testid="source-last-ingested"]').text(),
     ).not.toBe('')
 
     expect(wrapper.find('[data-testid="source-cancel-btn"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="source-upload-input"]').exists()).toBe(false)
+  })
+
+  it('comma-groups a large chunk count in a monospace cell', () => {
+    stubSources([{ ...SOURCES[0], id: ENABLED_ID, chunkCount: 1247 } as ContentSourceResponse])
+    stubJobs()
+    const { wrapper } = mountSources()
+
+    const cell = rowFor(wrapper, ENABLED_ID).find('[data-testid="source-chunk-count"]')
+    expect(cell.text()).toBe('1,247')
+    expect(cell.classes().join(' ')).toContain('font-mono')
+  })
+
+  it('renders the source type as a bordered badge', () => {
+    stubSources()
+    stubJobs()
+    const { wrapper } = mountSources()
+
+    const badge = rowFor(wrapper, ENABLED_ID).find('[data-testid="source-type"]')
+    expect(badge.classes().join(' ')).toContain('border')
+  })
+
+  it('tints the status pill background per state', () => {
+    stubSources()
+    stubJobs({ [ENABLED_ID]: [job({ state: 'completed' })] })
+    const { wrapper } = mountSources()
+
+    const pill = rowFor(wrapper, ENABLED_ID).find('[data-testid="source-status-pill"]')
+    expect(pill.classes().join(' ')).toMatch(/bg-readion-status-good/)
+  })
+
+  it('shows a live percentage and an ETA on the running-jobs banner', () => {
+    stubSources()
+    stubJobs({
+      [ENABLED_ID]: [job({ state: 'active', progress: 72, processedOn: Date.now() - 60_000 })],
+    })
+    const { wrapper } = mountSources()
+
+    const banner = wrapper.find('[data-testid="source-jobs-banner"]')
+    expect(banner.text()).toContain('72%')
+    expect(banner.text()).toMatch(/remaining/i)
   })
 
   it('falls back to the latest completed job for last-ingested when lastFetchedAt is null', () => {

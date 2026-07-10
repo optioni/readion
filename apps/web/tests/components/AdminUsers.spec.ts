@@ -84,6 +84,32 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+describe('AdminUsers client-side search', () => {
+  it('filters the loaded list by email as the admin types', async () => {
+    stubUsers()
+    const { wrapper } = mountUsers()
+
+    expect(wrapper.findAll('[data-testid="admin-user-row"]')).toHaveLength(3)
+
+    await wrapper.find('[data-testid="user-search"]').setValue('casey')
+
+    const rows = wrapper.findAll('[data-testid="admin-user-row"]')
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.find('[data-testid="user-email"]').text()).toContain('casey@org.io')
+  })
+
+  it('clears back to the full list when the search term is emptied', async () => {
+    stubUsers()
+    const { wrapper } = mountUsers()
+
+    await wrapper.find('[data-testid="user-search"]').setValue('casey')
+    expect(wrapper.findAll('[data-testid="admin-user-row"]')).toHaveLength(1)
+
+    await wrapper.find('[data-testid="user-search"]').setValue('')
+    expect(wrapper.findAll('[data-testid="admin-user-row"]')).toHaveLength(3)
+  })
+})
+
 describe('AdminUsers table render', () => {
   it('renders the page root and a row per user with email, role, join date and enrollment count', () => {
     stubUsers()
@@ -146,6 +172,29 @@ describe('AdminUsers table render', () => {
     expect(inviteBtn.attributes('disabled')).toBeDefined()
 
     expect(wrapper.find('[data-testid="user-summary"]').text()).toBe('3 users · 1 admin')
+  })
+
+  it('orders the toolbar with the summary first, then search + Invite', () => {
+    stubUsers()
+    const { wrapper } = mountUsers()
+
+    const toolbar = wrapper.find('[data-testid="user-toolbar"]')
+    const html = toolbar.html()
+    const summaryIndex = html.indexOf('user-summary')
+    const searchIndex = html.indexOf('user-search')
+    const inviteIndex = html.indexOf('user-invite-btn')
+    expect(summaryIndex).toBeGreaterThanOrEqual(0)
+    expect(summaryIndex).toBeLessThan(searchIndex)
+    expect(searchIndex).toBeLessThan(inviteIndex)
+  })
+
+  it('renders the Admin role badge in the amber/warning color, distinct from the primary blue', () => {
+    stubUsers()
+    const { wrapper } = mountUsers()
+
+    const badge = rowFor(wrapper, ADMIN_USER_ID).find('[data-testid="user-role"]')
+    expect(badge.classes().join(' ')).toContain('readion-status-warning')
+    expect(badge.classes().join(' ')).not.toContain('readion-primary')
   })
 
   it('sources the users count from meta.total rather than the current page size', () => {
