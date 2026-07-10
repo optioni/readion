@@ -1,6 +1,6 @@
 import type { SessionSummaryResponse } from '@readion/shared'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import SessionSummaryBody from '~/components/SessionSummaryBody.vue'
 
 function baseSummary(overrides: Partial<SessionSummaryResponse> = {}): SessionSummaryResponse {
@@ -111,6 +111,16 @@ describe('SessionSummaryBody readiness', () => {
   })
 })
 
+describe('SessionSummaryBody readiness-change bar', () => {
+  it('renders a gradient fill and a directional arrow marker in the readiness strip', () => {
+    const wrapper = mountBody()
+    const strip = wrapper.find('[data-testid="summary-readiness-strip"]')
+
+    expect(strip.find('[data-testid="readiness-bar-fill"]').exists()).toBe(true)
+    expect(strip.find('[data-testid="readiness-bar-arrow"]').exists()).toBe(true)
+  })
+})
+
 describe('SessionSummaryBody strongest and weakest', () => {
   it('renders the strongest question text and an ask-agent action keyed on responseId', async () => {
     const wrapper = mountBody()
@@ -204,6 +214,30 @@ describe('SessionSummaryBody page header', () => {
     expect(header.text()).toContain('Session complete')
     expect(header.text()).toContain('Study Session · SAA-C03')
   })
+
+  it('renders a relative "Today at h:mm A" timestamp right-aligned opposite the title block', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-29T12:00:00.000Z'))
+    try {
+      const wrapper = mountBody({
+        certCode: 'SAA-C03',
+        certName: 'Solutions Architect – Associate',
+        completedAt: '2026-06-29T00:20:00.000Z',
+      })
+
+      const header = wrapper.find('[data-testid="summary-header"]')
+      const timestamp = header.find('[data-testid="summary-completed-at"]')
+      expect(timestamp.text()).toBe('Today at 12:20 AM')
+
+      // Right-aligned opposite the title block: a top-level sibling of the title stack, not
+      // nested inside it.
+      const titleBlock = header.find('[data-testid="summary-header-title"]')
+      expect(titleBlock.exists()).toBe(true)
+      expect(titleBlock.find('[data-testid="summary-completed-at"]').exists()).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })
 
 describe('SessionSummaryBody readiness-change strip', () => {
@@ -294,6 +328,12 @@ describe('SessionSummaryBody actions', () => {
     const wrapper = mountBody()
     await wrapper.find('[data-testid="drill-button"]').trigger('click')
     expect(wrapper.emitted('drill')).toHaveLength(1)
+  })
+
+  it('renders a leading play icon on the drill-my-misses CTA', () => {
+    const wrapper = mountBody()
+    const drillButton = wrapper.find('[data-testid="drill-button"]')
+    expect(drillButton.find('[data-testid="drill-icon"]').exists()).toBe(true)
   })
 
   it('emits back when the back-to-dashboard button is clicked', async () => {

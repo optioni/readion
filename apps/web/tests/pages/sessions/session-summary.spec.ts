@@ -151,6 +151,15 @@ describe('Session summary page load', () => {
     await flushPromises()
     expect(wrapper.find('[data-testid="session-summary-error"]').exists()).toBe(true)
   })
+
+  it('uses the standard content width shared with other app-shell pages', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    const page = wrapper.find('[data-testid="session-summary-page"]')
+    expect(page.classes()).toContain('max-w-[1100px]')
+    expect(page.classes()).not.toContain('max-w-4xl')
+  })
 })
 
 describe('Session summary drill action', () => {
