@@ -157,7 +157,8 @@ function mountPage() {
         },
         ReviewHeader: {
           props: ['userCertificationId', 'current', 'total', 'timeStr', 'timeUrgent'],
-          template: '<div data-testid="review-header-stub" />',
+          template:
+            '<div data-testid="review-header-stub" :data-time-str="timeStr" :data-time-urgent="timeUrgent" />',
         },
       },
     },
@@ -197,6 +198,38 @@ describe('Review page — queue scene', () => {
 
     expect(wrapper.find('[data-testid="review-queue-entry-stub"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="quiz-card"]').exists()).toBe(false)
+  })
+})
+
+describe('Review page — live countdown', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('ticks the header timer down from 5:00', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    const header = () => wrapper.find('[data-testid="review-header-stub"]')
+    expect(header().attributes('data-time-str')).toBe('5:00')
+
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(header().attributes('data-time-str')).toBe('4:00')
+  })
+
+  it('enters the urgent state near expiry', async () => {
+    const wrapper = mountPage()
+    await flushPromises()
+
+    const header = () => wrapper.find('[data-testid="review-header-stub"]')
+    expect(header().attributes('data-time-urgent')).toBe('false')
+
+    await vi.advanceTimersByTimeAsync(4 * 60_000 + 40_000)
+    expect(header().attributes('data-time-urgent')).toBe('true')
   })
 })
 

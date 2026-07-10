@@ -51,6 +51,25 @@ describe('ReviewQueueEntry — with due items', () => {
     expect(wrapper.find('[data-testid="review-queue-entry"]').exists()).toBe(true)
   })
 
+  it('renders as a centered full-bleed hero, not a bordered card', () => {
+    const wrapper = mountEntry({
+      items: [dueItem('Secure Architectures', 'item-1')],
+      dueCount: 1,
+    })
+    const entry = wrapper.find('[data-testid="review-queue-entry"]')
+    expect(entry.classes()).toContain('items-center')
+    expect(entry.classes()).toContain('justify-center')
+    expect(entry.classes()).not.toContain('border')
+  })
+
+  it('renders the queue hero icon', () => {
+    const wrapper = mountEntry({
+      items: [dueItem('Secure Architectures', 'item-1')],
+      dueCount: 1,
+    })
+    expect(wrapper.find('[data-testid="review-queue-icon"]').exists()).toBe(true)
+  })
+
   it('displays the due count', () => {
     const wrapper = mountEntry({
       items: [
@@ -60,7 +79,33 @@ describe('ReviewQueueEntry — with due items', () => {
       ],
       dueCount: 5,
     })
-    expect(wrapper.find('[data-testid="review-due-count"]').text()).toContain('5')
+    expect(wrapper.find('[data-testid="review-due-count"]').text()).toBe('5')
+  })
+
+  it('renders a plain due-count headline, not a count embedded in a circular badge', () => {
+    const wrapper = mountEntry({
+      items: [dueItem('Secure Architectures', 'item-1')],
+      dueCount: 5,
+    })
+    const count = wrapper.find('[data-testid="review-due-count"]')
+    expect(count.classes()).not.toContain('rounded-full')
+    expect(wrapper.text()).toContain('items due for review')
+  })
+
+  it('shows the "Scheduled by spaced repetition" caption', () => {
+    const wrapper = mountEntry({
+      items: [dueItem('Secure Architectures', 'item-1')],
+      dueCount: 1,
+    })
+    expect(wrapper.text()).toContain('Scheduled by spaced repetition · ~5 minutes')
+  })
+
+  it('does not render a "By domain" label before the domain chips', () => {
+    const wrapper = mountEntry({
+      items: [dueItem('Secure Architectures', 'item-1')],
+      dueCount: 1,
+    })
+    expect(wrapper.text()).not.toContain('By domain')
   })
 
   it('shows per-domain breakdown listing every distinct domain', () => {
