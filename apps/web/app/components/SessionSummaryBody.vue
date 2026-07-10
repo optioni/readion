@@ -3,6 +3,7 @@ import type { SessionSummaryResponse } from '@readion/shared'
 import { computed } from 'vue'
 import DeltaBadge from '~/components/DeltaBadge.vue'
 import { formatReadiness } from '~/composables/readinessFormat'
+import { formatRelativeCompletionLabel } from '~/composables/relativeCompletionLabel'
 import { statusColorForScore, statusTextColorClass } from '~/composables/statusColor'
 
 const NOT_CALIBRATED_MESSAGE = 'Readiness not yet calibrated'
@@ -81,59 +82,54 @@ const readiness = computed(() => {
 
 const readinessDeltaValue = computed(() => props.summary.readiness.delta ?? 0)
 
-const completedAtLabel = computed(() => {
-  if (!props.completedAt) {
-    return null
-  }
-  const date = new Date(props.completedAt)
-  if (Number.isNaN(date.getTime())) {
-    return null
-  }
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'UTC',
-  }).format(date)
-})
+const completedAtLabel = computed(() =>
+  props.completedAt ? formatRelativeCompletionLabel(props.completedAt) : null,
+)
 </script>
 
 <template>
   <div class="flex flex-col gap-3.5">
     <div
       data-testid="summary-header"
-      class="flex flex-col gap-1 border-readion-border-strong border-b pb-3.5"
+      class="flex items-start justify-between gap-3 border-readion-border-strong border-b pb-3.5"
     >
-      <div class="flex items-center gap-2">
-        <span
-          class="flex h-5 w-5 items-center justify-center rounded-full border border-readion-status-good bg-readion-status-good/15"
-        >
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path
-              d="M2 5l2 2 4-4"
-              stroke="currentColor"
-              stroke-width="1.4"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="text-readion-status-good"
-            />
-          </svg>
-        </span>
-        <span
-          data-testid="summary-header-badge"
-          class="text-[11px] text-readion-status-good uppercase tracking-wider"
-        >
-          Session complete
-        </span>
+      <div data-testid="summary-header-title" class="flex flex-col gap-1">
+        <div class="flex items-center gap-2">
+          <span
+            class="flex h-5 w-5 items-center justify-center rounded-full border border-readion-status-good bg-readion-status-good/15"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path
+                d="M2 5l2 2 4-4"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="text-readion-status-good"
+              />
+            </svg>
+          </span>
+          <span
+            data-testid="summary-header-badge"
+            class="text-[11px] text-readion-status-good uppercase tracking-wider"
+          >
+            Session complete
+          </span>
+        </div>
+        <div class="font-semibold text-readion-text-primary text-xl leading-tight">
+          Study Session<template v-if="certCode"> · {{ certCode }}</template>
+        </div>
+        <div class="text-[12px] text-readion-text-muted">
+          <template v-if="certName">{{ certName }}</template>
+          <template v-if="certName && timeLabel"> &middot; </template>
+          <template v-if="timeLabel">{{ timeLabel }}</template>
+        </div>
       </div>
-      <div class="font-semibold text-readion-text-primary text-xl leading-tight">
-        Study Session<template v-if="certCode"> · {{ certCode }}</template>
-      </div>
-      <div class="text-[12px] text-readion-text-muted">
-        <template v-if="certName">{{ certName }}</template>
-        <template v-if="certName && timeLabel"> &middot; </template>
-        <template v-if="timeLabel">{{ timeLabel }}</template>
-      </div>
-      <div v-if="completedAtLabel" data-testid="summary-completed-at" class="text-[11px] text-readion-text-subtle">
+      <div
+        v-if="completedAtLabel"
+        data-testid="summary-completed-at"
+        class="flex-shrink-0 text-[11px] text-readion-text-subtle"
+      >
         {{ completedAtLabel }}
       </div>
     </div>
@@ -194,7 +190,18 @@ const completedAtLabel = computed(() => {
           <div class="flex flex-wrap items-center gap-4">
             <span class="text-[11px] text-readion-text-muted uppercase tracking-wider">Readiness score</span>
             <span class="font-bold text-2xl text-readion-text-muted leading-none">{{ readiness.before }}%</span>
-            <div class="h-[3px] min-w-10 flex-1 rounded-full bg-readion-border-strong" />
+            <div class="relative h-[3px] min-w-10 flex-1 rounded-full bg-readion-border-strong">
+              <div
+                data-testid="readiness-bar-fill"
+                class="absolute inset-0 rounded-full"
+                style="background: linear-gradient(90deg, rgba(124, 140, 248, 0.3), var(--readion-status-good))"
+              />
+              <div
+                data-testid="readiness-bar-arrow"
+                class="-translate-y-1/2 absolute top-1/2 right-[-1px] h-0 w-0 border-y-[5px] border-y-transparent border-l-[8px]"
+                style="border-left-color: var(--readion-status-good)"
+              />
+            </div>
             <span class="font-bold text-2xl text-readion-status-good leading-none">{{ readiness.after }}%</span>
             <div class="flex items-center gap-1.5">
               <DeltaBadge :value="readinessDeltaValue" />
@@ -299,6 +306,16 @@ const completedAtLabel = computed(() => {
         class="flex flex-1 items-center justify-center gap-2 rounded-md bg-readion-primary px-4 py-2.5 font-semibold text-sm text-white"
         @click="emit('drill')"
       >
+        <svg
+          data-testid="drill-icon"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <polygon points="5,3 19,12 5,21" />
+        </svg>
         Drill my misses →
       </button>
       <button

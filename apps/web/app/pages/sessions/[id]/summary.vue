@@ -89,7 +89,7 @@ async function handleBack() {
 </script>
 
 <template>
-  <div data-testid="session-summary-page" class="mx-auto flex w-full max-w-4xl flex-col gap-4 px-9 py-7">
+  <div data-testid="session-summary-page" class="mx-auto flex w-full max-w-[1100px] flex-col gap-4 px-9 py-7">
     <div
       v-if="isLoading"
       data-testid="session-summary-loading"
