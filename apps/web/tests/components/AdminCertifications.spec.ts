@@ -351,6 +351,75 @@ describe('AdminCertifications reverify flow', () => {
   })
 })
 
+describe('AdminCertifications reverify modal overlay', () => {
+  it('renders the diff inside a centered modal overlay with a backdrop, not an inline section', async () => {
+    vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
+      envelope({ state: 'completed', fields: EXTRACTION_FIELDS }),
+    )
+    const wrapper = mountComponent()
+
+    await wrapper.find('[data-testid="reverify-btn"]').trigger('click')
+    await flush()
+
+    const backdrop = wrapper.find('[data-testid="reverify-diff-backdrop"]')
+    expect(backdrop.exists()).toBe(true)
+    const modal = backdrop.find('[data-testid="reverify-diff-modal"]')
+    expect(modal.exists()).toBe(true)
+    expect(modal.find('[data-testid="reverify-diff"]').exists()).toBe(true)
+
+    wrapper.unmount()
+  })
+
+  it('shows a spinner and "Re-verifying…" label on the submit button while submitting', async () => {
+    vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
+      envelope({ state: 'completed', fields: EXTRACTION_FIELDS }),
+    )
+    let resolveReverify: (() => void) | undefined
+    vi.mocked(certSetupControllerReverify).mockReturnValue(
+      new Promise((resolve) => {
+        resolveReverify = () => resolve(envelope(CURRENT_CERT))
+      }) as never,
+    )
+    const wrapper = mountComponent()
+
+    await wrapper.find('[data-testid="reverify-btn"]').trigger('click')
+    await flush()
+
+    const submitBtn = wrapper.find('[data-testid="reverify-submit-btn"]')
+    void submitBtn.trigger('click')
+    await flush()
+
+    expect(submitBtn.text()).toContain('Re-verifying…')
+    expect(wrapper.find('[data-testid="reverify-submitting-spinner"]').exists()).toBe(true)
+
+    resolveReverify?.()
+    await flush()
+    wrapper.unmount()
+  })
+
+  it('scopes a submit failure inside the modal footer', async () => {
+    vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
+      envelope({ state: 'completed', fields: EXTRACTION_FIELDS }),
+    )
+    vi.mocked(certSetupControllerReverify).mockRejectedValue(
+      new ReadionProblemDetailsError({ title: 'Conflict', status: 409, detail: 'Already running' }),
+    )
+    const wrapper = mountComponent()
+
+    await wrapper.find('[data-testid="reverify-btn"]').trigger('click')
+    await flush()
+    await wrapper.find('[data-testid="reverify-submit-btn"]').trigger('click')
+    await flush()
+
+    const modal = wrapper.find('[data-testid="reverify-diff-modal"]')
+    const footerError = modal.find('[data-testid="reverify-error"]')
+    expect(footerError.exists()).toBe(true)
+    expect(footerError.text()).toContain('Already running')
+
+    wrapper.unmount()
+  })
+})
+
 describe('AdminCertifications existing certifications list', () => {
   it('lists existing certifications alongside the due-for-reverification section', async () => {
     const wrapper = mountComponent()
