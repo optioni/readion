@@ -2,7 +2,10 @@
 import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
+import AdminAsyncMessage from '~/components/admin/AdminAsyncMessage.vue'
+import AdminHeaderBar from '~/components/admin/AdminHeaderBar.vue'
 import AdminPagination from '~/components/admin/AdminPagination.vue'
+import AdminTableShell from '~/components/admin/AdminTableShell.vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import { emailInitials } from '~/composables/emailInitials'
 import { useAdminUsers } from '~/composables/useAdminUsers'
@@ -65,14 +68,20 @@ async function demote(id: string) {
 
 <template>
   <section data-testid="admin-users-page" class="flex flex-col gap-6">
-    <h1 class="font-semibold text-lg text-white">Users</h1>
+    <AdminHeaderBar title="Users" />
 
-    <p v-if="isLoading" data-testid="admin-users-loading" class="text-slate-400 text-sm">
-      Loading users…
-    </p>
-    <p v-else-if="isError" data-testid="admin-users-error" class="text-red-400 text-sm">
-      Could not load users. Please try again.
-    </p>
+    <AdminAsyncMessage
+      v-if="isLoading"
+      kind="loading"
+      message="Loading users…"
+      data-testid="admin-users-loading"
+    />
+    <AdminAsyncMessage
+      v-else-if="isError"
+      kind="error"
+      message="Could not load users. Please try again."
+      data-testid="admin-users-error"
+    />
 
     <template v-else>
       <p v-if="demoteError" data-testid="demote-error" class="text-red-400 text-sm">
@@ -101,11 +110,12 @@ async function demote(id: string) {
         </div>
       </div>
 
+      <AdminTableShell>
       <table class="w-full border-collapse text-left text-sm">
         <thead>
           <tr class="border-readion-background-surface border-b text-slate-400">
             <th class="px-3 py-2 font-medium">Name</th>
-            <th class="px-3 py-2 font-medium">User</th>
+            <th class="px-3 py-2 font-medium">Email</th>
             <th class="px-3 py-2 font-medium">Role</th>
             <th class="px-3 py-2 font-medium">Joined</th>
             <th class="px-3 py-2 font-medium">Last active</th>
@@ -186,6 +196,7 @@ async function demote(id: string) {
           </tr>
         </tbody>
       </table>
+      </AdminTableShell>
 
       <AdminPagination
         v-if="meta"

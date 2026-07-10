@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import AdminAsyncMessage from '~/components/admin/AdminAsyncMessage.vue'
+import AdminHeaderBar from '~/components/admin/AdminHeaderBar.vue'
 import AdminPagination from '~/components/admin/AdminPagination.vue'
+import AdminTableShell from '~/components/admin/AdminTableShell.vue'
 import { useAdminAuditLogs } from '~/composables/useAdminAuditLogs'
 import { formatAuditDiff } from '~/utils/formatAuditDiff'
 
@@ -35,16 +38,23 @@ function formatChange(
 
 <template>
   <section data-testid="admin-audit-log-page" class="flex flex-col gap-6">
-    <h1 class="font-semibold text-lg text-white">Audit Log</h1>
+    <AdminHeaderBar title="Audit Log" />
 
-    <p v-if="isLoading" data-testid="admin-audit-log-loading" class="text-slate-400 text-sm">
-      Loading audit log…
-    </p>
-    <p v-else-if="isError" data-testid="admin-audit-log-error" class="text-red-400 text-sm">
-      Could not load the audit log. Please try again.
-    </p>
+    <AdminAsyncMessage
+      v-if="isLoading"
+      kind="loading"
+      message="Loading audit log…"
+      data-testid="admin-audit-log-loading"
+    />
+    <AdminAsyncMessage
+      v-else-if="isError"
+      kind="error"
+      message="Could not load the audit log. Please try again."
+      data-testid="admin-audit-log-error"
+    />
 
-    <table v-else class="w-full border-collapse text-left text-sm">
+    <AdminTableShell v-else>
+    <table class="w-full border-collapse text-left text-sm">
       <thead>
         <tr class="border-readion-background-surface border-b text-slate-400">
           <th class="px-3 py-2 font-medium">Action</th>
@@ -80,6 +90,7 @@ function formatChange(
         </tr>
       </tbody>
     </table>
+    </AdminTableShell>
 
     <AdminPagination
       v-if="meta"

@@ -4,6 +4,9 @@ import { reverifyCertificationRequestSchema } from '@readion/shared'
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref, watch } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
+import AdminAsyncMessage from '~/components/admin/AdminAsyncMessage.vue'
+import AdminHeaderBar from '~/components/admin/AdminHeaderBar.vue'
+import AdminTableShell from '~/components/admin/AdminTableShell.vue'
 import { readDataEnvelope, readExtractionStatusEnvelope } from '~/composables/adminEnvelope'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import { isTerminalWithoutFields, nextRefetchInterval } from '~/composables/certExtractionPoll'
@@ -143,18 +146,46 @@ function formatVerifiedAt(verifiedAt: string | null): string {
 
 <template>
   <section data-testid="admin-certifications-page" class="flex flex-col gap-6">
-    <div class="flex items-center justify-between">
-      <h1 class="font-semibold text-lg text-white">Certifications</h1>
+    <AdminHeaderBar
+      title="Certifications"
+      subtitle="Manage certifications and keep their metadata verified against source."
+    >
       <NuxtLink
         to="/admin/certifications/new"
         data-testid="new-certification-link"
-        class="rounded-lg bg-readion-primary px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90"
+        class="inline-flex items-center gap-1.5 rounded-lg bg-readion-primary px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90"
       >
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 14 14"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M7 2v10M2 7h10" />
+        </svg>
         New certification
       </NuxtLink>
-    </div>
+    </AdminHeaderBar>
 
-    <h2 class="font-medium text-slate-200 text-sm">Certifications</h2>
+    <div class="flex items-baseline gap-2">
+      <h2
+        data-testid="existing-certs-section-label"
+        class="font-medium text-slate-400 text-xs uppercase tracking-widest"
+      >
+        Existing certifications
+      </h2>
+      <span
+        v-if="existingCerts.length > 0"
+        data-testid="existing-certs-count"
+        class="text-slate-500 text-xs"
+      >
+        {{ existingCerts.length }} active
+      </span>
+    </div>
 
     <p
       v-if="existingCerts.length === 0"
@@ -164,7 +195,8 @@ function formatVerifiedAt(verifiedAt: string | null): string {
       No certifications have been set up yet.
     </p>
 
-    <table v-else class="w-full border-collapse text-left text-sm">
+    <AdminTableShell v-else>
+    <table class="w-full border-collapse text-left text-sm">
       <thead>
         <tr class="border-readion-background-surface border-b text-slate-400">
           <th class="px-3 py-2 font-medium">Certification</th>
@@ -182,7 +214,9 @@ function formatVerifiedAt(verifiedAt: string | null): string {
           class="border-readion-background-surface/60 border-b"
         >
           <td class="px-3 py-3 text-slate-100">{{ cert.name }}</td>
-          <td class="px-3 py-3 text-slate-300">{{ cert.code }}</td>
+          <td class="px-3 py-3">
+            <span data-testid="existing-cert-code-chip" class="rounded-sm border border-readion-border-strong bg-readion-background-elevated px-1.5 py-0.5 font-mono text-slate-300 text-xs">{{ cert.code }}</span>
+          </td>
           <td class="px-3 py-3 text-slate-300">{{ cert.provider }}</td>
           <td class="px-3 py-3">
             <NuxtLink
@@ -196,20 +230,31 @@ function formatVerifiedAt(verifiedAt: string | null): string {
         </tr>
       </tbody>
     </table>
+    </AdminTableShell>
 
-    <h2 class="font-medium text-slate-200 text-sm">Due for re-verification</h2>
+    <h2 class="font-medium text-slate-400 text-xs uppercase tracking-widest">
+      Due for re-verification
+    </h2>
 
-    <p v-if="isLoading" data-testid="due-loading" class="text-slate-400 text-sm">
-      Loading certifications…
-    </p>
-    <p v-else-if="isError" data-testid="due-error" class="text-red-400 text-sm">
-      Could not load certifications. Please try again.
-    </p>
+    <AdminAsyncMessage
+      v-if="isLoading"
+      kind="loading"
+      message="Loading certifications…"
+      data-testid="due-loading"
+    />
+    <AdminAsyncMessage
+      v-else-if="isError"
+      kind="error"
+      message="Could not load certifications. Please try again."
+      data-testid="due-error"
+      @retry="dueQuery.refetch()"
+    />
     <p v-else-if="dueItems.length === 0" data-testid="due-empty" class="text-slate-400 text-sm">
       No certifications are due for re-verification.
     </p>
 
-    <table v-else class="w-full border-collapse text-left text-sm">
+    <AdminTableShell v-else>
+    <table class="w-full border-collapse text-left text-sm">
       <thead>
         <tr class="border-readion-background-surface border-b text-slate-400">
           <th class="px-3 py-2 font-medium">Certification</th>
@@ -227,7 +272,9 @@ function formatVerifiedAt(verifiedAt: string | null): string {
           class="border-readion-background-surface/60 border-b"
         >
           <td class="px-3 py-3 text-slate-100">{{ item.name }}</td>
-          <td class="px-3 py-3 text-slate-300">{{ item.code }}</td>
+          <td class="px-3 py-3">
+            <span data-testid="due-cert-code-chip" class="rounded-sm border border-readion-border-strong bg-readion-background-elevated px-1.5 py-0.5 font-mono text-slate-300 text-xs">{{ item.code }}</span>
+          </td>
           <td class="px-3 py-3 text-slate-300">{{ formatVerifiedAt(item.verifiedAt) }}</td>
           <td class="px-3 py-3">
             <button
@@ -242,6 +289,7 @@ function formatVerifiedAt(verifiedAt: string | null): string {
         </tr>
       </tbody>
     </table>
+    </AdminTableShell>
 
     <p v-if="reverifyError" data-testid="reverify-error" class="text-red-400 text-sm">
       {{ reverifyError }}

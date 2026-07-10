@@ -7,6 +7,9 @@ import {
 import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
+import AdminAsyncMessage from '~/components/admin/AdminAsyncMessage.vue'
+import AdminHeaderBar from '~/components/admin/AdminHeaderBar.vue'
+import AdminTableShell from '~/components/admin/AdminTableShell.vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import {
   deriveSourceStatus,
@@ -139,9 +142,7 @@ async function toggleEnabled(source: { id: string; enabled: boolean }) {
 
 <template>
   <section data-testid="admin-sources-page" class="flex flex-col gap-6">
-    <header class="flex flex-wrap items-center justify-between gap-4">
-      <h1 class="font-semibold text-lg text-white">Sources</h1>
-    </header>
+    <AdminHeaderBar title="Sources" />
 
     <div data-testid="source-cert-pills" class="flex flex-wrap gap-2">
       <button
@@ -238,14 +239,21 @@ async function toggleEnabled(source: { id: string; enabled: boolean }) {
         Ingestion in progress for one or more sources.
       </p>
 
-      <p v-if="isLoading" data-testid="admin-sources-loading" class="text-slate-400 text-sm">
-        Loading sources…
-      </p>
-      <p v-else-if="isError" data-testid="admin-sources-error" class="text-red-400 text-sm">
-        Could not load sources. Please try again.
-      </p>
+      <AdminAsyncMessage
+        v-if="isLoading"
+        kind="loading"
+        message="Loading sources…"
+        data-testid="admin-sources-loading"
+      />
+      <AdminAsyncMessage
+        v-else-if="isError"
+        kind="error"
+        message="Could not load sources. Please try again."
+        data-testid="admin-sources-error"
+      />
 
-      <table v-else class="w-full border-collapse text-left text-sm">
+      <AdminTableShell v-else>
+      <table class="w-full border-collapse text-left text-sm">
         <thead>
           <tr class="border-readion-background-surface border-b text-slate-400">
             <th class="px-3 py-2 font-medium">Source</th>
@@ -322,6 +330,7 @@ async function toggleEnabled(source: { id: string; enabled: boolean }) {
           </tr>
         </tbody>
       </table>
+      </AdminTableShell>
     </template>
   </section>
 </template>

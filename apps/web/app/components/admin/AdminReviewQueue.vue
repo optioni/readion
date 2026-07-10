@@ -2,6 +2,7 @@
 import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
+import AdminAsyncMessage from '~/components/admin/AdminAsyncMessage.vue'
 import AdminReviewQueueDetail from '~/components/admin/AdminReviewQueueDetail.vue'
 import AdminReviewQueueList from '~/components/admin/AdminReviewQueueList.vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
@@ -94,12 +95,18 @@ function reject(id: string) {
       </p>
     </div>
 
-    <p v-if="isLoading" data-testid="admin-review-queue-loading" class="text-slate-400 text-sm">
-      Loading quarantined items…
-    </p>
-    <p v-else-if="isError" data-testid="admin-review-queue-error" class="text-red-400 text-sm">
-      Could not load the review queue. Please try again.
-    </p>
+    <AdminAsyncMessage
+      v-if="isLoading"
+      kind="loading"
+      message="Loading quarantined items…"
+      data-testid="admin-review-queue-loading"
+    />
+    <AdminAsyncMessage
+      v-else-if="isError"
+      kind="error"
+      message="Could not load the review queue. Please try again."
+      data-testid="admin-review-queue-error"
+    />
 
     <template v-else>
       <p
