@@ -4,21 +4,13 @@ Defines the web mock-exam experience: a full-screen, agent-free surface that str
 ## Requirements
 ### Requirement: Mock-exam page renders a full-screen, agent-free surface keyed on generation and status
 
-The web app SHALL provide a route at `/mock-exams/:id` that loads the attempt via `GET /api/v1/mock-exams/:id` and renders a full-screen, minimal-chrome experience with **no app sidebar and no AI agent panel** (a mock exam is agent-free). The view MUST select its scene from the attempt's `generation` (`preparing` | `ready`) and `status` (`in_progress` | `submitted` | `expired`): a **preparing** scene while `generation === 'preparing'`, an **active exam** scene while `generation === 'ready'` and `status === 'in_progress'`, and a **results/review** scene when `status` is `submitted` or `expired`.
+The mock-exam page SHALL render a full-screen, agent-free surface keyed on generation and status, with **exactly one header** — the exam's own `ExamHeader` — as the only chrome above the question/nav-panel split (matching `openspec/design/MockExam.html`). The page MUST NOT inherit the `minimal` layout's header (logo + "Back to dashboard"), which would stack a second header above `ExamHeader`; it uses a bare/headerless layout instead. `ExamHeader` SHALL include the accent logo mark, show only the uppercase cert **code** (not the full cert name) in the active state, and render the flag and timer with their icons.
 
-#### Scenario: Agent-free full-screen layout
+#### Scenario: Only one exam header renders
 
-- **WHEN** an authenticated user opens `/mock-exams/:id` for any of their attempts
-- **THEN** the page renders on a minimal-chrome full-screen layout with no app navigation sidebar and no agent chat panel
-
-#### Scenario: Scene is chosen from generation and status
-
-- **WHEN** the attempt has `generation: "preparing"`
-- **THEN** the preparing scene is shown
-- **WHEN** the attempt has `generation: "ready"` and `status: "in_progress"`
-- **THEN** the active exam scene is shown
-- **WHEN** the attempt has `status: "submitted"` or `status: "expired"`
-- **THEN** the results scene is shown
+- **WHEN** the active mock-exam surface renders
+- **THEN** the exam's `ExamHeader` is the only header bar (no stacked minimal-layout header)
+- **AND** it shows the logo mark, the code-only cert identity, and flag/timer icons
 
 ### Requirement: Preparing scene streams generated questions into the nav sidebar with the timer paused
 
@@ -37,28 +29,13 @@ While `generation === 'preparing'` the page SHALL show a "Preparing your exam" s
 
 ### Requirement: Active exam presents one question at a time with a question-nav sidebar
 
-In the active scene the page SHALL present the current question with its domain tag, stem, and answer options, plus Previous / Skip / Next controls, and a right-hand **question-nav sidebar** of numbered squares — one per question — reflecting answered, current, and unanswered states, with a "Submit exam" action and an answered-count summary. The current-question counter MUST use the design's compact `Q N / T` form (e.g. "Q 1 / 65"). Selecting any square MUST navigate to that question. Per-option correct/incorrect status colours MUST NOT be shown during the active exam (exam-faithful — answers are revealed only after submission).
+The active exam SHALL present one question at a time with a question-nav sidebar. A question SHALL be **flaggable per question**: flag state is keyed by question index (not a single shared toggle), and a flagged question SHALL render a distinct "Flagged" square in the nav grid regardless of which question is currently displayed. The active-mode nav legend SHALL show "Answered" and "Flagged" swatches, and the `NavSquareState` SHALL include a `flagged` variant. Flag state is session-scoped (in memory); persistence across reload is not required.
 
-#### Scenario: Question counter uses the compact form
+#### Scenario: Flagging a question marks its nav square independently
 
-- **WHEN** the user is on the first question of a 65-question active attempt
-- **THEN** the counter reads "Q 1 / 65" (not "Question 1 of 65")
-
-#### Scenario: Nav square states reflect answers
-
-- **WHEN** an in-progress 65-question attempt has questions 0–10 answered and the user is on question 11
-- **THEN** the nav shows squares 1–11 in the answered state, square 12 in the current state, and the remaining squares unanswered
-- **AND** the summary reads that 11 of 65 are answered
-
-#### Scenario: Selecting a question is not coloured by correctness during the exam
-
-- **WHEN** the user selects an option for the current question during an active exam
-- **THEN** the chosen option is shown as selected but no correct/incorrect status colour is revealed
-
-#### Scenario: Nav navigates between questions
-
-- **WHEN** the user clicks square 30 in the nav sidebar
-- **THEN** the question pane shows question 30 as the current question
+- **WHEN** the user flags question N while question M (≠ N) is current
+- **THEN** question N's nav square renders in the "Flagged" state while M remains the current square
+- **AND** the active-mode legend shows "Answered" and "Flagged"
 
 ### Requirement: Answering a question persists by zero-based question index
 

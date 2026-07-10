@@ -4,20 +4,13 @@ Defines the web UI for starting and conducting a study session: the session-star
 ## Requirements
 ### Requirement: Session start screen offers a one-tap quick start from saved defaults
 
-The web app SHALL provide a minimal-chrome session-start route for an enrollment (no app sidebar / dashboard chrome) whose default mode is **Quick start**. Quick start MUST display the user's saved session defaults (duration, content mix, difficulty, learning style) as a read-only summary and a **Start session** action. Pressing Start MUST create a session via `POST /api/v1/user-certifications/:enrollmentId/sessions` with an **empty override body**, so the server applies the saved profile defaults, and on success MUST route to the session view for the returned session id. The screen MUST also offer a "Customise this session" affordance that switches to the custom-config mode.
+The session-start screen SHALL offer a one-tap quick start from the saved session defaults. Above the start card it SHALL render a **cert identity pill** showing the certification's mono code and full name (sourced for the enrollment), so the user confirms which certification the session is for. The defaults summary SHALL render **humanized labels** via the shared value→label map (e.g. content mix, difficulty, learning style), never raw enum slugs.
 
-#### Scenario: Quick start shows saved defaults and starts a session
+#### Scenario: Cert identity pill and humanized defaults render
 
-- **WHEN** an authenticated user opens the session-start screen for an active enrollment whose saved defaults are 30 min / balanced / intermediate / weak-area-focus
-- **THEN** the quick-start card shows those four defaults as a summary
-- **AND** pressing "Start session" sends `POST /api/v1/user-certifications/:enrollmentId/sessions` with an empty body
-- **AND** on a 201 response the app navigates to the session view for the returned session id
-
-#### Scenario: Customise switches to the config mode
-
-- **WHEN** the user presses "Customise this session" on the quick-start card
-- **THEN** the custom-config mode is shown with the domain-focus picker and session-setting overrides
-- **AND** a "Use defaults instead" affordance is available to return to quick start
+- **WHEN** the session-start screen renders for an enrollment
+- **THEN** a cert identity pill with the cert code and full name is shown above the start card
+- **AND** the defaults summary values render as humanized labels, not raw enum slugs
 
 ### Requirement: Quick start surfaces the suggested weak domain
 
@@ -72,18 +65,17 @@ Because the backend enforces at most one `active` session per enrollment, the st
 
 ### Requirement: Session view renders a split panel with a collapsible agent
 
-The session view SHALL render a split-panel layout: study content (reading blocks and quiz cards) on the left and the AI agent chat on the right, both visible by default. The agent panel MUST be collapsible to a narrow rail to maximise content width and re-expandable. The session view MUST load the session and its items via `GET /api/v1/sessions/:id?include=items`.
+The session view SHALL render within the **app shell** (the global sidebar with `Sessions` active), matching `openspec/design/Session.html` and the design manifest — not the bare `minimal` layout. The content SHALL be the split panel of reading/quiz items on the left and a collapsible agent panel on the right. When the agent panel is collapsed it SHALL show a chat-bubble icon and a vertical "Ask AI" label alongside the expand control (not only a bare toggle arrow). The agent panel header SHALL show an online-status dot next to "Study assistant", and each non-user bubble SHALL render a per-message sparkle avatar.
 
-#### Scenario: Split panel is shown with both columns
+#### Scenario: Session renders inside the app shell
 
-- **WHEN** the user opens the session view for an active session
-- **THEN** the left column renders the session content and the right column renders the agent panel
+- **WHEN** a session view renders
+- **THEN** the global app sidebar is present with `Sessions` active, wrapping the reading/quiz + agent split
 
-#### Scenario: Agent panel collapses and expands
+#### Scenario: Collapsed agent panel shows an icon and label
 
-- **WHEN** the user collapses the agent panel
-- **THEN** the agent panel shrinks to a rail and the content column widens
-- **AND** re-expanding restores the full agent panel
+- **WHEN** the agent panel is collapsed
+- **THEN** it shows a chat-bubble icon and a vertical "Ask AI" label alongside the expand control
 
 ### Requirement: Session header shows a live timer, progress, and end-session control
 
@@ -111,9 +103,7 @@ For an **ended** session (`status` of `completed`, `partial`, or `abandoned`) th
 
 ### Requirement: Reading blocks render Markdown TL;DR with go-deeper expansion and citation chips
 
-A reading-block item SHALL render its `content` as Markdown (the LLM-formatted TL;DR). It MUST provide a "Read full explanation" affordance that calls `POST /api/v1/sessions/:id/items/:index/go-deeper` and renders the returned `expandedContent` Markdown inline; once expanded the affordance MUST NOT re-fetch. It MUST render source citation chips derived from the item's provenance (`supportingSpans` / `sourceChunkIds`), and each chip MUST display a **human-readable source label**. A raw content-chunk id/UUID (e.g. `bb9dd4b7-e3e5-44e6-b006-1b6fd247e14b`) MUST NEVER be used as a chip label; when no human title can be resolved for a `sourceChunkId` the chip MUST fall back to a generic "Source" label rather than exposing the id. Advancing past a reading block MUST mark it complete via `POST /api/v1/sessions/:id/items/:index/complete`.
-
-> **Deferred:** the design's "Reading · <domain>" label beside the "Reading" pill is NOT delivered by this change. `GET /api/v1/sessions/:id` items carry no per-item domain (no `SessionItem.domain` column/DTO), so rendering it requires a future backend change; `ReadingBlock.vue` retains an unused optional `:domain` prop for that follow-up. See `proposal.md` → "Deferred / follow-up".
+A reading-block item SHALL render its `content` as Markdown (the LLM-formatted TL;DR). It MUST provide a "Read full explanation" affordance that calls `POST /api/v1/sessions/:id/items/:index/go-deeper` and renders the returned `expandedContent` Markdown inline; once expanded the affordance MUST NOT re-fetch. It MUST render source citation chips derived from the item's provenance (`supportingSpans` / `sourceChunkIds`), and each chip MUST display a **human-readable source label**. A raw content-chunk id/UUID MUST NEVER be used as a chip label; when no human title can be resolved for a `sourceChunkId` the chip MUST fall back to a generic "Source" label rather than exposing the id. Advancing past a reading block MUST mark it complete via `POST /api/v1/sessions/:id/items/:index/complete`. The block SHALL render a **domain label** (e.g. "IAM & Security") beside the "Reading" pill, sourced from the item's persisted `domain` field (`SessionItemResponse.domain`) — this supersedes the prior deferred note; the domain is now real per-item data, not a placeholder.
 
 #### Scenario: TL;DR renders and expands on demand
 
@@ -123,9 +113,14 @@ A reading-block item SHALL render its `content` as Markdown (the LLM-formatted T
 
 #### Scenario: Citation chips show human labels, never raw chunk ids
 
-- **WHEN** a reading block carries `sourceChunkIds` containing `bb9dd4b7-e3e5-44e6-b006-1b6fd247e14b` and `supportingSpans`
+- **WHEN** a reading block carries `sourceChunkIds` containing a raw UUID and `supportingSpans`
 - **THEN** the block renders one citation chip per cited source with a human-readable label
 - **AND** no chip label is a raw content-chunk UUID
+
+#### Scenario: Reading block shows its domain label
+
+- **WHEN** a reading block item with a non-empty `domain` renders
+- **THEN** its domain is shown as a label beside the "Reading" pill
 
 ### Requirement: Session items are parsed by type and insufficient quiz items are skippable
 
@@ -165,14 +160,13 @@ A quiz-card item SHALL render, beside its "Question" pill, a **"Q n of m"** posi
 
 ### Requirement: Confidence rating is required and uses a 1–5 scale
 
-Each quiz card SHALL expose a five-point confidence control (1 = not at all, 5 = very confident). The submit action MUST be disabled until both an option and a confidence value are chosen, guaranteeing the `confidence` field sent to the API is an integer in 1–5.
+Quiz cards SHALL require a confidence rating on a 1–5 scale before the answer is submitted (rate-then-submit) — the Submit control stays disabled until an option and a confidence value are both chosen. This gating is deliberate and is NOT changed to the artboard's submit-then-rate ordering. The confidence prompt SHALL interpolate the item's topic/domain (e.g. "How confident do you feel about **IAM & SCPs**?"), sourced from the item's persisted `domain` field, not a generic prompt.
 
-#### Scenario: Submit is gated on option and confidence
+#### Scenario: Confidence is required before submit with a topic-specific prompt
 
-- **WHEN** an option is selected but no confidence value is set
-- **THEN** the submit action is disabled
-- **WHEN** both an option and a confidence value (3) are set
-- **THEN** the submit action is enabled and sends `confidence: 3`
+- **WHEN** a quiz card renders in the answering state
+- **THEN** the confidence prompt names the item's topic/domain
+- **AND** Submit remains disabled until both an option and a 1–5 confidence value are selected
 
 ### Requirement: Quiz cards expose a report-this-question action
 
@@ -233,18 +227,13 @@ The agent panel SHALL inspect each `tool-result` stream part and render a dedica
 
 ### Requirement: End-of-session summary screen renders the session outcome
 
-On session completion the summary screen SHALL fetch `GET /api/v1/sessions/:id/summary` and render a **page header** — a "Session complete" badge, a "Study Session · CODE" title, the certification name · session duration, and a completion timestamp — above the outcome body. When `questionsAnswered > 0` the body SHALL render: questions answered and accuracy; per-domain accuracy (`domains[]`); weak-area score deltas (`weakAreaDeltas[]`); the readiness change (`readiness.before` → `readiness.after` with `readiness.delta`); the strongest and weakest question (`strongestQuestion` / `weakestQuestion`), each with an "Ask agent about this" action; and the suggested next focus (`nextFocus.domain`). Where `readiness.before/after/delta` are null (not yet calibrated) the screen MUST show a calibration message instead of a percentage change. Fields the summary contract does not provide (per-domain question counts, weak-area absolute before/after values, and a miss count) MUST NOT be fabricated.
+The end-of-session summary SHALL render the session outcome, matching `openspec/design/Summary.html` for the fields the summary DTO carries. The readiness-change bar SHALL render the inset gradient fill plus a directional arrow marker (not a flat empty spacer). The header timestamp SHALL be a right-aligned relative label ("Today at h:mm A") opposite the title block. The content SHALL use the standard content width, and the Drill-my-misses CTA SHALL show its leading play icon. The streak stat SHALL remain the real day-streak metric (a "sessions in a row" count is a different metric and is not adopted).
 
-#### Scenario: Summary renders the page header and outcome body
+#### Scenario: Readiness bar, timestamp, and drill CTA match the design
 
-- **WHEN** the summary returns accuracy 0.67, domains for IAM/Networking, weak-area deltas, and `readiness { before: 72, after: 75, delta: 3 }`
-- **THEN** the page header shows a "Session complete" badge, a "Study Session · CODE" title, the cert name · duration, and a completion timestamp
-- **AND** the body shows the accuracy, per-domain accuracy rows, weak-area delta badges, and a "72% → 75% (+3%)" readiness change
-
-#### Scenario: Uncalibrated readiness shows a calibration message
-
-- **WHEN** the summary returns `readiness` with null before/after/delta
-- **THEN** the readiness section shows a not-yet-calibrated message rather than a percentage change
+- **WHEN** the summary renders
+- **THEN** the readiness-change bar shows a gradient fill and directional arrow
+- **AND** the header timestamp is a right-aligned "Today at h:mm A" label and the Drill-my-misses CTA shows its leading icon
 
 ### Requirement: Drill-my-misses starts a targeted session or reports no misses
 

@@ -24,97 +24,37 @@ The web app SHALL expose a Progress page scoped to a single `UserCertification`,
 
 ### Requirement: Activity stat summary row
 
-The Progress page SHALL render a four-card activity summary at the top of the page — **Sessions**, **Questions answered**, **Study time**, and **Current streak** — matching `openspec/design/Progress.html`. The current page renders only two cards (Sessions, Questions); this requirement establishes the full four-card row.
+The progress page SHALL show the activity stat summary — Sessions, Questions answered, Study time, Current streak — under an uppercase **"This month"** section label, with each stat rendered in its own bordered surface card (matching `openspec/design/Progress.html`), not four values sharing a single container. Section headers on the page SHALL show a live count next to the label (e.g. "10 sessions", "Last 6 sessions", "N sessions total"). The page content SHALL use the manifest **`standard`** content width (centered, ~1100px), not a `max-w-[720px]` column.
 
-Because the API exposes no aggregate activity endpoint, every value SHALL be derived client-side from data already loaded for the page (the session list from `sessionsControllerList` filtered by `certificationId`, and the completed-session summaries from `sessionSummaryControllerSummary`), within the same bounded fan-out the page already performs over the most recent sessions page — no backend change and no new endpoint. Specifically:
+#### Scenario: Activity stats render under "This month" as bordered cards
 
-- **Sessions** — the count of the user's sessions for the enrollment.
-- **Questions answered** — the sum of each completed-session summary's `questionsAnswered`.
-- **Study time** — the sum of each session's `durationMinutes` (exposed on `SessionResponse`), rendered in a compact `h`/`m` form (e.g. "6h 12m", "58m").
-- **Current streak** — the number of consecutive days, ending on the most recent active day, on which at least one session was started, derived from each session's `startedAt` timestamp; rendered with a **singular-aware** day unit ("1 day", "2 days") from the shared singular-aware unit helper — the unit MUST NOT be hardcoded as "days".
-
-The Questions answered / Study time / Current streak cards SHALL always be present in the row (showing a zero/empty value such as "0" or "0m" when there is no data yet), rather than being conditionally hidden.
-
-#### Scenario: Four cards render with derived values
-
-- **WHEN** an enrollment has completed sessions with summaries
-- **THEN** the stat row renders four cards labelled "Sessions", "Questions answered", "Study time", and "Current streak"
-- **THEN** Sessions shows the session count, Questions answered shows the summed `questionsAnswered` across completed-session summaries, Study time shows the summed `durationMinutes` in `h`/`m` form, and Current streak shows the consecutive-day count derived from session `startedAt` dates
-
-#### Scenario: Current streak uses the singular unit form for one day
-
-- **WHEN** the enrollment's current streak is a single day (one session started on the most recent active day)
-- **THEN** the Current streak card reads "1 day" (singular), not "1 days"
-- **AND** a two-day streak reads "2 days"
-
-#### Scenario: Study time and current streak are derived client-side
-
-- **WHEN** the read model exposes no dedicated study-time total or streak field
-- **THEN** Study time is computed by summing the exposed per-session `durationMinutes` and Current streak by counting consecutive days with at least one session `startedAt`
-- **THEN** no backend endpoint or field is assumed beyond the session list and summaries already loaded
-
-#### Scenario: Early enrollment with no completed sessions
-
-- **WHEN** the enrollment has no completed sessions yet
-- **THEN** all four cards are still present, with Questions answered, Study time, and Current streak showing zero/empty values rather than being omitted
+- **WHEN** the progress page renders its activity summary
+- **THEN** the stats appear under a "This month" section label, each in its own bordered surface card
+- **AND** the page content uses the standard content width, not a 720px column
 
 ### Requirement: Readiness-over-time and accuracy trend
 
-The Progress page SHALL render a passive readiness-over-time line and a historical quiz-accuracy chart **composed into one surface card** matching `openspec/design/Progress.html` — the readiness line on top, a divider, and the accuracy bars below — rather than two side-by-side cards. The readiness portion SHALL render an **80% target line** (a dashed reference marker at the readiness target). Because no time-series endpoint exists, both series SHALL be derived client-side from completed-session summaries (`sessionSummaryControllerSummary.readiness.after` and `.accuracy`) ordered chronologically, in a co-located unit-tested composable. The current readiness value SHALL come from `readinessControllerRead`.
+The progress page SHALL show the readiness-over-time chart and the accuracy trend under the section labels **"Readiness over time"** and (for domains) **"Domain scores"**, matching `openspec/design/Progress.html`. The readiness chart SHALL render X-axis date labels (first / middle / last session), an area fill under the line, and — when trajectory data exists — a dashed projection segment from the last point toward the target. The accuracy trend SHALL show the numeric percentage only on the most recent (last) bar and a short date caption beneath each bar.
 
-The readiness-over-time line SHALL render, matching `openspec/design/Progress.html`, a visible **data point marker per plotted value** (with the most recent point emphasized), **y-axis percentage tick labels**, the **80% target line**, and the **current readiness value as a percentage label** — not a bare polyline. When the enrollment is not yet calibrated, the readiness portion SHALL show a friendly not-yet-calibrated early state — not a flat line with a draggable-looking handle dot that reads as a slider.
+#### Scenario: Readiness chart shows date labels, area fill, and projection
 
-The accuracy chart SHALL render one visible bar per entry in the derived accuracy series (one completed session each), with the most recent session emphasized, matching `openspec/design/Progress.html`. Each bar's drawn height SHALL be proportional to its session `accuracy` and SHALL be visibly non-zero for any positive accuracy (the bar element MUST resolve against a defined chart height, not collapse to zero). When the series is empty, the accuracy portion SHALL show a friendly explicit empty/insufficient-data state — not a bare flat line — distinguishing "no bars because there is genuinely no completed-session accuracy data" from a rendering failure.
+- **WHEN** the readiness-over-time chart renders with history
+- **THEN** it shows first/middle/last X-axis date labels and an area fill under the line
+- **AND** when trajectory data exists it draws a dashed projection segment toward the target
 
-#### Scenario: Readiness and accuracy compose in one surface card with an 80% target
+#### Scenario: Accuracy bars label only the last bar and caption each
 
-- **WHEN** the Progress page renders the readiness and accuracy figures
-- **THEN** they appear composed in a single surface card — readiness line on top, a divider, accuracy bars below — with a visible 80% target line on the readiness portion
-- **AND** they are not rendered as two separate side-by-side cards without a target line
-
-#### Scenario: Calibrated enrollment with completed sessions
-
-- **WHEN** the enrollment is calibrated (`readiness.calibrated === true`, `score` non-null) and has multiple completed sessions with summaries
-- **THEN** the readiness line plots one point per completed session using each summary's `readiness.after`, ending at the current readiness `score`
-- **THEN** the accuracy chart plots one bar per recent completed session using each summary's `accuracy`
-
-#### Scenario: Readiness line renders points, axis ticks, target line, and the current value
-
-- **WHEN** the readiness series has N plotted values for a calibrated enrollment
-- **THEN** the line renders N point markers (one per plotted value) with the most recent point visually emphasized
-- **THEN** y-axis percentage tick labels, the 80% target line, and the current readiness value as a percentage label are rendered
-- **THEN** the readiness figure is not a bare polyline without points/axis/value
-
-#### Scenario: Accuracy bars are drawn for a non-empty series
-
-- **WHEN** the derived accuracy series has N entries with positive `accuracy` values
-- **THEN** the chart renders exactly N bar elements (one per session), each with a visibly non-zero drawn height proportional to its `accuracy`
-- **THEN** the bar for the most recent session is visually emphasized relative to the others
-- **THEN** the empty/insufficient-data state is not shown
-
-#### Scenario: Friendly low-data empty states, not slider-looking flat lines
-
-- **WHEN** the enrollment is not yet calibrated and the accuracy series is empty
-- **THEN** the readiness portion shows a friendly not-yet-calibrated early state and the accuracy portion shows a friendly explicit empty/insufficient-data state
-- **THEN** neither portion renders a flat line with a draggable-looking handle dot or a bare flat line that reads as a rendering failure
-
-#### Scenario: Not-yet-calibrated enrollment
-
-- **WHEN** `readiness.calibrated === false` (equivalently `score === null`)
-- **THEN** the readiness figure renders as "not yet calibrated" via the reused `readinessFormat` helper rather than a misleading percentage
-- **THEN** the trend area shows an early/empty state instead of a fabricated line, points, axis, or value
+- **WHEN** the accuracy trend renders
+- **THEN** only the most recent bar shows its percentage, and each bar has a short date caption beneath it
 
 ### Requirement: Passive readiness trajectory call-out
 
-The page SHALL show the passive trajectory projection only when the backend provides it (`readinessControllerRead` returns `trajectory.weeksToReady`). The call-out SHALL render the fuller copy from `openspec/design/Progress.html` with a trend icon: a recent-pace rate plus the estimated time-to-ready, e.g. "At your recent pace (X% readiness/session avg.), you'll be exam-ready in approximately N weeks." The pace rate is not a dedicated API field; it SHALL be derived client-side from the same readiness series used by the trend chart (the average per-session readiness gain). The text SHALL remain informational — no dates and no reminders. When the projection is not yet estimable, the uncalibrated/insufficient-data branch SHALL show a "Complete at least N sessions to see your pace estimate" hint with no projected weeks and no pace rate.
+The passive readiness trajectory call-out SHALL render at the **bottom of the readiness-over-time section**, directly below the readiness chart and accuracy bars, as a conclusion drawn from the visible trend (matching `openspec/design/Progress.html`) — not at the top of the page before the stats and chart.
 
-#### Scenario: Trajectory available
-- **WHEN** `readinessControllerRead` returns `trajectory: { weeksToReady }` (non-null)
-- **THEN** the call-out renders the fuller copy with a trend icon: the recent-pace rate (derived client-side from the readiness series) and "exam-ready in approximately {weeksToReady} weeks"
+#### Scenario: Trajectory call-out sits below the chart
 
-#### Scenario: Trajectory not yet estimable
-- **WHEN** `trajectory` is null
-- **THEN** the call-out shows the insufficient-data branch ("Complete at least N sessions to see your pace estimate") with no projected weeks and no pace rate shown
+- **WHEN** the progress page renders the trajectory call-out
+- **THEN** it appears at the bottom of the readiness section, after the chart and accuracy bars, not before the stat summary
 
 ### Requirement: Per-domain scores with deltas
 
@@ -130,72 +70,50 @@ The page SHALL list per-domain scores for the certification. It SHALL render one
 
 ### Requirement: Mark a concept or domain as mastered
 
-The page SHALL let the user retire a domain from review and new-material selection via `enrollmentReviewControllerSuppressDomain` (domain scope). Within the review run loop, the user SHALL be able to retire a single concept via `reviewItemsControllerMaster`. The UI SHALL reflect the one-way nature of the backend contract: there is no un-suppress / un-master endpoint.
+The page SHALL let the user retire a domain from review and new-material selection via `enrollmentReviewControllerSuppressDomain` (domain scope). Within the review run loop, the user SHALL be able to retire a single concept via `reviewItemsControllerMaster`. The mastered state SHALL be **derived from fetched data and persist across reloads** — it MUST NOT be a local-only toggle that resets on navigation. A mastered domain SHALL render with the design's treatment (matching `openspec/design/Progress.html`): moved under a "Mastered" divider group, its name struck through, its score bar dimmed, and a "Mastered" pill badge. The UI SHALL reflect the one-way nature of the backend contract: there is no un-suppress / un-master endpoint, so no functional "Unretire" control is offered (the artboard's Unretire control is omitted).
 
-#### Scenario: Mark a domain as mastered from the domain list
-- **WHEN** the user clicks "Mark mastered" on a domain row and confirms
-- **THEN** the app calls `enrollmentReviewControllerSuppressDomain` with that domain
-- **THEN** the affected weak-area/review queries are invalidated and the row reflects the retired state
+#### Scenario: Mastering a domain persists across reloads
 
-#### Scenario: No un-retire affordance is offered when the backend cannot reverse it
-- **WHEN** a domain has been suppressed
-- **THEN** the UI does not present a functional "un-retire" action wired to a non-existent endpoint (any such artboard control is omitted or disabled with explanatory copy)
+- **WHEN** the user marks a domain mastered and confirms
+- **THEN** the app calls `enrollmentReviewControllerSuppressDomain`, invalidates the affected queries, and the domain renders in its mastered (retired) state
+- **AND** after a reload the domain is still shown as mastered (derived from fetched data, not a reset local ref)
+
+#### Scenario: Mastered domain uses the design treatment without an Unretire control
+
+- **WHEN** a mastered domain renders
+- **THEN** it appears under a "Mastered" divider with a struck-through name, dimmed bar, and "Mastered" pill
+- **AND** no functional "Unretire" action is presented (one-way contract)
 
 ### Requirement: Session history table
 
-The page SHALL render a session-history table merging study/review sessions (`sessionsControllerList` filtered by `certificationId`) with mock/diagnostic attempts (`enrollmentMockExamControllerList`), most recent first. The table SHALL render a visible **column-header row** — Date, Type, Duration, Questions, Accuracy, Readiness — matching `openspec/design/Progress.html`; the header row MUST NOT be omitted. Per-session Questions, Accuracy, and Readiness-delta columns — absent from the session list DTO — SHALL be populated from `sessionSummaryControllerSummary` for completed rows on the visible page only (bounded fan-out reusing the `recentSessionSummaries` pattern). Rows without a summary (active/abandoned) SHALL show a "—" for those columns. The Date column SHALL render dates in the design's friendly form (e.g. "Today, Jun 23") rather than a raw locale string (e.g. "7.7.2026").
+The session history table SHALL list the per-cert sessions, and each row SHALL show the date with the session's **start time-of-day** as a secondary line beneath it (e.g. "3:42 PM"), matching `openspec/design/Progress.html`.
 
-#### Scenario: Table renders a column-header row
+#### Scenario: History rows show time-of-day
 
-- **WHEN** the session-history table renders with at least one row
-- **THEN** a column-header row is shown with the headers Date, Type, Duration, Questions, Accuracy, and Readiness
-
-#### Scenario: Completed study session row
-
-- **WHEN** a completed study session is shown
-- **THEN** its row shows a friendly-formatted date (e.g. "Today, Jun 23"), a type pill ("Study"/"Review"), duration, and Questions/Accuracy/Readiness-delta from its summary, with accuracy colour from `statusColor`
-- **AND** the date is not rendered as a raw locale string like "7.7.2026"
-
-#### Scenario: Mock attempt row
-
-- **WHEN** a submitted mock or diagnostic attempt exists
-- **THEN** it appears in the table with a "Mock"/"Diagnostic" type pill, score, and links into the mock review route via the reused `runnerRoutes` helper
-
-#### Scenario: Session with no summary
-
-- **WHEN** a row is an active or abandoned session with no summary
-- **THEN** its Questions/Accuracy/Readiness columns render "—" without blocking the table
+- **WHEN** the session history table renders a row
+- **THEN** the row shows the date and the session start time-of-day as a secondary line
 
 ### Requirement: Five-minute review — queue entry
 
-The review run loop SHALL open on a queue-entry screen driven by `enrollmentReviewControllerQueue`, showing the due count and a per-domain breakdown of due items, with a primary "Start review" action calling `enrollmentReviewControllerStart`.
+The five-minute review queue entry SHALL render as a centered, full-bleed hero (matching `openspec/design/QuickReview.html`) — vertically and horizontally centered in the area below the header, without a bordered/backgrounded card wrapper. It SHALL show a rounded accent-tinted **queue icon** above a plain, standalone due-count headline (not a count embedded in a circular avatar badge), the "items due for review" line, the domain breakdown chips (with no "By domain" section label), and the caption "Scheduled by spaced repetition · ~5 minutes". The `ReviewHeader` timer SHALL be a **live countdown** starting at 5:00 that decrements across the session and enters the urgent (red) state near expiry — not a static default.
 
-The per-domain breakdown SHALL render as **chips** — one chip per distinct due `domain`, each pairing the domain label with its due `count` (an accent-coloured numeric) — matching `openspec/design/QuickReview.html`, not a plain key/value list of rows. The counts SHALL continue to be derived client-side from the queue items' `domain` via the existing `useDueDomainBreakdown` composable (no new API field).
+The queue screen SHALL retain the "Prefer quiz instead?" mode toggle that lets the user choose the self-grade flashcard loop or the quiz + confidence run loop (a speced capability); the artboard depicts only the flashcard loop and does not remove the toggle.
 
-The entry SHALL surface a **single primary "Start review"** affordance that leads into the review flow. The self-grade Again/Hard/Good/Easy rating defined by "Five-minute review run loop" is the in-flow rating revealed on the card — it SHALL NOT be promoted to a second, parallel entry button on the queue-entry screen. The previous separate "Self-grade flashcards" entry button (and its `start-self-grade` affordance on this screen) SHALL be removed so the entry matches the design's single-entry model; selecting between the quiz + confidence path and the self-grade path is a property of the in-flow run loop, not a competing entry CTA.
+#### Scenario: Queue renders as a centered hero with the icon and caption
 
-#### Scenario: Per-domain breakdown renders as chips
+- **WHEN** the five-minute review queue entry renders with items due
+- **THEN** the content is a centered full-bleed hero with the queue icon above a plain due-count headline
+- **AND** the "Scheduled by spaced repetition · ~5 minutes" caption is shown and no "By domain" label precedes the domain chips
 
-- **WHEN** the queue has due items spanning multiple domains
-- **THEN** the breakdown renders one chip per distinct domain, each showing the domain label and its due count
-- **THEN** the breakdown is not rendered as a plain row-per-domain list, and the counts come from the queue items' `domain` (no new API field)
+#### Scenario: Countdown timer ticks down
 
-#### Scenario: Items are due
+- **WHEN** the review session is in progress
+- **THEN** the header timer counts down from 5:00 and enters the urgent state near expiry
 
-- **WHEN** the queue has due items (`meta.dueCount > 0`)
-- **THEN** the entry screen shows the due count and the per-domain breakdown chips derived from the queue items' `domain`
-- **THEN** a single primary "Start review" action calls `enrollmentReviewControllerStart`, which returns `{ status: 'started', session }`, and the loop advances into that `review`-kind session where the self-grade Again/Hard/Good/Easy rating is revealed in-flow on the card
+#### Scenario: Quiz-mode toggle remains available
 
-#### Scenario: No separate self-grade entry button
-
-- **WHEN** the queue-entry screen is shown with due items
-- **THEN** there is no second "Self-grade flashcards" entry button alongside "Start review"
-- **THEN** the only primary entry affordance is the single "Start review" that leads into the flow; the Again/Hard/Good/Easy self-grade is reached as the in-flow revealed-card rating, not as a parallel entry choice
-
-#### Scenario: Nothing due — all caught up
-
-- **WHEN** `enrollmentReviewControllerStart` returns `{ status: 'all_caught_up' }` (or the queue is empty)
-- **THEN** the screen shows an "all caught up" empty state offering a normal study session instead of a review
+- **WHEN** the queue entry renders
+- **THEN** the "Prefer quiz instead?" toggle is shown, offering the self-grade or quiz+confidence run loop
 
 ### Requirement: Five-minute review — question and confidence loop
 

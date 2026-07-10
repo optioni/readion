@@ -6,27 +6,30 @@ Defines the behaviour of the standalone AI chat page (`/agent`) in the `apps/web
 ## Requirements
 ### Requirement: Standalone chat page entry and conversation creation
 
-The system SHALL expose a standalone agent chat page at the `apps/web` route `/agent`, rendered inside the `web-foundation` authenticated app shell with the "Ask AI" sidebar item active. On entering the page with no active conversation, the system SHALL create a standalone conversation via `POST /api/v1/agent-conversations` (`agentControllerCreateStandalone`) and retain the returned conversation `id` for the streaming and hydration calls.
+The web app SHALL expose a standalone `/agent` chat page. The page SHALL present as a **full-height chat shell** (matching `openspec/design/AgentChat.html`): it opts out of the default padded shell via `definePageMeta({ layout })` (the minimal/full-height layout, as the session runner and mock-exam scenes do), pinning the header to the top, letting only the message region scroll, and pinning the composer to the bottom. The message thread SHALL be centered at the manifest `~760px` content width; the page itself MUST NOT scroll as a whole inside default page padding.
 
-The in-page chat header SHALL present the agent's identity to match `openspec/design/AgentChat.html`: a circular **star avatar** followed by the title **"Study assistant"** (not "Ask AI"), with the "General knowledge · no session context" subtitle beneath the title. The header title MUST NOT read "Ask AI".
+User and assistant message bubbles SHALL use the design's color roles: **user bubbles** use the surface background with secondary text, and **assistant bubbles** use the primary background with white text — the app MUST NOT invert these. Each assistant bubble SHALL be preceded by a per-message circular sparkle avatar.
 
-#### Scenario: Page creates a standalone conversation on first load
+The composer SHALL disable/grey the Send button while the textarea is empty and enable it once it has content. The input placeholder SHALL use the ellipsis character ("Ask anything…"). The TTL pill SHALL include a clock icon and the New-chat button a refresh icon.
 
-- **WHEN** an authenticated user navigates to `/agent` and no conversation id is held
-- **THEN** the page issues `POST /api/v1/agent-conversations` exactly once
-- **THEN** the response `data.mode` is `standalone`, `data.studySessionId` is `null`, and `data.certificationId` is `null`
-- **THEN** the returned `data.id` is stored and used as the conversation id for subsequent message and hydration requests
+#### Scenario: Chat renders as a full-height shell
 
-#### Scenario: Header shows the star-avatar "Study assistant" identity
+- **WHEN** the `/agent` page renders
+- **THEN** the header is pinned to the top, only the message region scrolls, and the composer is pinned to the bottom
+- **AND** the thread is centered at the ~760px width and the whole page does not scroll inside default padding
 
-- **WHEN** the `/agent` chat header renders
-- **THEN** a circular star avatar is shown beside the title "Study assistant"
-- **THEN** the header title does not read "Ask AI" and the "General knowledge · no session context" subtitle is present
+#### Scenario: Bubble color roles match the design
 
-#### Scenario: Page requires authentication
+- **WHEN** the thread renders user and assistant messages
+- **THEN** user bubbles use the surface + secondary-text treatment and assistant bubbles use the primary + white treatment (not swapped)
+- **AND** each assistant bubble shows a per-message sparkle avatar
 
-- **WHEN** an unauthenticated visitor requests `/agent`
-- **THEN** the `web-foundation` auth route middleware redirects to the login page and no conversation is created
+#### Scenario: Send button reflects input state
+
+- **WHEN** the composer textarea is empty
+- **THEN** the Send button is disabled/greyed
+- **WHEN** the textarea has content
+- **THEN** the Send button is active
 
 ### Requirement: Hydrating an existing conversation's messages
 
@@ -45,25 +48,17 @@ The system SHALL hydrate prior messages of the active conversation via `GET /api
 
 ### Requirement: Streaming an agent turn over SSE
 
-The system SHALL send a user turn by `POST /api/v1/agent-conversations/:id/messages` with body `{ content }` and consume the `text/event-stream` response with the `useAgentTurnStream` fetch-reader composable. It SHALL append the user message immediately, append an assistant message that accumulates `text-delta` events, show a streaming cursor on the in-flight assistant message until the stream ends (`[DONE]`), and disable the send control while a turn is streaming.
+The standalone chat SHALL stream an agent turn over SSE, appending tokens to the in-progress assistant message. During streaming a blinking cursor SHALL render **inline at the end of the last paragraph** of the streaming assistant bubble, colored white-on-primary (matching `openspec/design/AgentChat.html`) — not as a separate muted block rendered after the whole message list. On completion the assistant turn SHALL render as discrete paragraphs (the stored turn is split for presentation); persistence of the turn is unchanged.
 
-#### Scenario: Assistant response streams token by token
+#### Scenario: Streaming cursor renders inline in the assistant bubble
 
-- **WHEN** the user submits a non-empty message and the SSE response emits a sequence of `text-delta` events followed by `[DONE]`
-- **THEN** the user message bubble appears immediately with the submitted text
-- **THEN** an assistant bubble is appended whose text grows as each `text-delta` is applied
-- **THEN** a streaming cursor is shown on the assistant bubble while the stream is open and removed once `[DONE]` is received
-- **THEN** the send control is disabled while streaming and re-enabled after the stream completes
+- **WHEN** an agent turn is streaming
+- **THEN** the cursor blinks inline at the end of the last paragraph inside the primary-colored assistant bubble (white), not as a muted sibling block after the list
 
-#### Scenario: Empty input is not sent
+#### Scenario: Completed assistant turn renders as paragraphs
 
-- **WHEN** the input is empty or whitespace-only and the user activates send
-- **THEN** no `POST /api/v1/agent-conversations/:id/messages` request is made
-
-#### Scenario: Stream error is rendered on the assistant message
-
-- **WHEN** the SSE stream emits an `error` event or the request fails with a non-OK status
-- **THEN** the error text is rendered on the in-flight assistant message and the send control is re-enabled
+- **WHEN** a multi-paragraph assistant turn has finished streaming
+- **THEN** it renders as discrete paragraphs with spacing, not one pre-wrapped block
 
 ### Requirement: No tool cards and no citations in standalone chat
 

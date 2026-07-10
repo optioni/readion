@@ -1,9 +1,7 @@
 ## Purpose
 
 Governs the web onboarding flow that a new authenticated user traverses before reaching the dashboard. Covers the first-run entry gate, certification selection, session-preference defaults, enrollment, and the diagnostic offer/re-prompt lifecycle.
-
 ## Requirements
-
 ### Requirement: First-run onboarding entry gate
 
 The web app SHALL route an authenticated user to the onboarding flow (`/onboarding`) on first run when they have no active certification enrollment and at least one live certification exists. A user who already has an active enrollment SHALL NOT be able to remain in the onboarding flow.
@@ -36,29 +34,42 @@ When `GET /certifications` returns an empty list, the onboarding flow SHALL NOT 
 
 ### Requirement: Certification selection step
 
-The onboarding cert-select step SHALL list the certifications returned by `GET /certifications` (live certs only, as the API already filters by `state: "live"`), showing each certification's name and provider, and SHALL let the user select exactly one to continue.
+The onboarding cert-select step SHALL list the certifications returned by `GET /certifications` (live certs only, as the API already filters by `state: "live"`), and SHALL let the user select exactly one to continue.
 
-The step SHALL render a certification **search box** above the list (matching `openspec/design/Onboarding.html` step 1). Typing in the search box SHALL filter the already-loaded catalog client-side — no additional request is issued — matching against each certification's name, provider, and code (case-insensitive). When the query matches no certification the list SHALL show an empty result rather than the full catalog. Clearing the query SHALL restore the full list.
+The list SHALL be **grouped by provider/vendor** (matching `openspec/design/Onboarding.html` step 1): certifications are bucketed under an uppercase vendor group header (e.g. "Amazon Web Services", "Google Cloud", "Microsoft Azure"), and each row shows the certification `name` and a `code` badge — the provider is conveyed by the group header rather than repeated inline on each row. Groups render in a stable order, and a group with no rows matching the active search is hidden.
+
+The step SHALL render a certification **search box** above the list with a leading magnifying-glass icon and a right-aligned "N available" count suffix reflecting the total number of loaded certifications. Typing in the search box SHALL filter the already-loaded catalog client-side — no additional request is issued — matching against each certification's name, provider, and code (case-insensitive). When the query matches no certification the list SHALL show an empty result rather than the full catalog; clearing the query SHALL restore the full grouped list.
+
+The step footer SHALL present the Continue action separated from the list by a top-border divider with the design's spacing, right-aligned, labeled "Continue →". Continue SHALL remain disabled until a certification is selected.
+
+#### Scenario: Certs are grouped by vendor
+
+- **WHEN** the cert-select step renders with certifications from `GET /certifications`
+- **THEN** certifications are grouped under uppercase vendor/provider headers
+- **THEN** each row shows the certification name and a code badge, with the provider shown as the group header (not repeated per row)
 
 #### Scenario: User selects a certification
 
-- **WHEN** the cert-select step renders with certifications from `GET /certifications`
-- **THEN** each option displays the certification `name` and `provider`
 - **WHEN** the user selects one certification and advances
 - **THEN** the chosen `certificationId` is carried into the default-preferences step
 
 #### Scenario: Continue is disabled until a certification is chosen
 
 - **WHEN** no certification is selected
-- **THEN** the control to advance to the preferences step is disabled
+- **THEN** the footer Continue action (labeled "Continue →", separated by a top-border divider) is disabled
 
-#### Scenario: Search filters the catalog client-side
+#### Scenario: Search filters the catalog client-side across groups
 
 - **WHEN** the user types a query into the cert search box
-- **THEN** only certifications whose name, provider, or code matches the query (case-insensitive) remain visible
+- **THEN** only certifications whose name, provider, or code matches the query (case-insensitive) remain visible, and groups with no remaining rows are hidden
 - **THEN** no additional `GET /certifications` request is issued to perform the filtering
 - **WHEN** the user clears the query
-- **THEN** the full live-cert list is shown again
+- **THEN** the full grouped live-cert list is shown again
+
+#### Scenario: Search box shows a count and icon
+
+- **WHEN** the cert-select step renders
+- **THEN** the search box shows a leading magnifying-glass icon and a right-aligned "N available" suffix reflecting the total loaded certification count
 
 ### Requirement: Onboarding presents as a standalone flow without the global app chrome
 
@@ -150,3 +161,4 @@ A dismissible diagnostic re-prompt nudge SHALL be shown on the dashboard for an 
 
 - **WHEN** the user chooses Take on the re-prompt nudge
 - **THEN** the app calls `POST /user-certifications/:id/diagnostic` and navigates into the mock-exam runner for the returned diagnostic attempt
+

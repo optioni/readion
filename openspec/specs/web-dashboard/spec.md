@@ -6,27 +6,22 @@ Defines the authenticated home dashboard that surfaces a user's active certifica
 ## Requirements
 ### Requirement: Dashboard renders enrolled certifications as a vertical list
 
-The web app SHALL provide an authenticated dashboard at the app home that fetches the user's active enrollments via `GET /api/v1/user-certifications?status=active` and renders one card per enrollment in a single vertical list. Each card MUST display the certification name and provider, resolved from `GET /api/v1/certifications` by the enrollment's `certificationId` (the enrollment row carries `certificationId` only). When the user has no active enrollments, the dashboard MUST render an empty state with an add-certification entry instead of an empty list.
+The dashboard SHALL render the user's active enrollments as a vertical list of certification cards within a content column set to the manifest **`standard`** content width (centered, ~1100px, matching `openspec/design/Dashboard.html`) — it MUST NOT constrain the column to the narrower `max-w-[720px]` width. Each card's title block SHALL show the certification name, provider, and a monospace **code pill** (e.g. "SAA-C03") on an elevated background beside the provider. Within a card, the weak-areas, recent-sessions, and review sections SHALL render as full-width sections separated by 1px hairline dividers directly on the card background — not as boxed `CardPanel` containers in a two-column grid. Recent sessions SHALL use the design's multi-column split (equal-width columns with vertical rules). Quick-start button copy SHALL be sentence case — "Mock exam" and "5-min review" — and the review button SHALL include the design's leading play icon.
 
-The list SHALL be introduced by the shared **PageHeader** (matching `openspec/design/Dashboard.html` and `openspec/design/App Shell.html`): an eyebrow reading "DASHBOARD", an h1 reading "Your certifications", and a right-aligned active-count indicator ("N active") accompanied by a green status dot. The PageHeader MUST be the shared component, not bespoke per-page header markup.
+#### Scenario: Dashboard uses the standard content width
 
-#### Scenario: Enrolled certifications appear as cards
+- **WHEN** the dashboard renders its cert cards
+- **THEN** the content column uses the standard (~1100px centered) width, not a 720px-capped column
 
-- **WHEN** an authenticated user with two active enrollments opens the dashboard
-- **THEN** two certification cards are rendered, each showing its certification name and provider
-- **AND** an "+ Add certification" entry is shown at the bottom of the list
+#### Scenario: Card shows the certification code pill
 
-#### Scenario: No enrollments shows an empty state
+- **WHEN** a cert card renders its title block
+- **THEN** a monospace code pill (e.g. "SAA-C03") is shown beside the provider
 
-- **WHEN** an authenticated user with zero active enrollments opens the dashboard
-- **THEN** an empty state is shown with an add-certification call to action
-- **AND** no certification card is rendered
+#### Scenario: Card sections are flat and hairline-divided
 
-#### Scenario: Shared PageHeader introduces the list
-
-- **WHEN** an authenticated user with two active enrollments opens the dashboard
-- **THEN** the shared PageHeader renders with the eyebrow "DASHBOARD" and the h1 "Your certifications"
-- **AND** a right-aligned "2 active" indicator with a green status dot is shown
+- **WHEN** a card renders its weak-areas, recent-sessions, and review sections
+- **THEN** the sections are full-width and separated by hairline dividers on the card background, not boxed panels in a two-column grid
 
 ### Requirement: Lowest-readiness cert gets the hero treatment and the list is sorted by readiness
 
@@ -58,17 +53,18 @@ The hero card's visual hierarchy MUST match `openspec/design/Dashboard.html`: th
 
 ### Requirement: Each card shows readiness with calibration state and delta
 
-Each certification card SHALL display its exam readiness. When `GET /api/v1/user-certifications/:id/readiness` returns `calibrated: true`, the card MUST show the score as a percentage and, when a prior completed session exists, the change since the last session derived from that session's `GET /api/v1/sessions/:id/summary` (`readiness.delta`). When `calibrated` is `false` (equivalently `readinessScore` is `null`), the card MUST show "not yet calibrated" instead of a percentage and MUST NOT show a delta. No per-cert exam-date countdown is shown (no such field exists in the backend contract).
+Each certification card SHALL show the readiness percentage with its calibration state and the session-over-session delta, matching `openspec/design/Dashboard.html`. Beneath the readiness percentage the card SHALL render a **ReadinessBar** — a thin rounded progress track filled to the readiness percentage. On the hero (gradient) card the track uses the white-translucent hero treatment; on standard cards it uses the status color for the readiness band. An uncalibrated (not-assessed) readiness renders the track empty with the "—" state, not a zero-filled bar.
 
-#### Scenario: Calibrated readiness shows percentage and delta
+#### Scenario: Readiness bar reflects the score on each card
 
-- **WHEN** an enrollment's readiness is calibrated at 75% and its last completed session's summary reports a readiness delta of +3
-- **THEN** the card shows "75%" and a "+3% since last session" indicator
+- **WHEN** a cert card renders with a readiness percentage
+- **THEN** a ReadinessBar track is shown filled to that percentage beneath the number
+- **AND** the hero card's track uses the white-translucent treatment while standard cards use the readiness-band status color
 
-#### Scenario: Uncalibrated readiness shows the calibration message
+#### Scenario: Not-assessed readiness renders an empty track
 
-- **WHEN** an enrollment's readiness is not yet calibrated
-- **THEN** the card shows "not yet calibrated" and no readiness percentage or delta
+- **WHEN** a card's readiness is uncalibrated ("—")
+- **THEN** the ReadinessBar renders empty rather than as a zero-filled status bar
 
 ### Requirement: Each card shows top weak areas with status-coloured scores
 
