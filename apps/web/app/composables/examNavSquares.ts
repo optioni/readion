@@ -2,7 +2,13 @@ export type ExamNavMode = 'preparing' | 'active' | 'review'
 
 export type ReviewOutcome = 'correct' | 'incorrect' | 'skipped'
 
-export type NavSquareState = 'ready' | 'answered' | 'current' | 'unanswered' | ReviewOutcome
+export type NavSquareState =
+  | 'ready'
+  | 'answered'
+  | 'current'
+  | 'unanswered'
+  | 'flagged'
+  | ReviewOutcome
 
 export interface NavSquare {
   index: number
@@ -16,6 +22,7 @@ export interface ExamNavSquaresInput {
   readyCount?: number
   currentIndex?: number
   answeredIndices?: Iterable<number>
+  flaggedIndices?: Iterable<number>
   outcomes?: ReviewOutcome[]
 }
 
@@ -33,6 +40,7 @@ export function buildExamNavSquares(input: ExamNavSquaresInput): NavSquare[] {
   }
 
   const answered = new Set(input.answeredIndices ?? [])
+  const flagged = new Set(input.flaggedIndices ?? [])
   return Array.from({ length: input.total }, (_, index) => {
     let state: NavSquareState = 'unanswered'
     // Answered wins over current: a question keeps its answered marker even while it is the one on
@@ -41,6 +49,11 @@ export function buildExamNavSquares(input: ExamNavSquaresInput): NavSquare[] {
       state = 'answered'
     } else if (index === input.currentIndex) {
       state = 'current'
+    }
+    // Flagged wins over everything else: a flagged question renders as "Flagged" in the nav grid
+    // regardless of whether it's also answered or the one currently displayed.
+    if (flagged.has(index)) {
+      state = 'flagged'
     }
     return { index, label: index + 1, state }
   })

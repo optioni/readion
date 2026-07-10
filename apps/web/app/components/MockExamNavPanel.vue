@@ -13,6 +13,7 @@ const props = defineProps<{
   readyCount?: number
   currentIndex?: number
   answeredIndices?: number[] | Set<number>
+  flaggedIndices?: number[] | Set<number>
   outcomes?: ReviewOutcome[]
 }>()
 
@@ -24,6 +25,10 @@ const answeredSet = computed<Set<number>>(() =>
     : new Set(props.answeredIndices ?? []),
 )
 
+const flaggedSet = computed<Set<number>>(() =>
+  props.flaggedIndices instanceof Set ? props.flaggedIndices : new Set(props.flaggedIndices ?? []),
+)
+
 const squares = computed(() =>
   buildExamNavSquares({
     mode: props.mode,
@@ -31,6 +36,7 @@ const squares = computed(() =>
     readyCount: props.readyCount,
     currentIndex: props.currentIndex,
     answeredIndices: answeredSet.value,
+    flaggedIndices: flaggedSet.value,
     outcomes: props.outcomes,
   }),
 )
@@ -41,6 +47,7 @@ const squareClass: Record<NavSquareState, string> = {
   unanswered: 'border-readion-border-strong bg-readion-background-surface text-readion-text-muted',
   answered: 'border-readion-primary bg-readion-primary text-white',
   current: 'border-readion-accent-label bg-readion-background-surface text-readion-accent-label',
+  flagged: 'border-readion-status-warning bg-readion-status-warning/10 text-readion-status-warning',
   correct: `${statusBorderColorClass('good')} bg-readion-status-good/15 ${statusTextColorClass('good')}`,
   incorrect: `${statusBorderColorClass('poor')} bg-readion-status-poor/15 ${statusTextColorClass('poor')}`,
   skipped: 'border-readion-border-default bg-readion-background-surface text-readion-text-subtle',
@@ -69,7 +76,7 @@ const legend = computed<{ label: string; swatch: string }[]>(() =>
       ]
     : [
         { label: 'Answered', swatch: 'bg-readion-primary' },
-        { label: 'Current', swatch: 'bg-readion-accent-label' },
+        { label: 'Flagged', swatch: 'bg-readion-status-warning' },
       ],
 )
 </script>

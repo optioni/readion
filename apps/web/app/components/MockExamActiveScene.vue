@@ -57,6 +57,22 @@ const lastIndex = computed<number>(() => Math.max(props.exam.questions.length - 
 
 const currentQuestion = computed(() => props.exam.questions[currentIndex.value])
 
+// Session-scoped only — there is no flag field or endpoint in the mock-exam contract, so it is
+// lost on reload. Keyed by index so each question's flag state is independent of which question
+// is currently displayed.
+const flaggedIndices = ref<Set<number>>(new Set())
+const currentFlagged = computed<boolean>(() => flaggedIndices.value.has(currentIndex.value))
+
+function toggleFlag(): void {
+  const next = new Set(flaggedIndices.value)
+  if (next.has(currentIndex.value)) {
+    next.delete(currentIndex.value)
+  } else {
+    next.add(currentIndex.value)
+  }
+  flaggedIndices.value = next
+}
+
 function optionStateFor(option: string): QuizOptionState {
   return optionRevealState(option, answerFor(currentIndex.value))
 }
@@ -88,6 +104,8 @@ function goNext(): void {
       :timer="remaining"
       :paused="paused"
       :urgent="urgent"
+      :flagged="currentFlagged"
+      @toggle-flag="toggleFlag"
     />
 
     <div class="flex min-h-0 flex-1 overflow-hidden">
@@ -155,6 +173,7 @@ function goNext(): void {
         :total="exam.questions.length"
         :current-index="currentIndex"
         :answered-indices="answeredIndices"
+        :flagged-indices="flaggedIndices"
         @navigate="(index) => (currentIndex = index)"
         @submit="requestSubmit"
       />

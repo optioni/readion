@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import MockExamSceneRouter from '~/components/MockExamSceneRouter.vue'
 import { useMockExamAttempt } from '~/composables/useMockExamAttempt'
 
-definePageMeta({ layout: 'minimal' })
+definePageMeta({ layout: false })
 
 const route = useRoute()
 const examId = computed(() => String(route.params.id))
@@ -12,7 +12,7 @@ const { exam, isLoading, isError } = useMockExamAttempt(examId.value)
 </script>
 
 <template>
-  <div class="flex min-h-0 flex-1 flex-col">
+  <div class="flex h-screen min-h-0 flex-col">
     <div
       v-if="isLoading && !exam"
       data-testid="mock-exam-loading"
