@@ -545,6 +545,9 @@ export function mockAdmin(
   mock(page, new RegExp(`/api/v1/admin/content-sources/${UUID}/jobs$`), async (route) => {
     const id = pathSegment(route, 5)
     if (activeIngestion && id === SOURCE_ENABLED_ID) {
+      // IngestionJobStatusDto's timestamp/processedOn/finishedOn are epoch-ms numbers (BullMQ
+      // convention), not ISO strings — the ETA estimate (estimateJobEta.ts) does `now -
+      // processedOn` arithmetic against this field, so it must be a real number.
       await fulfilJson(route, 200, {
         data: [
           {
@@ -553,8 +556,8 @@ export function mockAdmin(
             progress: 72,
             attemptsMade: 1,
             failedReason: null,
-            timestamp: '2026-06-25T07:55:00.000Z',
-            processedOn: '2026-06-25T07:56:00.000Z',
+            timestamp: Date.now() - 60_000,
+            processedOn: Date.now() - 60_000,
             finishedOn: null,
           },
         ],
@@ -569,9 +572,9 @@ export function mockAdmin(
           progress: 100,
           attemptsMade: 1,
           failedReason: null,
-          timestamp: '2026-06-25T07:55:00.000Z',
-          processedOn: '2026-06-25T07:56:00.000Z',
-          finishedOn: '2026-06-25T08:00:00.000Z',
+          timestamp: new Date('2026-06-25T07:55:00.000Z').getTime(),
+          processedOn: new Date('2026-06-25T07:56:00.000Z').getTime(),
+          finishedOn: new Date('2026-06-25T08:00:00.000Z').getTime(),
         },
       ],
     })
