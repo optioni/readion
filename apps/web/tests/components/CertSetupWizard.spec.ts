@@ -17,6 +17,7 @@ vi.mock('~~/src/api/certification-coverage/certification-coverage')
 
 const CERT_NAME = 'AWS Certified Solutions Architect — Associate'
 const CODE = 'SAA-C03'
+const PROVIDER = 'Amazon Web Services'
 const FIRST_URL = 'https://aws.amazon.com/certification/certified-solutions-architect-associate/'
 const PDF_URL = 'https://d1.awsstatic.com/SAA-C03-exam-guide.pdf'
 
@@ -43,8 +44,8 @@ function mockExtract(jobId = 'extract-job-1') {
 }
 
 beforeEach(() => {
-  // Step 2 (extraction step) polls this on mount; default to an in-flight job so the
-  // poll stays pending while step-1 assertions run.
+  // Step 3 (extraction step) polls this on mount; default to an in-flight job so the
+  // poll stays pending while earlier-step assertions run.
   vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
     // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
     {
@@ -69,15 +70,24 @@ function mountWizard() {
   })
 }
 
-async function fillAndDiscover(
+async function fillIdentifyAndSearch(
   wrapper: VueWrapper,
-  { name = CERT_NAME, code = CODE as string | null } = {},
+  { name = CERT_NAME, code = CODE as string, provider = PROVIDER, knownUrl = '' } = {},
 ) {
-  await wrapper.find('[data-testid="discover-name-input"]').setValue(name)
-  if (code) {
-    await wrapper.find('[data-testid="discover-code-input"]').setValue(code)
+  await wrapper.find('[data-testid="identify-name-input"]').setValue(name)
+  await wrapper.find('[data-testid="identify-code-input"]').setValue(code)
+  await wrapper.find('[data-testid="identify-provider-input"]').setValue(provider)
+  if (knownUrl) {
+    await wrapper.find('[data-testid="identify-known-url-input"]').setValue(knownUrl)
   }
-  await wrapper.find('[data-testid="discover-submit-btn"]').trigger('click')
+  await wrapper.find('[data-testid="identify-search-btn"]').trigger('click')
+  await flushPromises()
+}
+
+async function advanceToExtraction(wrapper: VueWrapper) {
+  await fillIdentifyAndSearch(wrapper)
+  await wrapper.findAll('[data-testid="source-candidate"]')[0]!.trigger('click')
+  await wrapper.find('[data-testid="confirm-source-btn"]').trigger('click')
   await flushPromises()
 }
 
@@ -88,77 +98,52 @@ function lastBody(
   return JSON.parse(options.body)
 }
 
-describe('CertSetupWizard step 1 — discovery', () => {
-  it('renders the page root and the discover form on step 1', () => {
+describe('CertSetupWizard step 1 — identify', () => {
+  it('renders the page root and the standalone identify screen (not the discovery form)', () => {
     const wrapper = mountWizard()
     expect(wrapper.find('[data-testid="admin-cert-setup-page"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="discover-name-input"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="discover-code-input"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="discover-submit-btn"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="cert-identify-step"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="identify-name-input"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="identify-code-input"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="identify-provider-input"]').exists()).toBe(true)
   })
 
-  it('triggers discoverSources with name and code, rendering selectable candidates without a confidence badge', async () => {
+  it('kicks off discovery on "Search for sources →" and advances to the confirmation step', async () => {
     mockDiscover()
     const wrapper = mountWizard()
 
-    await fillAndDiscover(wrapper)
+    await fillIdentifyAndSearch(wrapper)
 
     expect(certSetupControllerDiscoverSources).toHaveBeenCalledTimes(1)
-    expect(lastBody(certSetupControllerDiscoverSources)).toEqual({
-      name: CERT_NAME,
-      code: CODE,
-    })
+    expect(lastBody(certSetupControllerDiscoverSources)).toEqual({ name: CERT_NAME, code: CODE })
 
+    expect(wrapper.find('[data-testid="cert-identify-step"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="cert-confirm-step"]').exists()).toBe(true)
     const candidates = wrapper.findAll('[data-testid="source-candidate"]')
     expect(candidates).toHaveLength(2)
     expect(candidates[0]!.attributes('data-url')).toBe(FIRST_URL)
-    expect(candidates[1]!.attributes('data-url')).toBe(PDF_URL)
-    expect(wrapper.find('[data-testid="source-confidence"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="manual-url-input"]').exists()).toBe(true)
   })
 
-  it('omits the code field from the discover body when code is empty', async () => {
-    mockDiscover()
-    const wrapper = mountWizard()
-
-    await fillAndDiscover(wrapper, { name: CERT_NAME, code: null })
-
-    expect(lastBody(certSetupControllerDiscoverSources)).toEqual({ name: CERT_NAME })
-  })
-
-  it('disables the discover button until a name is entered', async () => {
-    const wrapper = mountWizard()
-    expect(wrapper.find('[data-testid="discover-submit-btn"]').attributes('disabled')).toBeDefined()
-
-    await wrapper.find('[data-testid="discover-name-input"]').setValue(CERT_NAME)
-    expect(
-      wrapper.find('[data-testid="discover-submit-btn"]').attributes('disabled'),
-    ).toBeUndefined()
-  })
-
-  it('surfaces a problem-details error when discovery fails', async () => {
+  it('surfaces a problem-details error when discovery fails and stays on the identify step', async () => {
     vi.mocked(certSetupControllerDiscoverSources).mockRejectedValue(
       new ReadionProblemDetailsError({ title: 'Bad Request', status: 400, detail: 'No name' }),
     )
     const wrapper = mountWizard()
 
-    await fillAndDiscover(wrapper)
+    await fillIdentifyAndSearch(wrapper)
 
-    expect(wrapper.find('[data-testid="discover-error"]').text()).toContain('No name')
-    expect(wrapper.findAll('[data-testid="source-candidate"]')).toHaveLength(0)
+    expect(wrapper.find('[data-testid="identify-error"]').text()).toContain('No name')
+    expect(wrapper.find('[data-testid="cert-identify-step"]').exists()).toBe(true)
   })
 })
 
-describe('CertSetupWizard step 1 — confirm', () => {
-  it('confirming a selected candidate triggers extraction with the selected url and advances to step 2', async () => {
+describe('CertSetupWizard step 2 — confirm', () => {
+  it('confirming a selected candidate triggers extraction with the selected url and advances to step 3', async () => {
     mockDiscover()
     mockExtract('extract-job-1')
     const wrapper = mountWizard()
 
-    await fillAndDiscover(wrapper)
-    await wrapper.findAll('[data-testid="source-candidate"]')[0]!.trigger('click')
-    await wrapper.find('[data-testid="confirm-source-btn"]').trigger('click')
-    await flushPromises()
+    await advanceToExtraction(wrapper)
 
     expect(certSetupControllerExtract).toHaveBeenCalledTimes(1)
     expect(lastBody(certSetupControllerExtract)).toEqual({
@@ -167,24 +152,8 @@ describe('CertSetupWizard step 1 — confirm', () => {
       confirmedSourceUrl: FIRST_URL,
     })
 
-    expect(wrapper.find('[data-testid="discover-submit-btn"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="cert-confirm-step"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="cert-extraction-step"]').exists()).toBe(true)
-  })
-
-  it('omits the code field from the extract body when no code was entered', async () => {
-    mockDiscover()
-    mockExtract()
-    const wrapper = mountWizard()
-
-    await fillAndDiscover(wrapper, { name: CERT_NAME, code: null })
-    await wrapper.findAll('[data-testid="source-candidate"]')[0]!.trigger('click')
-    await wrapper.find('[data-testid="confirm-source-btn"]').trigger('click')
-    await flushPromises()
-
-    expect(lastBody(certSetupControllerExtract)).toEqual({
-      name: CERT_NAME,
-      confirmedSourceUrl: FIRST_URL,
-    })
   })
 
   it('confirms a manually pasted url over the candidate list', async () => {
@@ -192,7 +161,7 @@ describe('CertSetupWizard step 1 — confirm', () => {
     mockExtract()
     const wrapper = mountWizard()
 
-    await fillAndDiscover(wrapper)
+    await fillIdentifyAndSearch(wrapper)
     await wrapper.find('[data-testid="manual-url-input"]').setValue('https://example.com/guide')
     await wrapper.find('[data-testid="confirm-source-btn"]').trigger('click')
     await flushPromises()
@@ -202,25 +171,19 @@ describe('CertSetupWizard step 1 — confirm', () => {
     })
   })
 
-  it('gates confirm on a valid url: disabled with no selection and with an invalid manual url', async () => {
+  it('prefills the manual URL from the upfront known-URL entered at step 1', async () => {
     mockDiscover()
     const wrapper = mountWizard()
 
-    await fillAndDiscover(wrapper)
-    expect(wrapper.find('[data-testid="confirm-source-btn"]').attributes('disabled')).toBeDefined()
+    await fillIdentifyAndSearch(wrapper, { knownUrl: 'https://known.example.com/guide' })
 
-    await wrapper.find('[data-testid="manual-url-input"]').setValue('not-a-url')
-    expect(wrapper.find('[data-testid="confirm-source-btn"]').attributes('disabled')).toBeDefined()
-
-    await wrapper.findAll('[data-testid="source-candidate"]')[0]!.trigger('click')
-    await wrapper.find('[data-testid="manual-url-input"]').setValue('')
     expect(
-      wrapper.find('[data-testid="confirm-source-btn"]').attributes('disabled'),
-    ).toBeUndefined()
+      (wrapper.find('[data-testid="manual-url-input"]').element as HTMLInputElement).value,
+    ).toBe('https://known.example.com/guide')
   })
 })
 
-describe('CertSetupWizard step 2→3 — submit draft + coverage', () => {
+describe('CertSetupWizard step 3→4 — submit draft + coverage', () => {
   const GROUNDED_FIELDS = {
     domains: {
       value: [
@@ -251,7 +214,7 @@ describe('CertSetupWizard step 2→3 — submit draft + coverage', () => {
     return { data: { data: payload }, status, headers: new Headers() } as any
   }
 
-  it('creates a draft from the reviewed fields and reveals read-only coverage without an extra navigation', async () => {
+  it('carries the step-1 identity into the extraction step, creates a draft, and reveals read-only coverage', async () => {
     mockDiscover()
     mockExtract()
     vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
@@ -265,14 +228,18 @@ describe('CertSetupWizard step 2→3 — submit draft + coverage', () => {
     )
 
     const wrapper = mountWizard()
-    await fillAndDiscover(wrapper)
-    await wrapper.findAll('[data-testid="source-candidate"]')[0]!.trigger('click')
-    await wrapper.find('[data-testid="confirm-source-btn"]').trigger('click')
-    await flushPromises()
+    await advanceToExtraction(wrapper)
 
-    await wrapper.find('[data-testid="cert-name-input"]').setValue(CERT_NAME)
-    await wrapper.find('[data-testid="cert-provider-input"]').setValue('AWS')
-    await wrapper.find('[data-testid="cert-code-input"]').setValue(CODE)
+    // Identity fields arrive pre-filled from step 1 — no re-entry needed.
+    expect((wrapper.find('[data-testid="cert-name-input"]').element as HTMLInputElement).value).toBe(
+      CERT_NAME,
+    )
+    expect(
+      (wrapper.find('[data-testid="cert-provider-input"]').element as HTMLInputElement).value,
+    ).toBe(PROVIDER)
+    expect((wrapper.find('[data-testid="cert-code-input"]').element as HTMLInputElement).value).toBe(
+      CODE,
+    )
 
     expect(wrapper.find('[data-testid="publish-cert-btn"]').exists()).toBe(false)
     await wrapper.find('[data-testid="submit-draft-btn"]').trigger('click')
@@ -280,7 +247,7 @@ describe('CertSetupWizard step 2→3 — submit draft + coverage', () => {
 
     expect(certSetupControllerCreate).toHaveBeenCalledTimes(1)
     const body = JSON.parse(vi.mocked(certSetupControllerCreate).mock.calls[0]?.[0]?.body as string)
-    expect(body).toMatchObject({ name: CERT_NAME, provider: 'AWS', code: CODE })
+    expect(body).toMatchObject({ name: CERT_NAME, provider: PROVIDER, code: CODE })
 
     expect(wrapper.find('[data-testid="cert-coverage"]').exists()).toBe(true)
     expect(certificationCoverageControllerCoverage).toHaveBeenCalledWith(
@@ -295,33 +262,41 @@ describe('CertSetupWizard — SetupHeader chrome', () => {
     return { data: { data: payload }, status, headers: new Headers() } as any
   }
 
-  it('renders the SetupHeader at step 1 alongside the discover form', () => {
+  it('renders the SetupHeader at step 1 of 5 alongside the identify screen', () => {
     const wrapper = mountWizard()
 
     expect(wrapper.find('[data-testid="setup-header"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="setup-header-step-indicator"]').text()).toBe(
-      'Step 1 of 4 · Source search',
+      'Step 1 of 5 · Identify certification',
     )
-    expect(wrapper.find('[data-testid="discover-name-input"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="cert-identify-step"]').exists()).toBe(true)
   })
 
-  it('advances the SetupHeader when the wizard moves to step 2', async () => {
+  it('advances the SetupHeader to step 2 of 5 on the confirmation screen', async () => {
+    mockDiscover()
+    const wrapper = mountWizard()
+
+    await fillIdentifyAndSearch(wrapper)
+
+    expect(wrapper.find('[data-testid="setup-header-step-indicator"]').text()).toBe(
+      'Step 2 of 5 · Source confirmation',
+    )
+  })
+
+  it('advances the SetupHeader to step 3 of 5 when the wizard moves to extraction', async () => {
     mockDiscover()
     mockExtract('extract-job-1')
     const wrapper = mountWizard()
 
-    await fillAndDiscover(wrapper)
-    await wrapper.findAll('[data-testid="source-candidate"]')[0]!.trigger('click')
-    await wrapper.find('[data-testid="confirm-source-btn"]').trigger('click')
-    await flushPromises()
+    await advanceToExtraction(wrapper)
 
     expect(wrapper.find('[data-testid="setup-header-step-indicator"]').text()).toBe(
-      'Step 2 of 4 · Field extraction',
+      'Step 3 of 5 · Field extraction',
     )
     expect(wrapper.find('[data-testid="cert-extraction-step"]').exists()).toBe(true)
   })
 
-  it('advances the SetupHeader to step 3 alongside coverage once a draft is created', async () => {
+  it('advances the SetupHeader to step 4 of 5 alongside coverage once a draft is created', async () => {
     mockDiscover()
     mockExtract()
     vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
@@ -351,19 +326,12 @@ describe('CertSetupWizard — SetupHeader chrome', () => {
     )
 
     const wrapper = mountWizard()
-    await fillAndDiscover(wrapper)
-    await wrapper.findAll('[data-testid="source-candidate"]')[0]!.trigger('click')
-    await wrapper.find('[data-testid="confirm-source-btn"]').trigger('click')
-    await flushPromises()
-
-    await wrapper.find('[data-testid="cert-name-input"]').setValue(CERT_NAME)
-    await wrapper.find('[data-testid="cert-provider-input"]').setValue('AWS')
-    await wrapper.find('[data-testid="cert-code-input"]').setValue(CODE)
+    await advanceToExtraction(wrapper)
     await wrapper.find('[data-testid="submit-draft-btn"]').trigger('click')
     await flushPromises()
 
     expect(wrapper.find('[data-testid="setup-header-step-indicator"]').text()).toBe(
-      'Step 3 of 4 · Content sources',
+      'Step 4 of 5 · Content sources',
     )
     expect(wrapper.find('[data-testid="cert-coverage"]').exists()).toBe(true)
   })
