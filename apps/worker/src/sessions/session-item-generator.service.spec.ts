@@ -87,6 +87,11 @@ describe('SessionItemGeneratorService', () => {
       expect(llm.generateStructured).toHaveBeenCalledTimes(2)
       expect(forkedEm.persist).toHaveBeenCalledTimes(2)
       expect(forkedEm.flush).toHaveBeenCalledTimes(1)
+
+      const readingItem = forkedEm.create.mock.calls[0]?.[1]
+      const quizItem = forkedEm.create.mock.calls[1]?.[1]
+      expect(readingItem?.domain).toBe('Security')
+      expect(quizItem?.domain).toBe('Security')
     })
 
     it('persists fallback reading item when generation fails', async () => {
@@ -107,6 +112,7 @@ describe('SessionItemGeneratorService', () => {
       expect(forkedEm.persist).toHaveBeenCalledTimes(1)
       const created = forkedEm.create.mock.calls[0]?.[1]
       expect(created?.content).toContain('Content for this domain is being prepared')
+      expect(created?.domain).toBe('Security')
       expect(forkedEm.flush).toHaveBeenCalledTimes(1)
     })
 
@@ -128,6 +134,7 @@ describe('SessionItemGeneratorService', () => {
       expect(forkedEm.persist).toHaveBeenCalledTimes(1)
       const created = forkedEm.create.mock.calls[0]?.[1]
       expect(created?.content).toContain('"insufficient":true')
+      expect(created?.domain).toBe('Security')
     })
   })
 
@@ -189,6 +196,7 @@ describe('SessionItemGeneratorService', () => {
 
       const created = forkedEm.create.mock.calls[0]?.[1]
       expect(created?.content).toBe('This is not JSON')
+      expect(created?.domain).toBe('Security')
     })
 
     it('uses the difficulty level in the prompt', async () => {
@@ -229,6 +237,7 @@ describe('SessionItemGeneratorService', () => {
       const content = JSON.parse(created?.content as string)
       expect(content.question).toBe('What is X?')
       expect(content.format).toBe('multiple_choice')
+      expect(created?.domain).toBe('Security')
     })
 
     it('defaults format to multiple_choice when not specified', async () => {
@@ -305,6 +314,7 @@ describe('SessionItemGeneratorService', () => {
       const created = forkedEm.create.mock.calls[0]?.[1]
       expect(created?.content).toContain('Kubernetes')
       expect(created?.type).toBe('reading')
+      expect(created?.domain).toBe('Kubernetes')
     })
 
     it('quiz fallback has insufficient flag with domain', async () => {
@@ -326,6 +336,7 @@ describe('SessionItemGeneratorService', () => {
       const content = JSON.parse(created?.content as string)
       expect(content.insufficient).toBe(true)
       expect(content.domain).toBe('Kubernetes')
+      expect(created?.domain).toBe('Kubernetes')
     })
   })
 })

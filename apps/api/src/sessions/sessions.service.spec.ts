@@ -145,6 +145,8 @@ describe('SessionsService (integration)', () => {
       expect(items.length).toBe(3)
       expect(items[0]!.type).toBe('reading')
       expect(items[1]!.type).toBe('quiz')
+      expect(items[0]!.domain).toBe('Security')
+      expect(items[1]!.domain).toBe('Security')
     })
 
     it('enqueues background fill for items beyond the first 3', async () => {

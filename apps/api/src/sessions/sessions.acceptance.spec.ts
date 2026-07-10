@@ -65,6 +65,7 @@ describe('sessions acceptance', () => {
       index: number
       type: string
       completed: boolean
+      domain: string
     }>
     expect(items.length).toBeGreaterThanOrEqual(3)
 
@@ -72,6 +73,9 @@ describe('sessions acceptance', () => {
     expect(items[0]!.type).toBe('reading')
     // Items alternate reading → quiz
     expect(items[1]!.type).toBe('quiz')
+    // Each item carries the domain it was generated for (surfaced from SessionItem.domain)
+    expect(items[0]!.domain).toBe('Security')
+    expect(items[1]!.domain).toBe('Security')
 
     // Complete items 0-2 advancing lastItemIndex
     for (let i = 0; i < 3; i++) {
