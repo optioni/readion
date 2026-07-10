@@ -31,10 +31,10 @@
 
 ## 4. Mock exam — single header + per-question flagging (`web-mock-exam`)
 
-- [ ] 4.1 RED: e2e/component test asserting only one exam header renders (no stacked minimal-layout header), with the logo mark, the code-only cert identity, and flag/timer icons
-- [ ] 4.2 RED: component test asserting flag state is per-question (keyed by index), that a flagged question renders a distinct "Flagged" nav square, and that the active legend shows "Answered" + "Flagged"
-- [ ] 4.3 GREEN: give the exam a bare (headerless) layout so `ExamHeader` is the only chrome; add the logo/flag/timer icons + code-only identity; add a `flagged` `NavSquareState` keyed by index + legend entry
-- [ ] 4.4 REFACTOR: remove the dead single `flagged` ref; keep flag state session-scoped (persistence not required)
+- [x] 4.1 RED: e2e/component test asserting only one exam header renders (no stacked minimal-layout header), with the logo mark, the code-only cert identity, and flag/timer icons
+- [x] 4.2 RED: component test asserting flag state is per-question (keyed by index), that a flagged question renders a distinct "Flagged" nav square, and that the active legend shows "Answered" + "Flagged"
+- [x] 4.3 GREEN: give the exam a bare (headerless) layout so `ExamHeader` is the only chrome; add the logo/flag/timer icons + code-only identity; add a `flagged` `NavSquareState` keyed by index + legend entry
+- [x] 4.4 REFACTOR: remove the dead single `flagged` ref (now a `flagged` prop + `toggle-flag` emit, state owned by `MockExamActiveScene`); flag state stays session-scoped (persistence not required)
 
 ## 5. Five-minute review — hero layout + live countdown (`web-progress`)
 
