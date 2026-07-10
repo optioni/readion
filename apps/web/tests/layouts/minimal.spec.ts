@@ -20,4 +20,10 @@ describe('Minimal layout', () => {
     expect(wrapper.find('[data-testid="app-sidebar"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="page-content"]').text()).toBe('Onboarding')
   })
+
+  it('renders the accent brand mark icon beside the wordmark', () => {
+    const wrapper = mountLayout('<section />')
+
+    expect(wrapper.find('[data-testid="brand-mark"]').exists()).toBe(true)
+  })
 })

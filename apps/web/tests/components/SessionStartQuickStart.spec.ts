@@ -3,12 +3,15 @@ import { DEFAULT_SESSION_DEFAULTS } from '@readion/shared'
 import { QueryClient, VueQueryPlugin } from '@tanstack/vue-query'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { computed } from 'vue'
 import SessionStartQuickStart from '~/components/SessionStartQuickStart.vue'
 import { createSession } from '~/composables/sessionViewApi'
+import { useCertDetail } from '~/composables/useCertDetail'
 import { userCertificationsControllerListWeakAreas } from '~~/src/api/user-certifications/user-certifications'
 import { usersControllerGetMe } from '~~/src/api/users/users'
 
 vi.mock('~/composables/sessionViewApi', () => ({ createSession: vi.fn() }))
+vi.mock('~/composables/useCertDetail', () => ({ useCertDetail: vi.fn() }))
 vi.mock('~~/src/api/users/users')
 vi.mock('~~/src/api/user-certifications/user-certifications')
 
@@ -46,6 +49,21 @@ function stubWeakAreas(weakAreas: WeakArea[]) {
   } as any)
 }
 
+function stubCert() {
+  vi.mocked(useCertDetail).mockReturnValue({
+    name: computed(() => 'Solutions Architect – Associate'),
+    provider: computed(() => 'AWS'),
+    code: computed(() => 'SAA-C03'),
+    certificationId: computed(() => 'cert-1'),
+    domains: computed(() => []),
+    questionCount: computed(() => 65),
+    passingScore: computed(() => null),
+    isLoading: computed(() => false),
+    isError: computed(() => false),
+    notFound: computed(() => false),
+  })
+}
+
 function mountPanel() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -59,6 +77,7 @@ function mountPanel() {
 beforeEach(() => {
   stubProfile(DEFAULT_SESSION_DEFAULTS)
   stubWeakAreas([])
+  stubCert()
   // biome-ignore lint/suspicious/noExplicitAny: session detail narrowed to fields under assertion
   vi.mocked(createSession).mockResolvedValue({ data: { id: 'sess-1' }, relationships: {} } as any)
 })
@@ -83,9 +102,38 @@ describe('SessionStartQuickStart defaults summary', () => {
     const summary = wrapper.find('[data-testid="quick-start-defaults"]')
     expect(summary.exists()).toBe(true)
     expect(summary.text()).toContain('60')
-    expect(summary.text()).toContain('quiz-heavy')
-    expect(summary.text()).toContain('advanced')
-    expect(summary.text()).toContain('spaced-repetition')
+    expect(summary.text()).toContain('Quiz-heavy')
+    expect(summary.text()).toContain('Advanced')
+    expect(summary.text()).toContain('Spaced repetition')
+  })
+
+  it('never renders raw enum slugs for humanized fields', async () => {
+    stubProfile({
+      duration: 60,
+      contentMix: 'quiz-heavy',
+      difficulty: 'advanced',
+      focusArea: 'review',
+      learningStyle: 'spaced-repetition',
+    })
+
+    const wrapper = mountPanel()
+    await flushPromises()
+
+    const summary = wrapper.find('[data-testid="quick-start-defaults"]')
+    expect(summary.text()).not.toContain('quiz-heavy')
+    expect(summary.text()).not.toContain('spaced-repetition')
+  })
+})
+
+describe('SessionStartQuickStart cert identity pill', () => {
+  it('renders the cert code and full name above the start card', async () => {
+    const wrapper = mountPanel()
+    await flushPromises()
+
+    const pill = wrapper.find('[data-testid="cert-identity-pill"]')
+    expect(pill.exists()).toBe(true)
+    expect(pill.text()).toContain('SAA-C03')
+    expect(pill.text()).toContain('Solutions Architect – Associate')
   })
 })
 
