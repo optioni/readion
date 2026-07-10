@@ -69,7 +69,7 @@
 
 ## 8. Polish
 
-- [ ] 8.1 `yarn lint`
-- [ ] 8.2 `yarn format`
-- [ ] 8.3 `yarn workspace apps/web typecheck` (zero errors)
-- [ ] 8.4 `yarn workspace apps/web test:coverage` (≥80% for touched components)
+- [x] 8.1 `yarn lint` — 0 new errors/warnings from this change; 62 pre-existing repo-wide errors (confirmed via `git stash` diff, all in untouched files) and the universal Vue-SFC `noUnusedVariables`/`noUnusedImports` false-positive warning pattern (template-only usage; pre-existing on every `.vue` file in the repo)
+- [x] 8.2 `yarn format` — clean for every file this change touches; 2 pre-existing unrelated format issues remain (`apps/web/e2e/seo-hygiene.e2e.ts`, `packages/db/src/migrations/.snapshot-readion_test.json`, both untouched)
+- [x] 8.3 `yarn workspace apps/web typecheck` (zero errors) — clean
+- [x] 8.4 `yarn workspace apps/web test:coverage` (≥80% for touched components) — exits 0 against the project's enforced 80%/80%/80% (lines/branches/functions) thresholds; `components` rolls up to 96.75%/91.91%/96.98%, `composables` to 90.61%/82.15%/89.87%
