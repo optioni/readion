@@ -14,23 +14,26 @@ vi.mock('~/composables/sessionViewApi', () => ({
 vi.mock('~/composables/useCertDetail', () => ({ useCertDetail: vi.fn() }))
 
 vi.stubGlobal('useRoute', () => ({ params: { id: 'sess-1' } }))
-vi.stubGlobal('definePageMeta', vi.fn())
+const definePageMetaSpy = vi.fn()
+vi.stubGlobal('definePageMeta', definePageMetaSpy)
 const mockNavigate = vi.fn()
 vi.stubGlobal('navigateTo', mockNavigate)
 
 interface ItemShape {
   index: number
   type: string
+  domain: string
   content: string
   completed: boolean
   sourceChunkIds: string[]
   supportingSpans: string[]
 }
 
-function readingItem(index: number, completed = false): ItemShape {
+function readingItem(index: number, completed = false, domain = 'IAM & Security'): ItemShape {
   return {
     index,
     type: 'reading',
+    domain,
     content: `reading-${index}`,
     completed,
     sourceChunkIds: [],
@@ -38,10 +41,11 @@ function readingItem(index: number, completed = false): ItemShape {
   }
 }
 
-function quizItem(index: number, completed = false): ItemShape {
+function quizItem(index: number, completed = false, domain = 'IAM & Security'): ItemShape {
   return {
     index,
     type: 'quiz',
+    domain,
     content: JSON.stringify({ questionId: `q-${index}`, question: '?', options: ['a', 'b'] }),
     completed,
     sourceChunkIds: [],
@@ -102,7 +106,7 @@ function mountPage() {
         ReadingBlock: {
           props: ['item', 'sessionId', 'domain'],
           template:
-            '<div data-testid="reading-stub" @click="$emit(\'advance\', item.index)">reading {{ item.index }}</div>',
+            '<div data-testid="reading-stub" :data-domain="domain" @click="$emit(\'advance\', item.index)">reading {{ item.index }}</div>',
         },
         QuizCard: {
           props: ['item', 'sessionId', 'userCertificationId'],
@@ -147,6 +151,22 @@ describe('Session view page shell', () => {
     const agentPanel = wrapper.find('[data-testid="agent-panel-stub"]')
     expect(agentPanel.exists()).toBe(true)
     expect(agentPanel.attributes('data-sid')).toBe('sess-1')
+  })
+
+  it('renders within the app shell layout, not the bare minimal layout', () => {
+    mountPage()
+
+    expect(definePageMetaSpy).toHaveBeenCalledWith({ layout: 'default' })
+  })
+
+  it("passes the current item's domain down to the ReadingBlock", async () => {
+    stubSession([readingItem(0, false, 'IAM & Security')])
+    const wrapper = mountPage()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="reading-stub"]').attributes('data-domain')).toBe(
+      'IAM & Security',
+    )
   })
 
   it('renders a loading state before the session resolves', () => {

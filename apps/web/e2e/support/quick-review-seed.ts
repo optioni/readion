@@ -178,6 +178,7 @@ const REVIEW_QUIZ_CONTENT = JSON.stringify({
 const REVIEW_ITEM: SessionItemResponseDto = {
   index: 0,
   type: 'quiz',
+  domain: 'Cost-Optimized Architectures',
   content: REVIEW_QUIZ_CONTENT,
   completed: false,
   sourceChunkIds: ['chunk-s3-glacier-001'],

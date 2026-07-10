@@ -11,14 +11,15 @@ const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 const readingItem: SessionItemResponse = {
   index: 0,
   type: 'reading',
+  domain: 'IAM & Security',
   content: '**TL;DR** — SCPs are guardrails, not grants.',
   completed: false,
   sourceChunkIds: ['bb9dd4b7-e3e5-44e6-b006-1b6fd247e14b'],
   supportingSpans: ['AWS Organizations User Guide §SCP'],
 }
 
-function mountBlock(item: SessionItemResponse = readingItem) {
-  return mount(ReadingBlock, { props: { sessionId: 'sess-1', item } })
+function mountBlock(item: SessionItemResponse = readingItem, domain?: string) {
+  return mount(ReadingBlock, { props: { sessionId: 'sess-1', item, domain } })
 }
 
 beforeEach(() => {
@@ -55,6 +56,12 @@ describe('ReadingBlock rendering', () => {
       expect(chip.text()).not.toMatch(UUID_PATTERN)
     }
     expect(wrapper.text()).toContain('Source')
+  })
+
+  it('renders the domain label beside the Reading pill when a domain is passed', () => {
+    const wrapper = mountBlock(readingItem, 'IAM & Security')
+
+    expect(wrapper.text()).toContain('IAM & Security')
   })
 })
 

@@ -44,4 +44,21 @@ describe('SessionLayout agent collapse', () => {
     expect(wrapper.find('[data-testid="agent-panel"]').attributes('data-collapsed')).toBe('false')
     expect(wrapper.find('[data-testid="slot-agent"]').exists()).toBe(true)
   })
+
+  it('shows a chat-bubble icon and a vertical "Ask AI" label when collapsed', async () => {
+    const wrapper = mountLayout()
+
+    await wrapper.find('[data-testid="agent-panel-toggle"]').trigger('click')
+
+    expect(wrapper.find('[data-testid="agent-panel-collapsed-icon"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="agent-panel-collapsed-label"]').text()).toBe('Ask AI')
+  })
+})
+
+describe('SessionLayout agent header', () => {
+  it('shows an online-status dot next to "Study assistant"', () => {
+    const wrapper = mountLayout()
+
+    expect(wrapper.find('[data-testid="agent-online-dot"]').exists()).toBe(true)
+  })
 })

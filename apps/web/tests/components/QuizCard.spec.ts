@@ -26,6 +26,7 @@ function quizItem(content = quizContent): SessionItemResponse {
   return {
     index: 1,
     type: 'quiz',
+    domain: 'IAM & SCPs',
     content,
     completed: false,
     sourceChunkIds: ['chunk-scp-001'],
@@ -40,6 +41,7 @@ function quizItem2(content = quizContent): SessionItemResponse {
 const insufficientItem: SessionItemResponse = {
   index: 2,
   type: 'quiz',
+  domain: 'Cost-Optimized Architectures',
   content: JSON.stringify({ insufficient: true, domain: 'Cost-Optimized Architectures' }),
   completed: false,
   sourceChunkIds: [],
@@ -80,10 +82,16 @@ describe('QuizCard rendering', () => {
     expect(wrapper.findAll('[data-testid="quiz-option"]')).toHaveLength(3)
   })
 
-  it('renders a "Q n of m" position label beside the Question pill for the 3rd of 12 items', () => {
+  it('renders a "Q n of m" position label beside the Question pill for the 3rd of 12 items with no stray space', () => {
     const wrapper = mountCard(quizItem2(), 12)
 
-    expect(wrapper.find('[data-testid="quiz-position"]').text()).toBe('Q 3 of 12')
+    expect(wrapper.find('[data-testid="quiz-position"]').text()).toBe('Q3 of 12')
+  })
+
+  it('interpolates the item domain into a topic-specific confidence prompt', () => {
+    const wrapper = mountCard(quizItem())
+
+    expect(wrapper.find('[data-testid="confidence-rating"]').text()).toContain('IAM & SCPs')
   })
 })
 

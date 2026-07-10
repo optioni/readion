@@ -27,4 +27,17 @@ describe('ConfidenceRating', () => {
       'true',
     )
   })
+
+  it('interpolates a topic-specific prompt when a topic is provided', () => {
+    const wrapper = mount(ConfidenceRating, { props: { modelValue: undefined, topic: 'IAM & SCPs' } })
+
+    expect(wrapper.text()).toContain('How confident do you feel about')
+    expect(wrapper.text()).toContain('IAM & SCPs')
+  })
+
+  it('falls back to the generic prompt when no topic is provided', () => {
+    const wrapper = mount(ConfidenceRating, { props: { modelValue: undefined } })
+
+    expect(wrapper.text()).toContain('How confident do you feel?')
+  })
 })

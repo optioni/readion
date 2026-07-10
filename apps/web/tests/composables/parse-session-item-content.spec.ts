@@ -6,6 +6,7 @@ function item(overrides: Partial<SessionItemResponse>): SessionItemResponse {
   return {
     index: 0,
     type: 'reading',
+    domain: '',
     content: '',
     completed: false,
     sourceChunkIds: [],

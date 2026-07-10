@@ -7,6 +7,7 @@ function item(index: number, completed: boolean): SessionItemResponse {
   return {
     index,
     type: 'reading',
+    domain: '',
     content: `r-${index}`,
     completed,
     sourceChunkIds: [],

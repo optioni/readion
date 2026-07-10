@@ -121,11 +121,14 @@ const INSUFFICIENT_ITEM_CONTENT = JSON.stringify({
   domain: 'Cost-Optimized Architectures',
 })
 
+export const ITEM_DOMAIN = 'IAM & SCPs'
+
 function buildItems(): SessionItemResponseDto[] {
   return [
     {
       index: 0,
       type: 'reading',
+      domain: ITEM_DOMAIN,
       content:
         '## Service Control Policies\n\n**TL;DR** — SCPs set the maximum available permissions for accounts in an AWS Organization; they are guardrails, not grants.',
       completed: false,
@@ -135,6 +138,7 @@ function buildItems(): SessionItemResponseDto[] {
     {
       index: 1,
       type: 'quiz',
+      domain: ITEM_DOMAIN,
       content: QUIZ_ITEM_CONTENT,
       completed: false,
       sourceChunkIds: ['chunk-scp-001'],
@@ -143,6 +147,7 @@ function buildItems(): SessionItemResponseDto[] {
     {
       index: 2,
       type: 'quiz',
+      domain: 'Cost-Optimized Architectures',
       content: INSUFFICIENT_ITEM_CONTENT,
       completed: false,
       sourceChunkIds: [],
@@ -386,6 +391,7 @@ export function mockActiveSessionWithCitationFixture(page: Page): {
     {
       index: 0,
       type: 'reading',
+      domain: ITEM_DOMAIN,
       content:
         '## Service Control Policies\n\n**TL;DR** — SCPs set the maximum available permissions for accounts in an AWS Organization.',
       completed: false,
