@@ -381,7 +381,7 @@ test.describe('web-admin — admin console', () => {
     await expect(detail.getByTestId('review-queue-verdict')).toContainText(
       'The answer key is incorrect',
     )
-    await expect(detail.getByTestId('review-queue-provenance')).toContainText('chunk-1')
+    await expect(detail.getByTestId('review-queue-evidence-card')).toContainText('chunk-1')
     await expect(page.locator('body')).not.toContainText('{"pass":false')
     await expect(page.locator('body')).not.toContainText('"score":0.2')
 
@@ -504,8 +504,11 @@ test.describe('fix-web-admin-parity — acceptance', () => {
     const evidence = page.getByTestId('review-queue-evidence-card')
     await expect(evidence).toBeVisible()
     await expect(evidence).toContainText('Amazon EC2 provides scalable computing capacity')
-    // The list row shows the question-text snippet, not the domain tag.
-    await expect(rowA).toContainText('Which AWS service provides scalable object storage?')
+    // The list row shows a 2-line snippet, not the bold domain tag. QuarantinedItemListItem (the
+    // list DTO) carries no question/content field, so the snippet is built from `reason` — the
+    // only free-text field the list response actually has (see design.md's descope notes).
+    await expect(rowA).toContainText('The answer key is incorrect')
+    await expect(rowA).not.toContainText('Secure Architectures')
   })
 
   test('sources: the running-job banner renders live percentage and ETA from the progress field', async ({

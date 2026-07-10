@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import AdminAsyncMessage from '~/components/admin/AdminAsyncMessage.vue'
+import AdminHeaderBar from '~/components/admin/AdminHeaderBar.vue'
 import AdminReviewQueueDetail from '~/components/admin/AdminReviewQueueDetail.vue'
 import AdminReviewQueueList from '~/components/admin/AdminReviewQueueList.vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
@@ -83,17 +84,16 @@ function reject(id: string) {
 </script>
 
 <template>
-  <section data-testid="admin-review-queue-page" class="flex flex-col gap-6">
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <h1 class="font-semibold text-lg text-white">Review queue</h1>
-      <p
+  <section data-testid="admin-review-queue-page" class="flex h-full min-h-[calc(100vh-4rem)] flex-col">
+    <AdminHeaderBar title="Review queue">
+      <span
         v-if="!isLoading && !isError"
         data-testid="review-queue-awaiting-count"
         class="text-slate-400 text-sm"
       >
         {{ awaitingCount }} {{ awaitingCount === 1 ? 'item' : 'items' }} awaiting review
-      </p>
-    </div>
+      </span>
+    </AdminHeaderBar>
 
     <AdminAsyncMessage
       v-if="isLoading"
@@ -112,51 +112,16 @@ function reject(id: string) {
       <p
         v-if="actionError"
         data-testid="review-queue-error-banner"
-        class="text-red-400 text-sm"
+        class="px-7 pt-3 text-red-400 text-sm"
       >
         {{ actionError }}
       </p>
 
-      <div v-if="certChips.length > 0" data-testid="review-queue-cert-chips" class="flex flex-wrap gap-2">
-        <button
-          type="button"
-          data-testid="review-queue-cert-chip"
-          data-cert-id="all"
-          :aria-pressed="selectedCertId === null"
-          class="rounded-full border px-3 py-1.5 font-medium text-sm transition-colors"
-          :class="
-            selectedCertId === null
-              ? 'border-readion-primary bg-readion-primary/10 text-readion-primary'
-              : 'border-readion-background-surface text-slate-300 hover:border-readion-primary'
-          "
-          @click="selectCertFilter(null)"
-        >
-          All
-        </button>
-        <button
-          v-for="chip in certChips"
-          :key="chip.id"
-          type="button"
-          data-testid="review-queue-cert-chip"
-          :data-cert-id="chip.id"
-          :aria-pressed="selectedCertId === chip.id"
-          class="rounded-full border px-3 py-1.5 font-medium text-sm transition-colors"
-          :class="
-            selectedCertId === chip.id
-              ? 'border-readion-primary bg-readion-primary/10 text-readion-primary'
-              : 'border-readion-background-surface text-slate-300 hover:border-readion-primary'
-          "
-          @click="selectCertFilter(chip.id)"
-        >
-          {{ chip.label }}
-        </button>
-      </div>
-
-      <div class="flex overflow-hidden rounded-lg border border-readion-background-surface">
+      <div class="flex flex-1 overflow-hidden">
         <div
           v-if="items.length === 0"
           data-testid="review-queue-empty"
-          class="flex w-80 flex-shrink-0 items-center justify-center border-readion-background-surface border-r border-dashed bg-readion-background-surface/40 px-6 py-10 text-center text-slate-400 text-sm"
+          class="flex w-80 flex-shrink-0 items-center justify-center border-readion-border-strong border-r bg-readion-background-surface/40 px-6 py-10 text-center text-slate-400 text-sm"
         >
           No quarantined items are awaiting review.
         </div>
@@ -165,7 +130,10 @@ function reject(id: string) {
           :items="filteredItems"
           :selected-id="selectedId"
           :certs-by-id="certsById"
+          :cert-chips="certChips"
+          :selected-cert-id="selectedCertId"
           @select="select"
+          @select-cert-filter="selectCertFilter"
         />
         <AdminReviewQueueDetail
           :id="selectedId"
