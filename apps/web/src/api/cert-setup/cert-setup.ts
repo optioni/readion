@@ -235,6 +235,103 @@ export const useCertSetupControllerExtract = <TError = void, TContext = unknown>
 
   return useMutation(mutationOptions)
 }
+export type certSetupControllerStreamExtractionEventsResponse200 = {
+  data: void
+  status: 200
+}
+
+export type certSetupControllerStreamExtractionEventsResponseSuccess =
+  certSetupControllerStreamExtractionEventsResponse200 & {
+    headers: Headers
+  }
+
+export type certSetupControllerStreamExtractionEventsResponse =
+  certSetupControllerStreamExtractionEventsResponseSuccess
+
+export const getCertSetupControllerStreamExtractionEventsUrl = (jobId: string) => {
+  return `/api/v1/admin/certifications/extractions/${jobId}/events`
+}
+
+export const certSetupControllerStreamExtractionEvents = async (
+  jobId: string,
+  options?: RequestInit,
+): Promise<certSetupControllerStreamExtractionEventsResponse> => {
+  return readionFetch<certSetupControllerStreamExtractionEventsResponse>(
+    getCertSetupControllerStreamExtractionEventsUrl(jobId),
+    {
+      ...options,
+      method: 'GET',
+    },
+  )
+}
+
+export const getCertSetupControllerStreamExtractionEventsQueryKey = (jobId?: MaybeRef<string>) => {
+  return ['api', 'v1', 'admin', 'certifications', 'extractions', jobId, 'events'] as const
+}
+
+export const getCertSetupControllerStreamExtractionEventsQueryOptions = <
+  TData = Awaited<ReturnType<typeof certSetupControllerStreamExtractionEvents>>,
+  TError = unknown,
+>(
+  jobId: MaybeRef<string>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof certSetupControllerStreamExtractionEvents>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = getCertSetupControllerStreamExtractionEventsQueryKey(jobId)
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof certSetupControllerStreamExtractionEvents>>
+  > = ({ signal }) =>
+    certSetupControllerStreamExtractionEvents(unref(jobId), { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: computed(() => !!unref(jobId)),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof certSetupControllerStreamExtractionEvents>>,
+    TError,
+    TData
+  >
+}
+
+export type CertSetupControllerStreamExtractionEventsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof certSetupControllerStreamExtractionEvents>>
+>
+export type CertSetupControllerStreamExtractionEventsQueryError = unknown
+
+export function useCertSetupControllerStreamExtractionEvents<
+  TData = Awaited<ReturnType<typeof certSetupControllerStreamExtractionEvents>>,
+  TError = unknown,
+>(
+  jobId: MaybeRef<string>,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof certSetupControllerStreamExtractionEvents>>,
+      TError,
+      TData
+    >
+    request?: SecondParameter<typeof readionFetch>
+  },
+): UseQueryReturnType<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getCertSetupControllerStreamExtractionEventsQueryOptions(jobId, options)
+
+  const query = useQuery(queryOptions) as UseQueryReturnType<TData, TError> & { queryKey: QueryKey }
+
+  query.queryKey = unref(queryOptions).queryKey as QueryKey
+
+  return query
+}
+
 export type certSetupControllerReadExtractionResponse200 = {
   data: ExtractionStatusDetailDto
   status: 200
