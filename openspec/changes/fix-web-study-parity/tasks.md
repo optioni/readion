@@ -38,10 +38,10 @@
 
 ## 5. Five-minute review — hero layout + live countdown (`web-progress`)
 
-- [ ] 5.1 RED: component test asserting the queue renders as a centered full-bleed hero (no bordered card) with the queue icon, a plain due-count headline, the "Scheduled by spaced repetition · ~5 minutes" caption, and no "By domain" label
-- [ ] 5.2 RED: component test asserting a live countdown ticks from 5:00 and enters the urgent state near expiry; the quiz-mode toggle still renders (reaffirmed)
-- [ ] 5.3 GREEN: restructure the queue entry to the centered hero, add the icon/caption/headline changes, pass a ticking timer to `ReviewHeader`
-- [ ] 5.4 REFACTOR: keep the SRS + quiz run-loop paths intact
+- [x] 5.1 RED: component test asserting the queue renders as a centered full-bleed hero (no bordered card) with the queue icon, a plain due-count headline, the "Scheduled by spaced repetition · ~5 minutes" caption, and no "By domain" label
+- [x] 5.2 RED: component test asserting a live countdown ticks from 5:00 and enters the urgent state near expiry; the quiz-mode toggle still renders (reaffirmed)
+- [x] 5.3 GREEN: restructure the queue entry to the centered hero, add the icon/caption/headline changes, pass a ticking timer to `ReviewHeader` (new `useReviewCountdown` composable)
+- [x] 5.4 REFACTOR: keep the SRS + quiz run-loop paths intact (confirmed: full suite green, no run-loop test touched)
 
 ## 6. Acceptance Test — Outer Loop GREEN
 
