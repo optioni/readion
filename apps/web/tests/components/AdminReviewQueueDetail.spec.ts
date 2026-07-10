@@ -101,8 +101,6 @@ describe('AdminReviewQueueDetail loaded state', () => {
     expect(detail.find('[data-testid="review-queue-reason"]').text()).toContain(
       'The answer key is incorrect',
     )
-    expect(detail.find('[data-testid="review-queue-provenance"]').text()).toContain('chunk-1')
-
     expect(detail.find('[data-testid="approve-item-btn"]').exists()).toBe(true)
     expect(detail.find('[data-testid="reject-item-btn"]').exists()).toBe(true)
   })
@@ -171,7 +169,7 @@ describe('AdminReviewQueueDetail error state', () => {
 })
 
 describe('AdminReviewQueueDetail no-content state', () => {
-  it('shows the no-content state while verdict, reason and provenance still render', () => {
+  it('shows the no-content state while verdict, reason and the evidence card still render', () => {
     stubDetail({ ...DETAIL, content: null })
     const wrapper = mount(AdminReviewQueueDetail, { props: { id: ITEM_ID } })
 
@@ -182,6 +180,28 @@ describe('AdminReviewQueueDetail no-content state', () => {
 
     expect(detail.find('[data-testid="review-queue-verdict"]').exists()).toBe(true)
     expect(detail.find('[data-testid="review-queue-reason"]').exists()).toBe(true)
-    expect(detail.find('[data-testid="review-queue-provenance"]').text()).toContain('chunk-1')
+    expect(detail.find('[data-testid="review-queue-evidence-card"]').exists()).toBe(true)
+  })
+})
+
+describe('AdminReviewQueueDetail — source evidence card', () => {
+  it('renders the quoted supportingSpans excerpt with the phrase highlighted, instead of raw chunk IDs', () => {
+    stubDetail(DETAIL)
+    const wrapper = mount(AdminReviewQueueDetail, { props: { id: ITEM_ID } })
+
+    const card = wrapper.find('[data-testid="review-queue-evidence-card"]')
+    expect(card.exists()).toBe(true)
+    expect(card.find('[data-testid="review-queue-evidence-highlight"]').text()).toContain(
+      'Amazon EC2 provides scalable computing capacity',
+    )
+    expect(card.find('[data-testid="review-queue-evidence-source"]').text()).toContain('chunk-1')
+    expect(wrapper.text()).not.toContain('Source chunks: chunk-1')
+  })
+
+  it('carries a warning icon on the decision verdict title', () => {
+    stubDetail(DETAIL)
+    const wrapper = mount(AdminReviewQueueDetail, { props: { id: ITEM_ID } })
+
+    expect(wrapper.find('[data-testid="review-queue-decision-icon"]').exists()).toBe(true)
   })
 })

@@ -73,6 +73,51 @@ describe('AdminReviewQueueList', () => {
   })
 })
 
+describe('AdminReviewQueueList — question snippet, not the domain tag', () => {
+  it('shows a 2-line snippet (the flag reason — the list payload carries no question text) instead of the raw domain tag', () => {
+    const wrapper = mount(AdminReviewQueueList, { props: { items: ITEMS, selectedId: null } })
+
+    const row = rowFor(wrapper, ITEM_A_ID)
+    expect(row.find('[data-testid="review-queue-item-snippet"]').text()).toContain(
+      'The answer key is incorrect',
+    )
+    expect(row.text()).not.toContain('Compute')
+  })
+
+  it('renders a relative date instead of an absolute one', () => {
+    const wrapper = mount(AdminReviewQueueList, { props: { items: ITEMS, selectedId: null } })
+
+    const dateText = rowFor(wrapper, ITEM_A_ID).find('[data-testid="review-queue-item-date"]').text()
+    expect(dateText).not.toMatch(/\b2026\b/)
+  })
+})
+
+describe('AdminReviewQueueList — "Quarantined items" panel header + in-panel filter chips', () => {
+  it('renders the "Quarantined items" label inside the list panel', () => {
+    const wrapper = mount(AdminReviewQueueList, { props: { items: ITEMS, selectedId: null } })
+
+    expect(wrapper.find('[data-testid="review-queue-panel-label"]').text()).toContain(
+      'Quarantined items',
+    )
+  })
+
+  it('renders cert filter chips scoped inside the panel when provided', async () => {
+    const wrapper = mount(AdminReviewQueueList, {
+      props: {
+        items: ITEMS,
+        selectedId: null,
+        certChips: [{ id: CERT_ID, label: 'SAA-C03' }],
+        selectedCertId: null,
+      },
+    })
+
+    const chips = wrapper.findAll('[data-testid="review-queue-cert-chip"]')
+    expect(chips.length).toBeGreaterThan(0)
+    await chips[chips.length - 1]!.trigger('click')
+    expect(wrapper.emitted('selectCertFilter')).toEqual([[CERT_ID]])
+  })
+})
+
 describe('AdminReviewQueueList metadata', () => {
   it('shows the full item id in a mono id element', () => {
     const wrapper = mount(AdminReviewQueueList, {
