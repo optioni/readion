@@ -208,4 +208,29 @@ test.describe('web-progress — 5-minute review loop', () => {
     await page.getByTestId('review-all-button').click()
     await expect(page.getByTestId('self-grade-card')).toBeVisible()
   })
+
+  test('queue renders as a centered hero and the header timer counts down from 5:00', async ({
+    page,
+  }) => {
+    mockReviewSelfGrade(page)
+
+    await gotoAuthenticated(page, `/user-certifications/${REVIEW_IDS.enrollmentId}/review`)
+
+    // --- Centered full-bleed hero: queue icon + plain headline, no "By domain" label ---
+    await expect(page.getByTestId('review-queue-entry')).toBeVisible()
+    await expect(page.getByTestId('review-queue-icon')).toBeVisible()
+    await expect(page.getByTestId('review-queue-entry')).toContainText(
+      'Scheduled by spaced repetition · ~5 minutes',
+    )
+    await expect(page.getByTestId('review-queue-entry')).not.toContainText('By domain')
+
+    // --- Live countdown: starts at 5:00 and ticks down within a couple of seconds (real timers) ---
+    const timer = page.getByTestId('review-header-timer')
+    await expect(timer).toContainText('5:00')
+    await expect(timer).toContainText('4:5', { timeout: 5_000 })
+
+    // --- The quiz-mode toggle still renders (reaffirmed — not removed by the hero restyle) ---
+    await expect(page.getByTestId('review-mode-toggle')).toBeVisible()
+    await expect(page.getByTestId('review-mode-quiz')).toBeVisible()
+  })
 })

@@ -481,6 +481,11 @@ export function mockSessionLoop(page: Page): {
   mock(page, new RegExp(`/api/v1/certifications/${certificationId}(\\?|$)`), async (route) => {
     await fulfilJson(route, 200, { data: CERTIFICATION, relationships: {} })
   })
+  // Enrollment → certification hop for useCertDetail (session-start cert pill, app-shell session
+  // header/sidebar lookups).
+  mock(page, new RegExp(`/api/v1/user-certifications/${enrollmentId}(\\?|$)`), async (route) => {
+    await fulfilJson(route, 200, { data: { id: enrollmentId, certificationId }, relationships: {} })
+  })
   mock(
     page,
     new RegExp(`/api/v1/user-certifications/${enrollmentId}/weak-areas(\\?|$)`),

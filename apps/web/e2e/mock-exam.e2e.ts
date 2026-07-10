@@ -70,6 +70,11 @@ test.describe('web-mock-exam — full timed-exam loop', () => {
     // Countdown is seeded from server remainingSeconds (6443 ≈ 01:47:23), not paused.
     await expect(page.getByTestId('exam-timer')).toContainText(/\d\d:\d\d:\d\d/)
 
+    // --- Single full-screen header: ExamHeader is the only chrome, no stacked minimal-layout bar ---
+    await expect(page.getByTestId('exam-header')).toBeVisible()
+    await expect(page.getByTestId('exam-logo-mark')).toBeVisible()
+    await expect(page.getByText('Back to dashboard')).toHaveCount(0)
+
     // --- Answer the current question (persisted by zero-based index 0); no correctness revealed ---
     const multiAz = page.getByTestId('exam-option').filter({ hasText: /multi-az/i })
     await multiAz.click()
@@ -78,6 +83,26 @@ test.describe('web-mock-exam — full timed-exam loop', () => {
       'data-state',
       'answered',
     )
+
+    // --- Per-question flagging: flag question 1, navigate to question 2 — question 1's nav square
+    // stays "Flagged" while question 2 is current, independent of the flag toggle. ---
+    await page.getByTestId('exam-flag-toggle').click()
+    await expect(page.getByTestId('exam-flag-toggle')).toHaveAttribute('data-flagged', 'true')
+    await expect(page.getByTestId('exam-nav-square').first()).toHaveAttribute(
+      'data-state',
+      'flagged',
+    )
+    await page.getByTestId('exam-nav-square').nth(1).click()
+    await expect(page.getByTestId('exam-question-counter')).toContainText(/Q 2 \/ 65/i)
+    await expect(page.getByTestId('exam-nav-square').first()).toHaveAttribute(
+      'data-state',
+      'flagged',
+    )
+    await expect(page.getByTestId('exam-nav-square').nth(1)).toHaveAttribute(
+      'data-state',
+      'current',
+    )
+    await expect(page.getByTestId('exam-flag-toggle')).toHaveAttribute('data-flagged', 'false')
 
     // --- Submit warns about unanswered questions, then advances to results ---
     await page.getByTestId('exam-submit-button').click()

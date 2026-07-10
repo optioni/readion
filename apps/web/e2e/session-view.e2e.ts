@@ -42,33 +42,54 @@ test.describe('web-session-view — full study-session loop', () => {
     await expect(page.getByTestId('quick-start-defaults')).toBeVisible()
     await expect(page.getByTestId('suggested-focus-banner')).toContainText(/secure architectures/i)
 
+    // Cert identity pill (code + name) above the start card, and humanized defaults — no raw enum
+    // slugs (the seeded profile carries contentMix "balanced", difficulty "intermediate",
+    // learningStyle "weak-area-focus").
+    const certPill = page.getByTestId('cert-identity-pill')
+    await expect(certPill).toContainText('SAA-C03')
+    await expect(certPill).toContainText(/Solutions Architect/i)
+    const defaults = page.getByTestId('quick-start-defaults')
+    await expect(defaults).toContainText('Balanced')
+    await expect(defaults).toContainText('Intermediate')
+    await expect(defaults).toContainText('Weak-area focus')
+    await expect(defaults).not.toContainText('balanced')
+    await expect(defaults).not.toContainText('weak-area-focus')
+
     // Quick start posts an empty body; both 201 (new) and 200 (resume) navigate to the session view.
     await page.getByTestId('quick-start-button').click()
     await expect(page).toHaveURL(new RegExp(`/sessions/${SESSION_IDS.sessionId}$`))
 
-    // --- Split-panel session view loads items ---
+    // --- Split-panel session view loads inside the app shell (sidebar, Sessions active) ---
     await expect(page.getByTestId('session-view-page')).toBeVisible()
+    await expect(page.getByTestId('app-sidebar')).toBeVisible()
+    await expect(page.getByTestId('app-nav-sessions')).toHaveAttribute('data-active', 'true')
     await expect(page.getByTestId('session-split-panel')).toBeVisible()
     await expect(page.getByTestId('session-header')).toBeVisible()
     await expect(page.getByTestId('session-timer')).toBeVisible()
     await expect(page.getByTestId('session-progress')).toBeVisible()
 
-    // Reading block: TL;DR, go-deeper, citation chip, then advance (marks the item complete).
+    // Reading block: TL;DR, domain label, go-deeper, citation chip, then advance (marks complete).
     const reading = page.getByTestId('reading-block')
     await expect(reading).toBeVisible()
+    await expect(reading).toContainText('IAM & SCPs')
     await expect(page.getByTestId('reading-tldr')).toContainText(/guardrails/i)
     await page.getByTestId('read-full-explanation-button').click()
     await expect(page.getByTestId('citation-chip').first()).toBeVisible()
     await page.getByTestId('advance-item-button').click()
 
-    // Quiz card: choose an option + confidence, submit, see the chosen-option result, continue.
+    // Quiz card: topic-specific confidence prompt, then choose an option + confidence — confidence
+    // is still rated before submit is enabled (reaffirmed gating).
     const quiz = page.getByTestId('quiz-card')
     await expect(quiz).toBeVisible()
+    await expect(quiz.getByTestId('confidence-rating')).toContainText('IAM & SCPs')
+    await expect(page.getByTestId('quiz-submit-button')).toBeDisabled()
     await quiz
       .getByTestId('quiz-option')
       .filter({ hasText: /service control policies/i })
       .click()
+    await expect(page.getByTestId('quiz-submit-button')).toBeDisabled()
     await page.getByTestId('confidence-option-4').click()
+    await expect(page.getByTestId('quiz-submit-button')).toBeEnabled()
     await page.getByTestId('quiz-submit-button').click()
     await expect(
       quiz.getByTestId('quiz-option').filter({ hasText: /service control policies/i }),

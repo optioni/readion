@@ -23,8 +23,12 @@ import { mockSettings } from './support/settings-seed'
 //   Relocated toggle  : the dark-mode toggle button (aria-label "Switch to light mode" /
 //                       "Switch to dark mode") lives in the footer
 //
-// Focused full-screen flows stay BARE (minimal layout, NO sidebar): mock exam, quick-review run,
-// in-session view, session start.
+// Focused full-screen flows stay BARE (minimal/headerless layout, NO sidebar): mock exam,
+// quick-review run, session start.
+//
+// fix-web-study-parity supersedes the prior in-session-view contract: the study session view
+// (/sessions/:id) now renders INSIDE the app shell (sidebar, Sessions active) per the design +
+// manifest — see session-view.e2e.ts for that coverage.
 // ============================================================================
 
 test.describe('web-app-shell-sidebar — persistent left sidebar shell', () => {
@@ -134,10 +138,11 @@ test.describe('web-app-shell-sidebar — persistent left sidebar shell', () => {
   }) => {
     mockSessionLoop(page)
 
-    await gotoAuthenticated(page, `/sessions/${SESSION_IDS.sessionId}`)
+    // Session start (pre-session config) stays on the bare minimal layout — unlike the in-session
+    // view (/sessions/:id), which fix-web-study-parity moved into the app shell.
+    await gotoAuthenticated(page, `/user-certifications/${SESSION_IDS.enrollmentId}/session/start`)
 
-    // The focused session view loads under the bare minimal layout.
-    await expect(page.getByTestId('session-view-page')).toBeVisible()
+    await expect(page.getByTestId('session-start-page')).toBeVisible()
 
     // No persistent sidebar in focused flows.
     await expect(page.getByTestId('app-sidebar')).toHaveCount(0)
