@@ -207,7 +207,9 @@ const navItems = computed<NavItem[]>(() => {
       to: sessionsTo.value,
       testid: 'app-nav-sessions',
       icon: ICONS.sessions,
-      active: path.startsWith('/user-certifications/') && !path.endsWith('/progress'),
+      active:
+        (path.startsWith('/user-certifications/') && !path.endsWith('/progress')) ||
+        path.startsWith('/sessions/'),
     },
     {
       label: 'Progress',

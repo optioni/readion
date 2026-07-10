@@ -104,7 +104,7 @@ function advance() {
           data-testid="quiz-position"
           class="text-readion-text-muted text-xs"
         >
-          Q {{ displayNumber(item.index) }} of {{ total }}
+          Q{{ displayNumber(item.index) }} of {{ total }}
         </span>
       </div>
 
@@ -124,6 +124,7 @@ function advance() {
       <ConfidenceRating
         v-if="result === null"
         v-model="confidence"
+        :topic="item.domain"
         class="mb-4"
       />
 

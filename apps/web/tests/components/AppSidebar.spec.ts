@@ -165,6 +165,14 @@ describe('AppSidebar active state', () => {
       'false',
     )
   })
+
+  it('marks Sessions active when the study-session view renders at /sessions/:id', () => {
+    vi.stubGlobal('useRoute', () => ({ path: '/sessions/sess-1' }))
+    authenticate()
+    const wrapper = mountComponent()
+
+    expect(wrapper.find('[data-testid="app-nav-sessions"]').attributes('data-active')).toBe('true')
+  })
 })
 
 describe('AppSidebar admin entry', () => {

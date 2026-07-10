@@ -15,7 +15,7 @@ import { useElapsedTimer } from '~/composables/useElapsedTimer'
 import { useSessionProgress } from '~/composables/useSessionProgress'
 import type { SessionItemResponseDto } from '~~/src/api/model'
 
-definePageMeta({ layout: 'minimal' })
+definePageMeta({ layout: 'default', fullBleed: true })
 
 const route = useRoute()
 const sessionId = computed(() => String(route.params.id))
@@ -149,6 +149,7 @@ async function handleEnd() {
           v-else-if="currentItem"
           :session-id="sessionId"
           :item="currentItem"
+          :domain="currentItem.domain"
           @advance="handleAdvance"
         />
       </template>

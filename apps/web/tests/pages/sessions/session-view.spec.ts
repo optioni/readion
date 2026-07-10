@@ -156,7 +156,7 @@ describe('Session view page shell', () => {
   it('renders within the app shell layout, not the bare minimal layout', () => {
     mountPage()
 
-    expect(definePageMetaSpy).toHaveBeenCalledWith({ layout: 'default' })
+    expect(definePageMetaSpy).toHaveBeenCalledWith({ layout: 'default', fullBleed: true })
   })
 
   it("passes the current item's domain down to the ReadingBlock", async () => {
@@ -215,10 +215,9 @@ describe('Session view resume behaviour', () => {
   })
 
   it('resumes at the last item (clamped to lastItemIndex) when every item is already complete', async () => {
-    stubSession(
-      [readingItem(0, true), readingItem(1, true), readingItem(2, true)],
-      { lastItemIndex: 1 },
-    )
+    stubSession([readingItem(0, true), readingItem(1, true), readingItem(2, true)], {
+      lastItemIndex: 1,
+    })
     const wrapper = mountPage()
     await flushPromises()
 

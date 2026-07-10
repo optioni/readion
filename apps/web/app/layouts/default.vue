@@ -1,5 +1,8 @@
 <template>
-  <div class="flex min-h-screen bg-readion-background-base text-slate-100 antialiased">
+  <div
+    class="flex bg-readion-background-base text-slate-100 antialiased"
+    :class="isFullBleed ? 'h-screen overflow-hidden' : 'min-h-screen'"
+  >
     <AppSidebar :open="drawerOpen" @close="drawerOpen = false" />
 
     <div
@@ -9,7 +12,7 @@
       @click="drawerOpen = false"
     />
 
-    <div class="flex min-w-0 flex-1 flex-col">
+    <div class="flex min-w-0 flex-1 flex-col" :class="isFullBleed ? 'min-h-0' : ''">
       <header
         class="flex h-13 flex-shrink-0 items-center gap-2 border-readion-border-strong border-b bg-readion-background-elevated px-4 lg:hidden"
       >
@@ -38,7 +41,11 @@
         <span class="font-bold text-slate-100 text-sm tracking-tight">Readion</span>
       </header>
 
-      <main data-testid="shell-container" class="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-10">
+      <main
+        data-testid="shell-container"
+        class="min-w-0 flex-1"
+        :class="isFullBleed ? 'flex min-h-0 flex-col' : 'px-4 py-8 sm:px-6 lg:px-10'"
+      >
         <slot />
       </main>
     </div>
@@ -46,10 +53,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const drawerOpen = ref(false)
 const route = useRoute()
+
+// Full-bleed pages (e.g. the session split panel) render their own internal header/scroll regions
+// and must fill the viewport edge-to-edge instead of the standard padded, page-scrolling column.
+const isFullBleed = computed(() => route.meta?.fullBleed === true)
 
 // Dismiss the off-canvas drawer once a destination is chosen on narrow viewports.
 watch(

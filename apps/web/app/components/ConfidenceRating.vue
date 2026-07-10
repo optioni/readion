@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ modelValue: number | undefined }>()
+defineProps<{ modelValue: number | undefined; topic?: string }>()
 
 defineEmits<{ 'update:modelValue': [value: number] }>()
 
@@ -12,7 +12,10 @@ const faces = ['😕', '🤔', '😐', '🙂', '😎']
     data-testid="confidence-rating"
     class="rounded-xl border border-readion-border-strong bg-readion-background-surface px-6 py-4"
   >
-    <p class="mb-3 text-readion-text-secondary text-xs">How confident do you feel?</p>
+    <p class="mb-3 text-readion-text-secondary text-xs">
+      <template v-if="topic">How confident do you feel about <strong class="text-readion-text-primary">{{ topic }}</strong>?</template>
+      <template v-else>How confident do you feel?</template>
+    </p>
     <div class="mb-2 flex gap-1.5">
       <button
         v-for="(n, i) in points"
