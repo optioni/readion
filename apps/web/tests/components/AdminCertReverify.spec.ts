@@ -78,6 +78,7 @@ async function flush(times = 8) {
 }
 
 beforeEach(() => {
+  vi.clearAllMocks()
   dueData.value = [DUE_ITEM]
   vi.mocked(certificationsControllerDetail).mockResolvedValue(envelope(CURRENT_CERT))
   vi.mocked(certSetupControllerDiscoverSources).mockResolvedValue(
