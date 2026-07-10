@@ -18,10 +18,10 @@
 
 ## 2. Session start — cert pill + humanized defaults (`web-session-view`)
 
-- [ ] 2.1 RED: component test asserting a cert identity pill (mono code + full name) renders above the start card, sourced for the enrollment
-- [ ] 2.2 RED: component test asserting the defaults summary renders humanized labels via the shared label map, not raw enum slugs
-- [ ] 2.3 GREEN: fetch/surface the cert code+name on the start page; render the pill; apply the label map; add the minimal-header brand mark
-- [ ] 2.4 REFACTOR: reuse the label map from the settings change
+- [x] 2.1 RED: component test asserting a cert identity pill (mono code + full name) renders above the start card, sourced for the enrollment
+- [x] 2.2 RED: component test asserting the defaults summary renders humanized labels via the shared label map, not raw enum slugs
+- [x] 2.3 GREEN: fetch/surface the cert code+name on the start page (via `useCertDetail`); render the pill; apply the label map; add the minimal-header brand mark
+- [x] 2.4 REFACTOR: reuse the label map from the settings change (`sessionDefaultContentMixLabels`/`sessionDefaultDifficultyLabels`/`sessionDefaultLearningStyleLabels`)
 
 ## 3. Session summary — presentational polish (`web-session-view`)
 
