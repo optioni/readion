@@ -11,7 +11,8 @@ vi.mock('~/composables/useMockExamAttempt', () => ({ useMockExamAttempt: vi.fn()
 vi.mock('~/composables/useCertDetail', () => ({ useCertDetail: vi.fn() }))
 
 vi.stubGlobal('useRoute', () => ({ params: { id: 'exam-1' } }))
-vi.stubGlobal('definePageMeta', vi.fn())
+const definePageMetaSpy = vi.fn()
+vi.stubGlobal('definePageMeta', definePageMetaSpy)
 const mockNavigate = vi.fn()
 vi.stubGlobal('navigateTo', mockNavigate)
 
@@ -133,6 +134,13 @@ describe('Mock exam page shell', () => {
     stubAttempt(null, { isError: true })
     const wrapper = mountPage()
     expect(wrapper.find('[data-testid="mock-exam-error"]').exists()).toBe(true)
+  })
+
+  it('uses a bare (headerless) layout so ExamHeader is the only chrome', () => {
+    stubAttempt(makeExam())
+    mountPage()
+
+    expect(definePageMetaSpy).toHaveBeenCalledWith({ layout: false })
   })
 })
 

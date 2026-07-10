@@ -77,6 +77,33 @@ describe('MockExamNavPanel', () => {
       expect(wrapper.find('[data-testid="exam-submit-button"]').exists()).toBe(true)
     })
 
+    it('shows an Answered and a Flagged legend swatch, not Current', () => {
+      const wrapper = mount(MockExamNavPanel, {
+        props: { mode: 'active', total: 65, currentIndex: 0, answeredIndices: [] },
+      })
+
+      const legend = wrapper.find('[data-testid="exam-nav-legend"]')
+      expect(legend.text()).toContain('Answered')
+      expect(legend.text()).toContain('Flagged')
+      expect(legend.text()).not.toContain('Current')
+    })
+
+    it('renders a flagged question in the Flagged state independently of the current square', () => {
+      const wrapper = mount(MockExamNavPanel, {
+        props: {
+          mode: 'active',
+          total: 5,
+          currentIndex: 2,
+          answeredIndices: [],
+          flaggedIndices: [4],
+        },
+      })
+
+      const squares = wrapper.findAll('[data-testid="exam-nav-square"]')
+      expect(squares[4]!.attributes('data-state')).toBe('flagged')
+      expect(squares[2]!.attributes('data-state')).toBe('current')
+    })
+
     it('emits the zero-based index when a square is clicked', async () => {
       const wrapper = mount(MockExamNavPanel, {
         props: { mode: 'active', total: 65, currentIndex: 0, answeredIndices: [] },

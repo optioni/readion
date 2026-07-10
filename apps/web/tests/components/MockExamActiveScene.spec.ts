@@ -179,6 +179,29 @@ describe('MockExamActiveScene', () => {
     expect(wrapper.find('[data-testid="exam-question-counter"]').text()).toMatch(/Q\s+4\s+\//)
   })
 
+  it('flags a question independently of which question is current, keyed by index', async () => {
+    const wrapper = mountScene(examWith65())
+
+    // Flag question 0 (the current question) via the header toggle.
+    await wrapper.find('[data-testid="exam-flag-toggle"]').trigger('click')
+    expect(wrapper.find('[data-testid="exam-flag-toggle"]').attributes('data-flagged')).toBe(
+      'true',
+    )
+    expect(wrapper.findAll('[data-testid="exam-nav-square"]')[0]!.attributes('data-state')).toBe(
+      'flagged',
+    )
+
+    // Navigate to question 5 — question 0's nav square stays flagged, the header toggle now
+    // reflects question 5's (unflagged) state.
+    await wrapper.findAll('[data-testid="exam-nav-square"]')[5]!.trigger('click')
+    expect(wrapper.find('[data-testid="exam-flag-toggle"]').attributes('data-flagged')).toBe(
+      'false',
+    )
+    expect(wrapper.findAll('[data-testid="exam-nav-square"]')[0]!.attributes('data-state')).toBe(
+      'flagged',
+    )
+  })
+
   describe('submit', () => {
     it('opens the unanswered confirmation when the nav submit button is clicked', async () => {
       const wrapper = mountScene(examWith65())

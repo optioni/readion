@@ -47,4 +47,22 @@ describe('buildExamNavSquares', () => {
     expect(squares.map((s) => s.state)).toEqual(['correct', 'incorrect', 'skipped', 'correct'])
     expect(squares.map((s) => s.label)).toEqual([1, 2, 3, 4])
   })
+
+  it('flags a question independently of whether it is answered or current', () => {
+    const squares = buildExamNavSquares({
+      mode: 'active',
+      total: 5,
+      currentIndex: 2,
+      answeredIndices: [0, 3],
+      flaggedIndices: [3],
+    })
+
+    expect(squares.map((s) => s.state)).toEqual([
+      'answered',
+      'unanswered',
+      'current',
+      'flagged',
+      'unanswered',
+    ])
+  })
 })
