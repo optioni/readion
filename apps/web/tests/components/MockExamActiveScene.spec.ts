@@ -184,9 +184,7 @@ describe('MockExamActiveScene', () => {
 
     // Flag question 0 (the current question) via the header toggle.
     await wrapper.find('[data-testid="exam-flag-toggle"]').trigger('click')
-    expect(wrapper.find('[data-testid="exam-flag-toggle"]').attributes('data-flagged')).toBe(
-      'true',
-    )
+    expect(wrapper.find('[data-testid="exam-flag-toggle"]').attributes('data-flagged')).toBe('true')
     expect(wrapper.findAll('[data-testid="exam-nav-square"]')[0]!.attributes('data-state')).toBe(
       'flagged',
     )

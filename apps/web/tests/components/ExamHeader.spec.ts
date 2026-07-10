@@ -117,9 +117,7 @@ describe('ExamHeader', () => {
     )
 
     await wrapper.setProps({ flagged: true })
-    expect(wrapper.find('[data-testid="exam-flag-toggle"]').attributes('data-flagged')).toBe(
-      'true',
-    )
+    expect(wrapper.find('[data-testid="exam-flag-toggle"]').attributes('data-flagged')).toBe('true')
 
     // Session-local: a flag never emits a persistence event.
     expect(wrapper.emitted('save')).toBeUndefined()
