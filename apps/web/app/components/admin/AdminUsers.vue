@@ -24,6 +24,13 @@ const meta = computed(() => usersQuery.data.value?.meta)
 const isLoading = computed(() => usersQuery.isLoading.value)
 const isError = computed(() => usersQuery.isError.value)
 
+const searchTerm = ref('')
+const filteredUsers = computed(() => {
+  const term = searchTerm.value.trim().toLowerCase()
+  if (!term) return users.value
+  return users.value.filter((user) => user.email.toLowerCase().includes(term))
+})
+
 const demoteError = ref<string | null>(null)
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {
@@ -88,17 +95,18 @@ async function demote(id: string) {
         {{ demoteError }}
       </p>
 
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <input
-          type="search"
-          data-testid="user-search"
-          placeholder="Search users…"
-          class="rounded-md border border-readion-background-surface bg-readion-background-overlay px-3 py-1.5 text-slate-100 text-sm placeholder:text-slate-500"
-        />
-        <div class="flex items-center gap-4">
-          <span data-testid="user-summary" class="text-slate-400 text-sm">
-            {{ userSummaryLabel }}
-          </span>
+      <div data-testid="user-toolbar" class="flex flex-wrap items-center justify-between gap-3">
+        <span data-testid="user-summary" class="text-slate-400 text-sm">
+          {{ userSummaryLabel }}
+        </span>
+        <div class="flex items-center gap-3">
+          <input
+            v-model="searchTerm"
+            type="search"
+            data-testid="user-search"
+            placeholder="Search users…"
+            class="rounded-md border border-readion-background-surface bg-readion-background-overlay px-3 py-1.5 text-slate-100 text-sm placeholder:text-slate-500"
+          />
           <button
             type="button"
             data-testid="user-invite-btn"
@@ -125,7 +133,7 @@ async function demote(id: string) {
         </thead>
         <tbody>
           <tr
-            v-for="user in users"
+            v-for="user in filteredUsers"
             :key="user.id"
             data-testid="admin-user-row"
             :data-user-id="user.id"
@@ -136,7 +144,7 @@ async function demote(id: string) {
               <div class="flex items-center gap-3">
                 <span
                   data-testid="user-avatar"
-                  class="flex size-9 items-center justify-center rounded-full bg-readion-primary font-medium text-white text-xs"
+                  class="flex size-9 items-center justify-center rounded-full border border-readion-border-strong bg-readion-background-elevated font-medium text-readion-accent-label text-xs"
                 >
                   {{ emailInitials(user.email) }}
                 </span>
@@ -149,7 +157,7 @@ async function demote(id: string) {
                 class="rounded-full px-2.5 py-1 font-medium text-xs"
                 :class="
                   user.role === 'admin'
-                    ? 'bg-readion-primary/15 text-readion-primary'
+                    ? 'bg-readion-status-warning/10 text-readion-status-warning'
                     : 'bg-readion-background-overlay text-slate-300'
                 "
               >

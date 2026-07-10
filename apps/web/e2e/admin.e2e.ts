@@ -171,9 +171,10 @@ test.describe('web-admin — admin console', () => {
     // Target renders the human label (the promoted user's email), not `targetType · uuid`.
     await expect(row.getByTestId('audit-target')).toContainText('casey@org.io')
     await expect(row.getByTestId('audit-target')).not.toContainText(PROMOTE_USER_ID)
-    // Change renders a scalar before → after diff, never raw JSON.stringify braces.
-    await expect(row.getByTestId('audit-change')).toContainText('user → admin')
-    await expect(row.getByTestId('audit-change')).not.toContainText('{')
+    // Before/After render as separate scalar columns, never raw JSON.stringify braces.
+    await expect(row.getByTestId('audit-before')).toContainText('user')
+    await expect(row.getByTestId('audit-after')).toContainText('admin')
+    await expect(row.getByTestId('audit-before')).not.toContainText('{')
     await expect(page.getByTestId('audit-export-btn')).toHaveCount(0)
     await expect(page.getByTestId('audit-edit-btn')).toHaveCount(0)
   })

@@ -49,7 +49,8 @@ test.describe('fix-admin-console — acceptance', () => {
     await expect(roleChangeRow.getByTestId('audit-target')).toContainText('casey@org.io')
     await expect(roleChangeRow.getByTestId('audit-target')).not.toContainText(PROMOTE_USER_ID)
     await expect(roleChangeRow.getByTestId('audit-target')).not.toContainText('user ·')
-    await expect(roleChangeRow).toContainText('user → admin')
+    await expect(roleChangeRow.getByTestId('audit-before')).toContainText('user')
+    await expect(roleChangeRow.getByTestId('audit-after')).toContainText('admin')
     await expect(roleChangeRow).not.toContainText('{')
     await expect(roleChangeRow).not.toContainText('}')
 
@@ -63,7 +64,8 @@ test.describe('fix-admin-console — acceptance', () => {
       'AWS Certified Solutions Architect',
     )
     await expect(certActionRow.getByTestId('audit-target')).not.toContainText('certification ·')
-    await expect(certActionRow).toContainText('draft → live')
+    await expect(certActionRow.getByTestId('audit-before')).toContainText('draft')
+    await expect(certActionRow.getByTestId('audit-after')).toContainText('live')
     await expect(certActionRow).not.toContainText('{')
     await expect(certActionRow).not.toContainText('}')
   })

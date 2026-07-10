@@ -16,11 +16,13 @@ import {
   isJobInFlight,
   latestJob,
   sourceStatusLabel,
-  sourceStatusTextClass,
+  sourceStatusPillClass,
 } from '~/composables/sourceStatus'
 import { useAdminCertificationsList } from '~/composables/useAdminCertificationsList'
 import { useAdminSources, useSourceJobs } from '~/composables/useAdminSources'
 import { lastIngestedTimestamp } from '~/utils/deriveLastIngested'
+import { estimateRemainingMinutes } from '~/utils/estimateJobEta'
+import { formatRelativeAdminTimestamp } from '~/utils/relativeAdminTimestamp'
 import {
   contentControllerDisable,
   contentControllerEnable,
@@ -55,22 +57,29 @@ function statusFor(source: { id: string; enabled: boolean }) {
   return deriveSourceStatus(source, latestJobFor(source.id))
 }
 
-const hasRunningJobs = computed(() =>
-  sources.value.some((source) => isJobInFlight(latestJobFor(source.id))),
+const runningJobs = computed(() =>
+  sources.value
+    .map((source) => latestJobFor(source.id))
+    .filter((job): job is NonNullable<typeof job> => isJobInFlight(job)),
 )
+const hasRunningJobs = computed(() => runningJobs.value.length > 0)
 
-const lastIngestedFormatter = new Intl.DateTimeFormat('en-US', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-})
+function jobBannerLabel(): string {
+  const job = runningJobs.value[0]
+  if (!job) return ''
+  const count = runningJobs.value.length
+  const noun = count === 1 ? 'job' : 'jobs'
+  const eta = estimateRemainingMinutes(job)
+  const etaLabel = eta === null ? '' : ` · ~${eta} min remaining`
+  return `${count} ingestion ${noun} running — ${job.progress}%${etaLabel}`
+}
 
 function lastIngestedLabel(source: { id: string; lastFetchedAt: string | null }): string {
   const timestamp = lastIngestedTimestamp(source, latestJobFor(source.id))
   if (timestamp === null) {
-    return 'Never'
+    return '—'
   }
-  return lastIngestedFormatter.format(new Date(timestamp))
+  return formatRelativeAdminTimestamp(new Date(timestamp).toISOString())
 }
 
 const showAddSource = ref(false)
@@ -231,13 +240,17 @@ async function toggleEnabled(source: { id: string; enabled: boolean }) {
         {{ registerError }}
       </p>
 
-      <p
+      <div
         v-if="hasRunningJobs"
         data-testid="source-jobs-banner"
-        class="rounded-md bg-readion-status-warning/10 px-4 py-2 text-readion-status-warning text-sm"
+        class="flex items-center gap-2.5 rounded-lg border border-readion-accent-label/20 bg-readion-accent-label/5 px-3.5 py-2.5 text-slate-300 text-sm"
       >
-        Ingestion in progress for one or more sources.
-      </p>
+        <span
+          data-testid="source-jobs-banner-spinner"
+          class="size-3 shrink-0 animate-spin rounded-full border-2 border-readion-accent-label/40 border-t-readion-accent-label"
+        />
+        <span>{{ jobBannerLabel() }}</span>
+      </div>
 
       <AdminAsyncMessage
         v-if="isLoading"
@@ -274,7 +287,14 @@ async function toggleEnabled(source: { id: string; enabled: boolean }) {
             class="border-readion-background-surface/60 border-b"
           >
             <td data-testid="source-url" class="px-3 py-3 text-slate-100">{{ source.url }}</td>
-            <td data-testid="source-type" class="px-3 py-3 text-slate-300">{{ source.type }}</td>
+            <td class="px-3 py-3">
+              <span
+                data-testid="source-type"
+                class="rounded-sm border border-readion-border-strong bg-readion-background-elevated px-1.5 py-0.5 text-slate-400 text-xs"
+              >
+                {{ source.type }}
+              </span>
+            </td>
             <td class="px-3 py-3">
               <button
                 type="button"
@@ -295,14 +315,14 @@ async function toggleEnabled(source: { id: string; enabled: boolean }) {
             <td data-testid="source-last-ingested" class="px-3 py-3 text-slate-300">
               {{ lastIngestedLabel(source) }}
             </td>
-            <td data-testid="source-chunk-count" class="px-3 py-3 text-slate-300">
-              {{ source.chunkCount }}
+            <td data-testid="source-chunk-count" class="px-3 py-3 font-mono text-slate-300">
+              {{ source.chunkCount.toLocaleString() }}
             </td>
             <td class="px-3 py-3">
               <span
                 data-testid="source-status-pill"
-                class="rounded-full bg-readion-background-overlay px-2.5 py-1 font-medium text-xs"
-                :class="sourceStatusTextClass(statusFor(source))"
+                class="rounded-full px-2.5 py-1 font-medium text-xs"
+                :class="sourceStatusPillClass(statusFor(source))"
               >
                 {{ sourceStatusLabel(statusFor(source)) }}
               </span>

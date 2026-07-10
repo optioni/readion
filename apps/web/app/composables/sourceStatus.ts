@@ -57,3 +57,13 @@ export function sourceStatusTextClass(status: SourceStatus): string {
   }
   return statusTextColorClass(STATUS_COLOR_KEYS[status])
 }
+
+// Per-state tinted background + border pill chrome (the design's status pills), layered on top
+// of the shared text-color helper above rather than duplicating the palette mapping.
+export function sourceStatusPillClass(status: SourceStatus): string {
+  if (status === 'disabled') {
+    return 'bg-readion-background-overlay text-slate-400 border border-readion-border-strong'
+  }
+  const key = STATUS_COLOR_KEYS[status]
+  return `bg-readion-status-${key}/10 border border-readion-status-${key}/25 ${statusTextColorClass(key)}`
+}
