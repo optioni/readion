@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import type { SessionDefaults } from '@readion/shared'
+import {
+  sessionDefaultContentMixLabels,
+  sessionDefaultDifficultyLabels,
+  sessionDefaultLearningStyleLabels,
+} from '@readion/shared'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { onboardingQueryKeys } from '~/composables/onboardingQueryKeys'
 import { sessionRunPath } from '~/composables/runnerRoutes'
 import { createSession } from '~/composables/sessionViewApi'
+import { useCertDetail } from '~/composables/useCertDetail'
 import { useCertWeakAreas } from '~/composables/useCertWeakAreas'
 import { readProfileEnvelope } from '~/composables/useOnboardingGate'
 import { usersControllerGetMe } from '~~/src/api/users/users'
@@ -28,12 +34,13 @@ const summaryRows = computed(() => {
   }
   return [
     { label: 'Duration', value: `${value.duration} min` },
-    { label: 'Content mix', value: value.contentMix },
-    { label: 'Difficulty', value: value.difficulty },
-    { label: 'Learning style', value: value.learningStyle },
+    { label: 'Content mix', value: sessionDefaultContentMixLabels[value.contentMix] },
+    { label: 'Difficulty', value: sessionDefaultDifficultyLabels[value.difficulty] },
+    { label: 'Learning style', value: sessionDefaultLearningStyleLabels[value.learningStyle] },
   ]
 })
 
+const { name: certName, code: certCode } = useCertDetail(props.enrollmentId)
 const { weakAreas } = useCertWeakAreas(props.enrollmentId)
 
 const suggestedDomain = computed(() => {
@@ -61,6 +68,16 @@ async function start() {
 
 <template>
   <div data-testid="quick-start-panel" class="mx-auto flex w-full max-w-[480px] flex-col">
+    <div class="mb-7 flex justify-center">
+      <div
+        data-testid="cert-identity-pill"
+        class="flex items-center gap-2 rounded-full border border-readion-border-strong bg-readion-background-surface px-3.5 py-1.5"
+      >
+        <span class="font-mono text-[11px] text-readion-accent-label uppercase">{{ certCode }}</span>
+        <span class="text-readion-text-secondary text-xs">{{ certName }}</span>
+      </div>
+    </div>
+
     <div
       class="mb-3 rounded-xl border border-readion-border-strong bg-readion-background-surface px-8 py-7"
     >
