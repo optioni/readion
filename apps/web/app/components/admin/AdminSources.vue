@@ -61,9 +61,8 @@ function statusFor(source: { id: string; enabled: boolean }) {
 const runningJobs = computed(() =>
   sources.value
     .map((source) => ({ source, job: latestJobFor(source.id) }))
-    .filter(
-      (entry): entry is { source: (typeof sources.value)[number]; job: IngestionJobStatus } =>
-        isJobInFlight(entry.job),
+    .filter((entry): entry is { source: (typeof sources.value)[number]; job: IngestionJobStatus } =>
+      isJobInFlight(entry.job),
     ),
 )
 const hasRunningJobs = computed(() => runningJobs.value.length > 0)

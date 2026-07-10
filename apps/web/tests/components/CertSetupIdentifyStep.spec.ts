@@ -51,11 +51,15 @@ describe('CertSetupIdentifyStep', () => {
     const cta = wrapper.find('[data-testid="identify-search-btn"]')
     expect(cta.attributes('disabled')).toBeDefined()
 
-    await wrapper.find('[data-testid="identify-name-input"]').setValue('Certified Kubernetes Security Specialist')
+    await wrapper
+      .find('[data-testid="identify-name-input"]')
+      .setValue('Certified Kubernetes Security Specialist')
     expect(wrapper.find('[data-testid="identify-search-btn"]').attributes('disabled')).toBeDefined()
 
     await wrapper.find('[data-testid="identify-code-input"]').setValue('CKS')
-    expect(wrapper.find('[data-testid="identify-search-btn"]').attributes('disabled')).toBeUndefined()
+    expect(
+      wrapper.find('[data-testid="identify-search-btn"]').attributes('disabled'),
+    ).toBeUndefined()
   })
 
   it('the next-steps callout reflects the entered code', async () => {
@@ -68,9 +72,13 @@ describe('CertSetupIdentifyStep', () => {
   it('submits the identity fields (name, code, certifying body, known URL) on CTA click', async () => {
     const { wrapper, submitIdentity } = mountStep()
 
-    await wrapper.find('[data-testid="identify-name-input"]').setValue('Certified Kubernetes Security Specialist')
+    await wrapper
+      .find('[data-testid="identify-name-input"]')
+      .setValue('Certified Kubernetes Security Specialist')
     await wrapper.find('[data-testid="identify-code-input"]').setValue('CKS')
-    await wrapper.find('[data-testid="identify-provider-input"]').setValue('CNCF / Linux Foundation')
+    await wrapper
+      .find('[data-testid="identify-provider-input"]')
+      .setValue('CNCF / Linux Foundation')
     await wrapper
       .find('[data-testid="identify-known-url-input"]')
       .setValue('https://training.linuxfoundation.org/certification/cks/')

@@ -87,7 +87,9 @@ describe('AdminReviewQueueList — question snippet, not the domain tag', () => 
   it('renders a relative date instead of an absolute one', () => {
     const wrapper = mount(AdminReviewQueueList, { props: { items: ITEMS, selectedId: null } })
 
-    const dateText = rowFor(wrapper, ITEM_A_ID).find('[data-testid="review-queue-item-date"]').text()
+    const dateText = rowFor(wrapper, ITEM_A_ID)
+      .find('[data-testid="review-queue-item-date"]')
+      .text()
     expect(dateText).not.toMatch(/\b2026\b/)
   })
 })

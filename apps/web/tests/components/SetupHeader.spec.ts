@@ -35,12 +35,12 @@ describe('SetupHeader', () => {
   })
 
   it('shows the field extraction and content sources labels at steps 3 and 4', () => {
-    expect(
-      mountHeader(3).find('[data-testid="setup-header-step-indicator"]').text(),
-    ).toBe('Step 3 of 5 · Field extraction')
-    expect(
-      mountHeader(4).find('[data-testid="setup-header-step-indicator"]').text(),
-    ).toBe('Step 4 of 5 · Content sources')
+    expect(mountHeader(3).find('[data-testid="setup-header-step-indicator"]').text()).toBe(
+      'Step 3 of 5 · Field extraction',
+    )
+    expect(mountHeader(4).find('[data-testid="setup-header-step-indicator"]').text()).toBe(
+      'Step 4 of 5 · Content sources',
+    )
   })
 
   it('emits cancel when the cancel affordance is activated', async () => {
@@ -61,7 +61,10 @@ describe('SetupHeader', () => {
   })
 
   it('reflects the entered cert code in the breadcrumb and the cert name as the header title', () => {
-    const wrapper = mountHeader(2, { code: 'CKS', certName: 'Certified Kubernetes Security Specialist' })
+    const wrapper = mountHeader(2, {
+      code: 'CKS',
+      certName: 'Certified Kubernetes Security Specialist',
+    })
 
     expect(wrapper.find('[data-testid="setup-header-breadcrumb"]').text()).toContain(
       'Certifications › New › CKS',

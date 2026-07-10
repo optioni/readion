@@ -6,7 +6,12 @@ import type { CertSetupWizardState } from '~/composables/useCertSetupWizard'
 
 const props = defineProps<{
   state: CertSetupWizardState
-  submitIdentity: (name: string, code: string, provider: string, knownSourceUrl: string) => Promise<void>
+  submitIdentity: (
+    name: string,
+    code: string,
+    provider: string,
+    knownSourceUrl: string,
+  ) => Promise<void>
 }>()
 
 const name = ref(props.state.name)
@@ -23,7 +28,12 @@ async function search(): Promise<void> {
   searchError.value = null
   searching.value = true
   try {
-    await props.submitIdentity(name.value.trim(), code.value.trim(), provider.value.trim(), knownUrl.value.trim())
+    await props.submitIdentity(
+      name.value.trim(),
+      code.value.trim(),
+      provider.value.trim(),
+      knownUrl.value.trim(),
+    )
   } catch (error) {
     searchError.value =
       error instanceof ReadionProblemDetailsError

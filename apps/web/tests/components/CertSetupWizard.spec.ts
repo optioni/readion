@@ -231,15 +231,15 @@ describe('CertSetupWizard step 3→4 — submit draft + coverage', () => {
     await advanceToExtraction(wrapper)
 
     // Identity fields arrive pre-filled from step 1 — no re-entry needed.
-    expect((wrapper.find('[data-testid="cert-name-input"]').element as HTMLInputElement).value).toBe(
-      CERT_NAME,
-    )
+    expect(
+      (wrapper.find('[data-testid="cert-name-input"]').element as HTMLInputElement).value,
+    ).toBe(CERT_NAME)
     expect(
       (wrapper.find('[data-testid="cert-provider-input"]').element as HTMLInputElement).value,
     ).toBe(PROVIDER)
-    expect((wrapper.find('[data-testid="cert-code-input"]').element as HTMLInputElement).value).toBe(
-      CODE,
-    )
+    expect(
+      (wrapper.find('[data-testid="cert-code-input"]').element as HTMLInputElement).value,
+    ).toBe(CODE)
 
     expect(wrapper.find('[data-testid="publish-cert-btn"]').exists()).toBe(false)
     await wrapper.find('[data-testid="submit-draft-btn"]').trigger('click')

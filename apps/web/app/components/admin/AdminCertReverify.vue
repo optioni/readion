@@ -7,7 +7,9 @@ import { useDueForReverification } from '~/composables/useDueForReverification'
 const props = defineProps<{ code: string }>()
 
 const dueQuery = useDueForReverification()
-const dueItem = computed(() => dueQuery.data.value?.find((item) => item.code === props.code) ?? null)
+const dueItem = computed(
+  () => dueQuery.data.value?.find((item) => item.code === props.code) ?? null,
+)
 
 const { diff, reverifyError, submitting, start, submit } = useCertReverifyFlow()
 

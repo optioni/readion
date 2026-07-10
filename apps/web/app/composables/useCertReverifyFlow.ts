@@ -52,7 +52,8 @@ export function useCertReverifyFlow(onSubmitted?: () => void | Promise<void>): C
     queryFn: async () =>
       readExtractionStatusEnvelope(await certSetupControllerReadExtraction(jobId.value as string)),
     enabled: computed(() => Boolean(jobId.value)),
-    refetchInterval: (query) => nextRefetchInterval(query.state.data, query.state.fetchFailureCount),
+    refetchInterval: (query) =>
+      nextRefetchInterval(query.state.data, query.state.fetchFailureCount),
   })
 
   watch(

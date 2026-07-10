@@ -15,7 +15,11 @@ describe('AdminWizardFooter', () => {
 
   it('supports overriding the cta/cancel testids for step-specific selectors', () => {
     const wrapper = mount(AdminWizardFooter, {
-      props: { ctaLabel: 'Confirm', ctaTestid: 'identify-search-btn', cancelTestid: 'identify-cancel-btn' },
+      props: {
+        ctaLabel: 'Confirm',
+        ctaTestid: 'identify-search-btn',
+        cancelTestid: 'identify-cancel-btn',
+      },
     })
 
     expect(wrapper.find('[data-testid="identify-search-btn"]').exists()).toBe(true)

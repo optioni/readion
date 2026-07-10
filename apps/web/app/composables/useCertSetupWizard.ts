@@ -47,7 +47,12 @@ export interface CertSetupWizardState {
 
 export interface CertSetupWizard {
   state: CertSetupWizardState
-  submitIdentity: (name: string, code: string, provider: string, knownSourceUrl: string) => Promise<void>
+  submitIdentity: (
+    name: string,
+    code: string,
+    provider: string,
+    knownSourceUrl: string,
+  ) => Promise<void>
   confirmSource: (url: string) => Promise<void>
   applyExtraction: (fields: CertExtractionFields) => void
   editFieldValue: <K extends CertExtractionFieldKey>(key: K, value: CertSetupFieldValues[K]) => void

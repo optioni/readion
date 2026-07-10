@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { QuarantinedItemListItem } from '@readion/shared'
-import { formatRelativeAdminTimestamp } from '~/utils/relativeAdminTimestamp'
 import { formatVerdict, verdictInputFromProvenance } from '~/utils/formatVerdict'
+import { formatRelativeAdminTimestamp } from '~/utils/relativeAdminTimestamp'
 
 interface CertLookupEntry {
   name: string

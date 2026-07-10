@@ -87,7 +87,9 @@ beforeEach(() => {
       suggestedContentSources: [],
     }),
   )
-  vi.mocked(certSetupControllerExtract).mockResolvedValue(envelope({ jobId: 'job-1', state: 'active' }))
+  vi.mocked(certSetupControllerExtract).mockResolvedValue(
+    envelope({ jobId: 'job-1', state: 'active' }),
+  )
   vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
     envelope({ state: 'completed', fields: EXTRACTION_FIELDS }),
   )
