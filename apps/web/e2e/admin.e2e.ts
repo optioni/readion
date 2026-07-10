@@ -261,15 +261,14 @@ test.describe('web-admin — admin console', () => {
     // certifying body, optional known URL, then "Search for sources →" kicks off discovery.
     await expect(page.getByTestId('cert-identify-step')).toBeVisible()
     await expect(page.getByTestId('setup-header-step-indicator')).toContainText('Step 1 of 5')
+    await expect(page.getByTestId('identify-search-btn')).toBeDisabled()
     await page
       .getByTestId('identify-name-input')
       .fill('AWS Certified Solutions Architect — Associate')
     await page.getByTestId('identify-code-input').fill('SAA-C03')
-    await page.getByTestId('identify-provider-input').fill('Amazon Web Services')
     await expect(page.getByTestId('identify-code-hint')).toBeVisible()
-    await expect(page.getByTestId('identify-search-btn')).toBeDisabled()
-    await page.getByTestId('identify-provider-input').fill('Amazon Web Services')
     await expect(page.getByTestId('identify-search-btn')).toBeEnabled()
+    await page.getByTestId('identify-provider-input').fill('Amazon Web Services')
     await page.getByTestId('identify-search-btn').click()
     await expect
       .poll(() => handles.discoverBodies.at(-1))

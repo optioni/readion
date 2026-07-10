@@ -1,10 +1,13 @@
-export type CertSetupStep = 1 | 2 | 3 | 4
+export type CertSetupStep = 1 | 2 | 3 | 4 | 5
 
-// Single source of truth for the cert-setup wizard's step labels: `SetupHeader`
-// derives its `Step N of 4 · <name>` indicator and progress bar from this list
-// rather than duplicating labels/count next to the wizard's own step state.
+// Single source of truth for the cert-setup wizard's step labels: `SetupHeader` derives its
+// `Step N of 5 · <name>` indicator and progress bar from this list rather than duplicating
+// labels/count next to the wizard's own step state. Step 5 ("Review & publish") has no distinct
+// screen in this app — draft creation auto-publishes — so the wizard never actually reaches it;
+// it stays in the count so the header's fraction matches the design's 5-step flow.
 export const CERT_SETUP_STEPS = [
-  'Source search',
+  'Identify certification',
+  'Source confirmation',
   'Field extraction',
   'Content sources',
   'Review & publish',

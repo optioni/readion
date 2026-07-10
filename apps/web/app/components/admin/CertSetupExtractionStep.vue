@@ -43,7 +43,10 @@ const extractionQuery = useQuery({
     readExtractionStatusEnvelope(
       await certSetupControllerReadExtraction(props.state.extractionJobId as string),
     ),
-  enabled: computed(() => Boolean(props.state.extractionJobId) && props.state.step === 2),
+  // Gated on the extraction job existing rather than a specific wizard step number: this
+  // component is only ever rendered by the wizard once it has reached the extraction phase (its
+  // own step-number label is the wizard's concern, not this component's).
+  enabled: computed(() => Boolean(props.state.extractionJobId)),
   refetchInterval: (query) => nextRefetchInterval(query.state.data, query.state.fetchFailureCount),
 })
 

@@ -66,6 +66,6 @@ describe('useCertSetupWizard draft creation', () => {
     registerCreatedDraft('c0000000-0000-0000-0000-000000000002')
 
     expect(state.createdCertId).toBe('c0000000-0000-0000-0000-000000000002')
-    expect(state.step).toBe(3)
+    expect(state.step).toBe(4)
   })
 })
