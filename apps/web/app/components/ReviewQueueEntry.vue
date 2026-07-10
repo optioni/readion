@@ -48,42 +48,45 @@ const overdueNote = computed(() => {
   <div
     v-else
     data-testid="review-queue-entry"
-    class="flex flex-col gap-5 rounded-xl border border-readion-border-strong bg-readion-background-surface px-8 py-8"
+    class="flex flex-1 flex-col items-center justify-center gap-7 px-8 py-10 text-center"
   >
-    <div class="flex items-center gap-4">
-      <div
-        class="flex h-14 w-14 items-center justify-center rounded-full bg-readion-primary/10 font-bold text-2xl text-readion-primary"
-        data-testid="review-due-count"
-      >
+    <div
+      data-testid="review-queue-icon"
+      class="flex h-13 w-13 items-center justify-center rounded-xl border border-readion-accent-label/20 bg-readion-accent-label/10 text-readion-accent-label"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+        <path d="M9 7h6M9 11h6M9 15h4" />
+      </svg>
+    </div>
+
+    <div>
+      <div data-testid="review-due-count" class="mb-2 font-bold text-2xl text-readion-text-primary leading-none">
         {{ dueCount }}
       </div>
-      <div>
-        <p class="font-semibold text-readion-text-primary">
-          {{ dueCount }} item{{ dueCount === 1 ? '' : 's' }} due for review
-        </p>
-        <p class="text-readion-text-muted text-sm">~5 minutes</p>
-      </div>
+      <p class="mb-1.5 font-semibold text-readion-text-primary text-base">
+        item{{ dueCount === 1 ? '' : 's' }} due for review
+      </p>
+      <p class="text-readion-text-muted text-sm">Scheduled by spaced repetition &middot; ~5 minutes</p>
     </div>
 
     <div
       data-testid="review-domain-breakdown"
-      class="flex flex-col gap-2"
+      class="flex flex-wrap justify-center gap-2"
     >
-      <p class="mb-1 text-[11px] text-readion-text-muted uppercase tracking-wider">By domain</p>
-      <div class="flex flex-wrap gap-2">
-        <span
-          v-for="entry in domainBreakdown"
-          :key="entry.domain"
-          data-testid="review-domain-chip"
-          class="inline-flex items-center gap-1.5 rounded-full border border-readion-border-strong bg-readion-background-surface px-3 py-1"
-        >
-          <span class="text-readion-text-secondary text-xs">{{ entry.domain }}</span>
-          <span class="font-semibold text-readion-primary text-xs">{{ entry.count }}</span>
-        </span>
-      </div>
+      <span
+        v-for="entry in domainBreakdown"
+        :key="entry.domain"
+        data-testid="review-domain-chip"
+        class="inline-flex items-center gap-1.5 rounded-full border border-readion-border-strong bg-readion-background-surface px-3 py-1"
+      >
+        <span class="text-readion-text-secondary text-xs">{{ entry.domain }}</span>
+        <span class="font-semibold text-readion-primary text-xs">{{ entry.count }}</span>
+      </span>
     </div>
 
-    <div class="flex items-center gap-3">
+    <div class="flex w-full max-w-[380px] items-center gap-3">
       <button
         type="button"
         data-testid="start-review-button"

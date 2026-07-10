@@ -21,6 +21,7 @@ import {
   fetchSessionDetail,
   fetchSessionSummary,
 } from '~/composables/sessionViewApi'
+import { useReviewCountdown } from '~/composables/useReviewCountdown'
 import { useTrack } from '~/composables/useTrack'
 import type { SessionItemResponseDto } from '~~/src/api/model'
 
@@ -30,6 +31,8 @@ const route = useRoute()
 const enrollmentId = computed(() => String(route.params.id))
 
 useTrack().track('review_started', { enrollmentId: enrollmentId.value })
+
+const { timeStr, timeUrgent } = useReviewCountdown()
 
 type Scene = 'queue' | 'loop' | 'completion' | 'self-grade' | 'self-grade-completion'
 const scene = ref<Scene>('queue')
@@ -198,16 +201,18 @@ const headerTotal = computed<number>(() => {
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col bg-readion-background-base">
+  <div class="flex h-screen flex-col bg-readion-background-base">
     <ReviewHeader
       :user-certification-id="enrollmentId"
       :current="headerCurrent"
       :total="headerTotal"
+      :time-str="timeStr"
+      :time-urgent="timeUrgent"
     />
 
     <div
       data-testid="review-page"
-      class="mx-auto flex w-full max-w-2xl flex-col gap-6 px-6 py-8"
+      class="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 overflow-y-auto px-6 py-8"
     >
         <template v-if="scene === 'queue'">
         <ReviewQueueEntry
