@@ -167,6 +167,13 @@ export type {
   VerifierVerdict,
 } from './grounding'
 export { isVerbatimPassage, normalizeText } from './grounding'
+export type { JobProgressEvent, JobProgressState } from './job-progress'
+export {
+  frameJobProgressEvent,
+  isTerminalJobState,
+  JOB_PROGRESS_HEARTBEAT,
+  jobProgressStates,
+} from './job-progress'
 export type {
   ExamOutcomeRequest,
   ExamOutcomeResponse,
