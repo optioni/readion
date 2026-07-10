@@ -30,6 +30,7 @@ import { AuditLogService } from '../admin/audit-log.service'
 import { mapCertificationToDto } from '../certifications/certifications.mapper'
 import type { CollectionResult } from '../common/interceptors/response.interceptor'
 import { CertDiscoveryService } from './cert-discovery.service'
+import { JobEventsService, type SseStreamResponse } from './job-events.service'
 
 export interface ListDueForReverificationQuery {
   page?: number
@@ -51,7 +52,12 @@ export class CertSetupService {
     private readonly em: EntityManager,
     private readonly auditLog: AuditLogService,
     private readonly config: ConfigService,
+    private readonly jobEvents: JobEventsService,
   ) {}
+
+  streamExtractionEvents(jobId: string, res: SseStreamResponse): Promise<void> {
+    return this.jobEvents.stream(this.queue, jobId, res)
+  }
 
   async discoverSources(request: DiscoverSourcesRequest): Promise<DiscoverSourcesResponse> {
     return this.discovery.discoverSources(request)

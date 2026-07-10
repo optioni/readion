@@ -7,9 +7,9 @@ import {
   Param,
   Post,
   Query,
+  Res,
 } from '@nestjs/common'
 import { ApiProperty, ApiPropertyOptional, ApiQuery, ApiResponse } from '@nestjs/swagger'
-import { SkipThrottle } from '@nestjs/throttler'
 import type {
   CertificationDomain,
   CertificationResponse,
@@ -29,8 +29,9 @@ import { Type } from 'class-transformer'
 import { IsInt, IsOptional, Min } from 'class-validator'
 import type { ZodType } from 'zod'
 import { CurrentUser, type CurrentUserPrincipal, Roles } from '../auth/auth.guards'
-import type { CollectionResult } from '../common/interceptors/response.interceptor'
+import { type CollectionResult, SkipEnvelope } from '../common/interceptors/response.interceptor'
 import { CertSetupService } from './cert-setup.service'
+import type { SseStreamResponse } from './job-events.service'
 
 export class ListDueForReverificationQueryDto {
   @IsOptional()
@@ -184,12 +185,21 @@ export class CertSetupController {
     return { data: await this.service.enqueueExtraction(parse(extractRequestSchema, body)) }
   }
 
-  // Status polling must use only the `general` bucket (300/60s). Every route is
-  // otherwise metered by all three throttlers, and both `auth` (10/15min, for
-  // login brute-force) and `agent` (30/60s) are far too tight for a read the
-  // wizard hits every 1.5s while an extraction runs. Superseded once the wizard
-  // moves to SSE push (see the sse-extraction-events change).
-  @SkipThrottle({ auth: true, agent: true })
+  // Server-pushed job progress: the wizard subscribes here instead of polling the status GET. The
+  // stream emits the job's current state on connect, relays the QueueEvents completed/failed signal
+  // with the grounded `fields` result, and closes on the terminal event (job-progress-events contract).
+  @SkipEnvelope()
+  @Get('extractions/:jobId/events')
+  streamExtractionEvents(
+    @Param('jobId') jobId: string,
+    @Res() res: SseStreamResponse,
+  ): Promise<void> {
+    return this.service.streamExtractionEvents(jobId, res)
+  }
+
+  // Retained as the SSE fallback for initial paint and for proxies/browsers that drop SSE. The wizard
+  // no longer polls this on an interval, so the previous `@SkipThrottle({ agent: true })` workaround
+  // (added to survive the 1.5s poll draining the agent bucket) is no longer needed.
   @Get('extractions/:jobId')
   @ApiResponse({ status: 200, type: ExtractionStatusDetailDto })
   @ApiResponse({ status: 404, description: 'Extraction job not found' })

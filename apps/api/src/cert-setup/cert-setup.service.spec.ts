@@ -34,6 +34,7 @@ import { QueueModule } from '../queue/queue.module'
 import { REDIS_CLIENT, RedisModule } from '../redis/redis.module'
 import { CertDiscoveryService } from './cert-discovery.service'
 import { CertSetupService } from './cert-setup.service'
+import { JobEventsService } from './job-events.service'
 
 const ADMIN_ID = '00000000-0000-4000-8000-00000000ad11'
 const UNKNOWN_ID = '00000000-0000-0000-0000-000000000000'
@@ -104,6 +105,7 @@ function draftPayload(
   ],
   providers: [
     CertSetupService,
+    JobEventsService,
     AuditLogService,
     { provide: CertDiscoveryService, useValue: discoveryMock },
     { provide: ConfigService, useValue: configMock },
