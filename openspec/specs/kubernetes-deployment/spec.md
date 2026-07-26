@@ -8,7 +8,7 @@ Defines the production Kubernetes deployment layer for Readion: the per-app `Dep
 
 ### Requirement: Per-app Kubernetes workloads
 
-Each application SHALL be deployed as its own Kubernetes workload from the GHCR image built by `.github/workflows/main.yml`: `apps/api` as a `Deployment` fronted by a `ClusterIP` `Service`; `apps/web` as a `Deployment` fronted by a `Service` and exposed via an `Ingress`; `apps/worker` as a `Deployment` with **no** `Service` and **no** `Ingress`.
+Each application SHALL be deployed as its own Kubernetes workload from the GHCR image built by `.github/workflows/images.yml`: `apps/api` as a `Deployment` fronted by a `ClusterIP` `Service`; `apps/web` as a `Deployment` fronted by a `Service` and exposed via an `Ingress`; `apps/worker` as a `Deployment` with **no** `Service` and **no** `Ingress`.
 
 #### Scenario: API is a Deployment behind a ClusterIP Service
 
@@ -88,7 +88,7 @@ The api `Deployment` SHALL use `GET /health` as its liveness and readiness probe
 
 ### Requirement: GitOps rollout via ArgoCD and Image Updater
 
-Deployment SHALL be driven by an ArgoCD `Application` tracking the `k8s/` manifests, with ArgoCD Image Updater configured to watch the GHCR images pushed by `.github/workflows/main.yml` (on the `latest`/`sha-*` tags) and trigger a rollout when a new image digest is detected.
+Deployment SHALL be driven by an ArgoCD `Application` tracking the `k8s/` manifests, with ArgoCD Image Updater configured to watch the GHCR images pushed by `.github/workflows/images.yml` and trigger a rollout when a new image digest is detected.
 
 #### Scenario: ArgoCD Application tracks the manifests
 
@@ -97,7 +97,7 @@ Deployment SHALL be driven by an ArgoCD `Application` tracking the `k8s/` manife
 
 #### Scenario: A new image digest triggers a rollout
 
-- **WHEN** `main.yml` pushes new `latest`/`sha-*` images and Image Updater detects the digest change
+- **WHEN** `images.yml` pushes a new image and Image Updater detects the digest change
 - **THEN** ArgoCD rolls the affected workloads to the new digest
 
 ### Requirement: Manifests are schema-valid and structurally correct
