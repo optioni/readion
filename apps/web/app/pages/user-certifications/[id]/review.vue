@@ -10,6 +10,7 @@ import {
 import { computed, onMounted, ref } from 'vue'
 import QuizCard from '~/components/QuizCard.vue'
 import ReadionAsyncRegion from '~/components/ReadionAsyncRegion.vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import ReviewCompletion from '~/components/ReviewCompletion.vue'
 import ReviewHeader from '~/components/ReviewHeader.vue'
 import ReviewQueueEntry from '~/components/ReviewQueueEntry.vue'
@@ -69,6 +70,7 @@ const currentItem = computed<SessionItemResponse | null>(
 const selfGradeItems = ref<ReviewItemResponse[]>([])
 const selfGradePos = ref(0)
 const selfGradeRevealed = ref(false)
+const pendingGrade = ref<ReviewGrade | null>(null)
 const selfGradeBreakdown = ref<Record<ReviewGrade, number>>({
   again: 0,
   hard: 0,
@@ -203,15 +205,21 @@ function enterSelfGradeFlow() {
 }
 
 async function handleGrade(grade: ReviewGrade) {
+  if (pendingGrade.value) return
   const item = currentSelfGradeItem.value
   if (!item) return
-  await gradeReviewItem(item.id, grade)
-  selfGradeBreakdown.value[grade] += 1
-  if (selfGradePos.value < selfGradeItems.value.length - 1) {
-    selfGradePos.value += 1
-    selfGradeRevealed.value = false
-  } else {
-    scene.value = 'self-grade-completion'
+  pendingGrade.value = grade
+  try {
+    await gradeReviewItem(item.id, grade)
+    selfGradeBreakdown.value[grade] += 1
+    if (selfGradePos.value < selfGradeItems.value.length - 1) {
+      selfGradePos.value += 1
+      selfGradeRevealed.value = false
+    } else {
+      scene.value = 'self-grade-completion'
+    }
+  } finally {
+    pendingGrade.value = null
   }
 }
 
@@ -308,34 +316,26 @@ const headerTotal = computed<number>(() => {
               class="flex items-center justify-end gap-2 text-readion-text-subtle text-xs"
             >
               <span>Prefer quiz instead?</span>
-              <button
-                type="button"
+              <ReadionButton
                 data-testid="review-mode-self-grade"
+                variant="toggle"
+                :selected="reviewMode === 'self-grade'"
                 :disabled="isStartingReview"
-                :class="[
-                  'rounded-md px-1.5 py-0.5',
-                  reviewMode === 'self-grade'
-                    ? 'text-readion-text-secondary underline'
-                    : 'text-readion-text-subtle hover:text-readion-text-secondary',
-                ]"
+                class="!min-h-0 px-1.5 py-0.5 text-xs"
                 @click="reviewMode = 'self-grade'"
               >
                 Self-grade
-              </button>
-              <button
-                type="button"
+              </ReadionButton>
+              <ReadionButton
                 data-testid="review-mode-quiz"
+                variant="toggle"
+                :selected="reviewMode === 'quiz'"
                 :disabled="isStartingReview"
-                :class="[
-                  'rounded-md px-1.5 py-0.5',
-                  reviewMode === 'quiz'
-                    ? 'text-readion-text-secondary underline'
-                    : 'text-readion-text-subtle hover:text-readion-text-secondary',
-                ]"
+                class="!min-h-0 px-1.5 py-0.5 text-xs"
                 @click="reviewMode = 'quiz'"
               >
                 Quiz
-              </button>
+              </ReadionButton>
             </div>
           </ReadionAsyncRegion>
         </div>
@@ -369,52 +369,64 @@ const headerTotal = computed<number>(() => {
           <p class="font-semibold text-readion-text-primary">{{ currentSelfGradeItem.domain }}</p>
         </div>
 
-        <button
+        <ReadionButton
           v-if="!selfGradeRevealed"
-          type="button"
           data-testid="reveal-button"
-          class="w-full rounded-md border border-readion-border-strong px-5 py-2.5 text-readion-text-secondary text-sm hover:border-readion-primary hover:text-readion-primary"
+          variant="secondary"
+          class="w-full px-5 py-2.5"
           @click="selfGradeRevealed = true"
         >
           Reveal
-        </button>
+        </ReadionButton>
 
         <div
           v-else
           class="flex gap-3"
         >
-          <button
-            type="button"
+          <ReadionButton
             data-testid="grade-again"
-            class="flex-1 rounded-md border border-readion-border-strong px-3 py-2 text-readion-status-poor text-sm hover:border-readion-status-poor"
+            variant="secondary"
+            :busy="pendingGrade === 'again'"
+            busy-label="Saving…"
+            :disabled="pendingGrade !== null && pendingGrade !== 'again'"
+            class="flex-1 px-3 py-2 text-readion-status-poor hover:border-readion-status-poor"
             @click="handleGrade('again')"
           >
             Again
-          </button>
-          <button
-            type="button"
+          </ReadionButton>
+          <ReadionButton
             data-testid="grade-hard"
-            class="flex-1 rounded-md border border-readion-border-strong px-3 py-2 text-readion-status-warning text-sm hover:border-readion-status-warning"
+            variant="secondary"
+            :busy="pendingGrade === 'hard'"
+            busy-label="Saving…"
+            :disabled="pendingGrade !== null && pendingGrade !== 'hard'"
+            class="flex-1 px-3 py-2 text-readion-status-warning hover:border-readion-status-warning"
             @click="handleGrade('hard')"
           >
             Hard
-          </button>
-          <button
-            type="button"
+          </ReadionButton>
+          <ReadionButton
             data-testid="grade-good"
-            class="flex-1 rounded-md border border-readion-border-strong px-3 py-2 text-readion-status-good text-sm hover:border-readion-status-good"
+            variant="secondary"
+            :busy="pendingGrade === 'good'"
+            busy-label="Saving…"
+            :disabled="pendingGrade !== null && pendingGrade !== 'good'"
+            class="flex-1 px-3 py-2 text-readion-status-good hover:border-readion-status-good"
             @click="handleGrade('good')"
           >
             Good
-          </button>
-          <button
-            type="button"
+          </ReadionButton>
+          <ReadionButton
             data-testid="grade-easy"
-            class="flex-1 rounded-md bg-readion-status-good/10 px-3 py-2 text-readion-status-good text-sm hover:bg-readion-status-good/20"
+            variant="secondary"
+            :busy="pendingGrade === 'easy'"
+            busy-label="Saving…"
+            :disabled="pendingGrade !== null && pendingGrade !== 'easy'"
+            class="flex-1 bg-readion-status-good/10 px-3 py-2 text-readion-status-good hover:bg-readion-status-good/20"
             @click="handleGrade('easy')"
           >
             Easy
-          </button>
+          </ReadionButton>
         </div>
       </div>
 
@@ -461,13 +473,13 @@ const headerTotal = computed<number>(() => {
           </div>
         </div>
 
-        <button
-          type="button"
-          class="w-full rounded-md border border-readion-border-strong px-5 py-2.5 text-readion-text-secondary text-sm hover:border-readion-primary hover:text-readion-primary"
+        <ReadionButton
+          variant="secondary"
+          class="w-full px-5 py-2.5"
           @click="scene = 'queue'"
         >
           Back to queue
-        </button>
+        </ReadionButton>
       </div>
     </div>
   </div>

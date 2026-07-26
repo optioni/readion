@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { changePasswordRequestSchema, updateUserProfileRequestSchema } from '@readion/shared'
 import { useQueryClient } from '@tanstack/vue-query'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import FormActions from '~/components/FormActions.vue'
 import ReadionButton from '~/components/ReadionButton.vue'
@@ -125,15 +125,20 @@ const deleteModalOpen = ref(false)
 const deletePassword = ref('')
 const deletingAccount = ref(false)
 const deleteError = ref<string | null>(null)
+const deleteDialogPanel = ref<HTMLElement | null>(null)
+const deletePasswordInput = ref<HTMLInputElement | null>(null)
+const deleteModalOpener = ref<HTMLElement | null>(null)
 
 const canConfirmDelete = computed(
   () => deletePassword.value.trim().length > 0 && !deletingAccount.value,
 )
 
-function openDeleteModal() {
+function openDeleteModal(event: MouseEvent) {
+  deleteModalOpener.value = event.currentTarget instanceof HTMLElement ? event.currentTarget : null
   deletePassword.value = ''
   deleteError.value = null
   deleteModalOpen.value = true
+  void nextTick(() => deletePasswordInput.value?.focus())
 }
 
 function closeDeleteModal() {
@@ -141,6 +146,33 @@ function closeDeleteModal() {
     return
   }
   deleteModalOpen.value = false
+  void nextTick(() => deleteModalOpener.value?.focus())
+}
+
+function handleDeleteDialogKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    closeDeleteModal()
+    return
+  }
+  if (event.key !== 'Tab' || !deleteDialogPanel.value) return
+
+  const focusable = Array.from(
+    deleteDialogPanel.value.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
+  )
+  const first = focusable[0]
+  const last = focusable.at(-1)
+  if (!first || !last) return
+
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
 }
 
 async function confirmDeleteAccount() {
@@ -171,12 +203,12 @@ async function confirmDeleteAccount() {
 <template>
   <div class="flex w-full min-w-0 flex-col gap-8">
     <section class="flex min-w-0 flex-col gap-1">
-      <h2 class="mb-3 font-medium text-slate-100 text-sm">Profile</h2>
+      <h2 class="mb-3 font-medium text-readion-text-primary text-sm">Profile</h2>
 
       <SettingsFieldRow label="Avatar">
         <div
           data-testid="account-avatar"
-          class="flex size-12 items-center justify-center rounded-full bg-readion-primary font-medium text-sm text-white"
+          class="flex size-12 items-center justify-center rounded-full bg-readion-primary font-medium text-readion-text-on-primary text-sm"
         >
           {{ initials }}
         </div>
@@ -194,7 +226,7 @@ async function confirmDeleteAccount() {
             id="timezone-select"
             v-model="selectedTimezone"
             data-testid="timezone-select"
-          class="w-full max-w-full min-w-0 truncate rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-readion-text-primary text-sm"
+          class="w-full max-w-full min-w-0 truncate rounded-lg border border-readion-text-muted bg-readion-background-elevated px-3 py-2 text-readion-text-primary text-sm"
           >
             <option v-for="zone in timeZones" :key="zone" :value="zone">{{ zone }}</option>
           </select>
@@ -231,7 +263,7 @@ async function confirmDeleteAccount() {
     </section>
 
     <section class="flex min-w-0 flex-col gap-1">
-      <h2 class="mb-3 font-medium text-slate-100 text-sm">Password</h2>
+      <h2 class="mb-3 font-medium text-readion-text-primary text-sm">Password</h2>
 
       <SettingsFieldRow label="Current password" for="current-password">
         <div class="flex flex-col gap-2">
@@ -240,7 +272,7 @@ async function confirmDeleteAccount() {
             v-model="currentPassword"
             type="password"
             data-testid="current-password-input"
-            class="w-full min-w-0 rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-readion-text-primary text-sm"
+            class="w-full min-w-0 rounded-lg border border-readion-text-muted bg-readion-background-elevated px-3 py-2 text-readion-text-primary text-sm"
           />
           <p
             v-if="currentPasswordError"
@@ -260,7 +292,7 @@ async function confirmDeleteAccount() {
             v-model="newPassword"
             type="password"
             data-testid="new-password-input"
-            class="w-full min-w-0 rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-readion-text-primary text-sm"
+            class="w-full min-w-0 rounded-lg border border-readion-text-muted bg-readion-background-elevated px-3 py-2 text-readion-text-primary text-sm"
           />
           <p
             v-if="newPasswordError"
@@ -280,7 +312,7 @@ async function confirmDeleteAccount() {
             v-model="confirmPassword"
             type="password"
             data-testid="confirm-password-input"
-            class="w-full min-w-0 rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-readion-text-primary text-sm"
+            class="w-full min-w-0 rounded-lg border border-readion-text-muted bg-readion-background-elevated px-3 py-2 text-readion-text-primary text-sm"
           />
           <p
             v-if="confirmPasswordError"
@@ -314,8 +346,11 @@ async function confirmDeleteAccount() {
       </FormActions>
     </section>
 
-    <section class="flex min-w-0 flex-col gap-3 rounded-xl border border-red-500/30 bg-red-500/5 p-5">
-      <h2 class="font-medium text-red-300 text-sm">Danger zone</h2>
+    <section
+      data-testid="account-danger-zone"
+      class="flex min-w-0 flex-col gap-3 rounded-xl border border-readion-status-poor/30 bg-readion-status-poor/10 p-5"
+    >
+      <h2 class="font-medium text-readion-status-poor text-sm">Danger zone</h2>
       <p class="break-words text-readion-text-secondary text-sm">
         Deleting your account is permanent. Your sessions, progress, and certifications are removed.
       </p>
@@ -338,19 +373,22 @@ async function confirmDeleteAccount() {
       aria-modal="true"
       aria-label="Delete account"
       class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      @keydown="handleDeleteDialogKeydown"
     >
       <button
         type="button"
+        data-testid="delete-account-backdrop"
         aria-label="Close"
         class="absolute inset-0 bg-black/60"
         @click="closeDeleteModal"
       />
 
       <div
-        class="relative z-10 max-h-[calc(100dvh-2rem)] w-full max-w-md min-w-0 overflow-y-auto rounded-xl border border-readion-background-surface bg-readion-background-elevated p-4 sm:p-6"
+        ref="deleteDialogPanel"
+        class="relative z-10 max-h-[calc(100dvh-2rem)] w-full max-w-md min-w-0 overflow-y-auto rounded-xl border border-readion-border-strong bg-readion-background-elevated p-4 sm:p-6"
       >
-        <h2 class="font-semibold text-slate-100 text-lg">Delete account</h2>
-        <p class="mt-1 text-slate-400 text-sm">
+        <h2 class="font-semibold text-readion-text-primary text-lg">Delete account</h2>
+        <p class="mt-1 text-readion-text-secondary text-sm">
           This action is permanent. Enter your current password to confirm.
         </p>
 
@@ -358,10 +396,11 @@ async function confirmDeleteAccount() {
           <div class="flex flex-col gap-2">
             <input
               id="delete-password"
+              ref="deletePasswordInput"
               v-model="deletePassword"
               type="password"
               data-testid="delete-password-input"
-              class="w-full min-w-0 rounded-lg border border-readion-background-surface bg-readion-background-overlay px-3 py-2 text-readion-text-primary text-sm"
+              class="w-full min-w-0 rounded-lg border border-readion-text-muted bg-readion-background-overlay px-3 py-2 text-readion-text-primary text-sm"
             />
 
             <p

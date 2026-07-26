@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import ReadionAsyncRegion from '~/components/ReadionAsyncRegion.vue'
 import ReadionButton from '~/components/ReadionButton.vue'
 import { dashboardQueryKeys } from '~/composables/dashboardQueryKeys'
@@ -71,6 +71,8 @@ const enrollingId = ref<string | null>(null)
 const selectedId = ref<string | null>(null)
 const enrollError = ref<string | null>(null)
 const retryingLists = ref(false)
+const dialogPanel = ref<HTMLElement | null>(null)
+const modalOpener = ref<HTMLElement | null>(null)
 
 async function retryLists() {
   if (retryingLists.value) return
@@ -111,9 +113,60 @@ async function selectCertification(certificationId: string) {
   }
 }
 
+function restoreModalFocus() {
+  void nextTick(() => modalOpener.value?.focus())
+}
+
 function close() {
   emit('update:open', false)
+  restoreModalFocus()
 }
+
+function handleDialogKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    close()
+    return
+  }
+  if (event.key !== 'Tab' || !dialogPanel.value) return
+
+  const focusable = Array.from(
+    dialogPanel.value.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
+  )
+  const first = focusable[0]
+  const last = focusable.at(-1)
+  if (!first || !last) return
+
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
+watch(
+  () => props.open,
+  (open, wasOpen) => {
+    if (open) {
+      const active = document.activeElement
+      if (active instanceof HTMLElement && !dialogPanel.value?.contains(active)) {
+        modalOpener.value = active
+      }
+      void nextTick(() =>
+        dialogPanel.value
+          ?.querySelector<HTMLElement>('[data-testid="add-cert-close-dialog"]')
+          ?.focus(),
+      )
+    } else if (wasOpen) {
+      restoreModalFocus()
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -124,6 +177,7 @@ function close() {
     aria-modal="true"
     aria-label="Add a certification"
     class="fixed inset-0 z-50 flex items-center justify-center p-4"
+    @keydown="handleDialogKeydown"
   >
     <button
       type="button"
@@ -134,23 +188,30 @@ function close() {
     />
 
     <div
-      class="relative z-10 w-full max-w-md rounded-xl border border-readion-background-surface bg-readion-background-elevated p-6 shadow-xl"
+      ref="dialogPanel"
+      class="relative z-10 w-full max-w-md rounded-xl border border-readion-border-strong bg-readion-background-elevated p-6 shadow-xl"
     >
       <div class="mb-5 flex items-start justify-between gap-4">
         <div>
-          <h2 class="font-semibold text-slate-100 text-lg">Add a certification</h2>
-          <p class="mt-1 text-slate-400 text-sm">
+          <h2
+            data-testid="add-cert-title"
+            class="font-semibold text-readion-text-primary text-lg"
+          >
+            Add a certification
+          </h2>
+          <p data-testid="add-cert-intro" class="mt-1 text-readion-text-secondary text-sm">
             Pick a certification to start a personalized study plan.
           </p>
         </div>
-        <button
-          type="button"
-          class="rounded-md p-1 text-slate-400 transition-colors hover:text-slate-200"
+        <ReadionButton
+          data-testid="add-cert-close-dialog"
+          variant="icon"
           aria-label="Close dialog"
+          class="shrink-0"
           @click="close"
         >
           ✕
-        </button>
+        </ReadionButton>
       </div>
 
       <ReadionAsyncRegion
@@ -184,7 +245,7 @@ function close() {
         <template #empty>
           <p
             data-testid="add-cert-empty-options"
-            class="rounded-lg border border-readion-background-surface border-dashed px-4 py-8 text-center text-slate-400 text-sm"
+            class="rounded-lg border border-readion-border-strong border-dashed px-4 py-8 text-center text-readion-text-secondary text-sm"
           >
             You are enrolled in every available certification.
           </p>

@@ -1,8 +1,70 @@
+import { readFileSync } from 'node:fs'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import ReadionButton from '~/components/ReadionButton.vue'
 
+const mainCss = readFileSync('app/assets/css/main.css', 'utf8')
+
+function luminance(hex: string): number {
+  const channels = hex
+    .match(/[a-f\d]{2}/gi)
+    ?.map((channel) => Number.parseInt(channel, 16) / 255)
+    .map((channel) => (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4))
+  if (channels?.length !== 3) throw new Error(`Invalid color: ${hex}`)
+  const [red, green, blue] = channels
+  if (red === undefined || green === undefined || blue === undefined) {
+    throw new Error(`Invalid color: ${hex}`)
+  }
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+}
+
+function contrast(first: string, second: string): number {
+  const firstLuminance = luminance(first)
+  const secondLuminance = luminance(second)
+  return (
+    (Math.max(firstLuminance, secondLuminance) + 0.05) /
+    (Math.min(firstLuminance, secondLuminance) + 0.05)
+  )
+}
+
+function applyThemeTokens(lightMode: boolean): string[] {
+  const selector = lightMode ? 'html\\.light' : ':root'
+  const block = mainCss.match(new RegExp(`${selector}\\s*{([^}]+)}`))?.[1] ?? ''
+  const names: string[] = []
+  for (const match of block.matchAll(/(--readion-[\w-]+):\s*(#[a-f\d]{6});/gi)) {
+    const [, name, value] = match
+    if (!name || !value) continue
+    document.documentElement.style.setProperty(name, value)
+    names.push(name)
+  }
+  return names
+}
+
 describe('ReadionButton', () => {
+  it.each([
+    false,
+    true,
+  ])('keeps rendered semantic text, control, and focus pairs contrast-safe in %s light mode', (lightMode) => {
+    const tokenNames = applyThemeTokens(lightMode)
+    document.documentElement.classList.toggle('light', lightMode)
+
+    const styles = getComputedStyle(document.documentElement)
+    const token = (name: string) => styles.getPropertyValue(name).trim()
+    const elevated = token('--readion-background-elevated')
+
+    expect(contrast(token('--readion-text-primary'), elevated)).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(token('--readion-text-secondary'), elevated)).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(token('--readion-status-poor'), elevated)).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(token('--readion-text-muted'), elevated)).toBeGreaterThanOrEqual(3)
+    expect(contrast(token('--readion-focus'), elevated)).toBeGreaterThanOrEqual(3)
+    expect(
+      contrast(token('--readion-text-on-primary'), token('--readion-primary')),
+    ).toBeGreaterThanOrEqual(4.5)
+
+    document.documentElement.classList.remove('light')
+    for (const name of tokenNames) document.documentElement.style.removeProperty(name)
+  })
+
   it.each([
     'primary',
     'secondary',

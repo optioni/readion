@@ -144,6 +144,20 @@ describe('Agent chat page scaffold', () => {
     expect(wrapper.find('[data-testid="agent-send-button"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="agent-new-chat-button"]').exists()).toBe(true)
   })
+
+  it('gives native-sized Agent actions the shared rest, focus, pressed, disabled, and busy contract', async () => {
+    const wrapper = await mountPage()
+
+    const newChat = wrapper.get('[data-testid="agent-new-chat-button"]')
+    const suggestion = wrapper.get('[data-testid="agent-suggestion"]')
+    const send = wrapper.get('[data-testid="agent-send-button"]')
+
+    expect(newChat.attributes('data-variant')).toBe('secondary')
+    expect(suggestion.attributes('data-variant')).toBe('secondary')
+    expect(send.attributes('data-state')).toBe('disabled')
+    expect(send.classes().join(' ')).toContain('focus-visible:ring-readion-focus')
+    expect(send.classes().join(' ')).toContain('active:scale-[0.98]')
+  })
 })
 
 describe('Agent chat full-height shell', () => {
@@ -298,6 +312,13 @@ describe('Agent chat page SSE turn streaming', () => {
     expect(wrapper.find('[data-testid="agent-streaming-cursor"]').exists()).toBe(true)
     expect(
       (wrapper.find('[data-testid="agent-send-button"]').element as HTMLButtonElement).disabled,
+    ).toBe(true)
+    expect(wrapper.get('[data-testid="agent-send-button"]').attributes('aria-busy')).toBe('true')
+    expect(
+      wrapper
+        .get('[data-testid="agent-send-button"]')
+        .find('[data-testid="agent-send-spinner"]')
+        .exists(),
     ).toBe(true)
 
     resolveStream()

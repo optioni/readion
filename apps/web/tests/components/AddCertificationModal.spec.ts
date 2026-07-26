@@ -53,12 +53,13 @@ function stubData(options: {
   )
 }
 
-function mountModal(open = true) {
+function mountModal(open = true, attachTo?: Element) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   })
   const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
   const wrapper = mount(AddCertificationModal, {
+    attachTo,
     props: { open },
     global: { plugins: [[VueQueryPlugin, { queryClient }]] },
   })
@@ -70,6 +71,20 @@ afterEach(() => {
 })
 
 describe('AddCertificationModal options', () => {
+  it('uses semantic mode-safe text and border colors throughout the dialog', async () => {
+    stubData({ certifications: [], enrollments: [] })
+    const { wrapper } = mountModal()
+    await flushPromises()
+
+    expect(wrapper.html()).not.toMatch(/(?:text|border)-slate-/)
+    expect(wrapper.get('[data-testid="add-cert-title"]').classes()).toContain(
+      'text-readion-text-primary',
+    )
+    expect(wrapper.get('[data-testid="add-cert-intro"]').classes()).toContain(
+      'text-readion-text-secondary',
+    )
+  })
+
   it('shows loading synchronously while both lists are unresolved', () => {
     vi.mocked(certificationsControllerList).mockReturnValue(new Promise(() => {}))
     vi.mocked(userCertificationsControllerList).mockReturnValue(new Promise(() => {}))
@@ -392,5 +407,43 @@ describe('AddCertificationModal close', () => {
 
     await wrapper.find('[data-testid="add-cert-close"]').trigger('click')
     expect(wrapper.emitted('update:open')?.at(-1)).toEqual([false])
+  })
+
+  it('focuses a meaningful control, traps Tab both ways, closes on Escape, and restores focus', async () => {
+    stubData({
+      certifications: [certification({ id: 'cert-1', name: 'AWS Architect' })],
+      enrollments: [],
+    })
+    const host = document.createElement('div')
+    const opener = document.createElement('button')
+    opener.textContent = 'Open certifications'
+    document.body.append(opener, host)
+    opener.focus()
+
+    const { wrapper } = mountModal(false, host)
+    await wrapper.setProps({ open: true })
+    await flushPromises()
+
+    const closeButton = wrapper.get('[data-testid="add-cert-close-dialog"]')
+    expect(document.activeElement).toBe(closeButton.element)
+    expect(document.activeElement).not.toBe(wrapper.get('[data-testid="add-cert-close"]').element)
+
+    const option = wrapper.get('[data-testid="add-cert-option"]')
+    ;(option.element as HTMLButtonElement).focus()
+    await option.trigger('keydown', { key: 'Tab' })
+    expect(document.activeElement).toBe(closeButton.element)
+
+    ;(closeButton.element as HTMLButtonElement).focus()
+    await closeButton.trigger('keydown', { key: 'Tab', shiftKey: true })
+    expect(document.activeElement).toBe(option.element)
+
+    await closeButton.trigger('keydown', { key: 'Escape' })
+    await flushPromises()
+    expect(wrapper.emitted('update:open')?.at(-1)).toEqual([false])
+    expect(document.activeElement).toBe(opener)
+
+    wrapper.unmount()
+    opener.remove()
+    host.remove()
   })
 })

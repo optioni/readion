@@ -60,6 +60,24 @@ afterEach(() => {
 })
 
 describe('NotificationsTab weekly digest switch', () => {
+  it('uses semantic mode-safe colors and the complete switch interaction recipe', async () => {
+    stubProfile(false)
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    expect(wrapper.html()).not.toMatch(/text-slate-/)
+    const toggle = wrapper.get('[data-testid="digest-toggle"]')
+    const classes = toggle.classes().join(' ')
+    expect(toggle.attributes('data-state')).toBe('selected')
+    expect(classes).toContain('focus-visible:ring-2')
+    expect(classes).toContain('focus-visible:ring-readion-focus')
+    expect(classes).toContain('active:scale-[0.98]')
+    expect(classes).toContain('motion-reduce:transition-none')
+    expect(classes).toMatch(/hover:/)
+    expect(classes).toMatch(/active:bg-/)
+    expect(classes).toMatch(/disabled:/)
+  })
+
   it('renders an accessible switch seeded ON when the user is subscribed', async () => {
     stubProfile(false)
     const { wrapper } = mountTab()
@@ -154,5 +172,7 @@ describe('NotificationsTab weekly digest switch', () => {
 
     expect(usersControllerUpdateMe).toHaveBeenCalledTimes(1)
     expect(toggle.attributes('aria-busy')).toBe('true')
+    expect(toggle.attributes('data-state')).toBe('busy')
+    expect(toggle.find('[data-testid="digest-toggle-spinner"]').exists()).toBe(true)
   })
 })

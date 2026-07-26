@@ -107,6 +107,20 @@ describe('StudyDefaultsTab renders all five session defaults', () => {
 })
 
 describe('StudyDefaultsTab section framing', () => {
+  it('uses semantic mode-safe text colors for normal-size copy', async () => {
+    stubProfile()
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    expect(wrapper.html()).not.toMatch(/text-slate-/)
+    expect(wrapper.get('[data-testid="study-defaults-title"]').classes()).toContain(
+      'text-readion-text-primary',
+    )
+    expect(wrapper.get('[data-testid="study-defaults-intro"]').classes()).toContain(
+      'text-readion-text-secondary',
+    )
+  })
+
   it('renders the "Session preferences" title and the adaptive-defaults intro copy', async () => {
     stubProfile()
     const { wrapper } = mountTab()

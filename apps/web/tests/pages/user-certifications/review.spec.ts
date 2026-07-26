@@ -513,6 +513,16 @@ describe('Review page — unified entry', () => {
     expect(wrapper.find('[data-testid="review-mode-toggle"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="review-mode-self-grade"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="review-mode-quiz"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="review-mode-self-grade"]').attributes('aria-pressed')).toBe(
+      'true',
+    )
+    expect(wrapper.get('[data-testid="review-mode-quiz"]').attributes('aria-pressed')).toBe('false')
+
+    await wrapper.get('[data-testid="review-mode-quiz"]').trigger('click')
+    expect(wrapper.get('[data-testid="review-mode-self-grade"]').attributes('aria-pressed')).toBe(
+      'false',
+    )
+    expect(wrapper.get('[data-testid="review-mode-quiz"]').attributes('aria-pressed')).toBe('true')
   })
 
   it('presents the rating mode toggle as a secondary, optional selector — not a competing entry CTA', async () => {
@@ -526,5 +536,34 @@ describe('Review page — unified entry', () => {
     // a co-equal preference row labeled like a settings choice.
     expect(toggle.attributes('aria-label')).toMatch(/optional/i)
     expect(toggle.text()).not.toContain('Rating style')
+  })
+})
+
+describe('Review page — self-grade control contract', () => {
+  it('uses shared controls for reveal and grading, with only the accepted grade busy', async () => {
+    const gradeRequest = new Promise<void>(() => {})
+    vi.mocked(gradeReviewItem).mockReturnValue(gradeRequest)
+    const wrapper = mountPage()
+    await flushPromises()
+    await wrapper.get('[data-testid="start-review-button"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="reveal-button"]').attributes('data-variant')).toBe(
+      'secondary',
+    )
+    await wrapper.get('[data-testid="reveal-button"]').trigger('click')
+
+    const again = wrapper.get('[data-testid="grade-again"]')
+    const hard = wrapper.get('[data-testid="grade-hard"]')
+    await again.trigger('click')
+    await flushPromises()
+
+    expect(again.attributes('aria-busy')).toBe('true')
+    expect(again.text()).toContain('Saving…')
+    expect(hard.attributes('disabled')).toBeDefined()
+    expect(hard.attributes('aria-busy')).toBeUndefined()
+
+    await again.trigger('click')
+    expect(gradeReviewItem).toHaveBeenCalledTimes(1)
   })
 })

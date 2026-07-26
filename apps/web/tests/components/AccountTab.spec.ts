@@ -65,12 +65,13 @@ function stubProfile(profile: UserProfileResponse = PROFILE) {
 
 let pinia: ReturnType<typeof createPinia>
 
-function mountTab() {
+function mountTab(attachTo?: Element) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   })
   const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
   const wrapper = mount(AccountTab, {
+    attachTo,
     global: { plugins: [pinia, [VueQueryPlugin, { queryClient }]] },
   })
   return { wrapper, queryClient, invalidateSpy }
@@ -86,6 +87,21 @@ afterEach(() => {
 })
 
 describe('AccountTab profile identity', () => {
+  it('uses mode-safe semantic colors for settings text, controls, and danger surfaces', async () => {
+    stubProfile()
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    expect(wrapper.html()).not.toMatch(/(?:text|bg|border)-(?:slate|red)-/)
+    expect(wrapper.get('h2').classes()).toContain('text-readion-text-primary')
+    expect(wrapper.get('[data-testid="timezone-select"]').classes()).toContain(
+      'border-readion-text-muted',
+    )
+    expect(wrapper.get('[data-testid="account-danger-zone"]').classes()).toContain(
+      'border-readion-status-poor/30',
+    )
+  })
+
   it('renders the email read-only and no Full name field', async () => {
     stubProfile()
     const { wrapper } = mountTab()
@@ -487,5 +503,42 @@ describe('AccountTab delete account danger zone', () => {
     expect(usersControllerDeleteMe).toHaveBeenCalledTimes(1)
     expect(confirm.attributes('aria-busy')).toBe('true')
     expect(confirm.text()).toContain('Deleting…')
+  })
+
+  it('focuses the password, traps keyboard traversal, closes on Escape, and restores the opener', async () => {
+    stubProfile()
+    const host = document.createElement('div')
+    document.body.append(host)
+    const { wrapper } = mountTab(host)
+    await flushPromises()
+
+    const opener = wrapper.get('[data-testid="delete-account-btn"]')
+    ;(opener.element as HTMLButtonElement).focus()
+    await opener.trigger('click')
+    await flushPromises()
+
+    const password = wrapper.get('[data-testid="delete-password-input"]')
+    expect(document.activeElement).toBe(password.element)
+    expect(document.activeElement).not.toBe(
+      wrapper.get('[data-testid="delete-account-backdrop"]').element,
+    )
+
+    await password.setValue('hunter2')
+    const confirm = wrapper.get('[data-testid="confirm-delete-btn"]')
+    ;(confirm.element as HTMLButtonElement).focus()
+    await confirm.trigger('keydown', { key: 'Tab' })
+    expect(document.activeElement).toBe(password.element)
+
+    ;(password.element as HTMLInputElement).focus()
+    await password.trigger('keydown', { key: 'Tab', shiftKey: true })
+    expect(document.activeElement).toBe(confirm.element)
+
+    await password.trigger('keydown', { key: 'Escape' })
+    await flushPromises()
+    expect(wrapper.find('[data-testid="delete-account-modal"]').exists()).toBe(false)
+    expect(document.activeElement).toBe(opener.element)
+
+    wrapper.unmount()
+    host.remove()
   })
 })

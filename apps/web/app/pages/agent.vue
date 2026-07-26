@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import AgentBubble from '~/components/AgentBubble.vue'
 import AgentStarAvatar from '~/components/agent/AgentStarAvatar.vue'
 import ReadionAsyncRegion from '~/components/ReadionAsyncRegion.vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import { AGENT_COPY, AGENT_SUGGESTIONS } from '~/composables/agentChatCopy'
 import { useAgentChatTtl } from '~/composables/agentChatTtl'
 import { useStandaloneAgentChat } from '~/composables/useStandaloneAgentChat'
@@ -23,22 +24,37 @@ const {
 } = useStandaloneAgentChat()
 const input = ref('')
 const hasInput = computed(() => input.value.trim().length > 0)
+const newChatPending = ref(false)
+const pendingSuggestion = ref<string | null>(null)
 
 const { warning: ttlWarning, warningMinutes: ttlBannerMinutes } = useAgentChatTtl(lastActivityAt)
 
 async function handleSend(): Promise<void> {
+  if (isStreaming.value || !isInitialized.value || !hasInput.value) return
   const content = input.value
   await send(content)
   input.value = ''
 }
 
 async function handleSuggestion(text: string): Promise<void> {
-  await send(text)
+  if (isStreaming.value || pendingSuggestion.value) return
+  pendingSuggestion.value = text
+  try {
+    await send(text)
+  } finally {
+    pendingSuggestion.value = null
+  }
 }
 
 async function handleNewChat(): Promise<void> {
-  await newChat()
-  input.value = ''
+  if (newChatPending.value || isInitializing.value) return
+  newChatPending.value = true
+  try {
+    await newChat()
+    input.value = ''
+  } finally {
+    newChatPending.value = false
+  }
 }
 </script>
 
@@ -63,11 +79,13 @@ async function handleNewChat(): Promise<void> {
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button
-          type="button"
+        <ReadionButton
           data-testid="agent-new-chat-button"
-          :disabled="isInitializing"
-          class="flex items-center gap-1 rounded-md border border-readion-border-strong bg-readion-background-surface px-2.5 py-1 text-[11px] text-readion-text-muted transition-colors hover:text-readion-text-secondary"
+          variant="secondary"
+          :disabled="isInitializing && !newChatPending"
+          :busy="newChatPending"
+          busy-label="Starting…"
+          class="!min-h-0 px-2.5 py-1 text-[11px]"
           @click="handleNewChat"
         >
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -75,7 +93,7 @@ async function handleNewChat(): Promise<void> {
             <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
           </svg>
           New chat
-        </button>
+        </ReadionButton>
       </div>
     </div>
 
@@ -122,31 +140,36 @@ async function handleNewChat(): Promise<void> {
               data-testid="agent-suggestion-list"
               class="flex w-full flex-col gap-1.5"
             >
-              <button
+              <ReadionButton
                 v-for="suggestion in AGENT_SUGGESTIONS"
                 :key="suggestion"
-                type="button"
                 data-testid="agent-suggestion"
-                class="flex w-full items-center justify-between gap-2 rounded-lg border border-readion-border-strong bg-readion-background-surface px-3.5 py-2 text-left text-[13px] text-readion-text-secondary transition-colors hover:text-readion-text-primary"
+                variant="secondary"
+                :busy="pendingSuggestion === suggestion"
+                busy-label="Sending…"
+                :disabled="isStreaming || (pendingSuggestion !== null && pendingSuggestion !== suggestion)"
+                class="w-full justify-between px-3.5 py-2 text-left text-[13px]"
                 @click="handleSuggestion(suggestion)"
               >
-                <span>{{ suggestion }}</span>
-                <svg
-                  data-testid="agent-suggestion-arrow"
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="flex-shrink-0 text-readion-text-subtle"
-                  aria-hidden="true"
-                >
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </button>
+                <span class="flex w-full items-center justify-between gap-2">
+                  <span>{{ suggestion }}</span>
+                  <svg
+                    data-testid="agent-suggestion-arrow"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="flex-shrink-0 text-readion-text-subtle"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </ReadionButton>
             </div>
           </div>
         </div>
@@ -181,14 +204,29 @@ async function handleNewChat(): Promise<void> {
             type="button"
             data-testid="agent-send-button"
             :disabled="isStreaming || !isInitialized || !hasInput"
-            aria-label="Send message"
-            class="flex h-6.5 w-6.5 flex-shrink-0 items-center justify-center rounded-md text-white transition-colors disabled:opacity-60"
-            :class="hasInput ? 'bg-readion-primary' : 'bg-readion-border-strong'"
+            :aria-busy="isStreaming ? 'true' : undefined"
+            :aria-label="isStreaming ? 'Sending message' : 'Send message'"
+            :data-state="
+              isStreaming ? 'busy' : !isInitialized || !hasInput ? 'disabled' : 'rest'
+            "
+            class="readion-interactive-control flex h-6.5 w-6.5 flex-shrink-0 items-center justify-center rounded-md text-readion-text-on-primary transition-[color,background-color,opacity,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-readion-focus focus-visible:ring-offset-2 focus-visible:ring-offset-readion-background-surface active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60"
+            :class="
+              hasInput
+                ? 'bg-readion-primary hover:bg-readion-primary-hover active:bg-readion-primary-active'
+                : 'bg-readion-border-strong'
+            "
             @click="handleSend"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg
+              v-if="isStreaming"
+              data-testid="agent-send-spinner"
+              class="size-3 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none"
+              aria-hidden="true"
+            />
+            <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M12 19V5M5 12l7-7 7 7" />
             </svg>
+            <span v-if="isStreaming" class="sr-only" role="status">Sending…</span>
           </button>
         </div>
         <p class="mt-1.5 text-center text-[10px] text-readion-text-muted">
