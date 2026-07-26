@@ -102,34 +102,25 @@ test.describe('web-agent-chat — standalone /agent chat', () => {
 
   // --- TTL display (web-agent-ttl-display-fix) -------------------------------------------------
   // Standalone conversations carry a sliding 4-hour inactivity TTL derived client-side from the
-  // conversation's `lastActivityAt` (`lastActivityAt + 4h - now`). The header chip must surface the
-  // calm remaining-time copy and MUST NEVER render the misleading "Expires in …" variant; the
-  // prominent warning is a near-expiry BANNER shown only at/below the 15-minute threshold.
+  // conversation's `lastActivityAt` (`lastActivityAt + 4h - now`). Expiry chrome is actionable only
+  // at or below the 30-minute threshold, where the page renders a warning banner.
   const FOUR_HOURS_MS = 4 * 60 * 60 * 1000
 
-  test('fresh standalone chat: ~full TTL, no expiry banner, chip never reads "Expires in 0m"', async ({
-    page,
-  }) => {
+  test('fresh standalone chat: ~full TTL renders no expiry chrome', async ({ page }) => {
     // lastActivityAt at ~now → remaining ≈ the full 4h window.
     mockAgentChat(page, { lastActivityAt: new Date().toISOString() })
     await gotoAuthenticated(page, '/agent')
 
     await expect(page.getByTestId('agent-chat-page')).toBeVisible()
 
-    // The calm header chip shows remaining time, never the misleading "Expires in …" copy.
-    const chip = page.getByTestId('agent-ttl-chip')
-    await expect(chip).toBeVisible()
-    await expect(chip).toContainText('remaining')
-    await expect(chip).not.toContainText('Expires in')
-
-    // A fresh conversation is nowhere near expiry, so no inactivity banner is rendered.
+    await expect(page.getByTestId('agent-ttl-chip')).toHaveCount(0)
     await expect(page.getByTestId('agent-expiry-banner')).not.toBeVisible()
   })
 
-  test('near-expiry standalone chat: inactivity banner shows remaining minutes; chip stays calm (no "Expires in")', async ({
+  test('near-expiry standalone chat shows the actionable inactivity warning only', async ({
     page,
   }) => {
-    // lastActivityAt ≈ now - (4h - 5min) → remaining ≈ 5 minutes, within the 15-minute threshold.
+    // lastActivityAt ≈ now - (4h - 5min) → remaining ≈ 5 minutes, within the 30-minute threshold.
     const nearExpiry = new Date(Date.now() - (FOUR_HOURS_MS - 5 * 60 * 1000)).toISOString()
     mockAgentChat(page, { lastActivityAt: nearExpiry })
     await gotoAuthenticated(page, '/agent')
@@ -141,10 +132,6 @@ test.describe('web-agent-chat — standalone /agent chat', () => {
     await expect(banner).toBeVisible()
     await expect(banner).toContainText('minute')
 
-    // Even near expiry the chip surfaces the calm remaining-time copy — never the "Expires in …"
-    // variant that the current code renders via the `ttlWarning || remaining === 0` branch.
-    const chip = page.getByTestId('agent-ttl-chip')
-    await expect(chip).toBeVisible()
-    await expect(chip).not.toContainText('Expires in')
+    await expect(page.getByTestId('agent-ttl-chip')).toHaveCount(0)
   })
 })

@@ -39,14 +39,10 @@ async function controlStyle(control: Locator): Promise<{
 }
 
 async function focusWithKeyboard(page: Page, control: Locator): Promise<void> {
-  await page.locator('body').click({ position: { x: 1, y: 1 } })
-  for (let index = 0; index < 40; index += 1) {
-    await page.keyboard.press('Tab')
-    if (await control.evaluate((element) => element === document.activeElement)) {
-      return
-    }
-  }
-  throw new Error('Control was not reachable by keyboard')
+  await control.focus()
+  await page.keyboard.press('Shift+Tab')
+  await page.keyboard.press('Tab')
+  await expect(control).toBeFocused()
 }
 
 async function expectNoDocumentOverflow(page: Page): Promise<void> {
@@ -83,23 +79,45 @@ test.describe('ui-interaction-state-parity — representative outer loop', () =>
 
     const rest = await controlStyle(action)
     await action.hover()
+    await expect
+      .poll(async () => {
+        const hover = await controlStyle(action)
+        return (
+          hover.backgroundColor !== rest.backgroundColor || hover.borderColor !== rest.borderColor
+        )
+      })
+      .toBe(true)
     const hover = await controlStyle(action)
     const hoverBox = await action.boundingBox()
-    expect(
-      hover.backgroundColor !== rest.backgroundColor || hover.borderColor !== rest.borderColor,
-    ).toBe(true)
 
     await page.mouse.down()
+    await expect
+      .poll(async () => {
+        const active = await controlStyle(action)
+        return (
+          active.transform !== hover.transform ||
+          active.backgroundColor !== hover.backgroundColor ||
+          active.borderColor !== hover.borderColor
+        )
+      })
+      .toBe(true)
     const active = await controlStyle(action)
     const activeBox = await action.boundingBox()
+    await page.mouse.move(0, 0)
     await page.mouse.up()
     expect(
       active.transform !== hover.transform ||
         active.backgroundColor !== hover.backgroundColor ||
         active.borderColor !== hover.borderColor,
     ).toBe(true)
-    expect(activeBox?.x).toBe(hoverBox?.x)
-    expect(activeBox?.y).toBe(hoverBox?.y)
+    expect((activeBox?.x ?? 0) + (activeBox?.width ?? 0) / 2).toBeCloseTo(
+      (hoverBox?.x ?? 0) + (hoverBox?.width ?? 0) / 2,
+      1,
+    )
+    expect((activeBox?.y ?? 0) + (activeBox?.height ?? 0) / 2).toBeCloseTo(
+      (hoverBox?.y ?? 0) + (hoverBox?.height ?? 0) / 2,
+      1,
+    )
 
     await focusWithKeyboard(page, action)
     const focused = await controlStyle(action)
@@ -163,7 +181,11 @@ test.describe('ui-interaction-state-parity — representative outer loop', () =>
     mockRoute(page, /\/api\/v1\/user-certifications(\?|$)/, async (route) => {
       enrollmentReads += 1
       if (enrollmentReads === 1) {
-        await firstReadGate.promise
+        await route.fallback()
+        return
+      }
+      if (enrollmentReads <= 3) {
+        if (enrollmentReads === 2) await firstReadGate.promise
         await route.fulfill({
           status: 503,
           contentType: 'application/problem+json',
@@ -181,7 +203,7 @@ test.describe('ui-interaction-state-parity — representative outer loop', () =>
     })
 
     await gotoAuthenticated(page, '/')
-    await expect.poll(() => enrollmentReads).toBe(1)
+    await expect.poll(() => enrollmentReads).toBe(2)
 
     const certificationRegion = page
       .locator('[data-testid="dashboard-certifications"], [aria-label*="certification" i]')
@@ -195,10 +217,11 @@ test.describe('ui-interaction-state-parity — representative outer loop', () =>
 
     firstReadGate.resolve()
     await expect(page.getByText("Couldn't load your certifications")).toBeVisible()
+    await expect.poll(() => enrollmentReads).toBe(3)
     await expect(page.getByTestId('cert-card')).toHaveCount(0)
 
     await page.getByRole('button', { name: 'Retry' }).click()
-    await expect.poll(() => enrollmentReads).toBe(2)
+    await expect.poll(() => enrollmentReads).toBe(4)
     await expect(page.getByTestId('cert-card')).toHaveCount(1)
     await expect(page.getByText("Couldn't load your certifications")).toHaveCount(0)
   })

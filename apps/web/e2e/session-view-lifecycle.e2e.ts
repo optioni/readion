@@ -24,6 +24,7 @@ test.describe('web-session-view — ended-session lifecycle', () => {
   test('completed session hides the End session control, never free-runs the timer, and never ends itself again', async ({
     page,
   }) => {
+    await page.clock.install()
     const { endCallCount } = mockCompletedSessionView(page)
     await gotoAuthenticated(page, `/sessions/${SESSION_IDS.sessionId}`)
 
@@ -46,7 +47,7 @@ test.describe('web-session-view — ended-session lifecycle', () => {
     const timer = page.getByTestId('session-timer')
     if ((await timer.count()) > 0) {
       const firstReading = await timer.textContent()
-      await page.waitForTimeout(1300)
+      await page.clock.runFor(1300)
       const secondReading = await timer.textContent()
 
       expect(secondReading).toBe(firstReading)

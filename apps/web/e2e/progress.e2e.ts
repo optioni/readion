@@ -66,7 +66,12 @@ test.describe('web-progress — progress page', () => {
     const readinessTrend = page.getByTestId('readiness-trend')
     await expect(readinessTrend.getByTestId('readiness-point').first()).toBeVisible()
     // Y-axis tick: implementer picks "nice" numbers on a 0-100 scale — 50 and 75 are common choices.
-    await expect(readinessTrend).toContainText(/\b(50|75)\b/)
+    await expect(
+      readinessTrend
+        .locator('text')
+        .filter({ hasText: /^(50|75)$/ })
+        .first(),
+    ).toBeVisible()
     // Current value always visible (seed score = 66).
     await expect(readinessTrend).toContainText('66%')
 

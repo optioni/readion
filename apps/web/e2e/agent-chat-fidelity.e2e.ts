@@ -38,9 +38,9 @@ test.describe('web-agent-chat — design fidelity (AgentChat.html)', () => {
     // RED: the header title currently reads "Ask AI".
     await expect(page.locator('h1')).toHaveText('Study assistant')
 
-    // RED: no star-avatar svg (matching the artboard's exact path) exists anywhere in the header
-    // yet — the current header only renders the title/subtitle and the TTL chip / new-chat button.
-    await expect(page.locator(`svg path[d="${STAR_PATH_D}"]`)).toHaveCount(2)
+    await expect(
+      page.getByTestId('agent-header-avatar').locator(`svg path[d="${STAR_PATH_D}"]`),
+    ).toHaveCount(1)
   })
 
   test('empty-state suggestions are a vertical, full-width stack with trailing arrows', async ({

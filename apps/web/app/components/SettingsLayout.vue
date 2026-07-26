@@ -24,7 +24,7 @@ function hasVisited(id: SettingsTabId) {
 
     <div
       data-testid="settings-content-column"
-      class="w-full max-w-full max-w-[580px] min-w-0 px-4 py-8 sm:px-6 lg:px-8"
+      class="w-full max-w-[min(100%,580px)] min-w-0 px-4 py-8 sm:px-6 lg:px-8"
     >
       <div v-show="active === 'account'" data-testid="account-panel" role="tabpanel">
         <slot v-if="hasVisited('account')" name="account" />

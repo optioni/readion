@@ -17,7 +17,7 @@ describe('SettingsLayout content column alignment', () => {
     // large empty left gutter — remove it so the column sits flush against the design's inner
     // padding.
     expect(classList).not.toContain('mx-auto')
-    expect(classList).toContain('max-w-[580px]')
+    expect(classList).toContain('max-w-[min(100%,580px)]')
   })
 
   it('keeps the design inner padding on the content column', () => {
@@ -42,6 +42,8 @@ describe('SettingsLayout content column alignment', () => {
 
     expect(page.classes()).toEqual(expect.arrayContaining(['w-full', 'max-w-full', 'min-w-0']))
     expect(page.classes()).not.toContain('overflow-x-hidden')
-    expect(column.classes()).toEqual(expect.arrayContaining(['w-full', 'max-w-full', 'min-w-0']))
+    expect(column.classes()).toEqual(
+      expect.arrayContaining(['w-full', 'max-w-[min(100%,580px)]', 'min-w-0']),
+    )
   })
 })
