@@ -1,7 +1,7 @@
 <template>
   <aside
     data-testid="app-sidebar"
-    class="min-h-screen w-52 flex-shrink-0 flex-col border-slate-700 border-r bg-readion-background-elevated px-4 py-6"
+    class="min-h-screen w-52 max-w-[calc(100vw-1rem)] flex-shrink-0 flex-col border-readion-border-default border-r bg-readion-background-elevated px-4 py-6"
     :class="
       open
         ? 'flex fixed inset-y-0 left-0 z-40 lg:static lg:z-auto'
@@ -10,22 +10,22 @@
   >
     <div class="mb-8 flex items-center gap-2 px-1.5">
       <div
-        class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-indigo-500"
+        class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-readion-primary"
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
           <path
             d="M6 1l1.5 3.5L11 5l-2.5 2.5.5 3.5L6 9.5 3 11l.5-3.5L1 5l3.5-.5z"
-            fill="#0f172a"
+            fill="var(--readion-background-base)"
           />
         </svg>
       </div>
-      <span class="font-bold text-slate-100 text-sm tracking-tight">Readion</span>
+      <span class="font-bold text-readion-text-primary text-sm tracking-tight">Readion</span>
       <div class="flex-1" />
-      <button
+      <ReadionButton
         data-testid="sidebar-drawer-close"
-        type="button"
+        variant="icon"
         aria-label="Close navigation"
-        class="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition-colors hover:text-slate-200 lg:hidden"
+        class="size-7 min-h-7 rounded-md lg:hidden"
         @click="emit('close')"
       >
         <svg
@@ -41,10 +41,12 @@
         >
           <path d="M18 6 6 18M6 6l12 12" />
         </svg>
-      </button>
+      </ReadionButton>
     </div>
 
-    <div class="mb-1.5 px-1.5 text-[10px] text-slate-500 uppercase tracking-wider">Study</div>
+    <div class="mb-1.5 px-1.5 text-[10px] text-readion-text-muted uppercase tracking-wider">
+      Study
+    </div>
 
     <nav aria-label="Primary" class="flex flex-col gap-0.5">
       <NuxtLink
@@ -54,11 +56,11 @@
         :data-testid="item.testid"
         :data-active="item.active ? 'true' : 'false'"
         :aria-current="item.active ? 'page' : undefined"
-        class="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors"
+        class="readion-interactive-control flex min-w-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-readion-focus focus-visible:ring-offset-2 focus-visible:ring-offset-readion-background-elevated active:bg-readion-background-overlay motion-reduce:transition-none"
         :class="
           item.active
-            ? 'bg-[rgba(29,78,216,0.15)] font-medium text-slate-100'
-            : 'text-slate-400 hover:text-slate-200'
+            ? 'bg-readion-background-overlay font-medium text-readion-text-primary'
+            : 'text-readion-text-secondary hover:bg-readion-surface hover:text-readion-text-primary'
         "
       >
         <svg
@@ -74,7 +76,7 @@
         >
           <path :d="item.icon" />
         </svg>
-        {{ item.label }}
+        <span data-testid="app-nav-label" class="min-w-0 break-words">{{ item.label }}</span>
       </NuxtLink>
     </nav>
 
@@ -86,7 +88,7 @@
       data-testid="app-nav-admin"
       :data-active="isAdminActive ? 'true' : 'false'"
       :aria-current="isAdminActive ? 'page' : undefined"
-      class="mb-2 flex items-center gap-2 rounded-md px-2 py-1.5 text-slate-500 text-xs transition-colors hover:text-slate-300"
+      class="readion-interactive-control mb-2 flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-readion-text-muted text-xs transition-colors duration-150 hover:bg-readion-surface hover:text-readion-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-readion-focus focus-visible:ring-offset-2 focus-visible:ring-offset-readion-background-elevated active:bg-readion-background-overlay motion-reduce:transition-none"
     >
       <svg
         width="13"
@@ -101,21 +103,21 @@
       >
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
-      Admin panel
+      <span class="min-w-0 break-words">Admin panel</span>
     </NuxtLink>
 
     <div
       data-testid="sidebar-user"
-      class="flex flex-col gap-3 rounded-md border border-slate-700 p-2"
+      class="flex min-w-0 flex-col gap-3 rounded-md border border-readion-border-default p-2"
     >
       <div class="flex items-center gap-2">
         <div
           class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-readion-background-overlay"
         >
-          <span class="font-semibold text-indigo-400 text-xs">{{ initials }}</span>
+          <span class="font-semibold text-readion-accent-label text-xs">{{ initials }}</span>
         </div>
         <div class="min-w-0 flex-1">
-          <div class="truncate font-medium text-slate-100 text-xs">{{ displayName }}</div>
+          <div class="truncate font-medium text-readion-text-primary text-xs">{{ displayName }}</div>
         </div>
       </div>
       <div class="flex items-center justify-between gap-2">
@@ -123,7 +125,7 @@
         <button
           data-testid="logout-btn"
           type="button"
-          class="text-slate-400 text-sm transition-colors hover:text-slate-200"
+          class="readion-interactive-control rounded-sm text-readion-text-secondary text-sm transition-colors duration-150 hover:text-readion-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-readion-focus focus-visible:ring-offset-2 focus-visible:ring-offset-readion-background-elevated active:text-readion-text-muted motion-reduce:transition-none"
           @click="handleLogout"
         >
           Log out
@@ -137,6 +139,7 @@
 import { computed } from 'vue'
 import { getCsrfTokenFromCookie } from '~/api/mutator'
 import ColorModeToggle from '~/components/ColorModeToggle.vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import { emailInitials } from '~/composables/emailInitials'
 import { useEnrollments } from '~/composables/useEnrollments'
 import { useTrack } from '~/composables/useTrack'

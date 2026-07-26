@@ -1,6 +1,7 @@
 <template>
   <div
-    class="flex bg-readion-background-base text-slate-100 antialiased"
+    data-testid="app-shell"
+    class="flex w-full max-w-full min-w-0 bg-readion-background-base text-readion-text-primary antialiased"
     :class="isFullBleed ? 'h-screen overflow-hidden' : 'min-h-screen'"
   >
     <AppSidebar :open="drawerOpen" @close="drawerOpen = false" />
@@ -8,20 +9,24 @@
     <div
       v-if="drawerOpen"
       data-testid="sidebar-drawer-backdrop"
-      class="fixed inset-0 z-30 bg-black/60 lg:hidden"
+      class="fixed inset-0 z-30 bg-readion-background-elevated/80 lg:hidden"
       @click="drawerOpen = false"
     />
 
-    <div class="flex min-w-0 flex-1 flex-col" :class="isFullBleed ? 'min-h-0' : ''">
+    <div
+      data-testid="shell-content-frame"
+      class="flex w-full max-w-full min-w-0 flex-1 flex-col"
+      :class="isFullBleed ? 'min-h-0' : ''"
+    >
       <header
         class="flex h-13 flex-shrink-0 items-center gap-2 border-readion-border-strong border-b bg-readion-background-elevated px-4 lg:hidden"
       >
-        <button
+        <ReadionButton
           data-testid="sidebar-drawer-toggle"
-          type="button"
+          variant="icon"
           aria-label="Open navigation"
           :aria-expanded="drawerOpen"
-          class="flex h-8 w-8 items-center justify-center rounded-md text-slate-300 transition-colors hover:text-slate-100"
+          class="size-8 min-h-8 rounded-md"
           @click="drawerOpen = true"
         >
           <svg
@@ -37,13 +42,13 @@
           >
             <path d="M3 6h18M3 12h18M3 18h18" />
           </svg>
-        </button>
-        <span class="font-bold text-slate-100 text-sm tracking-tight">Readion</span>
+        </ReadionButton>
+        <span class="font-bold text-readion-text-primary text-sm tracking-tight">Readion</span>
       </header>
 
       <main
         data-testid="shell-container"
-        class="min-w-0 flex-1"
+        class="w-full max-w-full min-w-0 flex-1 [overflow-wrap:anywhere]"
         :class="isFullBleed ? 'flex min-h-0 flex-col' : 'px-4 py-8 sm:px-6 lg:px-10'"
       >
         <slot />
@@ -54,6 +59,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 
 const drawerOpen = ref(false)
 const route = useRoute()

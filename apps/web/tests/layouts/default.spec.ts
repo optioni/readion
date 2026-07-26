@@ -50,6 +50,22 @@ describe('Default layout', () => {
     const container = wrapper.get('[data-testid="shell-container"]')
     expect(container.text()).toContain('Session content')
     expect(container.find('[data-testid="page-content"]').exists()).toBe(true)
+    expect(container.classes()).toEqual(
+      expect.arrayContaining(['w-full', 'max-w-full', 'min-w-0', '[overflow-wrap:anywhere]']),
+    )
+    expect(wrapper.get('[data-testid="app-shell"]').classes()).not.toContain('overflow-x-hidden')
+  })
+
+  it('keeps long unbroken content inside the shrinkable shell frame', () => {
+    const wrapper = mountLayout(
+      `<section data-testid="long-content">${'long-certification-label'.repeat(20)}</section>`,
+    )
+
+    const frame = wrapper.get('[data-testid="shell-content-frame"]')
+    const container = wrapper.get('[data-testid="shell-container"]')
+
+    expect(frame.classes()).toEqual(expect.arrayContaining(['min-w-0', 'w-full', 'max-w-full']))
+    expect(container.classes()).toContain('[overflow-wrap:anywhere]')
   })
 
   it('opens and closes the nav drawer from the toggle and backdrop', async () => {
@@ -59,6 +75,7 @@ describe('Default layout', () => {
     expect(toggle.exists()).toBe(true)
     expect(toggle.attributes('aria-label')).toMatch(/open navigation/i)
     expect(toggle.attributes('aria-expanded')).toBe('false')
+    expect(toggle.attributes('data-variant')).toBe('icon')
 
     expect(wrapper.find('[data-testid="sidebar-drawer-backdrop"]').exists()).toBe(false)
     expect(wrapper.findComponent(AppSidebar).props('open')).toBe(false)

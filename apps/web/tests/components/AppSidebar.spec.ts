@@ -107,6 +107,20 @@ describe('AppSidebar structure', () => {
     expect(wrapper.find('[data-testid="app-nav-agent"]').attributes('href')).toBe('/agent')
     expect(wrapper.find('[data-testid="app-nav-settings"]').attributes('href')).toBe('/settings')
   })
+
+  it('uses semantic shell tokens and keeps long navigation labels shrinkable', () => {
+    authenticate()
+    const wrapper = mountComponent()
+
+    const sidebar = wrapper.get('[data-testid="app-sidebar"]')
+    expect(sidebar.classes()).toContain('border-readion-border-default')
+    expect(sidebar.classes()).toContain('bg-readion-background-elevated')
+
+    const dashboard = wrapper.get('[data-testid="app-nav-dashboard"]')
+    expect(dashboard.classes()).toContain('min-w-0')
+    expect(dashboard.classes()).toContain('focus-visible:ring-readion-focus')
+    expect(dashboard.find('[data-testid="app-nav-label"]').classes()).toContain('break-words')
+  })
 })
 
 describe('AppSidebar cert-scoped links', () => {
@@ -257,6 +271,7 @@ describe('AppSidebar responsive drawer', () => {
     const close = wrapper.find('[data-testid="sidebar-drawer-close"]')
     expect(close.exists()).toBe(true)
     expect(close.attributes('aria-label')).toMatch(/close navigation/i)
+    expect(close.attributes('data-variant')).toBe('icon')
 
     await close.trigger('click')
     expect(wrapper.emitted('close')).toBeTruthy()
