@@ -101,27 +101,39 @@ The system SHALL provide a "New chat" affordance that discards the current conve
 - **THEN** the rendered messages are cleared and the empty state is shown
 - **THEN** a new `POST /api/v1/agent-conversations` request is made and its `data.id` becomes the active conversation id
 
+### Requirement: Standalone conversation initialization is explicit and recoverable
+
+The standalone chat page SHALL render a conversation-loading state while creating or hydrating the initial conversation and SHALL expose the conversation region as busy. It MUST NOT render the empty-state suggestions until initialization succeeds with no messages. If initialization fails, the page SHALL render a concise error and Retry; Retry SHALL issue one new initialization request without reloading the document.
+
+#### Scenario: Delayed initialization does not flash suggestions
+
+- **WHEN** Playwright delays standalone conversation initialization
+- **THEN** the conversation region exposes `aria-busy="true"` and renders a loading presentation
+- **AND** the empty-state heading and suggestion chips are absent until initialization succeeds
+
+#### Scenario: Initialization failure can be retried
+
+- **WHEN** the first initialization request fails and the second succeeds with an empty conversation
+- **THEN** the page shows an error and Retry after the first response
+- **AND** activating Retry sends exactly one new request and replaces the error with the empty-state suggestions
+
 ### Requirement: Surface the sliding 4-hour inactivity TTL
 
-The standalone conversation has a sliding 4-hour inactivity TTL refreshed on each message (owned by the backend `agent` change). The page SHALL surface this client-side, deriving the remaining idle time from the conversation's `lastActivityAt` plus a single 4-hour window constant (`lastActivityAt + 4h - now`), and SHALL treat a missing or not-yet-loaded `lastActivityAt` as a full window so a fresh conversation never reads as expired.
+The chat page SHALL surface the conversation's sliding four-hour inactivity TTL only when expiry is actionable. On conversation creation/hydration it SHALL store the `expiresAt` timestamp from the API and derive a live remaining duration. While more than 30 minutes remain, no TTL chip, badge, banner, or persistent session-duration chrome SHALL be shown. When the remaining duration is at or below 30 minutes and above zero, a warning banner SHALL state that the chat expires after inactivity and show the rounded-up remaining minutes. The warning SHALL be a polite live status. Sending a message resets the server-side TTL; after the send response returns the refreshed `expiresAt`, the warning MUST disappear when the remaining duration is again above the threshold.
 
-The page SHALL NOT render a persistent "Expires in 0m" pill. Instead, the TTL is surfaced as an **inactivity-warning banner** shown only when the remaining idle time falls at or below the near-expiry threshold (low double-digit minutes; the implementation threshold is 15 minutes, within which the artboard's 12-minute example sits), matching the `ExpiryBanner` treatment in `openspec/design/AgentChat.html`. When the conversation is not near expiry, no banner is shown. Sending a message SHALL refresh `lastActivityAt` (resetting the window), recompute the remaining time, and hide the banner. The page MUST NOT depend on any conversation-list endpoint (none exists); only single-conversation create/detail/stream are used.
+#### Scenario: Fresh conversation shows no TTL chrome
 
-#### Scenario: Fresh conversation shows full TTL and no expiry banner
-
-- **WHEN** a standalone conversation has just been created and its `lastActivityAt` is at (or near) the current time
-- **THEN** the remaining idle time computed from `lastActivityAt + 4h` is approximately the full 4-hour window
-- **THEN** no inactivity-warning banner is rendered and no "Expires in 0m" indicator is shown
+- **WHEN** the conversation API returns `expiresAt` approximately four hours in the future
+- **THEN** no expiry warning, TTL chip, "4h session" badge, or remaining-duration label is rendered
 
 #### Scenario: Warning banner appears near expiry with correct remaining time
 
-- **WHEN** the remaining idle time (`lastActivityAt + 4h - now`) falls at or below the near-expiry threshold
-- **THEN** an inactivity-warning banner is shown prompting the user to send a message to reset the timer
-- **THEN** the banner states the remaining time in whole minutes computed from `lastActivityAt + 4h - now`
+- **WHEN** the hydrated conversation has an `expiresAt` 25 minutes in the future
+- **THEN** the page shows a warning that the chat expires after inactivity with "25 minutes" remaining
+- **AND** the warning is exposed through a polite status region
 
 #### Scenario: Sending a message resets the TTL and hides the banner
 
-- **WHEN** the inactivity-warning banner is visible and the user sends a new message
-- **THEN** `lastActivityAt` is refreshed to the send time, resetting the 4-hour window
-- **THEN** the remaining idle time recomputes to approximately the full window and the banner is hidden
+- **WHEN** a near-expiry conversation shows the warning and the user sends a message
+- **THEN** after the send completes with an `expiresAt` approximately four hours in the future, the warning is removed
 
