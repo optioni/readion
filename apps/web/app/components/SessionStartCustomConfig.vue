@@ -13,6 +13,7 @@ import {
   sessionLearningStyles,
 } from '@readion/shared'
 import { computed, reactive, ref } from 'vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import SessionDomainToggle from '~/components/SessionDomainToggle.vue'
 import SessionOverrideControl from '~/components/SessionOverrideControl.vue'
 import { sessionRunPath } from '~/composables/runnerRoutes'
@@ -58,11 +59,13 @@ const difficulty = ref<SessionDifficulty>()
 const learningStyle = ref<SessionLearningStyle>()
 
 const isStarting = ref(false)
+const startError = ref<string | null>(null)
 
 async function start() {
   if (isStarting.value) {
     return
   }
+  startError.value = null
   isStarting.value = true
   try {
     const overrides: CreateSessionRequest = {}
@@ -83,7 +86,8 @@ async function start() {
 
     const session = await createSession(props.enrollmentId, overrides)
     await navigateTo(sessionRunPath(session.data.id))
-  } finally {
+  } catch {
+    startError.value = 'Couldn’t start the session. Your selections have been kept.'
     isStarting.value = false
   }
 }
@@ -175,15 +179,23 @@ async function start() {
       </div>
 
       <div>
-        <button
-          type="button"
+        <ReadionButton
           data-testid="custom-start-button"
-          :disabled="isStarting"
-          class="mb-2.5 w-full rounded-md bg-readion-primary py-2.5 font-semibold text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
+          class="mb-2.5 w-full py-2.5"
+          :busy="isStarting"
+          busy-label="Starting…"
           @click="start"
         >
           Start session &#8594;
-        </button>
+        </ReadionButton>
+        <p
+          v-if="startError"
+          data-testid="custom-start-error"
+          class="mb-2.5 text-readion-status-poor text-xs"
+          role="alert"
+        >
+          {{ startError }}
+        </p>
         <div class="text-center">
           <button
             type="button"

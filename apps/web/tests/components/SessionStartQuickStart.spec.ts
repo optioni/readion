@@ -20,6 +20,16 @@ vi.stubGlobal('navigateTo', mockNavigate)
 
 type WeakArea = { domain: string; score: number }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+  return { promise, resolve, reject }
+}
+
 const profileEnvelope = (sessionDefaults: SessionDefaults) => ({
   data: {
     data: {
@@ -164,6 +174,47 @@ describe('SessionStartQuickStart suggested focus banner', () => {
 })
 
 describe('SessionStartQuickStart start action', () => {
+  it('shows stable starting feedback, rejects duplicates, and stays busy through navigation', async () => {
+    const createGate = deferred<Awaited<ReturnType<typeof createSession>>>()
+    const navigationGate = deferred<void>()
+    vi.mocked(createSession).mockReturnValue(createGate.promise)
+    mockNavigate.mockReturnValue(navigationGate.promise)
+    const wrapper = mountPanel()
+    await flushPromises()
+
+    const button = wrapper.find('[data-testid="quick-start-button"]')
+    const widthClass = button.classes()
+    await button.trigger('click')
+    await button.trigger('click')
+
+    expect(createSession).toHaveBeenCalledTimes(1)
+    expect(button.attributes('aria-busy')).toBe('true')
+    expect(button.text()).toContain('Starting…')
+    expect(button.find('[data-testid="readion-button-spinner"]').exists()).toBe(true)
+    expect(button.classes()).toEqual(widthClass)
+
+    // biome-ignore lint/suspicious/noExplicitAny: session detail narrowed to fields under assertion
+    createGate.resolve({ data: { id: 'sess-1' }, relationships: {} } as any)
+    await flushPromises()
+    expect(mockNavigate).toHaveBeenCalledWith('/sessions/sess-1')
+    expect(button.attributes('aria-busy')).toBe('true')
+  })
+
+  it('shows a local retryable failure state', async () => {
+    vi.mocked(createSession).mockRejectedValueOnce(new Error('unavailable'))
+    const wrapper = mountPanel()
+    await flushPromises()
+
+    await wrapper.find('[data-testid="quick-start-button"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="quick-start-error"]').attributes('role')).toBe('alert')
+    expect(
+      wrapper.find('[data-testid="quick-start-button"]').attributes('disabled'),
+    ).toBeUndefined()
+    expect(wrapper.find('[data-testid="quick-start-button"]').text()).toContain('Start session')
+  })
+
   it('creates a session with an empty body and navigates to the run path', async () => {
     const wrapper = mountPanel()
     await flushPromises()

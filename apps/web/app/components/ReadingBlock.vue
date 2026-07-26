@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { SessionItemResponse } from '@readion/shared'
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import CitationChip from '~/components/CitationChip.vue'
 import MarkdownBlock from '~/components/MarkdownBlock.vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import { readingCitationLabels } from '~/composables/citationLabels'
 import { parseSessionItemContent } from '~/composables/parseSessionItemContent'
 import { goDeeperOnItem } from '~/composables/sessionViewApi'
@@ -25,16 +26,23 @@ const citations = computed(() =>
 )
 
 const expandedContent = ref<string | null>(null)
+const expandedContentElement = ref<HTMLElement | null>(null)
 const isLoading = ref(false)
+const expansionError = ref<string | null>(null)
 
 async function readFull() {
   if (expandedContent.value !== null || isLoading.value) {
     return
   }
+  expansionError.value = null
   isLoading.value = true
   try {
     const result = await goDeeperOnItem(props.sessionId, props.item.index)
     expandedContent.value = result.expandedContent
+    await nextTick()
+    expandedContentElement.value?.focus()
+  } catch {
+    expansionError.value = 'Couldn’t load the full explanation.'
   } finally {
     isLoading.value = false
   }
@@ -65,21 +73,35 @@ async function readFull() {
 
     <div
       v-if="expandedContent !== null"
+      ref="expandedContentElement"
+      data-testid="reading-expanded-content"
       class="mb-3 rounded-lg border border-readion-border-default bg-readion-background-base px-4 py-3.5"
+      tabindex="-1"
     >
       <MarkdownBlock :source="expandedContent" />
     </div>
 
-    <button
+    <ReadionButton
       v-else
-      type="button"
       data-testid="read-full-explanation-button"
-      :disabled="isLoading"
-      class="mb-3 text-readion-accent-label text-xs disabled:opacity-60"
+      variant="secondary"
+      class="mb-3 min-h-8 px-3 py-1.5 text-xs"
+      :busy="isLoading"
+      busy-label="Loading…"
+      :aria-describedby="expansionError ? 'reading-expansion-error' : undefined"
       @click="readFull"
     >
-      Read full explanation &#8595;
-    </button>
+      {{ expansionError ? 'Retry' : 'Read full explanation ↓' }}
+    </ReadionButton>
+    <p
+      v-if="expansionError"
+      id="reading-expansion-error"
+      data-testid="reading-expansion-error"
+      class="mb-3 text-readion-status-poor text-xs"
+      role="alert"
+    >
+      {{ expansionError }}
+    </p>
 
     <div class="mb-4 flex flex-wrap gap-1.5">
       <CitationChip v-for="citation in citations" :key="citation" :label="citation" />

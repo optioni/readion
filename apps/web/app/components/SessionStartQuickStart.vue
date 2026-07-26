@@ -7,6 +7,7 @@ import {
 } from '@readion/shared'
 import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import { onboardingQueryKeys } from '~/composables/onboardingQueryKeys'
 import { sessionRunPath } from '~/composables/runnerRoutes'
 import { createSession } from '~/composables/sessionViewApi'
@@ -51,16 +52,19 @@ const suggestedDomain = computed(() => {
 })
 
 const isStarting = ref(false)
+const startError = ref<string | null>(null)
 
 async function start() {
   if (isStarting.value) {
     return
   }
+  startError.value = null
   isStarting.value = true
   try {
     const session = await createSession(props.enrollmentId)
     await navigateTo(sessionRunPath(session.data.id))
-  } finally {
+  } catch {
+    startError.value = 'Couldn’t start the session. Try again.'
     isStarting.value = false
   }
 }
@@ -111,15 +115,23 @@ async function start() {
         </span>
       </div>
 
-      <button
-        type="button"
+      <ReadionButton
         data-testid="quick-start-button"
-        :disabled="isStarting"
-        class="w-full rounded-md bg-readion-primary py-3 font-semibold text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
+        class="w-full py-3"
+        :busy="isStarting"
+        busy-label="Starting…"
         @click="start"
       >
         Start session &#8594;
-      </button>
+      </ReadionButton>
+      <p
+        v-if="startError"
+        data-testid="quick-start-error"
+        class="mt-3 text-readion-status-poor text-sm"
+        role="alert"
+      >
+        {{ startError }}
+      </p>
     </div>
 
     <div class="text-center">

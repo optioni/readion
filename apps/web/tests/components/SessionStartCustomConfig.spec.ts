@@ -4,7 +4,7 @@ import {
   sessionDurationMinutes,
   sessionLearningStyles,
 } from '@readion/shared'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed } from 'vue'
 import SessionStartCustomConfig from '~/components/SessionStartCustomConfig.vue'
@@ -107,6 +107,53 @@ describe('SessionStartCustomConfig override controls', () => {
 })
 
 describe('SessionStartCustomConfig start action', () => {
+  it('preserves selected configuration and enables retry after failure', async () => {
+    vi.mocked(createSession).mockRejectedValueOnce(new Error('unavailable'))
+    const wrapper = mountPanel()
+
+    await wrapper.find('[data-testid="domain-toggle-IAM & Security"]').trigger('click')
+    await wrapper.find('[data-testid="domain-toggle-Networking & CDN"]').trigger('click')
+    await wrapper.find('[data-testid="duration-option-30"]').trigger('click')
+    await wrapper.find('[data-testid="custom-start-button"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="custom-start-error"]').attributes('role')).toBe('alert')
+    expect(
+      wrapper.find('[data-testid="domain-toggle-IAM & Security"]').attributes('aria-pressed'),
+    ).toBe('true')
+    expect(
+      wrapper.find('[data-testid="domain-toggle-Networking & CDN"]').attributes('aria-pressed'),
+    ).toBe('true')
+    expect(wrapper.find('[data-testid="duration-option-30"]').attributes('aria-pressed')).toBe(
+      'true',
+    )
+    expect(
+      wrapper.find('[data-testid="custom-start-button"]').attributes('disabled'),
+    ).toBeUndefined()
+  })
+
+  it('shows action-local progress and rejects duplicate start requests', async () => {
+    let resolveSession!: (value: Awaited<ReturnType<typeof createSession>>) => void
+    vi.mocked(createSession).mockReturnValue(
+      new Promise((resolve) => {
+        resolveSession = resolve
+      }),
+    )
+    const wrapper = mountPanel()
+    const button = wrapper.find('[data-testid="custom-start-button"]')
+
+    await button.trigger('click')
+    await button.trigger('click')
+
+    expect(createSession).toHaveBeenCalledTimes(1)
+    expect(button.attributes('aria-busy')).toBe('true')
+    expect(button.text()).toContain('Starting…')
+    expect(button.find('[data-testid="readion-button-spinner"]').exists()).toBe(true)
+
+    // biome-ignore lint/suspicious/noExplicitAny: session detail narrowed to fields under assertion
+    resolveSession({ data: { id: 'sess-1' }, relationships: {} } as any)
+  })
+
   it('posts only the chosen overrides with a domains focus area', async () => {
     const wrapper = mountPanel()
 

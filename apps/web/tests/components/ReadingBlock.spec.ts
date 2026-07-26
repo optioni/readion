@@ -18,8 +18,15 @@ const readingItem: SessionItemResponse = {
   supportingSpans: ['AWS Organizations User Guide §SCP'],
 }
 
-function mountBlock(item: SessionItemResponse = readingItem, domain?: string) {
-  return mount(ReadingBlock, { props: { sessionId: 'sess-1', item, domain } })
+function mountBlock(
+  item: SessionItemResponse = readingItem,
+  domain?: string,
+  attachToDocument = false,
+) {
+  return mount(ReadingBlock, {
+    props: { sessionId: 'sess-1', item, domain },
+    attachTo: attachToDocument ? document.body : undefined,
+  })
 }
 
 beforeEach(() => {
@@ -27,7 +34,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  vi.clearAllMocks()
+  vi.resetAllMocks()
 })
 
 describe('ReadingBlock rendering', () => {
@@ -66,6 +73,57 @@ describe('ReadingBlock rendering', () => {
 })
 
 describe('ReadingBlock go-deeper', () => {
+  it('keeps the TLDR and citations visible while loading and rejects duplicate requests', async () => {
+    let resolveExplanation!: (value: { expandedContent: string }) => void
+    vi.mocked(goDeeperOnItem).mockReturnValue(
+      new Promise((resolve) => {
+        resolveExplanation = resolve
+      }),
+    )
+    const wrapper = mountBlock()
+    const button = wrapper.find('[data-testid="read-full-explanation-button"]')
+
+    await button.trigger('click')
+    await button.trigger('click')
+
+    expect(goDeeperOnItem).toHaveBeenCalledTimes(1)
+    expect(button.attributes('aria-busy')).toBe('true')
+    expect(button.text()).toContain('Loading…')
+    expect(wrapper.find('[data-testid="reading-tldr"]').exists()).toBe(true)
+    expect(wrapper.findAll('[data-testid="citation-chip"]')).toHaveLength(2)
+
+    resolveExplanation({ expandedContent: 'Expanded.' })
+  })
+
+  it('shows an inline error and succeeds on an explicit retry without losing focus', async () => {
+    vi.mocked(goDeeperOnItem)
+      .mockRejectedValueOnce(new Error('unavailable'))
+      .mockResolvedValueOnce({ expandedContent: 'Recovered explanation.' })
+    const wrapper = mountBlock(readingItem, undefined, true)
+    const button = wrapper.find('[data-testid="read-full-explanation-button"]')
+    ;(button.element as HTMLElement).focus()
+
+    await button.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="reading-expansion-error"]').attributes('role')).toBe('alert')
+    expect(wrapper.find('[data-testid="read-full-explanation-button"]').text()).toContain('Retry')
+    expect(document.activeElement).toBe(
+      wrapper.find('[data-testid="read-full-explanation-button"]').element,
+    )
+
+    await wrapper.find('[data-testid="read-full-explanation-button"]').trigger('click')
+    await flushPromises()
+
+    expect(goDeeperOnItem).toHaveBeenCalledTimes(2)
+    expect(wrapper.text()).toContain('Recovered explanation.')
+    expect(wrapper.find('[data-testid="reading-expansion-error"]').exists()).toBe(false)
+    expect(document.activeElement).toBe(
+      wrapper.get('[data-testid="reading-expanded-content"]').element,
+    )
+    wrapper.unmount()
+  })
+
   it('fetches the expanded explanation once and renders it', async () => {
     const wrapper = mountBlock()
 

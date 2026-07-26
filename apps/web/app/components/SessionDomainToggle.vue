@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import { statusColorForScore } from '~/composables/statusColor'
 
 const props = defineProps<{
@@ -23,11 +24,11 @@ const scoreColorClass = computed(() =>
 </script>
 
 <template>
-  <button
-    type="button"
+  <ReadionButton
     :data-testid="`domain-toggle-${name}`"
-    :aria-pressed="selected"
-    class="flex w-full items-center gap-2.5 border-readion-border-default border-b py-2 text-left last:border-b-0"
+    variant="toggle"
+    :selected="selected"
+    class="w-full justify-start rounded-none border-x-0 border-t-0 px-0 py-2 text-left last:border-b-0"
     @click="$emit('toggle')"
   >
     <span
@@ -50,5 +51,5 @@ const scoreColorClass = computed(() =>
     <span v-if="score !== undefined" class="font-medium text-[11px]" :class="scoreColorClass">
       {{ score }}%
     </span>
-  </button>
+  </ReadionButton>
 </template>
