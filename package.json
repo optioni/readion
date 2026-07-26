@@ -17,7 +17,7 @@
     "test": "vitest run && yarn workspaces foreach --all --exclude . --parallel run test",
     "test:unit": "vitest run && yarn workspaces foreach --all --include '@readion/shared' --include '@readion/web' --parallel run test",
     "test:integration": "yarn workspaces foreach --all --include '@readion/api' --include '@readion/worker' --include '@readion/db' --parallel run test",
-    "test:coverage": "yarn workspaces foreach --all --exclude . --parallel run test:coverage",
+    "test:coverage": "yarn workspaces foreach --all --exclude . run test:coverage",
     "codegen": "orval"
   },
   "devDependencies": {
