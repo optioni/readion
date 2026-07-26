@@ -1,10 +1,10 @@
 import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { selectImageTargets } from '../.github/scripts/affected-apps.ts'
+import { selectImageTargets } from '../.github/scripts/affected-apps.mts'
 
 const ROOT = join(import.meta.dirname, '..')
-const SCRIPT = join(ROOT, '.github/scripts/affected-apps.ts')
+const SCRIPT = join(ROOT, '.github/scripts/affected-apps.mts')
 
 const ALL = ['api', 'worker', 'web']
 
@@ -92,7 +92,7 @@ describe('selectImageTargets fail-safes', () => {
   })
 })
 
-// The workflow invokes this script as `node .github/scripts/affected-apps.ts`
+// The workflow invokes this script as `node .github/scripts/affected-apps.mts`
 // with no build step and no flag, which only works because Node strips the
 // types natively. Executing it here proves the runner can do that.
 describe('affected-apps CLI', () => {

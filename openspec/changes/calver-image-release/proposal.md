@@ -27,7 +27,7 @@ None — the release path belongs to the existing `ci-pipeline` capability, whic
 
 - **Workflows**: `.github/workflows/main.yml` and `release.yml` deleted; `.github/workflows/images.yml` added. `pr.yml` untouched.
 - **Dependencies**: root `package.json` gains `turbo` (graph query) and `yaml` (the new workflow-contract test parses the YAML instead of grepping it); new root `turbo.json`.
-- **Tests**: new root-level `tests/images-workflow.spec.ts` and `tests/affected-apps.spec.ts`, plus a new `.github/scripts/affected-apps.ts` holding the affected-set mapping so it is unit-testable.
+- **Tests**: new root-level `tests/images-workflow.spec.ts` and `tests/affected-apps.spec.ts`, plus a new `.github/scripts/affected-apps.mts` holding the affected-set mapping so it is unit-testable.
 - **Docs**: `SPEC.md` §CI/CD gains the manual CalVer release path and the affected-only build note; `docker-bake.hcl`'s `TAG` example comment moves from `v1.4.0` to `v2026.7.0`.
 - **Deployment**: behavior unchanged. GitOps still tracks the `main`-tagged images, and no ArgoCD or Kubernetes manifest **value** changes — the only edit under `k8s/` is to the comments in `k8s/argocd/application.yaml` that name the deleted `main.yml` and misdescribe the tags it pushes. Note that the same file's `allow-tags` regexp (`^(latest|sha-.+)$`) already fails to match the `main` tag the current workflow pushes — a pre-existing bug, explicitly **out of scope** here, as is any change to the Image Updater strategy for the new `v*` tags.
 - **Out of scope**: GitHub Action major-version bumps (Renovate owns those) and extracting pr.yml's duplicated toolchain preamble into a composite action.

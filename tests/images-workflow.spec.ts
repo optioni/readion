@@ -109,7 +109,7 @@ describe('Images workflow — CalVer version', () => {
 })
 
 describe('Images workflow — affected-app detection', () => {
-  const detectScript = () => stepWith('detect', 'affected-apps.ts').run ?? ''
+  const detectScript = () => stepWith('detect', 'affected-apps.mts').run ?? ''
 
   it('installs the toolchain turbo needs', () => {
     const uses = job('detect').steps.map((s) => s.uses ?? s.run)
@@ -136,7 +136,7 @@ describe('Images workflow — affected-app detection', () => {
   })
 
   it('maps the graph output with the unit-tested script', () => {
-    expect(detectScript()).toContain('node .github/scripts/affected-apps.ts')
+    expect(detectScript()).toContain('node .github/scripts/affected-apps.mts')
   })
 
   it('falls back to every app whenever the affected set is untrustworthy', () => {
