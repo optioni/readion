@@ -9,6 +9,7 @@ import {
 } from '@readion/shared'
 import { computed, onMounted, ref } from 'vue'
 import QuizCard from '~/components/QuizCard.vue'
+import ReadionAsyncRegion from '~/components/ReadionAsyncRegion.vue'
 import ReviewCompletion from '~/components/ReviewCompletion.vue'
 import ReviewHeader from '~/components/ReviewHeader.vue'
 import ReviewQueueEntry from '~/components/ReviewQueueEntry.vue'
@@ -46,7 +47,11 @@ const reviewMode = ref<ReviewMode>('self-grade')
 // --- Queue state ---
 const queueItems = ref<ReviewItemResponse[]>([])
 const dueCount = ref(0)
+const isLoadingQueue = ref(false)
+const isRetryingQueue = ref(false)
+const queueError = ref<string | null>(null)
 const isStartingReview = ref(false)
+const startReviewError = ref<string | null>(null)
 
 // --- Quiz loop state ---
 const activeSessionId = ref<string | null>(null)
@@ -84,11 +89,35 @@ function toItem(dto: SessionItemResponseDto): SessionItemResponse {
 }
 
 // --- Lifecycle ---
+async function loadQueue(retrying = false): Promise<boolean> {
+  if (isLoadingQueue.value || isRetryingQueue.value) {
+    return false
+  }
+
+  if (retrying) {
+    isRetryingQueue.value = true
+  } else {
+    isLoadingQueue.value = true
+  }
+
+  try {
+    const queue = await fetchReviewQueue(enrollmentId.value)
+    queueItems.value = queue.items
+    dueCount.value = queue.meta.dueCount
+    queueError.value = null
+    return true
+  } catch {
+    queueError.value = 'Couldn’t load your review queue.'
+    return false
+  } finally {
+    isLoadingQueue.value = false
+    isRetryingQueue.value = false
+  }
+}
+
 onMounted(async () => {
-  const queue = await fetchReviewQueue(enrollmentId.value)
-  queueItems.value = queue.items
-  dueCount.value = queue.meta.dueCount
-  if (route.query.autostart === '1') {
+  const loaded = await loadQueue()
+  if (loaded && route.query.autostart === '1') {
     await handleStart()
   }
 })
@@ -97,6 +126,7 @@ onMounted(async () => {
 async function handleStart() {
   if (isStartingReview.value) return
   isStartingReview.value = true
+  startReviewError.value = null
   try {
     const result = await startReview(enrollmentId.value)
     if (result.status === 'all_caught_up') {
@@ -115,6 +145,8 @@ async function handleStart() {
     }
 
     enterSelfGradeFlow()
+  } catch {
+    startReviewError.value = 'Couldn’t start review. Try again.'
   } finally {
     isStartingReview.value = false
   }
@@ -224,48 +256,85 @@ const headerTotal = computed<number>(() => {
       data-testid="review-page"
       class="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 overflow-y-auto px-6 py-8"
     >
-        <template v-if="scene === 'queue'">
-        <ReviewQueueEntry
-          :enrollment-id="enrollmentId"
-          :items="queueItems"
-          :due-count="dueCount"
-          @start="handleStart"
-        />
-
+      <template v-if="scene === 'queue'">
         <div
-          v-if="dueCount > 0"
-          data-testid="review-mode-toggle"
-          role="group"
-          aria-label="Optional rating mode — self-grade is the default, quiz stays reachable"
-          class="flex items-center justify-end gap-2 text-readion-text-subtle text-xs"
+          data-testid="review-queue-region"
+          :aria-busy="isLoadingQueue || isRetryingQueue ? 'true' : undefined"
         >
-          <span>Prefer quiz instead?</span>
-          <button
-            type="button"
-            data-testid="review-mode-self-grade"
-            :class="[
-              'rounded-md px-1.5 py-0.5',
-              reviewMode === 'self-grade'
-                ? 'text-readion-text-secondary underline'
-                : 'text-readion-text-subtle hover:text-readion-text-secondary',
-            ]"
-            @click="reviewMode = 'self-grade'"
+          <ReadionAsyncRegion
+            :loading="isLoadingQueue"
+            :error="queueError ?? undefined"
+            :retrying="isRetryingQueue"
+            loading-label="Loading review queue…"
+            retrying-label="Retrying…"
+            aria-label="Review queue"
+            @retry="loadQueue(true)"
           >
-            Self-grade
-          </button>
-          <button
-            type="button"
-            data-testid="review-mode-quiz"
-            :class="[
-              'rounded-md px-1.5 py-0.5',
-              reviewMode === 'quiz'
-                ? 'text-readion-text-secondary underline'
-                : 'text-readion-text-subtle hover:text-readion-text-secondary',
-            ]"
-            @click="reviewMode = 'quiz'"
-          >
-            Quiz
-          </button>
+            <template #loading>
+              <div
+                class="mx-auto h-72 w-full max-w-md animate-pulse rounded-xl bg-readion-background-surface motion-reduce:animate-none"
+                aria-hidden="true"
+              />
+            </template>
+            <template #error>
+              <span data-testid="review-queue-error" role="alert">{{ queueError }}</span>
+            </template>
+
+            <ReviewQueueEntry
+              :enrollment-id="enrollmentId"
+              :items="queueItems"
+              :due-count="dueCount"
+              :starting="isStartingReview"
+              @start="handleStart"
+            />
+
+            <p
+              v-if="startReviewError"
+              data-testid="review-start-error"
+              class="mt-4 text-center text-readion-status-poor text-sm"
+              role="alert"
+            >
+              {{ startReviewError }}
+            </p>
+
+            <div
+              v-if="dueCount > 0"
+              data-testid="review-mode-toggle"
+              role="group"
+              aria-label="Optional rating mode — self-grade is the default, quiz stays reachable"
+              class="flex items-center justify-end gap-2 text-readion-text-subtle text-xs"
+            >
+              <span>Prefer quiz instead?</span>
+              <button
+                type="button"
+                data-testid="review-mode-self-grade"
+                :disabled="isStartingReview"
+                :class="[
+                  'rounded-md px-1.5 py-0.5',
+                  reviewMode === 'self-grade'
+                    ? 'text-readion-text-secondary underline'
+                    : 'text-readion-text-subtle hover:text-readion-text-secondary',
+                ]"
+                @click="reviewMode = 'self-grade'"
+              >
+                Self-grade
+              </button>
+              <button
+                type="button"
+                data-testid="review-mode-quiz"
+                :disabled="isStartingReview"
+                :class="[
+                  'rounded-md px-1.5 py-0.5',
+                  reviewMode === 'quiz'
+                    ? 'text-readion-text-secondary underline'
+                    : 'text-readion-text-subtle hover:text-readion-text-secondary',
+                ]"
+                @click="reviewMode = 'quiz'"
+              >
+                Quiz
+              </button>
+            </div>
+          </ReadionAsyncRegion>
         </div>
       </template>
 

@@ -137,6 +137,7 @@ describe('ReadinessTrend — X-axis labels, area fill, projection (5.2)', () => 
     const projection = wrapper.find('[data-testid="readiness-projection"]')
     expect(projection.exists()).toBe(true)
     expect(projection.attributes('stroke-dasharray')).toBeTruthy()
+    expect(wrapper.find('[data-testid="readiness-projection-point"]').exists()).toBe(true)
   })
 
   it('omits the projection segment when showProjection is false', () => {
@@ -144,5 +145,24 @@ describe('ReadinessTrend — X-axis labels, area fill, projection (5.2)', () => 
       props: { points: POINTS, hasData: true, showProjection: false },
     })
     expect(wrapper.find('[data-testid="readiness-projection"]').exists()).toBe(false)
+  })
+
+  it('anchors edge labels inward and keeps chart typography bounded', () => {
+    const wrapper = mount(ReadinessTrend, {
+      props: {
+        points: [
+          { score: 55, label: 'Long localized April 3' },
+          { score: 62, label: 'Long localized May 3' },
+          { score: 66, label: 'Long localized June 3' },
+        ],
+        hasData: true,
+      },
+    })
+    const labels = wrapper.findAll('[data-testid="readiness-x-label"]')
+    expect(labels[0]?.attributes('text-anchor')).toBe('start')
+    expect(labels.at(-1)?.attributes('text-anchor')).toBe('end')
+    for (const label of labels) {
+      expect(Number(label.attributes('font-size'))).toBeLessThanOrEqual(9)
+    }
   })
 })

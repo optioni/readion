@@ -11,7 +11,10 @@ defineProps<{
 </script>
 
 <template>
-  <div data-testid="readiness-accuracy-card" class="rounded-md bg-black/25 p-3">
+  <div
+    data-testid="readiness-accuracy-card"
+    class="w-full max-w-full min-w-0 rounded-md bg-black/25 p-3"
+  >
     <ReadinessTrend :points="points" :has-data="hasData" :show-projection="showProjection" />
 
     <div data-testid="readiness-accuracy-divider" class="my-3 border-readion-background-surface border-t" />

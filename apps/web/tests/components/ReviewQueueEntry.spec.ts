@@ -28,12 +28,14 @@ function mountEntry(options: {
   enrollmentId?: string
   items?: ReviewItemResponse[]
   dueCount?: number
+  starting?: boolean
 }) {
   return mount(ReviewQueueEntry, {
     props: {
       enrollmentId: options.enrollmentId ?? 'enr-1',
       items: options.items ?? [],
       dueCount: options.dueCount ?? 0,
+      starting: options.starting ?? false,
     },
   })
 }
@@ -155,6 +157,18 @@ describe('ReviewQueueEntry — with due items', () => {
     })
     await wrapper.find('[data-testid="start-review-button"]').trigger('click')
     expect(wrapper.emitted('start')).toHaveLength(1)
+  })
+
+  it('identifies start progress and disables the competing action', () => {
+    const wrapper = mountEntry({
+      items: [dueItem('Security', 'i1')],
+      dueCount: 1,
+      starting: true,
+    })
+    const start = wrapper.get('[data-testid="start-review-button"]')
+    expect(start.attributes('aria-busy')).toBe('true')
+    expect(start.text()).toContain('Starting…')
+    expect(wrapper.get('[data-testid="review-all-button"]').attributes('disabled')).toBeDefined()
   })
 
   it('does not show the all-caught-up state', () => {

@@ -57,6 +57,21 @@ describe('AccuracyBars', () => {
     expect(bars[1]!.find('[data-testid="accuracy-bar-caption"]').text()).toBe('Jun 5')
   })
 
+  it('constrains long captions within each responsive bar column', () => {
+    const wrapper = mount(AccuracyBars, {
+      props: {
+        series: [
+          { sessionId: 's1', accuracy: 60, label: 'Long localized April 3' },
+          { sessionId: 's2', accuracy: 70, label: 'Long localized May 3' },
+        ],
+      },
+    })
+    expect(wrapper.get('[data-testid="accuracy-bars"]').classes()).toContain('min-w-0')
+    for (const caption of wrapper.findAll('[data-testid="accuracy-bar-caption"]')) {
+      expect(caption.classes()).toEqual(expect.arrayContaining(['w-full', 'truncate']))
+    }
+  })
+
   it('renders one bar fill per series entry with positive accuracy-proportional pixel heights', () => {
     const wrapper = mount(AccuracyBars, {
       props: {

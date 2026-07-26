@@ -142,9 +142,9 @@ function mountPage() {
           emits: ['advance'],
         },
         ReviewQueueEntry: {
-          props: ['enrollmentId', 'items', 'dueCount'],
+          props: ['enrollmentId', 'items', 'dueCount', 'starting'],
           template:
-            '<div data-testid="review-queue-entry-stub"><button data-testid="start-review-button" @click="$emit(\'start\')">Start</button></div>',
+            '<div data-testid="review-queue-entry-stub"><button data-testid="start-review-button" :aria-busy="starting ? \'true\' : undefined" @click="$emit(\'start\')">{{ starting ? \'Starting…\' : \'Start\' }}</button></div>',
           emits: ['start'],
         },
         ReviewCompletion: {
@@ -185,6 +185,36 @@ afterEach(() => {
 })
 
 describe('Review page — queue scene', () => {
+  it('shows a bounded loading state without flashing queue success or caught-up content', async () => {
+    vi.mocked(fetchReviewQueue).mockReturnValue(new Promise(() => {}))
+    const wrapper = mountPage()
+    await vi.waitFor(() => expect(fetchReviewQueue).toHaveBeenCalledTimes(1))
+
+    expect(wrapper.get('[data-testid="review-queue-region"]').attributes('aria-busy')).toBe('true')
+    expect(wrapper.find('[data-testid="review-queue-entry-stub"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('All caught up')
+  })
+
+  it('shows an error and retries the due-count request exactly once', async () => {
+    vi.mocked(fetchReviewQueue)
+      .mockRejectedValueOnce(new Error('unavailable'))
+      .mockResolvedValueOnce({
+        items: [],
+        // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
+        meta: { dueCount: 5, total: 5 } as any,
+      })
+    const wrapper = mountPage()
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="review-queue-error"]').attributes('role')).toBe('alert')
+    expect(wrapper.find('[data-testid="review-queue-entry-stub"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="readion-async-retry"]').trigger('click')
+    await flushPromises()
+
+    expect(fetchReviewQueue).toHaveBeenCalledTimes(2)
+    expect(wrapper.find('[data-testid="review-queue-entry-stub"]').exists()).toBe(true)
+  })
+
   it('loads the review queue on mount and shows the queue entry', async () => {
     const wrapper = mountPage()
     await flushPromises()
@@ -271,6 +301,20 @@ describe('Review page — live countdown', () => {
 })
 
 describe('Review page — queue → self-grade flow (primary)', () => {
+  it('shows Starting progress and rejects a duplicate start activation', async () => {
+    vi.mocked(startReview).mockReturnValue(new Promise(() => {}))
+    const wrapper = mountPage()
+    await flushPromises()
+
+    const start = wrapper.get('[data-testid="start-review-button"]')
+    await start.trigger('click')
+    await start.trigger('click')
+
+    expect(startReview).toHaveBeenCalledTimes(1)
+    expect(start.attributes('aria-busy')).toBe('true')
+    expect(start.text()).toContain('Starting…')
+  })
+
   it('calls startReview and enters the self-grade flow when start is emitted', async () => {
     const wrapper = mountPage()
     await flushPromises()

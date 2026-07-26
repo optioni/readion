@@ -13,6 +13,15 @@ vi.stubGlobal('navigateTo', vi.fn())
 type ProgressData = ReturnType<typeof useProgressData>
 
 function stubProgressData(overrides: Partial<Record<keyof ProgressData, unknown>> = {}) {
+  const regionState = (name: 'summaryState' | 'trendState' | 'domainState' | 'historyState') =>
+    computed(
+      () =>
+        (overrides[name] as {
+          loading: boolean
+          error?: string
+          refreshing: boolean
+        }) ?? { loading: false, error: undefined, refreshing: false },
+    )
   vi.mocked(useProgressData).mockReturnValue({
     notFound: computed(() => (overrides.notFound as boolean | undefined) ?? false),
     certName: computed(
@@ -65,6 +74,14 @@ function stubProgressData(overrides: Partial<Record<keyof ProgressData, unknown>
     ),
     isLoading: computed(() => (overrides.isLoading as boolean | undefined) ?? false),
     isError: computed(() => (overrides.isError as boolean | undefined) ?? false),
+    summaryState: regionState('summaryState'),
+    trendState: regionState('trendState'),
+    domainState: regionState('domainState'),
+    historyState: regionState('historyState'),
+    retrySummary: (overrides.retrySummary as (() => Promise<void>) | undefined) ?? vi.fn(),
+    retryTrend: (overrides.retryTrend as (() => Promise<void>) | undefined) ?? vi.fn(),
+    retryDomains: (overrides.retryDomains as (() => Promise<void>) | undefined) ?? vi.fn(),
+    retryHistory: (overrides.retryHistory as (() => Promise<void>) | undefined) ?? vi.fn(),
   } as ProgressData)
 }
 
@@ -131,6 +148,65 @@ describe('Progress page — charts', () => {
     const wrapper = mountPage()
     expect(wrapper.find('[data-testid="readiness-trend"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="accuracy-bars"]').exists()).toBe(true)
+  })
+})
+
+describe('Progress page — independent async regions', () => {
+  it('renders structural loading without synthetic metrics, charts, domains, or history', () => {
+    const loading = { loading: true, error: undefined, refreshing: false }
+    stubProgressData({
+      summaryState: loading,
+      trendState: loading,
+      domainState: loading,
+      historyState: loading,
+    })
+    const wrapper = mountPage()
+
+    for (const region of ['summary', 'trend', 'domains', 'history']) {
+      expect(wrapper.get(`[data-testid="progress-${region}-region"]`).attributes('aria-busy')).toBe(
+        'true',
+      )
+    }
+    expect(wrapper.findAll('[data-testid="progress-stat-card"]')).toHaveLength(0)
+    expect(wrapper.find('[data-testid="readiness-trend"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="progress-domain-row"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="progress-session-history-table"]').exists()).toBe(false)
+  })
+
+  it('retries a failed trend locally while keeping successful domains visible', async () => {
+    const retryTrend = vi.fn()
+    stubProgressData({
+      trendState: {
+        loading: false,
+        error: 'Couldn’t load readiness history.',
+        refreshing: false,
+      },
+      domainScores: [
+        { domain: 'Security', score: 41, status: 'poor', hasData: true, mastered: false },
+      ],
+      retryTrend,
+    })
+    const wrapper = mountPage()
+
+    expect(wrapper.find('[data-testid="progress-domain-row"]').exists()).toBe(true)
+    const trendRegion = wrapper.get('[data-testid="progress-trend-region"]')
+    await trendRegion.get('[data-testid="readion-async-retry"]').trigger('click')
+    expect(retryTrend).toHaveBeenCalledTimes(1)
+  })
+
+  it('preserves loaded trend content during background refresh', () => {
+    stubProgressData({
+      trendState: { loading: false, error: undefined, refreshing: true },
+    })
+    const wrapper = mountPage()
+
+    expect(wrapper.find('[data-testid="readiness-trend"]').exists()).toBe(true)
+    expect(
+      wrapper
+        .get('[data-testid="progress-trend-region"]')
+        .find('[data-testid="readion-async-refresh"]')
+        .exists(),
+    ).toBe(true)
   })
 })
 

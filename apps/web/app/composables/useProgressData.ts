@@ -25,6 +25,12 @@ export interface SwitcherEntry {
   certName: string
 }
 
+export interface ProgressRegionState {
+  loading: boolean
+  error?: string
+  refreshing: boolean
+}
+
 export function useProgressData(enrollmentId: string) {
   const queryClient = useQueryClient()
 
@@ -222,6 +228,120 @@ export function useProgressData(enrollmentId: string) {
     () => (enrollmentQuery.isError.value && !notFound.value) || certQuery.isError.value,
   )
 
+  const summaryState = computed<ProgressRegionState>(() => {
+    const loading = enrollmentQuery.isLoading.value || sessionsQuery.isLoading.value
+    const error =
+      enrollmentQuery.isError.value || sessionsQuery.isError.value
+        ? 'Couldn’t load your activity summary.'
+        : undefined
+    return {
+      loading,
+      error,
+      refreshing:
+        !loading && !error && (enrollmentQuery.isFetching.value || sessionsQuery.isFetching.value),
+    }
+  })
+
+  const trendState = computed<ProgressRegionState>(() => {
+    const loading =
+      enrollmentQuery.isLoading.value ||
+      readinessQuery.isLoading.value ||
+      sessionsQuery.isLoading.value
+    const error =
+      enrollmentQuery.isError.value || readinessQuery.isError.value || sessionsQuery.isError.value
+        ? 'Couldn’t load readiness history.'
+        : undefined
+    return {
+      loading,
+      error,
+      refreshing:
+        !loading &&
+        !error &&
+        (enrollmentQuery.isFetching.value ||
+          readinessQuery.isFetching.value ||
+          sessionsQuery.isFetching.value),
+    }
+  })
+
+  const domainState = computed<ProgressRegionState>(() => {
+    const loading =
+      enrollmentQuery.isLoading.value || certQuery.isLoading.value || weakAreasQuery.isLoading.value
+    const error =
+      enrollmentQuery.isError.value || certQuery.isError.value || weakAreasQuery.isError.value
+        ? 'Couldn’t load domain scores.'
+        : undefined
+    return {
+      loading,
+      error,
+      refreshing:
+        !loading &&
+        !error &&
+        (enrollmentQuery.isFetching.value ||
+          certQuery.isFetching.value ||
+          weakAreasQuery.isFetching.value),
+    }
+  })
+
+  const historyState = computed<ProgressRegionState>(() => {
+    const loading =
+      enrollmentQuery.isLoading.value ||
+      sessionsQuery.isLoading.value ||
+      mockExamsQuery.isLoading.value
+    const error =
+      enrollmentQuery.isError.value || sessionsQuery.isError.value || mockExamsQuery.isError.value
+        ? 'Couldn’t load session history.'
+        : undefined
+    return {
+      loading,
+      error,
+      refreshing:
+        !loading &&
+        !error &&
+        (enrollmentQuery.isFetching.value ||
+          sessionsQuery.isFetching.value ||
+          mockExamsQuery.isFetching.value),
+    }
+  })
+
+  async function retrySummary(): Promise<void> {
+    if (enrollmentQuery.isError.value) {
+      await enrollmentQuery.refetch()
+    }
+    if (certificationId.value !== null) {
+      await sessionsQuery.refetch()
+    }
+  }
+
+  async function retryTrend(): Promise<void> {
+    if (enrollmentQuery.isError.value) {
+      await enrollmentQuery.refetch()
+    }
+    await readinessQuery.refetch()
+    if (certificationId.value !== null) {
+      await sessionsQuery.refetch()
+    }
+  }
+
+  async function retryDomains(): Promise<void> {
+    if (enrollmentQuery.isError.value) {
+      await enrollmentQuery.refetch()
+    }
+    await weakAreasQuery.refetch()
+    if (certificationId.value !== null) {
+      await certQuery.refetch()
+    }
+  }
+
+  async function retryHistory(): Promise<void> {
+    if (enrollmentQuery.isError.value) {
+      await enrollmentQuery.refetch()
+    }
+    await mockExamsQuery.refetch()
+    if (certificationId.value !== null) {
+      await sessionsQuery.refetch()
+    }
+  }
+
   return {
     notFound,
     certName,
@@ -239,5 +359,13 @@ export function useProgressData(enrollmentId: string) {
     switcher,
     isLoading,
     isError,
+    summaryState,
+    trendState,
+    domainState,
+    historyState,
+    retrySummary,
+    retryTrend,
+    retryDomains,
+    retryHistory,
   }
 }

@@ -1,15 +1,22 @@
 <script setup lang="ts">
 import type { ReviewItemResponse } from '@readion/shared'
 import { computed } from 'vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import { sessionStartPath } from '~/composables/runnerRoutes'
 import { useDueDomainBreakdown } from '~/composables/useDueDomainBreakdown'
 import { formatOverdueSummary, useOverdueSummary } from '~/composables/useOverdueSummary'
 
-const props = defineProps<{
-  enrollmentId: string
-  items: ReviewItemResponse[]
-  dueCount: number
-}>()
+const props = withDefaults(
+  defineProps<{
+    enrollmentId: string
+    items: ReviewItemResponse[]
+    dueCount: number
+    starting?: boolean
+  }>(),
+  {
+    starting: false,
+  },
+)
 
 const emit = defineEmits<{
   start: []
@@ -87,22 +94,24 @@ const overdueNote = computed(() => {
     </div>
 
     <div class="flex w-full max-w-[380px] items-center gap-3">
-      <button
-        type="button"
+      <ReadionButton
         data-testid="start-review-button"
-        class="flex-1 rounded-md bg-readion-primary px-5 py-2.5 font-semibold text-sm text-white"
+        class="flex-1 rounded-md"
+        :busy="starting"
+        busy-label="Starting…"
         @click="emit('start')"
       >
         Start review →
-      </button>
-      <button
-        type="button"
+      </ReadionButton>
+      <ReadionButton
         data-testid="review-all-button"
+        variant="secondary"
+        :disabled="starting"
         class="whitespace-nowrap rounded-md border border-readion-border-strong px-4 py-2.5 text-readion-text-secondary text-xs"
         @click="emit('start')"
       >
         Review all {{ dueCount }}
-      </button>
+      </ReadionButton>
     </div>
 
     <p

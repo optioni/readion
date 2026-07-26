@@ -11,14 +11,18 @@ defineProps<{
 </script>
 
 <template>
-  <div data-testid="accuracy-bars">
+  <div data-testid="accuracy-bars" class="w-full max-w-full min-w-0">
     <!-- Fixed-height plot area (56px bars + 20px label row) so the per-bar percentage maps to a definite pixel height; matches openspec/design/Progress.html. -->
-    <div v-if="series.length > 0" class="flex items-end gap-1" :style="{ height: '76px' }">
+    <div
+      v-if="series.length > 0"
+      class="flex w-full max-w-full min-w-0 items-end gap-1"
+      :style="{ height: '76px' }"
+    >
       <div
         v-for="(point, index) in series"
         :key="point.sessionId"
         data-testid="accuracy-bar"
-        class="relative flex flex-1 flex-col items-center justify-end gap-1"
+        class="relative flex min-w-0 flex-1 flex-col items-center justify-end gap-1"
         :title="`${point.accuracy}%`"
       >
         <span
@@ -32,7 +36,10 @@ defineProps<{
           :class="index === series.length - 1 ? 'bg-readion-primary' : 'bg-readion-primary/40'"
           :style="{ height: `${Math.max(2, (point.accuracy / 100) * 56)}px` }"
         />
-        <span data-testid="accuracy-bar-caption" class="text-[8px] opacity-50">{{ point.label }}</span>
+        <span
+          data-testid="accuracy-bar-caption"
+          class="w-full truncate text-center text-[8px] opacity-50"
+        >{{ point.label }}</span>
       </div>
     </div>
 

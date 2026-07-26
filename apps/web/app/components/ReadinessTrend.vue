@@ -13,21 +13,24 @@ const props = defineProps<{
 }>()
 
 const WIDTH = 300
-const HEIGHT = 80
+const HEIGHT = 100
 const PAD_LEFT = 24
-const PAD = 8
+const PAD_RIGHT = 8
+const PAD_TOP = 8
+const PAD_BOTTOM = 20
 const PROJECTION_STEPS = 3
 const TARGET_SCORE = 80
+const MAX_LABEL_LENGTH = 18
 
 const GRID_YS = [25, 50, 75, 100] as const
 const TARGET_Y = 80
 
 function xScale(i: number, total: number): number {
-  return PAD_LEFT + (i / Math.max(total - 1, 1)) * (WIDTH - PAD_LEFT - PAD)
+  return PAD_LEFT + (i / Math.max(total - 1, 1)) * (WIDTH - PAD_LEFT - PAD_RIGHT)
 }
 
 function yScale(v: number): number {
-  return PAD + (1 - v / 100) * (HEIGHT - PAD * 2)
+  return PAD_TOP + (1 - v / 100) * (HEIGHT - PAD_TOP - PAD_BOTTOM)
 }
 
 const pointCoords = computed(() =>
@@ -50,23 +53,14 @@ const areaPath = computed(() => {
   }
   const first = coords[0] as (typeof coords)[number]
   const last = coords[coords.length - 1] as (typeof coords)[number]
-  const baseline = HEIGHT - PAD
+  const baseline = HEIGHT - PAD_BOTTOM
   const linePart = coords.map(({ x, y }) => `L${x.toFixed(1)},${y.toFixed(1)}`).join(' ')
   return `M${first.x.toFixed(1)},${baseline} ${linePart} L${last.x.toFixed(1)},${baseline} Z`
 })
 
 const currentValue = computed(() => props.points.at(-1)?.score ?? null)
 
-const tickLabels = computed(() =>
-  GRID_YS.map((tickY) => ({
-    value: tickY,
-    label: ` ${tickY} `,
-    topPct: (yScale(tickY) / HEIGHT) * 100,
-  })),
-)
-
 const targetY = computed(() => yScale(TARGET_Y))
-const targetTopPct = computed(() => (targetY.value / HEIGHT) * 100)
 
 // X-axis labels — show only the first, middle, and last points (design: uncluttered ticks).
 const xLabelIndexes = computed(() => {
@@ -81,7 +75,17 @@ const xLabels = computed(() =>
   xLabelIndexes.value.map((i) => ({
     index: i,
     x: pointCoords.value[i]?.x ?? 0,
-    text: pointCoords.value[i]?.label ?? '',
+    text:
+      (pointCoords.value[i]?.label.length ?? 0) > MAX_LABEL_LENGTH
+        ? `${pointCoords.value[i]?.label.slice(0, MAX_LABEL_LENGTH - 1)}…`
+        : (pointCoords.value[i]?.label ?? ''),
+    fullText: pointCoords.value[i]?.label ?? '',
+    anchor:
+      i === 0
+        ? ('start' as const)
+        : i === props.points.length - 1
+          ? ('end' as const)
+          : ('middle' as const),
   })),
 )
 
@@ -94,52 +98,75 @@ const projectionPath = computed(() => {
     return ''
   }
   const projectedX = Math.min(
-    last.x + (PROJECTION_STEPS / Math.max(coords.length - 1, 1)) * (WIDTH - PAD_LEFT - PAD),
-    WIDTH - PAD - 4,
+    last.x + (PROJECTION_STEPS / Math.max(coords.length - 1, 1)) * (WIDTH - PAD_LEFT - PAD_RIGHT),
+    WIDTH - PAD_RIGHT - 4,
   )
   const projectedY = yScale(TARGET_SCORE)
   return `M${last.x.toFixed(1)},${last.y.toFixed(1)} L${projectedX.toFixed(1)},${projectedY.toFixed(1)}`
 })
+
+const projectionPoint = computed(() => {
+  const coords = pointCoords.value
+  const last = coords.at(-1)
+  if (!last) {
+    return null
+  }
+  return {
+    x: Math.min(
+      last.x + (PROJECTION_STEPS / Math.max(coords.length - 1, 1)) * (WIDTH - PAD_LEFT - PAD_RIGHT),
+      WIDTH - PAD_RIGHT - 4,
+    ),
+    y: yScale(TARGET_SCORE),
+  }
+})
 </script>
 
 <template>
-  <div data-testid="readiness-trend">
+  <div data-testid="readiness-trend" class="w-full max-w-full min-w-0">
     <div class="mb-2 text-[11px] uppercase tracking-wider opacity-70">Readiness Trend</div>
 
     <div v-if="!hasData" data-testid="progress-not-calibrated" class="py-4 text-center">
-      <p class="text-slate-400 text-sm">Not yet calibrated</p>
-      <p class="mt-1 text-slate-500 text-xs">
+      <p class="text-readion-text-secondary text-sm">Not yet calibrated</p>
+      <p class="mt-1 text-readion-text-muted text-xs">
         Complete a few sessions to see your readiness trend.
       </p>
     </div>
 
     <template v-else>
       <div class="mb-2 flex items-end justify-between">
-        <span class="font-semibold text-2xl text-slate-100">{{ currentValue }}%</span>
+        <span class="font-semibold text-2xl text-readion-text-primary">{{ currentValue }}%</span>
       </div>
-      <div class="relative">
+      <div class="relative w-full max-w-full min-w-0">
         <svg
           :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
-          class="w-full"
+          class="block h-auto w-full max-w-full"
           aria-hidden="true"
         >
           <g v-for="tickY in GRID_YS" :key="tickY">
             <line
               :x1="PAD_LEFT"
               :y1="yScale(tickY)"
-              :x2="WIDTH - PAD"
+              :x2="WIDTH - PAD_RIGHT"
               :y2="yScale(tickY)"
               stroke="currentColor"
               stroke-width="0.5"
-              class="text-slate-800"
+              class="text-readion-border-default"
             />
+            <text
+              :x="PAD_LEFT - 4"
+              :y="yScale(tickY) + 3"
+              text-anchor="end"
+              font-size="8"
+              fill="currentColor"
+              class="text-readion-text-subtle"
+            >{{ tickY }}</text>
           </g>
 
           <line
             data-testid="readiness-target-line"
             :x1="PAD_LEFT"
             :y1="targetY"
-            :x2="WIDTH - PAD"
+            :x2="WIDTH - PAD_RIGHT"
             :y2="targetY"
             stroke="currentColor"
             stroke-width="1"
@@ -152,6 +179,16 @@ const projectionPath = computed(() => {
             :d="areaPath"
             fill="currentColor"
             class="text-readion-primary/[0.07]"
+          />
+
+          <circle
+            v-if="showProjection && projectionPoint"
+            data-testid="readiness-projection-point"
+            :cx="projectionPoint.x"
+            :cy="projectionPoint.y"
+            r="3"
+            fill="currentColor"
+            class="text-readion-status-good"
           />
 
           <path
@@ -191,32 +228,26 @@ const projectionPath = computed(() => {
             :key="label.index"
             data-testid="readiness-x-label"
             :x="label.x"
-            :y="HEIGHT - 2"
-            text-anchor="middle"
+            :y="HEIGHT - 4"
+            :text-anchor="label.anchor"
             font-size="9"
             fill="currentColor"
-            class="text-slate-500"
-          >{{ label.text }}</text>
+            class="text-readion-text-subtle"
+            :aria-label="label.fullText"
+          >
+            {{ label.text }}
+          </text>
+
+          <text
+            data-testid="readiness-target-label"
+            :x="WIDTH - PAD_RIGHT"
+            :y="targetY - 3"
+            text-anchor="end"
+            font-size="8"
+            fill="currentColor"
+            class="text-readion-status-good/70"
+          >80% target</text>
         </svg>
-
-        <div
-          v-for="tick in tickLabels"
-          :key="tick.value"
-          class="pointer-events-none absolute right-[calc(100%-6.5%)] -translate-y-1/2 text-slate-500"
-          style="font-size: 9px"
-          :style="{ top: `${tick.topPct}%` }"
-        >
-          {{ tick.label }}
-        </div>
-
-        <div
-          data-testid="readiness-target-label"
-          class="pointer-events-none absolute left-[calc(100%-2%)] -translate-y-1/2 whitespace-nowrap text-readion-status-good/70"
-          style="font-size: 9px"
-          :style="{ top: `${targetTopPct}%` }"
-        >
-          80% target
-        </div>
       </div>
     </template>
   </div>
