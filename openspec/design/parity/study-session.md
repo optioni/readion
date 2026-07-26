@@ -1,8 +1,16 @@
 # Parity — Study session
 
-10 findings — 3 high · 4 medium · 3 low
+3 active findings — 2 high · 1 medium · 0 low
 
-- **[high] Persistent app sidebar (AppSidebar, active=Sessions)** — missing/layout
+## Reconciliation — ui-interaction-state-parity
+
+This report keeps 10 snapshot observations as evidence. Counts and the parity index include only the 3 entries still marked `open`; `resolved` and `superseded` entries below are historical.
+
+- Static Claude frames remain the visual hierarchy reference. Live loading/content/empty/error+Retry/background-refresh states, operation-specific busy labels and duplicate guards, semantic dark/light modes, accessibility/focus behavior, and tested 375px containment are intentional product contracts even when no static frame depicts them.
+- Busy identity belongs only to the initiating action; adjacent disabled actions do not display its spinner or progressive label. Dimensions remain stable and reduced-motion preferences are honored.
+- Resolved snapshot findings: “Persistent app sidebar (AppSidebar, active=Sessions)”; “Confidence rating prompt copy (topic-specific)”; “ReadingBlock domain label ('IAM & Security')”; “Collapsed agent rail affordance”; “Agent panel header online-status dot”; “Agent bubble avatar icon”; “Question position label spacing”.
+
+- **[high · resolved] Persistent app sidebar (AppSidebar, active=Sessions)** — missing/layout
   - design: SessionLayout renders Shell.AppSidebar (active='Sessions') as a permanent left nav rail alongside the header/content/agent split, per the design's 'Split-panel study interface' description.
   - app: The page uses `definePageMeta({ layout: 'minimal' })`, which renders only a thin top bar (logo + 'Back to dashboard' link) with no sidebar/nav at all during a session.
   - evidence: `openspec/design/Session.html:84-85,367-382 (AppSidebar in SessionLayout); apps/web/app/pages/sessions/[id]/index.vue:18; apps/web/app/layouts/minimal.vue:1-19`
@@ -14,11 +22,11 @@
   - design: ConfidenceRating is its own leftContent card that appears only after submission (state 'submitted-incorrect'), alongside the now-submitted QuizCard. In 'answering-unsubmitted', no confidence UI exists and the Submit button has no extra precondition beyond selecting an option.
   - app: ConfidenceRating is embedded inside QuizCard and shown BEFORE submission (`v-if="result === null"`); `canSubmit` requires both an option AND a confidence value, so the Submit button stays disabled until confidence is rated pre-submission — inverting the design's submit-then-rate flow.
   - evidence: `openspec/design/Session.html:240-255,395-465 (ConfidenceRating only in submitted state); apps/web/app/components/QuizCard.vue:29-31,124-128`
-- **[medium] Confidence rating prompt copy (topic-specific)** — simplified/composition
+- **[medium · resolved] Confidence rating prompt copy (topic-specific)** — simplified/composition
   - design: Prompt reads "How confident do you feel about **IAM & SCPs**?" — bolded, topic-specific context.
   - app: Generic prompt "How confident do you feel?" with no topic/domain interpolation.
   - evidence: `openspec/design/Session.html:242; apps/web/app/components/ConfidenceRating.vue:15`
-- **[medium] ReadingBlock domain label ('IAM & Security')** — missing/composition
+- **[medium · resolved] ReadingBlock domain label ('IAM & Security')** — missing/composition
   - design: Reading pill is followed by a domain label (e.g. 'IAM & Security') for context.
   - app: ReadingBlock renders the domain span only `v-if="domain"`, but the page never passes a `domain` prop when invoking `<ReadingBlock>`, so the label never renders.
   - evidence: `openspec/design/Session.html:131,434; apps/web/app/components/ReadingBlock.vue:13-14,55; apps/web/app/pages/sessions/[id]/index.vue:148-153`
@@ -26,19 +34,19 @@
   - design: The ReadingBlock component has no advance/continue affordance — it ends with the citation chips, since (per finding above) the related quiz is shown directly beneath it.
   - app: ReadingBlock adds its own bottom 'Continue →' button to advance the single-item sequence, a control not present in the design component.
   - evidence: `openspec/design/Session.html:125-169 (no button); apps/web/app/components/ReadingBlock.vue:88-95`
-- **[medium] Collapsed agent rail affordance** — simplified/composition
+- **[medium · resolved] Collapsed agent rail affordance** — simplified/composition
   - design: Collapsed AgentPanel shows a chat-bubble icon button plus a vertical 'Ask AI' label alongside the expand control.
   - app: Collapsed state (`w-11`) keeps only the header row's toggle arrow button; no icon or 'Ask AI' label is rendered.
   - evidence: `openspec/design/Session.html:313-325; apps/web/app/components/SessionLayout.vue:23-46`
-- **[low] Agent panel header online-status dot** — missing/composition
+- **[low · resolved] Agent panel header online-status dot** — missing/composition
   - design: Header shows a small green dot next to 'Study assistant' indicating live/online status.
   - app: Header shows only the 'Study assistant' text and the collapse/close button — no status dot.
   - evidence: `openspec/design/Session.html:331-337; apps/web/app/components/SessionLayout.vue:29-41`
-- **[low] Agent bubble avatar icon** — missing/composition
+- **[low · resolved] Agent bubble avatar icon** — missing/composition
   - design: Non-user bubbles show a small circular sparkle-icon avatar before the 'Study assistant' label.
   - app: AgentBubble renders only the 'Study assistant' text label, no avatar icon.
   - evidence: `openspec/design/Session.html:294-301; apps/web/app/components/AgentBubble.vue:28-30`
-- **[low] Question position label spacing** — divergent/composition
+- **[low · resolved] Question position label spacing** — divergent/composition
   - design: Label reads 'Q3 of 12' with no space between 'Q' and the number.
   - app: Template inserts a literal space: "Q {{ displayNumber(item.index) }} of {{ total }}", rendering 'Q 3 of 12'.
   - evidence: `openspec/design/Session.html:212; apps/web/app/components/QuizCard.vue:107`

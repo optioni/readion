@@ -1,11 +1,11 @@
 {
   "screen_id": "settings",
   "screen": "Settings",
-  "totalFindings": 10,
+  "totalFindings": 5,
   "bySeverity": {
     "high": 4,
-    "medium": 5,
-    "low": 1
+    "medium": 1,
+    "low": 0
   },
   "findings": [
     {
@@ -16,7 +16,8 @@
       "design": "Custom slider card: 'Duration' label with live value readout ('20 min'), a filled track with a draggable thumb, and tick labels 5m/15m/30m/45m/60m beneath.",
       "app": "Discrete pill/button row (like every other field) offering raw numeric values 15, 30, 60, 90 with no unit suffix, live readout, track, or tick marks.",
       "evidence": "Design: openspec/design/Settings.html:224-240 (FieldRow 'Session length' + slider markup). App: apps/web/app/components/OnboardingSessionPrefs.vue:50-56,102-119 renders `duration` via the same generic pill-button field as everything else; values sourced from packages/shared/src/users/index.ts:6 `sessionDefaultDurations = [15, 30, 60, 90]`.",
-      "screen": "Settings \u2014 study-defaults-tab"
+      "screen": "Settings — study-defaults-tab",
+      "status": "open"
     },
     {
       "element": "Difficulty pill labels",
@@ -24,9 +25,10 @@
       "axis": "composition",
       "severity": "high",
       "design": "Human-readable option labels: 'Adaptive', 'Easy', 'Medium', 'Hard' (Adaptive shown selected).",
-      "app": "Raw enum slugs rendered verbatim as button text: 'beginner', 'intermediate', 'advanced', 'adaptive' \u2014 different wording, casing, and set membership (no 'Easy'/'Medium'/'Hard').",
+      "app": "Raw enum slugs rendered verbatim as button text: 'beginner', 'intermediate', 'advanced', 'adaptive' — different wording, casing, and set membership (no 'Easy'/'Medium'/'Hard').",
       "evidence": "Design: openspec/design/Settings.html:242-250 (difficulty options array). App: apps/web/app/components/OnboardingSessionPrefs.vue:117 `{{ option }}` prints raw values from packages/shared/src/users/index.ts:8-13 `sessionDefaultDifficulties = ['beginner','intermediate','advanced','adaptive']` with no label mapping.",
-      "screen": "Settings \u2014 study-defaults-tab"
+      "screen": "Settings — study-defaults-tab",
+      "status": "open"
     },
     {
       "element": "Content mix pill labels",
@@ -36,7 +38,8 @@
       "design": "Options 'Questions', 'Mixed', 'Concepts first' (Mixed selected).",
       "app": "Raw enum slugs 'balanced', 'reading-heavy', 'quiz-heavy' rendered unformatted, with no correspondence to the design's copy.",
       "evidence": "Design: openspec/design/Settings.html:242-243. App: apps/web/app/components/OnboardingSessionPrefs.vue:117 with values from packages/shared/src/users/index.ts:7 `sessionDefaultContentMixes = ['balanced','reading-heavy','quiz-heavy']`.",
-      "screen": "Settings \u2014 study-defaults-tab"
+      "screen": "Settings — study-defaults-tab",
+      "status": "open"
     },
     {
       "element": "Learning style pill set",
@@ -44,9 +47,10 @@
       "axis": "composition",
       "severity": "high",
       "design": "Two options: 'Spaced rep.', 'Intensive' (Spaced rep. selected).",
-      "app": "Three raw enum options rendered verbatim: 'weak-area-focus', 'spaced-repetition', 'scenario-based' \u2014 different count, wording, and default selection ('weak-area-focus').",
+      "app": "Three raw enum options rendered verbatim: 'weak-area-focus', 'spaced-repetition', 'scenario-based' — different count, wording, and default selection ('weak-area-focus').",
       "evidence": "Design: openspec/design/Settings.html:245. App: apps/web/app/components/OnboardingSessionPrefs.vue:117 with values from packages/shared/src/users/index.ts:15-19,26 (`sessionDefaultLearningStyles`, `DEFAULT_SESSION_DEFAULTS.learningStyle = 'weak-area-focus'`).",
-      "screen": "Settings \u2014 study-defaults-tab"
+      "screen": "Settings — study-defaults-tab",
+      "status": "open"
     },
     {
       "element": "'Session preferences' section title",
@@ -56,7 +60,9 @@
       "design": "SettingsSection renders a bold 13px title 'Session preferences' above the field group.",
       "app": "No section heading is rendered before the fields; StudyDefaultsTab goes straight into OnboardingSessionPrefs's field list.",
       "evidence": "Design: openspec/design/Settings.html:218 (`<SettingsSection title=\"Session preferences\">`). App: apps/web/app/components/StudyDefaultsTab.vue:41-48 has no heading element.",
-      "screen": "Settings \u2014 study-defaults-tab"
+      "screen": "Settings — study-defaults-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "Intro/behavioral description text",
@@ -66,7 +72,9 @@
       "design": "Explanatory copy: 'These are your default starting values for each new session. Readion adjusts them over time based on your performance,' setting user expectations that these are starting defaults, not fixed settings.",
       "app": "No equivalent copy anywhere in StudyDefaultsTab or OnboardingSessionPrefs; the adaptive-adjustment behavior is undocumented in the UI.",
       "evidence": "Design: openspec/design/Settings.html:219-221. App: apps/web/app/components/StudyDefaultsTab.vue:41-48 (no descriptive text node).",
-      "screen": "Settings \u2014 study-defaults-tab"
+      "screen": "Settings — study-defaults-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "Field row layout (label column + hint aside content)",
@@ -76,7 +84,9 @@
       "design": "Two-column FieldRow: fixed 160px-wide label (+ optional hint) on the left, control on the right, all rows vertically aligned into a form-table layout.",
       "app": "Stacked single-column layout: an uppercase mono-font label sits above its pill row, one full-width block per field, no left-hand label column.",
       "evidence": "Design: openspec/design/Settings.html:120-128 (`FieldRow` component). App: apps/web/app/components/OnboardingSessionPrefs.vue:96-121 (`<div class=\"flex flex-col gap-2\">` per field, label above buttons).",
-      "screen": "Settings \u2014 study-defaults-tab"
+      "screen": "Settings — study-defaults-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "'Default duration per session' hint text",
@@ -86,17 +96,20 @@
       "design": "Session length FieldRow shows a secondary hint line under the label: 'Default duration per session'.",
       "app": "No hint/sub-text is rendered for any field; only the field label itself.",
       "evidence": "Design: openspec/design/Settings.html:224. App: apps/web/app/components/OnboardingSessionPrefs.vue:98-101 (label only, no hint slot).",
-      "screen": "Settings \u2014 study-defaults-tab"
+      "screen": "Settings — study-defaults-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "Extra 'Focus area' field",
       "class": "divergent",
       "axis": "composition",
       "severity": "medium",
-      "design": "Study defaults tab defines exactly three pill fields: Content mix, Difficulty, Learning style (plus the Session length slider) \u2014 no Focus area field.",
+      "design": "Study defaults tab defines exactly three pill fields: Content mix, Difficulty, Learning style (plus the Session length slider) — no Focus area field.",
       "app": "A fifth field, 'Focus area' (options: auto, weak-areas, new-material, review), is rendered between Difficulty and Learning style, with no design counterpart in this tab.",
       "evidence": "Design: openspec/design/Settings.html:242-250 (only 3 pill fields defined). App: apps/web/app/components/OnboardingSessionPrefs.vue:69-74 (`focusArea` field) rendered via the shared `fields` array at :50-81.",
-      "screen": "Settings \u2014 study-defaults-tab"
+      "screen": "Settings — study-defaults-tab",
+      "status": "open"
     },
     {
       "element": "Pill/chip shape and selected-state styling",
@@ -106,7 +119,29 @@
       "design": "Fully rounded pill chips (`border-radius: rFull`), unselected state has no border-only-transparent background, selected state fills solid primary color with white text and medium weight.",
       "app": "Buttons use `rounded-lg` (soft rectangle, not full pill) with visible border in both states and slate background/text for unselected state.",
       "evidence": "Design: openspec/design/Settings.html:150-156 (`OBPills` component, `borderRadius: T.rFull`). App: apps/web/app/components/OnboardingSessionPrefs.vue:109-114 (`class=\"rounded-lg border px-4 py-2 ...\"`).",
-      "screen": "Settings \u2014 study-defaults-tab"
+      "screen": "Settings — study-defaults-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     }
-  ]
+  ],
+  "reconciliation": {
+    "change": "ui-interaction-state-parity",
+    "snapshotPolicy": "Claude HTML remains visual hierarchy evidence; implemented live, accessible, theme, and responsive behavior is the product contract where static frames cannot demonstrate it.",
+    "statusVocabulary": {
+      "open": "active parity defect",
+      "resolved": "implementation now matches the cited snapshot evidence",
+      "superseded": "snapshot difference is an intentional product contract and is not an active defect"
+    },
+    "intentionalProductContracts": {
+      "colorModes": "Dark and light modes use semantic Readion tokens and meet 4.5:1 normal-text and 3:1 large-text/non-text minimum contrast.",
+      "controls": "Controls expose rest, hover, active, focus-visible, disabled, selected, and action-local busy states with stable dimensions, reduced-motion handling, semantic state, duplicate guards, and operation-specific labels.",
+      "async": "HTTP regions distinguish initial loading, content, successful empty, error with Retry, and content-preserving background refresh.",
+      "accessibility": "Progress and outcomes are announced; modal focus enters a meaningful control, traps traversal, supports permitted Escape/backdrop dismissal, and returns to the opener.",
+      "responsive": "Implemented shell screens contain content at 375px with wrapping or bounded local overflow while preserving the desktop artboard hierarchy."
+    },
+    "activeFindingCount": 5,
+    "historicalFindingCount": 10,
+    "resolvedCount": 5,
+    "supersededCount": 0
+  }
 }

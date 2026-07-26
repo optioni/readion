@@ -1,6 +1,14 @@
 # Parity — Review queue
 
-12 findings — 5 high · 3 medium · 4 low
+8 active findings — 5 high · 3 medium · 0 low
+
+## Reconciliation — ui-interaction-state-parity
+
+This report keeps 12 snapshot observations as evidence. Counts and the parity index include only the 8 entries still marked `open`; `resolved` and `superseded` entries below are historical.
+
+- Static Claude frames remain the visual hierarchy reference. Live loading/content/empty/error+Retry/background-refresh states, operation-specific busy labels and duplicate guards, semantic dark/light modes, accessibility/focus behavior, and tested 375px containment are intentional product contracts even when no static frame depicts them.
+- Busy identity belongs only to the initiating action; adjacent disabled actions do not display its spinner or progressive label. Dimensions remain stable and reduced-motion preferences are honored.
+- Resolved snapshot findings: “QueueList section label 'Quarantined items'”; “Cert filter chips placement”; “Decision panel warning icon”; “Relative date formatting in queue list ('Today'/'Yesterday')”.
 
 - **[high] FlagBadge (Auto-flagged / User-reported / Duplicate) + report count** — missing/composition
   - design: Every queue item (list row and detail identity row) carries a colored FlagBadge distinguishing why it was quarantined (auto-flagged / user-reported / duplicate), plus a report count ('5 user reports', poor-colored) in the detail identity row.
@@ -34,19 +42,19 @@
   - design: The whole screen is a single edge-to-edge app shell: sidebar + full-height content column with a bordered top header bar, and the queue/detail split panel fills all remaining vertical space.
   - app: Content sits inside `AdminConsole`'s `mx-auto max-w-7xl px-4 py-8` centered container alongside the sidebar; there is no distinct bordered top header bar for the screen (just an inline `h1`), and the split panel does not fill the viewport height
   - evidence: `design: openspec/design/admin-content.jsx:124-131 vs app: apps/web/app/components/admin/AdminConsole.vue:83-87, apps/web/app/components/admin/AdminReviewQueue.vue:85-95,148`
-- **[low] QueueList section label 'Quarantined items'** — missing/composition
+- **[low · resolved] QueueList section label 'Quarantined items'** — missing/composition
   - design: List panel has a header row with the label 'Quarantined items' plus the filter chips inline beneath it.
   - app: No such label exists; the list simply starts with items, and filter chips are relocated outside the list entirely
   - evidence: `design: openspec/design/admin-content.jsx:94-101 vs app: apps/web/app/components/admin/AdminReviewQueueList.vue:41-56`
-- **[low] Cert filter chips placement** — divergent/layout
+- **[low · resolved] Cert filter chips placement** — divergent/layout
   - design: Filter chips ('All'/cert codes) live inside the queue-list panel's header, scoped visually to the list.
   - app: Chips are rendered as a page-level row above the entire split list+detail panel, not scoped inside the list panel
   - evidence: `design: openspec/design/admin-content.jsx:96-100 vs app: apps/web/app/components/admin/AdminReviewQueue.vue:113-146`
-- **[low] Decision panel warning icon** — missing/composition
+- **[low · resolved] Decision panel warning icon** — missing/composition
   - design: Decision panel title is preceded by a colored triangle-warning SVG icon next to the verdict text.
   - app: No icon precedes the verdict text in the toned box
   - evidence: `design: openspec/design/admin-content.jsx:147-148 vs app: apps/web/app/components/admin/AdminReviewQueueDetail.vue:70-73`
-- **[low] Relative date formatting in queue list ('Today'/'Yesterday')** — divergent/behavioral
+- **[low · resolved] Relative date formatting in queue list ('Today'/'Yesterday')** — divergent/behavioral
   - design: Dates shown as relative labels: Today, Yesterday, Jun 21.
   - app: Always formats as an absolute date via `Intl.DateTimeFormat` (e.g. 'Jul 8, 2026'), never relative
   - evidence: `design: openspec/design/admin-content.jsx:86-90,114 vs app: apps/web/app/components/admin/AdminReviewQueueList.vue:21-29,64`

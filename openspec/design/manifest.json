@@ -8,136 +8,1113 @@
   },
   "shellNote": "App Shell (app-shell.jsx) is the single source of truth for nav chrome: a 200px fixed sidebar (active item highlighted, user card pinned bottom, role-gated admin link) + a fluid content region. The admin console uses the same shell's AdminSidebar variant. Per-screen artboards inherit the shell unchanged and vary only the content region; each 'layout' below names which shell + active item wraps the content and which contentWidths token the content region uses.",
   "artboards": [
-    { "id": "app-shell-sidebar-dashboard-active", "screen": "App shell — sidebar", "route": null, "state": "dashboard-active", "file": "App Shell.html", "description": "Shared AppSidebar chrome, Dashboard active (accent icon + tinted row); user card pinned bottom. Non-admin, so the role-gated 'Admin panel' link is hidden — that absence is what distinguishes it from the admin demo.", "layout": "The shell itself (reference): 200px fixed sidebar + fluid content region. Sidebar width is constant at any viewport; only the content region flexes." },
-    { "id": "app-shell-sidebar-progress-active-admin", "screen": "App shell — sidebar", "route": null, "state": "progress-active-admin", "file": "App Shell.html", "description": "Same sidebar with Progress active and admin=true, so the role-gated 'Admin panel' link renders above the user card. Differs from dashboard-active by active item + the presence of that admin link.", "layout": "The shell itself (reference): 200px fixed sidebar + fluid content region." },
-    { "id": "readiness-ring-score-scale", "screen": "Readiness — ring", "route": null, "state": "score-scale", "file": "App Shell.html", "description": "ReadinessRing shown across every band of the colour scale (<50 poor, 50–64 warning, 65–74 medium, 75+ good; null renders '—' not-assessed). Ring fill, number and caption all derive from one score — colour is the single source of truth, not set per-instance.", "layout": "Component swatch (no shell): fixed-size ring specimens laid out in a row." },
-    { "id": "readiness-inline-bar-and-badge", "screen": "Readiness — inline", "route": null, "state": "bar-and-badge", "file": "App Shell.html", "description": "ReadinessBar (thin inline progress) and DomainBadge (dot + label + pct pill), both coloured by the same score scale. Reference for compact inline readiness; colour must track the score, not be hard-coded.", "layout": "Component swatch (no shell): specimens sized to their content." },
-    { "id": "readiness-breakdown-domain-score-rows", "screen": "Readiness — breakdown", "route": null, "state": "domain-score-rows", "file": "App Shell.html", "description": "DomainScoreRow list for per-domain breakdowns; rows flagged focus render a 'Focus' tag and a bolder label. Bar colour tracks the score scale.", "layout": "Component swatch (no shell): full-width rows within a fixed specimen card." },
-
-    { "id": "onboarding-step-1-choose-cert", "screen": "Onboarding", "route": "/onboarding", "state": "step-1-choose-cert", "file": "Onboarding.html", "description": "Wizard step 1 of 3. Vendor-grouped cert list; selecting a cert highlights it and enables Continue (disabled until one is chosen). Sidebar shows step progress; no Back on step 1.", "layout": "shell: Onboarding wizard (its own step-progress rail, NOT App Shell — this is pre-app); content: reading (centered single column)." },
-    { "id": "onboarding-step-2-preferences", "screen": "Onboarding", "route": "/onboarding", "state": "step-2-preferences", "file": "Onboarding.html", "description": "Step 2. Study preferences — duration slider, difficulty defaults to adaptive. Continue advances; Back returns to cert choice.", "layout": "shell: Onboarding wizard; content: reading (centered single column)." },
-    { "id": "onboarding-step-3-diagnostic", "screen": "Onboarding", "route": "/onboarding", "state": "step-3-diagnostic", "file": "Onboarding.html", "description": "Step 3, optional diagnostic. User either starts the diagnostic or skips; that choice branches which completion screen shows next (complete-with-diagnostic vs complete-skipped).", "layout": "shell: Onboarding wizard; content: reading (centered single column)." },
-    { "id": "onboarding-complete-with-diagnostic", "screen": "Onboarding", "route": "/onboarding", "state": "complete-with-diagnostic", "file": "Onboarding.html", "description": "Landing when the diagnostic was taken — baseline readiness handoff showing a real initial score + domain baseline. Distinguished from complete-skipped by the presence of an actual readiness number.", "layout": "shell: Onboarding wizard; content: standard (centered result card, wider than the step forms to fit the baseline breakdown)." },
-    { "id": "onboarding-complete-skipped", "screen": "Onboarding", "route": "/onboarding", "state": "complete-skipped", "file": "Onboarding.html", "description": "Landing when the diagnostic was skipped — completion summary with a nudge to take it later. Readiness shows not-assessed ('—') because no baseline exists yet.", "layout": "shell: Onboarding wizard; content: content (centered summary card)." },
-    { "id": "dashboard-empty-no-certs-user", "screen": "Dashboard", "route": "/", "state": "empty-no-certs-user", "file": "Onboarding.html", "description": "Empty-dashboard edge case for a regular user with no certs enrolled; bypasses the wizard. CTA is enrol/browse. Differs from the admin empty state by that CTA (enrol vs configure a certification).", "layout": "shell: App Shell — Dashboard active; content: a single centered empty-state card (~500px) within the content region (the artboard frames the card only, but it lives inside the standard shell)." },
-    { "id": "dashboard-empty-no-certs-admin", "screen": "Dashboard", "route": "/", "state": "empty-no-certs-admin", "file": "Onboarding.html", "description": "Empty-dashboard edge case for a first admin with nothing configured — CTA routes into cert setup rather than enrolment. Only the admin-oriented CTA distinguishes it from the user empty state.", "layout": "shell: App Shell — Dashboard active; content: a single centered empty-state card (~500px) within the content region." },
-
-    { "id": "dashboard-two-certs", "screen": "Dashboard", "route": "/", "state": "two-certs", "file": "Dashboard.html", "description": "Home with 2 certs. The lowest-readiness cert gets the gradient hero card; the rest are standard surface cards. Status dots map directly to domain scores. Quick-start review CTA present.", "layout": "shell: App Shell — Dashboard active; content: standard (hero card spans the content width, remaining certs stack below; gutters grow as the viewport widens)." },
-    { "id": "dashboard-three-certs", "screen": "Dashboard", "route": "/", "state": "three-certs", "file": "Dashboard.html", "description": "Same layout scaled to 3 certs — one gradient hero (still the lowest-readiness cert) + two standard cards. Differs from two-certs only by card count/data, not layout rules.", "layout": "shell: App Shell — Dashboard active; content: standard (hero + stacked cards)." },
-    { "id": "dashboard-day-one-empty", "screen": "Dashboard", "route": "/", "state": "day-one-empty", "file": "Dashboard.html", "description": "Enrolled but zero sessions logged — readiness reads not-assessed ('—'), weak-areas empty, and the primary CTA is start-first-session rather than resume. Post-enrolment counterpart to the no-certs empty states.", "layout": "shell: App Shell — Dashboard active; content: standard (single cert card in its not-assessed state)." },
-
-    { "id": "sign-in-default", "screen": "Sign in", "route": "/login", "state": "default", "file": "SignIn.html", "description": "Split-panel auth (brand left, form right). Email + masked password with an eye toggle for visibility, 'Forgot password?' link, SSO option below the divider. Submit idle; no error banner present.", "layout": "shell: none (pre-auth); split-panel — ~280px brand rail + form pane. The whole panel is capped (~780px) and centered; it does not stretch full-bleed as the viewport widens." },
-    { "id": "sign-in-error", "screen": "Sign in", "route": "/login", "state": "error", "file": "SignIn.html", "description": "Same form after a failed attempt — a red error banner appears and the email field carries an inline error + red focus ring. The only difference from default is these error affordances; layout is identical.", "layout": "shell: none (pre-auth); split-panel — ~280px brand rail + form pane, capped ~780px and centered." },
-
-    { "id": "register-default", "screen": "Register", "route": "/register", "state": "default", "file": "Register.html", "description": "Account creation. The password field drives a live 4-segment strength meter + label. The Terms checkbox gates Create account (disabled until checked). SSO sign-up is the alternate below the divider.", "layout": "shell: none (pre-auth); split-panel — ~280px brand rail + form pane, capped ~780px and centered." },
-
-    { "id": "forgot-password-form", "screen": "Forgot password", "route": "/forgot-password", "state": "form", "file": "ForgotPassword.html", "description": "Reset-request step — single email field + 'Send reset link', with a back-to-sign-in link. Submitting transitions to the email-sent state (same route).", "layout": "shell: none (pre-auth); split-panel — brand rail + form pane, capped ~780px and centered." },
-    { "id": "forgot-password-email-sent", "screen": "Forgot password", "route": "/forgot-password", "state": "email-sent", "file": "ForgotPassword.html", "description": "Post-submit confirmation — success icon, masked destination email, Resend / use-a-different-email actions, 15-minute expiry note. This is the sent state of the same route as the request form.", "layout": "shell: none (pre-auth); split-panel — brand rail + centered confirmation pane, capped ~780px." },
-
-    { "id": "reset-password-set-new-password", "screen": "Reset password", "route": "/reset-password", "state": "set-new-password", "file": "ResetPassword.html", "description": "Reached only from a valid reset link. New-password strength meter + confirm field; the confirm field shows a green check when it matches. Submit sets the password and returns the user to sign-in.", "layout": "shell: none (pre-auth); split-panel — brand rail + form pane, capped ~780px and centered." },
-
-    { "id": "verify-email-sent", "screen": "Verify email", "route": "/verify-email", "state": "sent", "file": "VerifyEmail.html", "description": "Post-registration link-sent screen — 24h expiry, Resend / different-email actions. The account is not yet active; this blocks continuing until the link is clicked.", "layout": "shell: none (pre-auth); split-panel — brand rail + centered confirmation pane, capped ~780px." },
-    { "id": "verify-email-verified", "screen": "Verify email", "route": "/verify-email", "state": "verified", "file": "VerifyEmail.html", "description": "After the link is clicked — 'Account activated' confirmation with a Continue-to-setup CTA (routes into onboarding). Terminal success state of the verify flow.", "layout": "shell: none (pre-auth); split-panel — brand rail + centered confirmation pane, capped ~780px." },
-
-    { "id": "study-session-answering-unsubmitted", "screen": "Study session", "route": "/sessions/:id", "state": "answering-unsubmitted", "file": "Session.html", "description": "Split reading + quiz. An option is selected but not yet submitted — Submit is enabled, no correct/incorrect colour is shown, and the agent panel is idle. Correctness styling is deliberately withheld until submit.", "layout": "shell: App Shell — Sessions active; content: split — reading/quiz main pane + a collapsible agent rail on the right, fills the content region." },
-    { "id": "study-session-submitted-incorrect", "screen": "Study session", "route": "/sessions/:id", "state": "submitted-incorrect", "file": "Session.html", "description": "After submitting a wrong answer — options reveal correct/incorrect colours and the agent auto-explains via a tool card. Distinguished from the answering state by the revealed colours + the agent explanation appearing.", "layout": "shell: App Shell — Sessions active; content: split — reading/quiz pane + expanded agent rail (showing the explanation tool card)." },
-    { "id": "study-session-reading-expanded-agent-collapsed", "screen": "Study session", "route": "/sessions/:id", "state": "reading-expanded-agent-collapsed", "file": "Session.html", "description": "Reading block expanded and the AI agent collapsed to a rail (both are user-toggleable). Quiz has progressed to a later question. Same screen, different panel emphasis.", "layout": "shell: App Shell — Sessions active; content: split — reading pane widened, agent collapsed to a thin rail; the split ratio is what changes between session states." },
-
-    { "id": "session-start-quick-start", "screen": "Session start", "route": "/user-certifications/:id/session/start", "state": "quick-start", "file": "SessionStart.html", "description": "Pre-session config, minimal chrome (no app sidebar). Quick start launches with saved defaults in one tap; a suggested focus is shown. A Customise affordance reveals the custom-config state.", "layout": "shell: none (minimal, no sidebar); content: content (centered config column, ~840px)." },
-    { "id": "session-start-custom-config", "screen": "Session start", "route": "/user-certifications/:id/session/start", "state": "custom-config", "file": "SessionStart.html", "description": "Expanded config — per-domain focus checkboxes plus duration/difficulty overrides. Distinguished from quick-start by the visible domain picker and override controls.", "layout": "shell: none (minimal, no sidebar); content: content (centered config column, ~840px; grows taller as options expand)." },
-
-    { "id": "mock-exam-loading", "screen": "Mock exam", "route": "/mock-exams/:id", "state": "loading", "file": "MockExam.html", "description": "Full-screen, no sidebar or agent. Questions stream in and the timer stays paused until all are ready; Start is disabled meanwhile. No status colours yet.", "layout": "shell: none (full-screen exam mode, deliberately no nav); content: full — question pane + fixed right question-nav panel, fills the viewport." },
-    { "id": "mock-exam-active-unsubmitted", "screen": "Mock exam", "route": "/mock-exams/:id", "state": "active-unsubmitted", "file": "MockExam.html", "description": "Timer running, an option selected but not submitted. The right-hand question-nav panel tracks answered vs unanswered. Correctness is hidden during the exam.", "layout": "shell: none (full-screen exam mode); content: full — question pane + fixed right nav panel, fills the viewport." },
-    { "id": "mock-exam-results", "screen": "Mock exam", "route": "/mock-exams/:id", "state": "results", "file": "MockExam.html", "description": "Post-exam score breakdown by domain with a pass/fail verdict — revealed only after finishing. Entry point into review mode.", "layout": "shell: none (full-screen exam mode); content: full — results occupy the whole viewport (nav panel gives way to the domain breakdown)." },
-    { "id": "mock-exam-review", "screen": "Mock exam", "route": "/mock-exams/:id", "state": "review", "file": "MockExam.html", "description": "Per-question review — correct/incorrect revealed with explanations. Read-only walk-through of the completed exam; no answers can change.", "layout": "shell: none (full-screen exam mode); content: full — question pane + right nav panel, fills the viewport." },
-
-    { "id": "session-summary-after-study-session", "screen": "Session summary", "route": "/sessions/:id/summary", "state": "after-study-session", "file": "Summary.html", "description": "Shown after a study session (20 min / 12 Qs). Readiness delta + domain accuracy; deltas use the status colour scale. 'Drill my misses' is the primary CTA.", "layout": "shell: App Shell — Sessions active; content: standard (centered summary column)." },
-    { "id": "session-summary-after-mock-exam", "screen": "Session summary", "route": "/sessions/:id/summary", "state": "after-mock-exam", "file": "Summary.html", "description": "Same summary template after a mock exam (1h 47m, 65 Qs, PASS). Same component as the study-session variant; distinguished only by scale of data + the pass verdict.", "layout": "shell: App Shell — Sessions active; content: standard (centered summary column)." },
-
-    { "id": "review-queue-entry", "screen": "5-minute review", "route": "/user-certifications/:id/review", "state": "queue-entry", "file": "QuickReview.html", "description": "SRS entry point — items due grouped by domain with counts. Start begins the card loop. This pre-loop overview is what distinguishes it from the card states.", "layout": "shell: none (focused review loop, no sidebar); content: content (centered single card, ~780px)." },
-    { "id": "review-card-front", "screen": "5-minute review", "route": "/user-certifications/:id/review", "state": "card-front", "file": "QuickReview.html", "description": "Flashcard front — question + optional hint and a Reveal CTA. The answer and the rating buttons are hidden until Reveal is pressed.", "layout": "shell: none (focused review loop); content: content (centered single card, ~780px)." },
-    { "id": "review-card-back-rating", "screen": "5-minute review", "route": "/user-certifications/:id/review", "state": "card-back-rating", "file": "QuickReview.html", "description": "After reveal — answer shown plus Again/Hard/Good/Easy SRS ratings. The chosen rating schedules the next repetition and advances to the next card.", "layout": "shell: none (focused review loop); content: content (centered single card, ~780px)." },
-    { "id": "review-completion", "screen": "5-minute review", "route": "/user-certifications/:id/review", "state": "completion", "file": "QuickReview.html", "description": "End of the loop — session breakdown + next-due summary. Terminal state of the review.", "layout": "shell: none (focused review loop); content: content (centered single card, ~780px)." },
-
-    { "id": "progress-with-history", "screen": "Progress", "route": "/user-certifications/:id/progress", "state": "with-history", "file": "Progress.html", "description": "Historical view with 10 sessions — the readiness trend line is meaningful, domain bars use the status scale, full session history listed. Trajectory is visible.", "layout": "shell: App Shell — Progress active; content: standard (centered column: activity summary, trend chart, domain bars, history table)." },
-    { "id": "progress-early", "screen": "Progress", "route": "/user-certifications/:id/progress", "state": "early", "file": "Progress.html", "description": "Same page with only 3 sessions — trend is not yet meaningful (short/flat) and history is sparse. Distinguished from with-history by data volume, not layout.", "layout": "shell: App Shell — Progress active; content: standard (same centered column, sparse data)." },
-
-    { "id": "cert-detail-overview-tab", "screen": "Cert detail", "route": "/user-certifications/:id", "state": "overview-tab", "file": "CertDetail.html", "description": "Per-cert deep-dive with the Overview tab active — domain scores, stats, recent sessions. Breadcrumb back to dashboard. Switching tabs swaps content on the same route.", "layout": "shell: App Shell — Dashboard active (drill-down; breadcrumb back to Dashboard); content: standard with a tab bar under the header; Overview content in the region." },
-    { "id": "cert-detail-sessions-tab", "screen": "Cert detail", "route": "/user-certifications/:id", "state": "sessions-tab", "file": "CertDetail.html", "description": "Sessions tab active — full session-history table for this cert. Same route/screen as overview; distinguished only by the active tab and its content.", "layout": "shell: App Shell — Dashboard active (drill-down); content: standard with the tab bar; Sessions table fills the region." },
-
-    { "id": "settings-account-tab", "screen": "Settings", "route": "/settings", "state": "account-tab", "file": "Settings.html", "description": "Settings with the Account tab active; app sidebar stays visible (Settings active). Editable profile fields. Tabs are client-side on one /settings route.", "layout": "shell: App Shell — Settings active; content: reading (centered narrow column) beside the tab list, for comfortable reading." },
-    { "id": "settings-study-defaults-tab", "screen": "Settings", "route": "/settings", "state": "study-defaults-tab", "file": "Settings.html", "description": "Study Defaults tab — default duration/difficulty/domain focus applied to new sessions. Same route; distinguished by active tab + content.", "layout": "shell: App Shell — Settings active; content: reading (centered narrow column)." },
-    { "id": "settings-notifications-tab", "screen": "Settings", "route": "/settings", "state": "notifications-tab", "file": "Settings.html", "description": "Notifications tab — per-channel toggles. Same route; distinguished from siblings only by the active tab and its content.", "layout": "shell: App Shell — Settings active; content: reading (centered narrow column)." },
-
-    { "id": "agent-chat-active-streaming", "screen": "Agent chat", "route": "/agent", "state": "active-streaming", "file": "AgentChat.html", "description": "Standalone tutor with no session context. A response is streaming — user bubbles use surface/secondary, agent bubbles primary/white. No tool cards (unlike in-session). Sliding 4h inactivity TTL.", "layout": "shell: App Shell — Ask AI active; content: standard (centered chat thread, max ~760px) with a sticky composer pinned to the bottom of the content region." },
-    { "id": "agent-chat-empty", "screen": "Agent chat", "route": "/agent", "state": "empty", "file": "AgentChat.html", "description": "New chat — empty thread with suggestion chips and a ready composer. Chips seed the first message. Distinguished from active by the absence of any messages.", "layout": "shell: App Shell — Ask AI active; content: standard (centered empty thread + suggestion chips) with sticky composer." },
-    { "id": "agent-chat-expiry-warning", "screen": "Agent chat", "route": "/agent", "state": "expiry-warning", "file": "AgentChat.html", "description": "Active chat idle ~12 min — a TTL expiry banner appears above the thread; sending a message resets the sliding 4h TTL. Only the banner distinguishes it from the active state.", "layout": "shell: App Shell — Ask AI active; content: standard (centered thread) with a full-width expiry banner above it + sticky composer." },
-
-    { "id": "admin-certifications-populated", "screen": "Admin Certifications", "route": "/admin/certifications", "state": "populated", "file": "AdminCertifications.html", "description": "Admin landing reached before the setup wizard. Existing-certs table where Manage sources is the ONLY action (no status column, no edit/delete) + a due-for-re-verification table loaded with rows. 'New certification' routes to the wizard; each row's Re-verify opens the diff panel over this page.", "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard (page header + two stacked full-width tables in the content region)." },
-    { "id": "admin-certifications-existing-empty", "screen": "Admin Certifications", "route": "/admin/certifications", "state": "existing-empty", "file": "AdminCertifications.html", "description": "Fresh install — the existing-certs table shows its empty copy 'No certifications have been set up yet.' and the due table is empty too. Distinguished from due-empty by the TOP table being empty (whole page is the zero-state).", "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard (both tables render their empty rows)." },
-    { "id": "admin-certifications-due-loading", "screen": "Admin Certifications", "route": "/admin/certifications", "state": "due-loading", "file": "AdminCertifications.html", "description": "Existing certs loaded; the due table is in its loading async state — 'Loading certifications…' with a spinner, no rows or Re-verify actions yet. One of the due table's three async states (loading / error / empty).", "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard (top table populated, bottom table shows a centered loading row)." },
-    { "id": "admin-certifications-due-empty", "screen": "Admin Certifications", "route": "/admin/certifications", "state": "due-empty", "file": "AdminCertifications.html", "description": "Existing certs present; the due table has resolved to empty — 'No certifications are due for re-verification.' Distinguished from existing-empty (top table populated here) and from the loading/error async states.", "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard (top table populated, bottom table shows a centered empty row)." },
-    { "id": "admin-certifications-error", "screen": "Admin Certifications", "route": "/admin/certifications", "state": "error", "file": "AdminCertifications.html", "description": "The due table failed to load — 'Could not load certifications. Please try again.' with a Retry; the existing-certs table still renders normally. The error async sibling of the loading/empty states.", "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard (top table populated, bottom table shows a centered error row + Retry)." },
-    { "id": "admin-certifications-diff-panel-open", "screen": "Admin Certifications", "route": "/admin/certifications", "state": "diff-panel-open", "file": "AdminCertifications.html", "description": "After clicking Re-verify — a modal 'Proposed changes' panel over the dimmed list. Field/Current/Proposed table where changed rows render the Proposed value in the primary colour and unverified fields carry a muted '(unverified)' tag. 'Accept all & re-verify' (primary; disables + shows a spinner while submitting) and 'Cancel'; an error line appears in the footer on failure.", "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard underneath, with a centered modal (~720px) overlaying the dimmed content region." },
-
-    { "id": "cert-setup-step-1-identify", "screen": "Cert setup wizard", "route": "/admin/certifications/new", "state": "step-1-identify", "file": "AdminCertSetup.html", "description": "Wizard step 1 of 5 and the true entry point (reached from the 'New certification' button). The admin names the certification — certification name, exam code, certifying body, and an optional known source URL — before any search runs. 'Search for sources' kicks off the agent search and advances to step 2; no metadata is created until a source is approved there.", "layout": "shell: App Shell — Admin sidebar, Certifications active; content: below a step header — reading (centered ~640px form; exam code + certifying body sit side by side)." },
-    { "id": "cert-setup-step-2-source-confirmation", "screen": "Cert setup wizard", "route": "/admin/certifications/new", "state": "step-2-source-confirmation", "file": "AdminCertSetup.html", "description": "Wizard step 2 of 5. Agent-found candidate sources ranked by confidence with one pre-selected; manual-URL entry with Verify. Confirming triggers field extraction and advances to step 3.", "layout": "shell: App Shell — Admin sidebar, Certifications active; content: below a step header — reading (centered ~640px source list)." },
-    { "id": "cert-setup-step-3-field-extraction", "screen": "Cert setup wizard", "route": "/admin/certifications/new", "state": "step-3-field-extraction", "file": "AdminCertSetup.html", "description": "Step 3 of 5. Per-field list with a citation panel for the selected field — extracted value + highlighted source passage. Each field carries confirmed/unverified/pending status; Confirm walks field-by-field.", "layout": "shell: App Shell — Admin sidebar, Certifications active; content: split — fixed field-list rail + fluid citation pane, below the step header." },
-    { "id": "cert-setup-step-4-content-sources", "screen": "Cert setup wizard", "route": "/admin/certifications/new", "state": "step-4-content-sources", "file": "AdminCertSetup.html", "description": "Step 4 of 5. Ingestion sources (ingested/ingesting/pending) + coverage bars against the 80% go-live threshold marker. Agent-proposed sources require explicit approval before chunks are extracted and embedded.", "layout": "shell: App Shell — Admin sidebar, Certifications active; content: two-column (sources list main + fixed coverage/readiness sidebar), fills the region below the step header." },
-    { "id": "cert-setup-step-5-review-publish", "screen": "Cert setup wizard", "route": "/admin/certifications/new", "state": "step-5-review-publish", "file": "AdminCertSetup.html", "description": "Step 5 of 5. Summary of confirmed vs needs-attention fields + coverage, and a go-live readiness checklist. Publish is gated by a review checkbox; unverified fields stay hidden from learners until confirmed — you may publish now and resolve later.", "layout": "shell: App Shell — Admin sidebar, Certifications active; content: two-column (summary main + fixed publish/readiness rail), below the step header." },
-    { "id": "cert-reverification-stale-diff", "screen": "Cert re-verification", "route": "/admin/certifications", "state": "stale-diff", "file": "AdminCertSetup.html", "description": "Full-page re-verification for a stale cert — warning header, per-field diff (current struck-through vs proposed) with per-row Accept plus Accept-all. Distinct from the /admin/certifications inline diff panel: this is the wizard-scoped full-page flow reached from a re-verify link.", "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard (centered diff table under a warning header) — a full page, not the modal used on the list route." },
-
-    { "id": "admin-review-queue-item-selected", "screen": "Review queue", "route": "/admin/review-queue", "state": "item-selected", "file": "AdminReviewQueue.html", "description": "Quarantine queue (left list) with one item selected (blue rail). The right pane leads with the verdict + recommended fix, then pairs the stored question against the highlighted source passage. Flag/verdict badges drive colour. Selecting a different list item swaps the right pane.", "layout": "shell: App Shell — Admin sidebar, Review queue active; content: split — fixed ~320px quarantine-list rail + fluid detail pane, fills the content region." },
-    { "id": "admin-sources-populated", "screen": "Sources", "route": "/admin/sources", "state": "populated", "file": "AdminSources.html", "description": "Content-sources table for the selected cert. Per-source enable toggle, status pill (active/ingesting/disabled), Re-ingest/Remove actions. A running-ingestion banner (progress % + Cancel) appears only while a job is active.", "layout": "shell: App Shell — Admin sidebar, Sources active; content: standard (cert selector + optional ingestion banner + full-width table)." },
-    { "id": "admin-users-populated", "screen": "Users", "route": "/admin/users", "state": "populated", "file": "AdminUsers.html", "description": "User table with role badges. Promote/Demote flips the role; Remove is destructive (red). Search + Invite in the header. Admin rows are visually distinct from users.", "layout": "shell: App Shell — Admin sidebar, Users active; content: standard (toolbar + full-width table)." },
-    { "id": "admin-audit-log-populated", "screen": "Audit log", "route": "/admin/audit-logs", "state": "populated", "file": "AdminAuditLog.html", "description": "Append-only, read-only event log. Each row shows a before→after transition; privileged actions are marked with a star. Rows have no actions (immutable); CSV export is the only affordance.", "layout": "shell: App Shell — Admin sidebar, Audit Log active; content: standard (meta row + full-width table)." }
+    {
+      "id": "app-shell-sidebar-dashboard-active",
+      "screen": "App shell — sidebar",
+      "route": null,
+      "state": "dashboard-active",
+      "file": "App Shell.html",
+      "description": "Shared AppSidebar chrome, Dashboard active (accent icon + tinted row); user card pinned bottom. Non-admin, so the role-gated 'Admin panel' link is hidden — that absence is what distinguishes it from the admin demo.",
+      "layout": "The shell itself (reference): 200px fixed sidebar + fluid content region. Sidebar width is constant at any viewport; only the content region flexes."
+    },
+    {
+      "id": "app-shell-sidebar-progress-active-admin",
+      "screen": "App shell — sidebar",
+      "route": null,
+      "state": "progress-active-admin",
+      "file": "App Shell.html",
+      "description": "Same sidebar with Progress active and admin=true, so the role-gated 'Admin panel' link renders above the user card. Differs from dashboard-active by active item + the presence of that admin link.",
+      "layout": "The shell itself (reference): 200px fixed sidebar + fluid content region."
+    },
+    {
+      "id": "readiness-ring-score-scale",
+      "screen": "Readiness — ring",
+      "route": null,
+      "state": "score-scale",
+      "file": "App Shell.html",
+      "description": "ReadinessRing shown across every band of the colour scale (<50 poor, 50–64 warning, 65–74 medium, 75+ good; null renders '—' not-assessed). Ring fill, number and caption all derive from one score — colour is the single source of truth, not set per-instance.",
+      "layout": "Component swatch (no shell): fixed-size ring specimens laid out in a row."
+    },
+    {
+      "id": "readiness-inline-bar-and-badge",
+      "screen": "Readiness — inline",
+      "route": null,
+      "state": "bar-and-badge",
+      "file": "App Shell.html",
+      "description": "ReadinessBar (thin inline progress) and DomainBadge (dot + label + pct pill), both coloured by the same score scale. Reference for compact inline readiness; colour must track the score, not be hard-coded.",
+      "layout": "Component swatch (no shell): specimens sized to their content."
+    },
+    {
+      "id": "readiness-breakdown-domain-score-rows",
+      "screen": "Readiness — breakdown",
+      "route": null,
+      "state": "domain-score-rows",
+      "file": "App Shell.html",
+      "description": "DomainScoreRow list for per-domain breakdowns; rows flagged focus render a 'Focus' tag and a bolder label. Bar colour tracks the score scale.",
+      "layout": "Component swatch (no shell): full-width rows within a fixed specimen card."
+    },
+    {
+      "id": "onboarding-step-1-choose-cert",
+      "screen": "Onboarding",
+      "route": "/onboarding",
+      "state": "step-1-choose-cert",
+      "file": "Onboarding.html",
+      "description": "Wizard step 1 of 3. Vendor-grouped cert list; selecting a cert highlights it and enables Continue (disabled until one is chosen). Sidebar shows step progress; no Back on step 1.",
+      "layout": "shell: Onboarding wizard (its own step-progress rail, NOT App Shell — this is pre-app); content: reading (centered single column)."
+    },
+    {
+      "id": "onboarding-step-2-preferences",
+      "screen": "Onboarding",
+      "route": "/onboarding",
+      "state": "step-2-preferences",
+      "file": "Onboarding.html",
+      "description": "Step 2. Study preferences — duration slider, difficulty defaults to adaptive. Continue advances; Back returns to cert choice.",
+      "layout": "shell: Onboarding wizard; content: reading (centered single column)."
+    },
+    {
+      "id": "onboarding-step-3-diagnostic",
+      "screen": "Onboarding",
+      "route": "/onboarding",
+      "state": "step-3-diagnostic",
+      "file": "Onboarding.html",
+      "description": "Step 3, optional diagnostic. User either starts the diagnostic or skips; that choice branches which completion screen shows next (complete-with-diagnostic vs complete-skipped).",
+      "layout": "shell: Onboarding wizard; content: reading (centered single column)."
+    },
+    {
+      "id": "onboarding-complete-with-diagnostic",
+      "screen": "Onboarding",
+      "route": "/onboarding",
+      "state": "complete-with-diagnostic",
+      "file": "Onboarding.html",
+      "description": "Landing when the diagnostic was taken — baseline readiness handoff showing a real initial score + domain baseline. Distinguished from complete-skipped by the presence of an actual readiness number.",
+      "layout": "shell: Onboarding wizard; content: standard (centered result card, wider than the step forms to fit the baseline breakdown)."
+    },
+    {
+      "id": "onboarding-complete-skipped",
+      "screen": "Onboarding",
+      "route": "/onboarding",
+      "state": "complete-skipped",
+      "file": "Onboarding.html",
+      "description": "Landing when the diagnostic was skipped — completion summary with a nudge to take it later. Readiness shows not-assessed ('—') because no baseline exists yet.",
+      "layout": "shell: Onboarding wizard; content: content (centered summary card)."
+    },
+    {
+      "id": "dashboard-empty-no-certs-user",
+      "screen": "Dashboard",
+      "route": "/",
+      "state": "empty-no-certs-user",
+      "file": "Onboarding.html",
+      "description": "Empty-dashboard edge case for a regular user with no certs enrolled; bypasses the wizard. CTA is enrol/browse. Differs from the admin empty state by that CTA (enrol vs configure a certification).",
+      "layout": "shell: App Shell — Dashboard active; content: a single centered empty-state card (~500px) within the content region (the artboard frames the card only, but it lives inside the standard shell)."
+    },
+    {
+      "id": "dashboard-empty-no-certs-admin",
+      "screen": "Dashboard",
+      "route": "/",
+      "state": "empty-no-certs-admin",
+      "file": "Onboarding.html",
+      "description": "Empty-dashboard edge case for a first admin with nothing configured — CTA routes into cert setup rather than enrolment. Only the admin-oriented CTA distinguishes it from the user empty state.",
+      "layout": "shell: App Shell — Dashboard active; content: a single centered empty-state card (~500px) within the content region."
+    },
+    {
+      "id": "dashboard-two-certs",
+      "screen": "Dashboard",
+      "route": "/",
+      "state": "two-certs",
+      "file": "Dashboard.html",
+      "description": "Home with 2 certs. The lowest-readiness cert gets the gradient hero card; the rest are standard surface cards. Status dots map directly to domain scores. Quick-start review CTA present.",
+      "layout": "shell: App Shell — Dashboard active; content: standard (hero card spans the content width, remaining certs stack below; gutters grow as the viewport widens)."
+    },
+    {
+      "id": "dashboard-three-certs",
+      "screen": "Dashboard",
+      "route": "/",
+      "state": "three-certs",
+      "file": "Dashboard.html",
+      "description": "Same layout scaled to 3 certs — one gradient hero (still the lowest-readiness cert) + two standard cards. Differs from two-certs only by card count/data, not layout rules.",
+      "layout": "shell: App Shell — Dashboard active; content: standard (hero + stacked cards)."
+    },
+    {
+      "id": "dashboard-day-one-empty",
+      "screen": "Dashboard",
+      "route": "/",
+      "state": "day-one-empty",
+      "file": "Dashboard.html",
+      "description": "Enrolled but zero sessions logged — readiness reads not-assessed ('—'), weak-areas empty, and the primary CTA is start-first-session rather than resume. Post-enrolment counterpart to the no-certs empty states.",
+      "layout": "shell: App Shell — Dashboard active; content: standard (single cert card in its not-assessed state)."
+    },
+    {
+      "id": "sign-in-default",
+      "screen": "Sign in",
+      "route": "/login",
+      "state": "default",
+      "file": "SignIn.html",
+      "description": "Split-panel auth (brand left, form right). Email + masked password with an eye toggle for visibility, 'Forgot password?' link, SSO option below the divider. Submit idle; no error banner present.",
+      "layout": "shell: none (pre-auth); split-panel — ~280px brand rail + form pane. The whole panel is capped (~780px) and centered; it does not stretch full-bleed as the viewport widens."
+    },
+    {
+      "id": "sign-in-error",
+      "screen": "Sign in",
+      "route": "/login",
+      "state": "error",
+      "file": "SignIn.html",
+      "description": "Same form after a failed attempt — a red error banner appears and the email field carries an inline error + red focus ring. The only difference from default is these error affordances; layout is identical.",
+      "layout": "shell: none (pre-auth); split-panel — ~280px brand rail + form pane, capped ~780px and centered."
+    },
+    {
+      "id": "register-default",
+      "screen": "Register",
+      "route": "/register",
+      "state": "default",
+      "file": "Register.html",
+      "description": "Account creation. The password field drives a live 4-segment strength meter + label. The Terms checkbox gates Create account (disabled until checked). SSO sign-up is the alternate below the divider.",
+      "layout": "shell: none (pre-auth); split-panel — ~280px brand rail + form pane, capped ~780px and centered."
+    },
+    {
+      "id": "forgot-password-form",
+      "screen": "Forgot password",
+      "route": "/forgot-password",
+      "state": "form",
+      "file": "ForgotPassword.html",
+      "description": "Reset-request step — single email field + 'Send reset link', with a back-to-sign-in link. Submitting transitions to the email-sent state (same route).",
+      "layout": "shell: none (pre-auth); split-panel — brand rail + form pane, capped ~780px and centered."
+    },
+    {
+      "id": "forgot-password-email-sent",
+      "screen": "Forgot password",
+      "route": "/forgot-password",
+      "state": "email-sent",
+      "file": "ForgotPassword.html",
+      "description": "Post-submit confirmation — success icon, masked destination email, Resend / use-a-different-email actions, 15-minute expiry note. This is the sent state of the same route as the request form.",
+      "layout": "shell: none (pre-auth); split-panel — brand rail + centered confirmation pane, capped ~780px."
+    },
+    {
+      "id": "reset-password-set-new-password",
+      "screen": "Reset password",
+      "route": "/reset-password",
+      "state": "set-new-password",
+      "file": "ResetPassword.html",
+      "description": "Reached only from a valid reset link. New-password strength meter + confirm field; the confirm field shows a green check when it matches. Submit sets the password and returns the user to sign-in.",
+      "layout": "shell: none (pre-auth); split-panel — brand rail + form pane, capped ~780px and centered."
+    },
+    {
+      "id": "verify-email-sent",
+      "screen": "Verify email",
+      "route": "/verify-email",
+      "state": "sent",
+      "file": "VerifyEmail.html",
+      "description": "Post-registration link-sent screen — 24h expiry, Resend / different-email actions. The account is not yet active; this blocks continuing until the link is clicked.",
+      "layout": "shell: none (pre-auth); split-panel — brand rail + centered confirmation pane, capped ~780px."
+    },
+    {
+      "id": "verify-email-verified",
+      "screen": "Verify email",
+      "route": "/verify-email",
+      "state": "verified",
+      "file": "VerifyEmail.html",
+      "description": "After the link is clicked — 'Account activated' confirmation with a Continue-to-setup CTA (routes into onboarding). Terminal success state of the verify flow.",
+      "layout": "shell: none (pre-auth); split-panel — brand rail + centered confirmation pane, capped ~780px."
+    },
+    {
+      "id": "study-session-answering-unsubmitted",
+      "screen": "Study session",
+      "route": "/sessions/:id",
+      "state": "answering-unsubmitted",
+      "file": "Session.html",
+      "description": "Split reading + quiz. An option is selected but not yet submitted — Submit is enabled, no correct/incorrect colour is shown, and the agent panel is idle. Correctness styling is deliberately withheld until submit.",
+      "layout": "shell: App Shell — Sessions active; content: split — reading/quiz main pane + a collapsible agent rail on the right, fills the content region."
+    },
+    {
+      "id": "study-session-submitted-incorrect",
+      "screen": "Study session",
+      "route": "/sessions/:id",
+      "state": "submitted-incorrect",
+      "file": "Session.html",
+      "description": "After submitting a wrong answer — options reveal correct/incorrect colours and the agent auto-explains via a tool card. Distinguished from the answering state by the revealed colours + the agent explanation appearing.",
+      "layout": "shell: App Shell — Sessions active; content: split — reading/quiz pane + expanded agent rail (showing the explanation tool card)."
+    },
+    {
+      "id": "study-session-reading-expanded-agent-collapsed",
+      "screen": "Study session",
+      "route": "/sessions/:id",
+      "state": "reading-expanded-agent-collapsed",
+      "file": "Session.html",
+      "description": "Reading block expanded and the AI agent collapsed to a rail (both are user-toggleable). Quiz has progressed to a later question. Same screen, different panel emphasis.",
+      "layout": "shell: App Shell — Sessions active; content: split — reading pane widened, agent collapsed to a thin rail; the split ratio is what changes between session states."
+    },
+    {
+      "id": "session-start-quick-start",
+      "screen": "Session start",
+      "route": "/user-certifications/:id/session/start",
+      "state": "quick-start",
+      "file": "SessionStart.html",
+      "description": "Pre-session config, minimal chrome (no app sidebar). Quick start launches with saved defaults in one tap; a suggested focus is shown. A Customise affordance reveals the custom-config state.",
+      "layout": "shell: none (minimal, no sidebar); content: content (centered config column, ~840px)."
+    },
+    {
+      "id": "session-start-custom-config",
+      "screen": "Session start",
+      "route": "/user-certifications/:id/session/start",
+      "state": "custom-config",
+      "file": "SessionStart.html",
+      "description": "Expanded config — per-domain focus checkboxes plus duration/difficulty overrides. Distinguished from quick-start by the visible domain picker and override controls.",
+      "layout": "shell: none (minimal, no sidebar); content: content (centered config column, ~840px; grows taller as options expand)."
+    },
+    {
+      "id": "mock-exam-loading",
+      "screen": "Mock exam",
+      "route": "/mock-exams/:id",
+      "state": "loading",
+      "file": "MockExam.html",
+      "description": "Full-screen, no sidebar or agent. Questions stream in and the timer stays paused until all are ready; Start is disabled meanwhile. No status colours yet.",
+      "layout": "shell: none (full-screen exam mode, deliberately no nav); content: full — question pane + fixed right question-nav panel, fills the viewport."
+    },
+    {
+      "id": "mock-exam-active-unsubmitted",
+      "screen": "Mock exam",
+      "route": "/mock-exams/:id",
+      "state": "active-unsubmitted",
+      "file": "MockExam.html",
+      "description": "Timer running, an option selected but not submitted. The right-hand question-nav panel tracks answered vs unanswered. Correctness is hidden during the exam.",
+      "layout": "shell: none (full-screen exam mode); content: full — question pane + fixed right nav panel, fills the viewport."
+    },
+    {
+      "id": "mock-exam-results",
+      "screen": "Mock exam",
+      "route": "/mock-exams/:id",
+      "state": "results",
+      "file": "MockExam.html",
+      "description": "Post-exam score breakdown by domain with a pass/fail verdict — revealed only after finishing. Entry point into review mode.",
+      "layout": "shell: none (full-screen exam mode); content: full — results occupy the whole viewport (nav panel gives way to the domain breakdown)."
+    },
+    {
+      "id": "mock-exam-review",
+      "screen": "Mock exam",
+      "route": "/mock-exams/:id",
+      "state": "review",
+      "file": "MockExam.html",
+      "description": "Per-question review — correct/incorrect revealed with explanations. Read-only walk-through of the completed exam; no answers can change.",
+      "layout": "shell: none (full-screen exam mode); content: full — question pane + right nav panel, fills the viewport."
+    },
+    {
+      "id": "session-summary-after-study-session",
+      "screen": "Session summary",
+      "route": "/sessions/:id/summary",
+      "state": "after-study-session",
+      "file": "Summary.html",
+      "description": "Shown after a study session (20 min / 12 Qs). Readiness delta + domain accuracy; deltas use the status colour scale. 'Drill my misses' is the primary CTA.",
+      "layout": "shell: App Shell — Sessions active; content: standard (centered summary column)."
+    },
+    {
+      "id": "session-summary-after-mock-exam",
+      "screen": "Session summary",
+      "route": "/sessions/:id/summary",
+      "state": "after-mock-exam",
+      "file": "Summary.html",
+      "description": "Same summary template after a mock exam (1h 47m, 65 Qs, PASS). Same component as the study-session variant; distinguished only by scale of data + the pass verdict.",
+      "layout": "shell: App Shell — Sessions active; content: standard (centered summary column)."
+    },
+    {
+      "id": "review-queue-entry",
+      "screen": "5-minute review",
+      "route": "/user-certifications/:id/review",
+      "state": "queue-entry",
+      "file": "QuickReview.html",
+      "description": "SRS entry point — items due grouped by domain with counts. Start begins the card loop. This pre-loop overview is what distinguishes it from the card states.",
+      "layout": "shell: none (focused review loop, no sidebar); content: content (centered single card, ~780px)."
+    },
+    {
+      "id": "review-card-front",
+      "screen": "5-minute review",
+      "route": "/user-certifications/:id/review",
+      "state": "card-front",
+      "file": "QuickReview.html",
+      "description": "Flashcard front — question + optional hint and a Reveal CTA. The answer and the rating buttons are hidden until Reveal is pressed.",
+      "layout": "shell: none (focused review loop); content: content (centered single card, ~780px)."
+    },
+    {
+      "id": "review-card-back-rating",
+      "screen": "5-minute review",
+      "route": "/user-certifications/:id/review",
+      "state": "card-back-rating",
+      "file": "QuickReview.html",
+      "description": "After reveal — answer shown plus Again/Hard/Good/Easy SRS ratings. The chosen rating schedules the next repetition and advances to the next card.",
+      "layout": "shell: none (focused review loop); content: content (centered single card, ~780px)."
+    },
+    {
+      "id": "review-completion",
+      "screen": "5-minute review",
+      "route": "/user-certifications/:id/review",
+      "state": "completion",
+      "file": "QuickReview.html",
+      "description": "End of the loop — session breakdown + next-due summary. Terminal state of the review.",
+      "layout": "shell: none (focused review loop); content: content (centered single card, ~780px)."
+    },
+    {
+      "id": "progress-with-history",
+      "screen": "Progress",
+      "route": "/user-certifications/:id/progress",
+      "state": "with-history",
+      "file": "Progress.html",
+      "description": "Historical view with 10 sessions — the readiness trend line is meaningful, domain bars use the status scale, full session history listed. Trajectory is visible.",
+      "layout": "shell: App Shell — Progress active; content: standard (centered column: activity summary, trend chart, domain bars, history table)."
+    },
+    {
+      "id": "progress-early",
+      "screen": "Progress",
+      "route": "/user-certifications/:id/progress",
+      "state": "early",
+      "file": "Progress.html",
+      "description": "Same page with only 3 sessions — trend is not yet meaningful (short/flat) and history is sparse. Distinguished from with-history by data volume, not layout.",
+      "layout": "shell: App Shell — Progress active; content: standard (same centered column, sparse data)."
+    },
+    {
+      "id": "cert-detail-overview-tab",
+      "screen": "Cert detail",
+      "route": "/user-certifications/:id",
+      "state": "overview-tab",
+      "file": "CertDetail.html",
+      "description": "Per-cert deep-dive with the Overview tab active — domain scores, stats, recent sessions. Breadcrumb back to dashboard. Switching tabs swaps content on the same route.",
+      "layout": "shell: App Shell — Dashboard active (drill-down; breadcrumb back to Dashboard); content: standard with a tab bar under the header; Overview content in the region."
+    },
+    {
+      "id": "cert-detail-sessions-tab",
+      "screen": "Cert detail",
+      "route": "/user-certifications/:id",
+      "state": "sessions-tab",
+      "file": "CertDetail.html",
+      "description": "Sessions tab active — full session-history table for this cert. Same route/screen as overview; distinguished only by the active tab and its content.",
+      "layout": "shell: App Shell — Dashboard active (drill-down); content: standard with the tab bar; Sessions table fills the region."
+    },
+    {
+      "id": "settings-account-tab",
+      "screen": "Settings",
+      "route": "/settings",
+      "state": "account-tab",
+      "file": "Settings.html",
+      "description": "Settings with the Account tab active; app sidebar stays visible (Settings active). Editable profile fields. Tabs are client-side on one /settings route.",
+      "layout": "shell: App Shell — Settings active; content: reading (centered narrow column) beside the tab list, for comfortable reading."
+    },
+    {
+      "id": "settings-study-defaults-tab",
+      "screen": "Settings",
+      "route": "/settings",
+      "state": "study-defaults-tab",
+      "file": "Settings.html",
+      "description": "Study Defaults tab — default duration/difficulty/domain focus applied to new sessions. Same route; distinguished by active tab + content.",
+      "layout": "shell: App Shell — Settings active; content: reading (centered narrow column)."
+    },
+    {
+      "id": "settings-notifications-tab",
+      "screen": "Settings",
+      "route": "/settings",
+      "state": "notifications-tab",
+      "file": "Settings.html",
+      "description": "Notifications tab — per-channel toggles. Same route; distinguished from siblings only by the active tab and its content.",
+      "layout": "shell: App Shell — Settings active; content: reading (centered narrow column)."
+    },
+    {
+      "id": "agent-chat-active-streaming",
+      "screen": "Agent chat",
+      "route": "/agent",
+      "state": "active-streaming",
+      "file": "AgentChat.html",
+      "description": "Standalone tutor with no session context. A response is streaming — user bubbles use surface/secondary, agent bubbles primary/white. No tool cards (unlike in-session). Sliding 4h inactivity TTL.",
+      "layout": "shell: App Shell — Ask AI active; content: standard (centered chat thread, max ~760px) with a sticky composer pinned to the bottom of the content region."
+    },
+    {
+      "id": "agent-chat-empty",
+      "screen": "Agent chat",
+      "route": "/agent",
+      "state": "empty",
+      "file": "AgentChat.html",
+      "description": "New chat — empty thread with suggestion chips and a ready composer. Chips seed the first message. Distinguished from active by the absence of any messages.",
+      "layout": "shell: App Shell — Ask AI active; content: standard (centered empty thread + suggestion chips) with sticky composer."
+    },
+    {
+      "id": "agent-chat-expiry-warning",
+      "screen": "Agent chat",
+      "route": "/agent",
+      "state": "expiry-warning",
+      "file": "AgentChat.html",
+      "description": "Active chat idle ~12 min — a TTL expiry banner appears above the thread; sending a message resets the sliding 4h TTL. Only the banner distinguishes it from the active state.",
+      "layout": "shell: App Shell — Ask AI active; content: standard (centered thread) with a full-width expiry banner above it + sticky composer."
+    },
+    {
+      "id": "admin-certifications-populated",
+      "screen": "Admin Certifications",
+      "route": "/admin/certifications",
+      "state": "populated",
+      "file": "AdminCertifications.html",
+      "description": "Admin landing reached before the setup wizard. Existing-certs table where Manage sources is the ONLY action (no status column, no edit/delete) + a due-for-re-verification table loaded with rows. 'New certification' routes to the wizard; each row's Re-verify opens the diff panel over this page.",
+      "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard (page header + two stacked full-width tables in the content region)."
+    },
+    {
+      "id": "admin-certifications-existing-empty",
+      "screen": "Admin Certifications",
+      "route": "/admin/certifications",
+      "state": "existing-empty",
+      "file": "AdminCertifications.html",
+      "description": "Fresh install — the existing-certs table shows its empty copy 'No certifications have been set up yet.' and the due table is empty too. Distinguished from due-empty by the TOP table being empty (whole page is the zero-state).",
+      "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard (both tables render their empty rows)."
+    },
+    {
+      "id": "admin-certifications-due-loading",
+      "screen": "Admin Certifications",
+      "route": "/admin/certifications",
+      "state": "due-loading",
+      "file": "AdminCertifications.html",
+      "description": "Existing certs loaded; the due table is in its loading async state — 'Loading certifications…' with a spinner, no rows or Re-verify actions yet. One of the due table's three async states (loading / error / empty).",
+      "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard (top table populated, bottom table shows a centered loading row)."
+    },
+    {
+      "id": "admin-certifications-due-empty",
+      "screen": "Admin Certifications",
+      "route": "/admin/certifications",
+      "state": "due-empty",
+      "file": "AdminCertifications.html",
+      "description": "Existing certs present; the due table has resolved to empty — 'No certifications are due for re-verification.' Distinguished from existing-empty (top table populated here) and from the loading/error async states.",
+      "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard (top table populated, bottom table shows a centered empty row)."
+    },
+    {
+      "id": "admin-certifications-error",
+      "screen": "Admin Certifications",
+      "route": "/admin/certifications",
+      "state": "error",
+      "file": "AdminCertifications.html",
+      "description": "The due table failed to load — 'Could not load certifications. Please try again.' with a Retry; the existing-certs table still renders normally. The error async sibling of the loading/empty states.",
+      "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard (top table populated, bottom table shows a centered error row + Retry)."
+    },
+    {
+      "id": "admin-certifications-diff-panel-open",
+      "screen": "Admin Certifications",
+      "route": "/admin/certifications",
+      "state": "diff-panel-open",
+      "file": "AdminCertifications.html",
+      "description": "After clicking Re-verify — a modal 'Proposed changes' panel over the dimmed list. Field/Current/Proposed table where changed rows render the Proposed value in the primary colour and unverified fields carry a muted '(unverified)' tag. 'Accept all & re-verify' (primary; disables + shows a spinner while submitting) and 'Cancel'; an error line appears in the footer on failure.",
+      "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard underneath, with a centered modal (~720px) overlaying the dimmed content region."
+    },
+    {
+      "id": "cert-setup-step-1-identify",
+      "screen": "Cert setup wizard",
+      "route": "/admin/certifications/new",
+      "state": "step-1-identify",
+      "file": "AdminCertSetup.html",
+      "description": "Wizard step 1 of 5 and the true entry point (reached from the 'New certification' button). The admin names the certification — certification name, exam code, certifying body, and an optional known source URL — before any search runs. 'Search for sources' kicks off the agent search and advances to step 2; no metadata is created until a source is approved there.",
+      "layout": "shell: App Shell — Admin sidebar, Certifications active; content: below a step header — reading (centered ~640px form; exam code + certifying body sit side by side)."
+    },
+    {
+      "id": "cert-setup-step-2-source-confirmation",
+      "screen": "Cert setup wizard",
+      "route": "/admin/certifications/new",
+      "state": "step-2-source-confirmation",
+      "file": "AdminCertSetup.html",
+      "description": "Wizard step 2 of 5. Agent-found candidate sources ranked by confidence with one pre-selected; manual-URL entry with Verify. Confirming triggers field extraction and advances to step 3.",
+      "layout": "shell: App Shell — Admin sidebar, Certifications active; content: below a step header — reading (centered ~640px source list)."
+    },
+    {
+      "id": "cert-setup-step-3-field-extraction",
+      "screen": "Cert setup wizard",
+      "route": "/admin/certifications/new",
+      "state": "step-3-field-extraction",
+      "file": "AdminCertSetup.html",
+      "description": "Step 3 of 5. Per-field list with a citation panel for the selected field — extracted value + highlighted source passage. Each field carries confirmed/unverified/pending status; Confirm walks field-by-field.",
+      "layout": "shell: App Shell — Admin sidebar, Certifications active; content: split — fixed field-list rail + fluid citation pane, below the step header."
+    },
+    {
+      "id": "cert-setup-step-4-content-sources",
+      "screen": "Cert setup wizard",
+      "route": "/admin/certifications/new",
+      "state": "step-4-content-sources",
+      "file": "AdminCertSetup.html",
+      "description": "Step 4 of 5. Ingestion sources (ingested/ingesting/pending) + coverage bars against the 80% go-live threshold marker. Agent-proposed sources require explicit approval before chunks are extracted and embedded.",
+      "layout": "shell: App Shell — Admin sidebar, Certifications active; content: two-column (sources list main + fixed coverage/readiness sidebar), fills the region below the step header."
+    },
+    {
+      "id": "cert-setup-step-5-review-publish",
+      "screen": "Cert setup wizard",
+      "route": "/admin/certifications/new",
+      "state": "step-5-review-publish",
+      "file": "AdminCertSetup.html",
+      "description": "Step 5 of 5. Summary of confirmed vs needs-attention fields + coverage, and a go-live readiness checklist. Publish is gated by a review checkbox; unverified fields stay hidden from learners until confirmed — you may publish now and resolve later.",
+      "layout": "shell: App Shell — Admin sidebar, Certifications active; content: two-column (summary main + fixed publish/readiness rail), below the step header."
+    },
+    {
+      "id": "cert-reverification-stale-diff",
+      "screen": "Cert re-verification",
+      "route": "/admin/certifications",
+      "state": "stale-diff",
+      "file": "AdminCertSetup.html",
+      "description": "Full-page re-verification for a stale cert — warning header, per-field diff (current struck-through vs proposed) with per-row Accept plus Accept-all. Distinct from the /admin/certifications inline diff panel: this is the wizard-scoped full-page flow reached from a re-verify link.",
+      "layout": "shell: App Shell — Admin sidebar, Certifications active; content: standard (centered diff table under a warning header) — a full page, not the modal used on the list route."
+    },
+    {
+      "id": "admin-review-queue-item-selected",
+      "screen": "Review queue",
+      "route": "/admin/review-queue",
+      "state": "item-selected",
+      "file": "AdminReviewQueue.html",
+      "description": "Quarantine queue (left list) with one item selected (blue rail). The right pane leads with the verdict + recommended fix, then pairs the stored question against the highlighted source passage. Flag/verdict badges drive colour. Selecting a different list item swaps the right pane.",
+      "layout": "shell: App Shell — Admin sidebar, Review queue active; content: split — fixed ~320px quarantine-list rail + fluid detail pane, fills the content region."
+    },
+    {
+      "id": "admin-sources-populated",
+      "screen": "Sources",
+      "route": "/admin/sources",
+      "state": "populated",
+      "file": "AdminSources.html",
+      "description": "Content-sources table for the selected cert. Per-source enable toggle, status pill (active/ingesting/disabled), Re-ingest/Remove actions. A running-ingestion banner (progress % + Cancel) appears only while a job is active.",
+      "layout": "shell: App Shell — Admin sidebar, Sources active; content: standard (cert selector + optional ingestion banner + full-width table)."
+    },
+    {
+      "id": "admin-users-populated",
+      "screen": "Users",
+      "route": "/admin/users",
+      "state": "populated",
+      "file": "AdminUsers.html",
+      "description": "User table with role badges. Promote/Demote flips the role; Remove is destructive (red). Search + Invite in the header. Admin rows are visually distinct from users.",
+      "layout": "shell: App Shell — Admin sidebar, Users active; content: standard (toolbar + full-width table)."
+    },
+    {
+      "id": "admin-audit-log-populated",
+      "screen": "Audit log",
+      "route": "/admin/audit-logs",
+      "state": "populated",
+      "file": "AdminAuditLog.html",
+      "description": "Append-only, read-only event log. Each row shows a before→after transition; privileged actions are marked with a star. Rows have no actions (immutable); CSV export is the only affordance.",
+      "layout": "shell: App Shell — Admin sidebar, Audit Log active; content: standard (meta row + full-width table)."
+    }
   ],
-  "stateCoverageNote": "Per screen in 'screens': 'states' lists populated + the non-happy-path states (loading / error / empty). A value that names artboard state(s) means it is DRAWN; 'gap — …' means the behavior is specified here but no artboard exists yet. The 21 pre-existing screens are frozen (split-and-label only), so their missing states are documented rather than drawn — commission frames to close them. Admin Certifications (net-new) already draws loading / error / empty. 'n/a' marks screens/states that don't apply (e.g. auth forms have no initial data load — only a submit spinner).",
-  "responsiveNote": "Desktop-first; every artboard is desktop-width. Narrow-viewport support is stated per screen. 'mobile out of scope' means the layout is not expected to reflow below ~1024px and no phone frames are specified. Auth screens are the exception — their split-panel collapses to a single form column on narrow.",
+  "stateCoverageNote": "Static artboard labels describe what is drawn. Screen reconciliation metadata identifies implemented live states that intentionally have no frozen Claude frame. Implemented regions distinguish initial loading, content, successful empty, error with Retry, and content-preserving background refresh; 'gap' now means neither drawn nor reconciled as implemented.",
+  "responsiveNote": "Artboards remain desktop visual references. The implemented shared shell, Dashboard, Progress, Ask AI, Settings, and representative Admin screens support 375px containment with a navigation drawer, wrapping, stacking, or bounded local overflow; this intentional product contract does not fabricate phone artboards or alter desktop hierarchy.",
   "contentBehaviorNote": "Long/overflowing real-content handling is stated per screen. Defaults: single-line identifiers (emails, codes, filenames) truncate with ellipsis; multi-line prose and labels wrap; scrollable regions scroll within their pane, not the page.",
   "screens": [
-    { "id": "app-shell", "screen": "App shell & Readiness", "routes": [null], "files": ["App Shell.html"], "states": { "note": "Component reference — no data-loading states." }, "responsive": "Reference only: 200px fixed sidebar + fluid content region.", "contentBehavior": "Nav labels are short and fixed; the bottom user-card name truncates with ellipsis." },
-
-    { "id": "onboarding", "screen": "Onboarding", "routes": ["/onboarding"], "files": ["Onboarding.html"], "states": { "populated": "step-1-choose-cert / step-2-preferences / step-3-diagnostic / complete-with-diagnostic / complete-skipped", "loading": "gap — the cert list (step 1) and diagnostic questions (step 3) load: show skeleton rows / a loading question, Continue disabled", "error": "gap — cert list or diagnostic fetch fails: inline message + Retry, wizard holds the current step", "empty": "gap — no certs available to pick: 'No certifications available yet' with a contact-admin note (the drawn dashboard-empty-* frames are the no-cert app landing, not this)" }, "responsive": "Desktop-first; the wizard column is already a reading-width single column so it centers acceptably on tablet; phone out of scope.", "contentBehavior": "Long cert / vendor names wrap to two lines; the cert list scrolls within the step body." },
-
-    { "id": "dashboard", "screen": "Dashboard", "routes": ["/"], "files": ["Dashboard.html", "Onboarding.html"], "states": { "populated": "two-certs / three-certs", "loading": "gap — cert cards load: 1 hero + N skeleton cards", "error": "gap — 'Couldn't load your certifications' with Retry; sidebar stays intact", "empty": "DRAWN — day-one-empty (enrolled, no sessions) + empty-no-certs-user / empty-no-certs-admin (no certs at all)" }, "responsive": "Desktop-first; cards are full content-width and stack cleanly, but mobile chrome (sidebar → drawer) is out of scope.", "contentBehavior": "Long cert names wrap (max ~2 lines); weak-area chips wrap to a new row; readiness numbers never truncate." },
-
-    { "id": "sign-in", "screen": "Sign in", "routes": ["/login"], "files": ["SignIn.html"], "states": { "populated": "default", "error": "DRAWN — 'error' (bad credentials, banner + inline field error); submit-in-flight shows the spinner on the Sign in button", "loading": "n/a — no initial data load", "empty": "n/a" }, "responsive": "Split-panel; on narrow viewports the ~280px brand rail drops and the form becomes a single full-width column (form-first). Supported down to phone.", "contentBehavior": "Email + error text wrap; no truncation." },
-    { "id": "register", "screen": "Register", "routes": ["/register"], "files": ["Register.html"], "states": { "populated": "default", "error": "gap — field validation (email already in use, weak password) renders inline like Sign in's error; submit spinner on the button", "loading": "n/a", "empty": "n/a" }, "responsive": "As Sign in — brand rail drops on narrow, form single-column.", "contentBehavior": "Validation messages wrap beneath their field." },
-    { "id": "forgot-password", "screen": "Forgot password", "routes": ["/forgot-password"], "files": ["ForgotPassword.html"], "states": { "populated": "form / email-sent (DRAWN)", "error": "gap — send failure inline + Retry; Resend respects a cooldown", "loading": "n/a — submit spinner only", "empty": "n/a" }, "responsive": "Brand rail drops on narrow; single-column form.", "contentBehavior": "Masked destination email wraps." },
-    { "id": "reset-password", "screen": "Reset password", "routes": ["/reset-password"], "files": ["ResetPassword.html"], "states": { "populated": "set-new-password", "error": "gap — invalid/expired link: full-pane 'This reset link has expired' + request-new CTA; password mismatch shows inline", "loading": "gap — validating the token on load: brief spinner pane before the form", "empty": "n/a" }, "responsive": "Brand rail drops on narrow.", "contentBehavior": "n/a — fixed-length fields." },
-    { "id": "verify-email", "screen": "Verify email", "routes": ["/verify-email"], "files": ["VerifyEmail.html"], "states": { "populated": "sent / verified (DRAWN)", "error": "gap — expired/invalid verification link: 'Link expired' + Resend", "loading": "gap — verifying the link on load: spinner pane before the verified state", "empty": "n/a" }, "responsive": "Brand rail drops on narrow.", "contentBehavior": "Masked email wraps." },
-
-    { "id": "study-session", "screen": "Study session", "routes": ["/sessions/:id"], "files": ["Session.html"], "states": { "populated": "answering-unsubmitted / submitted-incorrect / reading-expanded-agent-collapsed", "loading": "gap — question + reading block stream in: skeleton reading + disabled options while loading", "error": "gap — 'Couldn't load this question' with Retry / skip; a separate agent-unreachable inline note in the rail", "empty": "n/a — a session always has content" }, "responsive": "Desktop-only; the reading + quiz + agent split cannot usefully reflow below ~1024px — mobile out of scope.", "contentBehavior": "Reading block scrolls independently; long answer options wrap; agent messages wrap and code blocks scroll horizontally." },
-
-    { "id": "session-start", "screen": "Session start", "routes": ["/user-certifications/:id/session/start"], "files": ["SessionStart.html"], "states": { "populated": "quick-start / custom-config", "loading": "gap — saved defaults + domain list load: skeleton on the config column", "error": "gap — 'Couldn't load your defaults' inline + Retry", "empty": "n/a" }, "responsive": "Centered column, already narrow; usable on tablet, phone out of scope.", "contentBehavior": "Domain labels wrap; a long domain list scrolls within the picker." },
-
-    { "id": "mock-exam", "screen": "Mock exam", "routes": ["/mock-exams/:id"], "files": ["MockExam.html"], "states": { "populated": "active-unsubmitted / results / review", "loading": "DRAWN — 'loading' (questions streaming in, timer paused, Start disabled)", "error": "gap — 'Couldn't start the exam' full-screen with Retry / exit", "empty": "n/a" }, "responsive": "Full-screen desktop; the question pane + fixed nav panel do not reflow — mobile out of scope.", "contentBehavior": "Question / option text wraps; the right nav panel is a fixed grid of numbered cells." },
-
-    { "id": "session-summary", "screen": "Session summary", "routes": ["/sessions/:id/summary"], "files": ["Summary.html"], "states": { "populated": "after-study-session / after-mock-exam", "loading": "gap — computing the breakdown: skeleton delta + domain rows", "error": "gap — 'Couldn't load the summary' + Retry (the session is still saved)", "empty": "n/a" }, "responsive": "Centered column; tablet ok, phone chrome out of scope.", "contentBehavior": "Domain names truncate with ellipsis in the accuracy rows; long cert names wrap in the header." },
-
-    { "id": "quick-review", "screen": "5-minute review", "routes": ["/user-certifications/:id/review"], "files": ["QuickReview.html"], "states": { "populated": "queue-entry / card-front / card-back-rating / completion", "loading": "gap — the SRS due-queue loads: skeleton on the queue card", "error": "gap — 'Couldn't load your review queue' + Retry", "empty": "gap — nothing due: 'You're all caught up' with the next-due time (distinct from 'completion', which is the post-loop summary)" }, "responsive": "Single centered card; usable down to phone width.", "contentBehavior": "Card question / answer text wraps; long option text wraps." },
-
-    { "id": "progress", "screen": "Progress", "routes": ["/user-certifications/:id/progress"], "files": ["Progress.html"], "states": { "populated": "with-history", "loading": "gap — history + trend load: skeleton chart + rows", "error": "gap — 'Couldn't load your progress' + Retry", "empty": "'early' (3 sessions, no trajectory) is DRAWN as the sparse state; a true zero-session empty ('Complete a session to see your progress') is a gap" }, "responsive": "Centered column; the chart shrinks; phone out of scope.", "contentBehavior": "Session / domain labels truncate with ellipsis; the history table scrolls vertically." },
-
-    { "id": "cert-detail", "screen": "Cert detail", "routes": ["/user-certifications/:id"], "files": ["CertDetail.html"], "states": { "populated": "overview-tab / sessions-tab", "loading": "gap — cert + sessions load: skeleton scores / table", "error": "gap — 'Couldn't load this certification' / not-found with back-to-dashboard", "empty": "gap — Sessions tab with no sessions: 'No sessions yet for this certification'" }, "responsive": "Centered column with a tab bar; tablet ok, phone out of scope.", "contentBehavior": "Session rows truncate long names with ellipsis; domain labels wrap." },
-
-    { "id": "settings", "screen": "Settings", "routes": ["/settings"], "files": ["Settings.html"], "states": { "populated": "account-tab / study-defaults-tab / notifications-tab", "loading": "gap — account / preferences load: skeleton fields", "error": "gap — load-failure banner + Retry; per-save failure shows an inline message on the field/section", "empty": "n/a" }, "responsive": "Narrow reading column; the tab list collapses above the column on narrow; usable to phone.", "contentBehavior": "Field values ellipsis in read rows; help text wraps." },
-
-    { "id": "agent-chat", "screen": "Agent chat", "routes": ["/agent"], "files": ["AgentChat.html"], "states": { "populated": "active-streaming (the streaming reply IS the in-flight/loading state) / empty / expiry-warning", "loading": "response-loading is covered by active-streaming; gap — initial history load skeleton on first open", "error": "gap — send failed: red inline note under the failed bubble + Retry; an agent-unreachable banner", "empty": "DRAWN — 'empty' (new chat with suggestion chips)" }, "responsive": "Centered thread; usable to phone (composer stays sticky at the bottom).", "contentBehavior": "Message bubbles wrap; long code blocks scroll horizontally; the thread scrolls vertically with the composer pinned." },
-
-    { "id": "admin-certifications", "screen": "Admin Certifications", "routes": ["/admin/certifications"], "files": ["AdminCertifications.html"], "states": { "populated": "populated", "loading": "DRAWN — due-loading", "error": "DRAWN — error (due table)", "empty": "DRAWN — existing-empty + due-empty (diff-panel-open also drawn)" }, "responsive": "Admin console is desktop-only; the tables do not reflow below ~1024px — mobile out of scope.", "contentBehavior": "Long certification names wrap in the Certification column; code chips are mono; provider wraps." },
-
-    { "id": "cert-setup", "screen": "Cert setup wizard", "routes": ["/admin/certifications/new"], "files": ["AdminCertSetup.html"], "states": { "populated": "step-1-identify / step-2-source-confirmation / step-3-field-extraction / step-4-content-sources / step-5-review-publish", "loading": "step 2's agent source-search and step 4's 'ingesting' rows are in-flight states shown inline; gap — a full-page extraction spinner on the 2→3 transition", "error": "gap — source-search / extraction / ingestion failure shown inline with Retry, blocking advance", "empty": "gap — source search returns nothing: 'No sources found' + prompt to use the manual-URL field (that field already exists on steps 1 and 2)" }, "responsive": "Admin desktop-only; mobile out of scope.", "contentBehavior": "Source URLs break anywhere (break-all); extracted field values ellipsis in the list, shown full in the citation pane." },
-
-    { "id": "cert-reverification", "screen": "Cert re-verification", "routes": ["/admin/certifications"], "files": ["AdminCertSetup.html"], "states": { "populated": "stale-diff", "loading": "gap — re-fetching the source to build the diff: spinner pane", "error": "gap — source fetch / diff failed: 'Couldn't re-verify' + Retry", "empty": "gap — no changes detected: 'Metadata is already up to date' confirmation instead of a diff table" }, "responsive": "Admin desktop-only.", "contentBehavior": "Long field values wrap; the struck-through Current and the Proposed columns wrap independently." },
-
-    { "id": "admin-review-queue", "screen": "Review queue", "routes": ["/admin/review-queue"], "files": ["AdminReviewQueue.html"], "states": { "populated": "item-selected", "loading": "gap — queue + selected item load: skeleton list + detail pane", "error": "gap — 'Couldn't load the review queue' + Retry", "empty": "gap — queue cleared: 'No items awaiting review' empty pane" }, "responsive": "Admin desktop-only; the list + detail split can't reflow small — mobile out of scope.", "contentBehavior": "Queue snippets clamp to 2 lines; source URL ellipsis; evidence blocks wrap." },
-
-    { "id": "admin-sources", "screen": "Sources", "routes": ["/admin/sources"], "files": ["AdminSources.html"], "states": { "populated": "populated", "loading": "gap — the sources table loads: skeleton rows (the running-ingestion banner is a separate live in-flight state, already shown)", "error": "gap — 'Couldn't load sources' + Retry", "empty": "gap — no sources for the selected cert: empty row + the Add source CTA" }, "responsive": "Admin desktop-only.", "contentBehavior": "Source names ellipsis; chunk counts mono; type chips fixed width." },
-
-    { "id": "admin-users", "screen": "Users", "routes": ["/admin/users"], "files": ["AdminUsers.html"], "states": { "populated": "populated", "loading": "gap — the user table loads: skeleton rows", "error": "gap — 'Couldn't load users' + Retry", "empty": "gap — no users match the search: 'No users found' row" }, "responsive": "Admin desktop-only.", "contentBehavior": "Name + email truncate with ellipsis (email is mono); role badges fixed." },
-
-    { "id": "admin-audit-log", "screen": "Audit log", "routes": ["/admin/audit-logs"], "files": ["AdminAuditLog.html"], "states": { "populated": "populated", "loading": "gap — the log page loads: skeleton rows", "error": "gap — 'Couldn't load the audit log' + Retry", "empty": "gap — no events in range: 'No audit events' row" }, "responsive": "Admin desktop-only.", "contentBehavior": "The Target column ellipsis; before/after and timestamps are mono." }
-  ]
+    {
+      "id": "app-shell",
+      "screen": "App shell & Readiness",
+      "routes": [
+        null
+      ],
+      "files": [
+        "App Shell.html"
+      ],
+      "states": {
+        "note": "Component reference — no data-loading states."
+      },
+      "responsive": "Reference only: 200px fixed sidebar + fluid content region.",
+      "contentBehavior": "Nav labels are short and fixed; the bottom user-card name truncates with ellipsis."
+    },
+    {
+      "id": "onboarding",
+      "screen": "Onboarding",
+      "routes": [
+        "/onboarding"
+      ],
+      "files": [
+        "Onboarding.html"
+      ],
+      "states": {
+        "populated": "step-1-choose-cert / step-2-preferences / step-3-diagnostic / complete-with-diagnostic / complete-skipped",
+        "loading": "gap — the cert list (step 1) and diagnostic questions (step 3) load: show skeleton rows / a loading question, Continue disabled",
+        "error": "gap — cert list or diagnostic fetch fails: inline message + Retry, wizard holds the current step",
+        "empty": "gap — no certs available to pick: 'No certifications available yet' with a contact-admin note (the drawn dashboard-empty-* frames are the no-cert app landing, not this)"
+      },
+      "responsive": "Desktop-first; the wizard column is already a reading-width single column so it centers acceptably on tablet; phone out of scope.",
+      "contentBehavior": "Long cert / vendor names wrap to two lines; the cert list scrolls within the step body."
+    },
+    {
+      "id": "dashboard",
+      "screen": "Dashboard",
+      "routes": [
+        "/"
+      ],
+      "files": [
+        "Dashboard.html",
+        "Onboarding.html"
+      ],
+      "states": {
+        "populated": "two-certs / three-certs",
+        "loading": "gap — cert cards load: 1 hero + N skeleton cards",
+        "error": "gap — 'Couldn't load your certifications' with Retry; sidebar stays intact",
+        "empty": "DRAWN — day-one-empty (enrolled, no sessions) + empty-no-certs-user / empty-no-certs-admin (no certs at all)"
+      },
+      "responsive": "Desktop-first; cards are full content-width and stack cleanly, but mobile chrome (sidebar → drawer) is out of scope.",
+      "contentBehavior": "Long cert names wrap (max ~2 lines); weak-area chips wrap to a new row; readiness numbers never truncate.",
+      "reconciliation": {
+        "change": "ui-interaction-state-parity",
+        "liveStates": "Implemented behavior follows the explicit loading/content/empty/error+Retry/background-refresh and action-local busy contracts where applicable; absence of a frozen frame is intentional.",
+        "accessibility": "Semantic control state, visible focus, progress/status announcements, and modal focus lifecycle apply.",
+        "colorModes": "Semantic dark/light modes are supported; the dark artboard is not a dark-only requirement.",
+        "responsive": "375px containment is implemented and intentional; desktop hierarchy remains unchanged."
+      }
+    },
+    {
+      "id": "sign-in",
+      "screen": "Sign in",
+      "routes": [
+        "/login"
+      ],
+      "files": [
+        "SignIn.html"
+      ],
+      "states": {
+        "populated": "default",
+        "error": "DRAWN — 'error' (bad credentials, banner + inline field error); submit-in-flight shows the spinner on the Sign in button",
+        "loading": "n/a — no initial data load",
+        "empty": "n/a"
+      },
+      "responsive": "Split-panel; on narrow viewports the ~280px brand rail drops and the form becomes a single full-width column (form-first). Supported down to phone.",
+      "contentBehavior": "Email + error text wrap; no truncation."
+    },
+    {
+      "id": "register",
+      "screen": "Register",
+      "routes": [
+        "/register"
+      ],
+      "files": [
+        "Register.html"
+      ],
+      "states": {
+        "populated": "default",
+        "error": "gap — field validation (email already in use, weak password) renders inline like Sign in's error; submit spinner on the button",
+        "loading": "n/a",
+        "empty": "n/a"
+      },
+      "responsive": "As Sign in — brand rail drops on narrow, form single-column.",
+      "contentBehavior": "Validation messages wrap beneath their field."
+    },
+    {
+      "id": "forgot-password",
+      "screen": "Forgot password",
+      "routes": [
+        "/forgot-password"
+      ],
+      "files": [
+        "ForgotPassword.html"
+      ],
+      "states": {
+        "populated": "form / email-sent (DRAWN)",
+        "error": "gap — send failure inline + Retry; Resend respects a cooldown",
+        "loading": "n/a — submit spinner only",
+        "empty": "n/a"
+      },
+      "responsive": "Brand rail drops on narrow; single-column form.",
+      "contentBehavior": "Masked destination email wraps."
+    },
+    {
+      "id": "reset-password",
+      "screen": "Reset password",
+      "routes": [
+        "/reset-password"
+      ],
+      "files": [
+        "ResetPassword.html"
+      ],
+      "states": {
+        "populated": "set-new-password",
+        "error": "gap — invalid/expired link: full-pane 'This reset link has expired' + request-new CTA; password mismatch shows inline",
+        "loading": "gap — validating the token on load: brief spinner pane before the form",
+        "empty": "n/a"
+      },
+      "responsive": "Brand rail drops on narrow.",
+      "contentBehavior": "n/a — fixed-length fields."
+    },
+    {
+      "id": "verify-email",
+      "screen": "Verify email",
+      "routes": [
+        "/verify-email"
+      ],
+      "files": [
+        "VerifyEmail.html"
+      ],
+      "states": {
+        "populated": "sent / verified (DRAWN)",
+        "error": "gap — expired/invalid verification link: 'Link expired' + Resend",
+        "loading": "gap — verifying the link on load: spinner pane before the verified state",
+        "empty": "n/a"
+      },
+      "responsive": "Brand rail drops on narrow.",
+      "contentBehavior": "Masked email wraps."
+    },
+    {
+      "id": "study-session",
+      "screen": "Study session",
+      "routes": [
+        "/sessions/:id"
+      ],
+      "files": [
+        "Session.html"
+      ],
+      "states": {
+        "populated": "answering-unsubmitted / submitted-incorrect / reading-expanded-agent-collapsed",
+        "loading": "gap — question + reading block stream in: skeleton reading + disabled options while loading",
+        "error": "gap — 'Couldn't load this question' with Retry / skip; a separate agent-unreachable inline note in the rail",
+        "empty": "n/a — a session always has content"
+      },
+      "responsive": "Desktop-only; the reading + quiz + agent split cannot usefully reflow below ~1024px — mobile out of scope.",
+      "contentBehavior": "Reading block scrolls independently; long answer options wrap; agent messages wrap and code blocks scroll horizontally.",
+      "reconciliation": {
+        "change": "ui-interaction-state-parity",
+        "liveStates": "Implemented behavior follows the explicit loading/content/empty/error+Retry/background-refresh and action-local busy contracts where applicable; absence of a frozen frame is intentional.",
+        "accessibility": "Semantic control state, visible focus, progress/status announcements, and modal focus lifecycle apply.",
+        "colorModes": "Semantic dark/light modes are supported; the dark artboard is not a dark-only requirement.",
+        "responsive": "Keep the existing per-screen responsive scope; shared controls still wrap and contain local overflow."
+      }
+    },
+    {
+      "id": "session-start",
+      "screen": "Session start",
+      "routes": [
+        "/user-certifications/:id/session/start"
+      ],
+      "files": [
+        "SessionStart.html"
+      ],
+      "states": {
+        "populated": "quick-start / custom-config",
+        "loading": "gap — saved defaults + domain list load: skeleton on the config column",
+        "error": "gap — 'Couldn't load your defaults' inline + Retry",
+        "empty": "n/a"
+      },
+      "responsive": "Centered column, already narrow; usable on tablet, phone out of scope.",
+      "contentBehavior": "Domain labels wrap; a long domain list scrolls within the picker.",
+      "reconciliation": {
+        "change": "ui-interaction-state-parity",
+        "liveStates": "Implemented behavior follows the explicit loading/content/empty/error+Retry/background-refresh and action-local busy contracts where applicable; absence of a frozen frame is intentional.",
+        "accessibility": "Semantic control state, visible focus, progress/status announcements, and modal focus lifecycle apply.",
+        "colorModes": "Semantic dark/light modes are supported; the dark artboard is not a dark-only requirement.",
+        "responsive": "Keep the existing per-screen responsive scope; shared controls still wrap and contain local overflow."
+      }
+    },
+    {
+      "id": "mock-exam",
+      "screen": "Mock exam",
+      "routes": [
+        "/mock-exams/:id"
+      ],
+      "files": [
+        "MockExam.html"
+      ],
+      "states": {
+        "populated": "active-unsubmitted / results / review",
+        "loading": "DRAWN — 'loading' (questions streaming in, timer paused, Start disabled)",
+        "error": "gap — 'Couldn't start the exam' full-screen with Retry / exit",
+        "empty": "n/a"
+      },
+      "responsive": "Full-screen desktop; the question pane + fixed nav panel do not reflow — mobile out of scope.",
+      "contentBehavior": "Question / option text wraps; the right nav panel is a fixed grid of numbered cells."
+    },
+    {
+      "id": "session-summary",
+      "screen": "Session summary",
+      "routes": [
+        "/sessions/:id/summary"
+      ],
+      "files": [
+        "Summary.html"
+      ],
+      "states": {
+        "populated": "after-study-session / after-mock-exam",
+        "loading": "gap — computing the breakdown: skeleton delta + domain rows",
+        "error": "gap — 'Couldn't load the summary' + Retry (the session is still saved)",
+        "empty": "n/a"
+      },
+      "responsive": "Centered column; tablet ok, phone chrome out of scope.",
+      "contentBehavior": "Domain names truncate with ellipsis in the accuracy rows; long cert names wrap in the header."
+    },
+    {
+      "id": "quick-review",
+      "screen": "5-minute review",
+      "routes": [
+        "/user-certifications/:id/review"
+      ],
+      "files": [
+        "QuickReview.html"
+      ],
+      "states": {
+        "populated": "queue-entry / card-front / card-back-rating / completion",
+        "loading": "gap — the SRS due-queue loads: skeleton on the queue card",
+        "error": "gap — 'Couldn't load your review queue' + Retry",
+        "empty": "gap — nothing due: 'You're all caught up' with the next-due time (distinct from 'completion', which is the post-loop summary)"
+      },
+      "responsive": "Single centered card; usable down to phone width.",
+      "contentBehavior": "Card question / answer text wraps; long option text wraps.",
+      "reconciliation": {
+        "change": "ui-interaction-state-parity",
+        "liveStates": "Implemented behavior follows the explicit loading/content/empty/error+Retry/background-refresh and action-local busy contracts where applicable; absence of a frozen frame is intentional.",
+        "accessibility": "Semantic control state, visible focus, progress/status announcements, and modal focus lifecycle apply.",
+        "colorModes": "Semantic dark/light modes are supported; the dark artboard is not a dark-only requirement.",
+        "responsive": "Keep the existing per-screen responsive scope; shared controls still wrap and contain local overflow."
+      }
+    },
+    {
+      "id": "progress",
+      "screen": "Progress",
+      "routes": [
+        "/user-certifications/:id/progress"
+      ],
+      "files": [
+        "Progress.html"
+      ],
+      "states": {
+        "populated": "with-history",
+        "loading": "gap — history + trend load: skeleton chart + rows",
+        "error": "gap — 'Couldn't load your progress' + Retry",
+        "empty": "'early' (3 sessions, no trajectory) is DRAWN as the sparse state; a true zero-session empty ('Complete a session to see your progress') is a gap"
+      },
+      "responsive": "Centered column; the chart shrinks; phone out of scope.",
+      "contentBehavior": "Session / domain labels truncate with ellipsis; the history table scrolls vertically.",
+      "reconciliation": {
+        "change": "ui-interaction-state-parity",
+        "liveStates": "Implemented behavior follows the explicit loading/content/empty/error+Retry/background-refresh and action-local busy contracts where applicable; absence of a frozen frame is intentional.",
+        "accessibility": "Semantic control state, visible focus, progress/status announcements, and modal focus lifecycle apply.",
+        "colorModes": "Semantic dark/light modes are supported; the dark artboard is not a dark-only requirement.",
+        "responsive": "375px containment is implemented and intentional; desktop hierarchy remains unchanged."
+      }
+    },
+    {
+      "id": "cert-detail",
+      "screen": "Cert detail",
+      "routes": [
+        "/user-certifications/:id"
+      ],
+      "files": [
+        "CertDetail.html"
+      ],
+      "states": {
+        "populated": "overview-tab / sessions-tab",
+        "loading": "gap — cert + sessions load: skeleton scores / table",
+        "error": "gap — 'Couldn't load this certification' / not-found with back-to-dashboard",
+        "empty": "gap — Sessions tab with no sessions: 'No sessions yet for this certification'"
+      },
+      "responsive": "Centered column with a tab bar; tablet ok, phone out of scope.",
+      "contentBehavior": "Session rows truncate long names with ellipsis; domain labels wrap.",
+      "reconciliation": {
+        "change": "ui-interaction-state-parity",
+        "liveStates": "Implemented behavior follows the explicit loading/content/empty/error+Retry/background-refresh and action-local busy contracts where applicable; absence of a frozen frame is intentional.",
+        "accessibility": "Semantic control state, visible focus, progress/status announcements, and modal focus lifecycle apply.",
+        "colorModes": "Semantic dark/light modes are supported; the dark artboard is not a dark-only requirement.",
+        "responsive": "Keep the existing per-screen responsive scope; shared controls still wrap and contain local overflow."
+      }
+    },
+    {
+      "id": "settings",
+      "screen": "Settings",
+      "routes": [
+        "/settings"
+      ],
+      "files": [
+        "Settings.html"
+      ],
+      "states": {
+        "populated": "account-tab / study-defaults-tab / notifications-tab",
+        "loading": "gap — account / preferences load: skeleton fields",
+        "error": "gap — load-failure banner + Retry; per-save failure shows an inline message on the field/section",
+        "empty": "n/a"
+      },
+      "responsive": "Narrow reading column; the tab list collapses above the column on narrow; usable to phone.",
+      "contentBehavior": "Field values ellipsis in read rows; help text wraps.",
+      "reconciliation": {
+        "change": "ui-interaction-state-parity",
+        "liveStates": "Implemented behavior follows the explicit loading/content/empty/error+Retry/background-refresh and action-local busy contracts where applicable; absence of a frozen frame is intentional.",
+        "accessibility": "Semantic control state, visible focus, progress/status announcements, and modal focus lifecycle apply.",
+        "colorModes": "Semantic dark/light modes are supported; the dark artboard is not a dark-only requirement.",
+        "responsive": "375px containment is implemented and intentional; desktop hierarchy remains unchanged."
+      }
+    },
+    {
+      "id": "agent-chat",
+      "screen": "Agent chat",
+      "routes": [
+        "/agent"
+      ],
+      "files": [
+        "AgentChat.html"
+      ],
+      "states": {
+        "populated": "active-streaming (the streaming reply IS the in-flight/loading state) / empty / expiry-warning",
+        "loading": "response-loading is covered by active-streaming; gap — initial history load skeleton on first open",
+        "error": "gap — send failed: red inline note under the failed bubble + Retry; an agent-unreachable banner",
+        "empty": "DRAWN — 'empty' (new chat with suggestion chips)"
+      },
+      "responsive": "Centered thread; usable to phone (composer stays sticky at the bottom).",
+      "contentBehavior": "Message bubbles wrap; long code blocks scroll horizontally; the thread scrolls vertically with the composer pinned.",
+      "reconciliation": {
+        "change": "ui-interaction-state-parity",
+        "liveStates": "Implemented behavior follows the explicit loading/content/empty/error+Retry/background-refresh and action-local busy contracts where applicable; absence of a frozen frame is intentional.",
+        "accessibility": "Semantic control state, visible focus, progress/status announcements, and modal focus lifecycle apply.",
+        "colorModes": "Semantic dark/light modes are supported; the dark artboard is not a dark-only requirement.",
+        "responsive": "375px containment is implemented and intentional; desktop hierarchy remains unchanged."
+      }
+    },
+    {
+      "id": "admin-certifications",
+      "screen": "Admin Certifications",
+      "routes": [
+        "/admin/certifications"
+      ],
+      "files": [
+        "AdminCertifications.html"
+      ],
+      "states": {
+        "populated": "populated",
+        "loading": "DRAWN — due-loading",
+        "error": "DRAWN — error (due table)",
+        "empty": "DRAWN — existing-empty + due-empty (diff-panel-open also drawn)"
+      },
+      "responsive": "Admin console is desktop-only; the tables do not reflow below ~1024px — mobile out of scope.",
+      "contentBehavior": "Long certification names wrap in the Certification column; code chips are mono; provider wraps.",
+      "reconciliation": {
+        "change": "ui-interaction-state-parity",
+        "liveStates": "Implemented behavior follows the explicit loading/content/empty/error+Retry/background-refresh and action-local busy contracts where applicable; absence of a frozen frame is intentional.",
+        "accessibility": "Semantic control state, visible focus, progress/status announcements, and modal focus lifecycle apply.",
+        "colorModes": "Semantic dark/light modes are supported; the dark artboard is not a dark-only requirement.",
+        "responsive": "375px containment is implemented and intentional; desktop hierarchy remains unchanged."
+      }
+    },
+    {
+      "id": "cert-setup",
+      "screen": "Cert setup wizard",
+      "routes": [
+        "/admin/certifications/new"
+      ],
+      "files": [
+        "AdminCertSetup.html"
+      ],
+      "states": {
+        "populated": "step-1-identify / step-2-source-confirmation / step-3-field-extraction / step-4-content-sources / step-5-review-publish",
+        "loading": "step 2's agent source-search and step 4's 'ingesting' rows are in-flight states shown inline; gap — a full-page extraction spinner on the 2→3 transition",
+        "error": "gap — source-search / extraction / ingestion failure shown inline with Retry, blocking advance",
+        "empty": "gap — source search returns nothing: 'No sources found' + prompt to use the manual-URL field (that field already exists on steps 1 and 2)"
+      },
+      "responsive": "Admin desktop-only; mobile out of scope.",
+      "contentBehavior": "Source URLs break anywhere (break-all); extracted field values ellipsis in the list, shown full in the citation pane.",
+      "reconciliation": {
+        "change": "ui-interaction-state-parity",
+        "liveStates": "Implemented behavior follows the explicit loading/content/empty/error+Retry/background-refresh and action-local busy contracts where applicable; absence of a frozen frame is intentional.",
+        "accessibility": "Semantic control state, visible focus, progress/status announcements, and modal focus lifecycle apply.",
+        "colorModes": "Semantic dark/light modes are supported; the dark artboard is not a dark-only requirement.",
+        "responsive": "Keep the existing per-screen responsive scope; shared controls still wrap and contain local overflow."
+      }
+    },
+    {
+      "id": "cert-reverification",
+      "screen": "Cert re-verification",
+      "routes": [
+        "/admin/certifications"
+      ],
+      "files": [
+        "AdminCertSetup.html"
+      ],
+      "states": {
+        "populated": "stale-diff",
+        "loading": "gap — re-fetching the source to build the diff: spinner pane",
+        "error": "gap — source fetch / diff failed: 'Couldn't re-verify' + Retry",
+        "empty": "gap — no changes detected: 'Metadata is already up to date' confirmation instead of a diff table"
+      },
+      "responsive": "Admin desktop-only.",
+      "contentBehavior": "Long field values wrap; the struck-through Current and the Proposed columns wrap independently.",
+      "reconciliation": {
+        "change": "ui-interaction-state-parity",
+        "liveStates": "Implemented behavior follows the explicit loading/content/empty/error+Retry/background-refresh and action-local busy contracts where applicable; absence of a frozen frame is intentional.",
+        "accessibility": "Semantic control state, visible focus, progress/status announcements, and modal focus lifecycle apply.",
+        "colorModes": "Semantic dark/light modes are supported; the dark artboard is not a dark-only requirement.",
+        "responsive": "Keep the existing per-screen responsive scope; shared controls still wrap and contain local overflow."
+      }
+    },
+    {
+      "id": "admin-review-queue",
+      "screen": "Review queue",
+      "routes": [
+        "/admin/review-queue"
+      ],
+      "files": [
+        "AdminReviewQueue.html"
+      ],
+      "states": {
+        "populated": "item-selected",
+        "loading": "gap — queue + selected item load: skeleton list + detail pane",
+        "error": "gap — 'Couldn't load the review queue' + Retry",
+        "empty": "gap — queue cleared: 'No items awaiting review' empty pane"
+      },
+      "responsive": "Admin desktop-only; the list + detail split can't reflow small — mobile out of scope.",
+      "contentBehavior": "Queue snippets clamp to 2 lines; source URL ellipsis; evidence blocks wrap.",
+      "reconciliation": {
+        "change": "ui-interaction-state-parity",
+        "liveStates": "Implemented behavior follows the explicit loading/content/empty/error+Retry/background-refresh and action-local busy contracts where applicable; absence of a frozen frame is intentional.",
+        "accessibility": "Semantic control state, visible focus, progress/status announcements, and modal focus lifecycle apply.",
+        "colorModes": "Semantic dark/light modes are supported; the dark artboard is not a dark-only requirement.",
+        "responsive": "375px containment is implemented and intentional; desktop hierarchy remains unchanged."
+      }
+    },
+    {
+      "id": "admin-sources",
+      "screen": "Sources",
+      "routes": [
+        "/admin/sources"
+      ],
+      "files": [
+        "AdminSources.html"
+      ],
+      "states": {
+        "populated": "populated",
+        "loading": "gap — the sources table loads: skeleton rows (the running-ingestion banner is a separate live in-flight state, already shown)",
+        "error": "gap — 'Couldn't load sources' + Retry",
+        "empty": "gap — no sources for the selected cert: empty row + the Add source CTA"
+      },
+      "responsive": "Admin desktop-only.",
+      "contentBehavior": "Source names ellipsis; chunk counts mono; type chips fixed width."
+    },
+    {
+      "id": "admin-users",
+      "screen": "Users",
+      "routes": [
+        "/admin/users"
+      ],
+      "files": [
+        "AdminUsers.html"
+      ],
+      "states": {
+        "populated": "populated",
+        "loading": "gap — the user table loads: skeleton rows",
+        "error": "gap — 'Couldn't load users' + Retry",
+        "empty": "gap — no users match the search: 'No users found' row"
+      },
+      "responsive": "Admin desktop-only.",
+      "contentBehavior": "Name + email truncate with ellipsis (email is mono); role badges fixed."
+    },
+    {
+      "id": "admin-audit-log",
+      "screen": "Audit log",
+      "routes": [
+        "/admin/audit-logs"
+      ],
+      "files": [
+        "AdminAuditLog.html"
+      ],
+      "states": {
+        "populated": "populated",
+        "loading": "gap — the log page loads: skeleton rows",
+        "error": "gap — 'Couldn't load the audit log' + Retry",
+        "empty": "gap — no events in range: 'No audit events' row"
+      },
+      "responsive": "Admin desktop-only.",
+      "contentBehavior": "The Target column ellipsis; before/after and timestamps are mono."
+    }
+  ],
+  "interactionContract": {
+    "colorModes": "Dark and light modes use semantic Readion tokens and meet 4.5:1 normal-text and 3:1 large-text/non-text minimum contrast.",
+    "controls": "Controls expose rest, hover, active, focus-visible, disabled, selected, and action-local busy states with stable dimensions, reduced-motion handling, semantic state, duplicate guards, and operation-specific labels.",
+    "async": "HTTP regions distinguish initial loading, content, successful empty, error with Retry, and content-preserving background refresh.",
+    "accessibility": "Progress and outcomes are announced; modal focus enters a meaningful control, traps traversal, supports permitted Escape/backdrop dismissal, and returns to the opener.",
+    "responsive": "Implemented shell screens contain content at 375px with wrapping or bounded local overflow while preserving the desktop artboard hierarchy."
+  },
+  "intentionalDivergences": {
+    "agentTtl": "The static four-hour chip is superseded: no permanent TTL chrome above 30 minutes remaining; a polite warning appears only at or below 30 minutes and clears after activity extends expiry.",
+    "operationBusyIdentity": "Static frames cannot represent action-local progress. Accepted mutations use operation-specific labels and duplicate guards without making adjacent disabled actions look busy.",
+    "lightMode": "Light mode is supported through semantic tokens even though imported Claude snapshots are dark.",
+    "phoneSupport": "375px support on reconciled shell screens is required even where imported snapshots are desktop-only."
+  }
 }

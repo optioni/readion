@@ -13,30 +13,33 @@
       "class": "missing",
       "axis": "layout",
       "severity": "high",
-      "design": "A standalone full-page screen at route /admin/certifications/:code/re-verify \u2014 own AdminSidebar, own header, occupies the whole viewport for one certification's stale-metadata review.",
-      "app": "No such route exists (Glob of apps/web/app/pages/admin/certifications only returns index.vue and new.vue). The reverify flow is an inline card that expands at the bottom of the generic /admin/certifications list page after clicking a table row's 'Re-verify' button \u2014 there is no per-cert navigation/URL.",
+      "design": "A standalone full-page screen at route /admin/certifications/:code/re-verify — own AdminSidebar, own header, occupies the whole viewport for one certification's stale-metadata review.",
+      "app": "No such route exists (Glob of apps/web/app/pages/admin/certifications only returns index.vue and new.vue). The reverify flow is an inline card that expands at the bottom of the generic /admin/certifications list page after clicking a table row's 'Re-verify' button — there is no per-cert navigation/URL.",
       "evidence": "design: openspec/design/AdminCertSetup.html:515-579,706 (StaleRecertScreen, route=/admin/certifications/:code/re-verify); app: apps/web/app/pages/admin/certifications/{index,new}.vue (no [code]/re-verify page) and apps/web/app/components/admin/AdminCertifications.vue:250-306 (inline <div v-if=\"diff\">)",
-      "screen": "Cert re-verification \u2014 stale-diff"
+      "screen": "Cert re-verification — stale-diff",
+      "status": "open"
     },
     {
-      "element": "Stale-cert header (breadcrumb + cert title + 'Metadata stale \u00b7 action required' pill)",
+      "element": "Stale-cert header (breadcrumb + cert title + 'Metadata stale · action required' pill)",
       "class": "missing",
       "axis": "composition",
       "severity": "high",
-      "design": "Page header shows breadcrumb 'Certifications \u203a SAA-C03 \u203a Re-verification required' (last crumb in warning color), the cert's display name 'Solutions Architect \u2013 Associate' as an H1-equivalent, and a right-aligned warning-colored pill 'Metadata stale \u00b7 action required'.",
+      "design": "Page header shows breadcrumb 'Certifications › SAA-C03 › Re-verification required' (last crumb in warning color), the cert's display name 'Solutions Architect – Associate' as an H1-equivalent, and a right-aligned warning-colored pill 'Metadata stale · action required'.",
       "app": "No per-cert header is rendered for the reverify state; the page still shows the generic 'Certifications' h1 (shared with the rest of the list page). No breadcrumb and no stale-status pill exist anywhere in the component.",
       "evidence": "design: openspec/design/AdminCertSetup.html:519-535; app: apps/web/app/components/admin/AdminCertifications.vue:144-155",
-      "screen": "Cert re-verification \u2014 stale-diff"
+      "screen": "Cert re-verification — stale-diff",
+      "status": "open"
     },
     {
-      "element": "Stale-reason callout ('Exam guide updated \u2014 November 2024' explanation)",
+      "element": "Stale-reason callout ('Exam guide updated — November 2024' explanation)",
       "class": "missing",
       "axis": "composition",
       "severity": "high",
       "design": "A warning-tinted callout with icon explains *why* re-verification is needed: 'AWS published a revised SAA-C03 exam guide. The agent identified changes to domain weightings and 2 renamed domains.'",
-      "app": "No explanatory callout is rendered anywhere in the reverify flow \u2014 the admin sees only the raw diff table with no narrative context for the change.",
+      "app": "No explanatory callout is rendered anywhere in the reverify flow — the admin sees only the raw diff table with no narrative context for the change.",
       "evidence": "design: openspec/design/AdminCertSetup.html:539-547; app: apps/web/app/components/admin/AdminCertifications.vue:250-306 (no equivalent block)",
-      "screen": "Cert re-verification \u2014 stale-diff"
+      "screen": "Cert re-verification — stale-diff",
+      "status": "open"
     },
     {
       "element": "Per-row 'Accept' button for individually changed fields",
@@ -46,17 +49,19 @@
       "design": "Each DiffRow shows an individual 'Accept' button only for rows that changed, letting the admin accept field changes one at a time.",
       "app": "Only a single bulk 'Accept all & re-verify' button exists for the whole diff; there is no per-row accept control or ability to selectively accept individual field changes.",
       "evidence": "design: openspec/design/AdminCertSetup.html:504-513 (DiffRow's conditional Accept button); app: apps/web/app/components/admin/AdminCertifications.vue:265-296 (no per-row action column)",
-      "screen": "Cert re-verification \u2014 stale-diff"
+      "screen": "Cert re-verification — stale-diff",
+      "status": "open"
     },
     {
       "element": "Domain-level diff granularity + Validity period / Exam version rows",
       "class": "simplified",
       "axis": "composition",
       "severity": "medium",
-      "design": "Diff table has 8 granular rows: Domain 1 name, Domain 1 weight, Domain 3 name, Domain 3 weight, Domain 4 weight, Validity period, Exam version, Passing score \u2014 each domain's name and weight independently comparable.",
+      "design": "Diff table has 8 granular rows: Domain 1 name, Domain 1 weight, Domain 3 name, Domain 3 weight, Domain 4 weight, Validity period, Exam version, Passing score — each domain's name and weight independently comparable.",
       "app": "All domains are collapsed into a single 'Domains' row formatted as a comma-joined string (e.g. 'Name (30%), ...'); there is no per-domain name/weight comparison. 'Validity period' and 'Exam version' fields don't exist in the reverify schema at all (CertProposedValues only has domains, questionCount, passingScore, timeLimitMinutes).",
       "evidence": "design: openspec/design/AdminCertSetup.html:559-566; app: apps/web/app/composables/certReverifyDiff.ts:37-42,50-67,85-117",
-      "screen": "Cert re-verification \u2014 stale-diff"
+      "screen": "Cert re-verification — stale-diff",
+      "status": "open"
     },
     {
       "element": "Changed-value color coding (strikethrough red old / bold green new)",
@@ -64,19 +69,21 @@
       "axis": "composition",
       "severity": "medium",
       "design": "Changed rows render the old value with strikethrough + red (poor) text on a faint red background, and the new value bold + green (good) text on a faint green background; unchanged rows are muted/subtle in both columns.",
-      "app": "The 'current' cell is always plain slate-300 text with no strikethrough or red tint. The 'proposed' cell only gets a color change (readion-primary) when changed \u2014 no strikethrough, no distinct background tinting for changed vs. unchanged rows.",
+      "app": "The 'current' cell is always plain slate-300 text with no strikethrough or red tint. The 'proposed' cell only gets a color change (readion-primary) when changed — no strikethrough, no distinct background tinting for changed vs. unchanged rows.",
       "evidence": "design: openspec/design/AdminCertSetup.html:504-513; app: apps/web/app/components/admin/AdminCertifications.vue:265-284",
-      "screen": "Cert re-verification \u2014 stale-diff"
+      "screen": "Cert re-verification — stale-diff",
+      "status": "open"
     },
     {
       "element": "Footer actions: 'Review source URL first' / 'Accept all changes' / 'Save & mark verified'",
       "class": "divergent",
       "axis": "behavioral",
       "severity": "medium",
-      "design": "Three distinct actions: a left-anchored secondary 'Review source URL first' (lets the admin verify the source before trusting the diff), and a right-side pair \u2014 secondary 'Accept all changes' and primary 'Save & mark verified' \u2014 implying accept-then-commit as two steps.",
-      "app": "Only two actions exist: 'Accept all & re-verify' (primary, submits immediately) and 'Cancel'. There is no source-URL review action and no separation between accepting changes and committing/marking verified \u2014 it's a single combined submit.",
+      "design": "Three distinct actions: a left-anchored secondary 'Review source URL first' (lets the admin verify the source before trusting the diff), and a right-side pair — secondary 'Accept all changes' and primary 'Save & mark verified' — implying accept-then-commit as two steps.",
+      "app": "Only two actions exist: 'Accept all & re-verify' (primary, submits immediately) and 'Cancel'. There is no source-URL review action and no separation between accepting changes and committing/marking verified — it's a single combined submit.",
       "evidence": "design: openspec/design/AdminCertSetup.html:569-575; app: apps/web/app/components/admin/AdminCertifications.vue:287-306",
-      "screen": "Cert re-verification \u2014 stale-diff"
+      "screen": "Cert re-verification — stale-diff",
+      "status": "open"
     },
     {
       "element": "Full-height split-panel layout vs. boxed inline section",
@@ -86,7 +93,8 @@
       "design": "Edge-to-edge flex layout: fixed-width AdminSidebar plus a flex-1 content column that fills the viewport height, dedicated entirely to this one certification's re-verification.",
       "app": "AdminConsole renders a centered `mx-auto max-w-7xl` boxed container shared by the whole /admin/certifications page; the reverify diff appears as one more card stacked beneath two other tables (existing certs, due-for-reverification), not as a focused full-height screen.",
       "evidence": "design: openspec/design/AdminCertSetup.html:516-518; app: apps/web/app/components/admin/AdminConsole.vue:83-87 and AdminCertifications.vue:144-145,250-253",
-      "screen": "Cert re-verification \u2014 stale-diff"
+      "screen": "Cert re-verification — stale-diff",
+      "status": "open"
     },
     {
       "element": "Diff section label & colored column headers ('Field changes detected' / 'Current (outdated)' / 'Proposed (new guide)')",
@@ -96,17 +104,39 @@
       "design": "Uppercase eyebrow label 'Field changes detected' above the table; column headers explicitly read 'Current (outdated)' (red) and 'Proposed (new guide)' (green).",
       "app": "Section is titled 'Proposed changes' (h2, not an uppercase eyebrow) with plain, uncolored column headers 'Current' and 'Proposed'.",
       "evidence": "design: openspec/design/AdminCertSetup.html:550,554-556; app: apps/web/app/components/admin/AdminCertifications.vue:255,259-261",
-      "screen": "Cert re-verification \u2014 stale-diff"
+      "screen": "Cert re-verification — stale-diff",
+      "status": "open"
     },
     {
       "element": "'(unverified)' inline annotation on diff rows",
       "class": "divergent",
       "axis": "composition",
       "severity": "low",
-      "design": "The stale-diff screen has no unverified-field annotation \u2014 that status concept belongs to the separate field-extraction screen (StatusBadge), not the re-verification diff.",
+      "design": "The stale-diff screen has no unverified-field annotation — that status concept belongs to the separate field-extraction screen (StatusBadge), not the re-verification diff.",
       "app": "Adds a '(unverified)' text annotation next to the field label when the extracted value lacks a citation, a behavior not present in the corresponding design screen.",
       "evidence": "design: openspec/design/AdminCertSetup.html:504-513 (no such annotation in DiffRow); app: apps/web/app/components/admin/AdminCertifications.vue:274",
-      "screen": "Cert re-verification \u2014 stale-diff"
+      "screen": "Cert re-verification — stale-diff",
+      "status": "open"
     }
-  ]
+  ],
+  "reconciliation": {
+    "change": "ui-interaction-state-parity",
+    "snapshotPolicy": "Claude HTML remains visual hierarchy evidence; implemented live, accessible, theme, and responsive behavior is the product contract where static frames cannot demonstrate it.",
+    "statusVocabulary": {
+      "open": "active parity defect",
+      "resolved": "implementation now matches the cited snapshot evidence",
+      "superseded": "snapshot difference is an intentional product contract and is not an active defect"
+    },
+    "intentionalProductContracts": {
+      "colorModes": "Dark and light modes use semantic Readion tokens and meet 4.5:1 normal-text and 3:1 large-text/non-text minimum contrast.",
+      "controls": "Controls expose rest, hover, active, focus-visible, disabled, selected, and action-local busy states with stable dimensions, reduced-motion handling, semantic state, duplicate guards, and operation-specific labels.",
+      "async": "HTTP regions distinguish initial loading, content, successful empty, error with Retry, and content-preserving background refresh.",
+      "accessibility": "Progress and outcomes are announced; modal focus enters a meaningful control, traps traversal, supports permitted Escape/backdrop dismissal, and returns to the opener.",
+      "responsive": "Implemented shell screens contain content at 375px with wrapping or bounded local overflow while preserving the desktop artboard hierarchy."
+    },
+    "activeFindingCount": 10,
+    "historicalFindingCount": 10,
+    "resolvedCount": 0,
+    "supersededCount": 0
+  }
 }

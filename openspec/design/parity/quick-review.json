@@ -1,11 +1,11 @@
 {
   "screen_id": "quick-review",
   "screen": "5-minute review",
-  "totalFindings": 7,
+  "totalFindings": 0,
   "bySeverity": {
-    "high": 2,
-    "medium": 3,
-    "low": 2
+    "high": 0,
+    "medium": 0,
+    "low": 0
   },
   "findings": [
     {
@@ -14,39 +14,47 @@
       "axis": "composition",
       "severity": "high",
       "design": "A 52x52 rounded-xl accent-tinted box with a document/quiz outline SVG icon sits above the due-count headline, anchoring the hero composition (QueueEntry, openspec/design/QuickReview.html lines 198-204).",
-      "app": "absent \u2014 ReviewQueueEntry renders only a circular avatar containing the due-count number; no icon/glyph element exists anywhere in the component.",
+      "app": "absent — ReviewQueueEntry renders only a circular avatar containing the due-count number; no icon/glyph element exists anywhere in the component.",
       "evidence": "design: openspec/design/QuickReview.html:198-204 (QueueEntry icon block); app: apps/web/app/components/ReviewQueueEntry.vue:48-66 (no svg/icon present)",
-      "screen": "5-minute review \u2014 queue-entry"
+      "screen": "5-minute review — queue-entry",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "Review countdown timer",
       "class": "divergent",
       "axis": "behavioral",
       "severity": "high",
-      "design": "ReviewHeader's timer is a live countdown starting at 5:00 that decrements across the session and turns urgent/red near expiry (timeStr varies 5:00\u21924:12\u21923:58\u21923:41 across states; timeUrgent flag drives red styling) \u2014 the artboard subtitle frames this as a timed '~5 minute' loop.",
-      "app": "The page never passes timeStr/timeUrgent props to ReviewHeader, so the component's defaults ('5:00', timeUrgent=false) are shown statically forever \u2014 there is no ticking timer or urgency state anywhere in review.vue.",
+      "design": "ReviewHeader's timer is a live countdown starting at 5:00 that decrements across the session and turns urgent/red near expiry (timeStr varies 5:00→4:12→3:58→3:41 across states; timeUrgent flag drives red styling) — the artboard subtitle frames this as a timed '~5 minute' loop.",
+      "app": "The page never passes timeStr/timeUrgent props to ReviewHeader, so the component's defaults ('5:00', timeUrgent=false) are shown statically forever — there is no ticking timer or urgency state anywhere in review.vue.",
       "evidence": "design: openspec/design/QuickReview.html:196,242,265,305 (varying timeStr/timeUrgent per state); app: apps/web/app/pages/user-certifications/[id]/review.vue:202-206 (ReviewHeader invoked with no timeStr/timeUrgent) and apps/web/app/components/ReviewHeader.vue:5-17 (static defaults '5:00'/false)",
-      "screen": "5-minute review \u2014 queue-entry"
+      "screen": "5-minute review — queue-entry",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "Queue-entry vertical centering / full-bleed hero layout",
       "class": "divergent",
       "axis": "layout",
       "severity": "medium",
-      "design": "QueueEntry fills the entire area below the header with `flex:1, alignItems:center, justifyContent:center` \u2014 icon, headline, chips, CTAs and caveat are vertically and horizontally centered as one open hero block with no card border (QuickReview.html:194-236).",
-      "app": "The content sits in normal top-aligned document flow inside a bordered/backgrounded card (`rounded-xl border ... bg-readion-background-surface`) within a `max-w-2xl` column \u2014 no vertical centering, and the card chrome itself isn't in the design.",
+      "design": "QueueEntry fills the entire area below the header with `flex:1, alignItems:center, justifyContent:center` — icon, headline, chips, CTAs and caveat are vertically and horizontally centered as one open hero block with no card border (QuickReview.html:194-236).",
+      "app": "The content sits in normal top-aligned document flow inside a bordered/backgrounded card (`rounded-xl border ... bg-readion-background-surface`) within a `max-w-2xl` column — no vertical centering, and the card chrome itself isn't in the design.",
       "evidence": "design: openspec/design/QuickReview.html:195-197 (flex:1 center/center, no border); app: apps/web/app/pages/user-certifications/[id]/review.vue:208-211 (plain flow container) and apps/web/app/components/ReviewQueueEntry.vue:48-51 (bordered card wrapper)",
-      "screen": "5-minute review \u2014 queue-entry"
+      "screen": "5-minute review — queue-entry",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
-      "element": "'Scheduled by spaced repetition \u00b7 ~5 minutes' caption",
+      "element": "'Scheduled by spaced repetition · ~5 minutes' caption",
       "class": "simplified",
       "axis": "composition",
       "severity": "medium",
-      "design": "Subtext under the headline reads 'Scheduled by spaced repetition \u00b7 ~5 minutes', explaining the SRS provenance of the queue (QuickReview.html:209).",
+      "design": "Subtext under the headline reads 'Scheduled by spaced repetition · ~5 minutes', explaining the SRS provenance of the queue (QuickReview.html:209).",
       "app": "Only '~5 minutes' is rendered; the 'Scheduled by spaced repetition' clause is dropped entirely.",
       "evidence": "design: openspec/design/QuickReview.html:209; app: apps/web/app/components/ReviewQueueEntry.vue:64",
-      "screen": "5-minute review \u2014 queue-entry"
+      "screen": "5-minute review — queue-entry",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "Self-grade vs quiz review-mode toggle",
@@ -54,9 +62,11 @@
       "axis": "behavioral",
       "severity": "medium",
       "design": "The artboard's description states a single SRS flashcard loop ('Front shows question, reveal shows answer, SRS rating schedules next repetition') triggered by one 'Start review' CTA with no alternate mode selection on the queue screen (QuickReview.html:373-374, 224-230).",
-      "app": "Below the queue card the app renders an additional 'Prefer quiz instead?' toggle letting the user switch between a self-grade flow and an entirely different quiz+confidence run loop before starting \u2014 a bifurcated entry flow not present in the design.",
+      "app": "Below the queue card the app renders an additional 'Prefer quiz instead?' toggle letting the user switch between a self-grade flow and an entirely different quiz+confidence run loop before starting — a bifurcated entry flow not present in the design.",
       "evidence": "design: openspec/design/QuickReview.html:194-236 (single Start review CTA only); app: apps/web/app/pages/user-certifications/[id]/review.vue:220-254 (review-mode-toggle block)",
-      "screen": "5-minute review \u2014 queue-entry"
+      "screen": "5-minute review — queue-entry",
+      "status": "superseded",
+      "reconciliation": "Intentional product contract under ui-interaction-state-parity; retained as historical snapshot evidence."
     },
     {
       "element": "Due-count headline treatment",
@@ -66,7 +76,9 @@
       "design": "The count is a standalone 22px bold number sitting above the 'items due for review' line, separate from any icon/badge (QuickReview.html:207).",
       "app": "The same number is instead embedded inside a 14x14 circular primary-tinted avatar, merging the count with an icon-like badge rather than a plain headline figure.",
       "evidence": "design: openspec/design/QuickReview.html:206-210; app: apps/web/app/components/ReviewQueueEntry.vue:53-59",
-      "screen": "5-minute review \u2014 queue-entry"
+      "screen": "5-minute review — queue-entry",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "'By domain' section label",
@@ -76,7 +88,29 @@
       "design": "Domain breakdown chips are shown directly with no preceding section label (QuickReview.html:213-220).",
       "app": "An uppercase 'By domain' label is inserted above the chip row, which the design does not include.",
       "evidence": "design: openspec/design/QuickReview.html:213-220; app: apps/web/app/components/ReviewQueueEntry.vue:68-72",
-      "screen": "5-minute review \u2014 queue-entry"
+      "screen": "5-minute review — queue-entry",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     }
-  ]
+  ],
+  "reconciliation": {
+    "change": "ui-interaction-state-parity",
+    "snapshotPolicy": "Claude HTML remains visual hierarchy evidence; implemented live, accessible, theme, and responsive behavior is the product contract where static frames cannot demonstrate it.",
+    "statusVocabulary": {
+      "open": "active parity defect",
+      "resolved": "implementation now matches the cited snapshot evidence",
+      "superseded": "snapshot difference is an intentional product contract and is not an active defect"
+    },
+    "intentionalProductContracts": {
+      "colorModes": "Dark and light modes use semantic Readion tokens and meet 4.5:1 normal-text and 3:1 large-text/non-text minimum contrast.",
+      "controls": "Controls expose rest, hover, active, focus-visible, disabled, selected, and action-local busy states with stable dimensions, reduced-motion handling, semantic state, duplicate guards, and operation-specific labels.",
+      "async": "HTTP regions distinguish initial loading, content, successful empty, error with Retry, and content-preserving background refresh.",
+      "accessibility": "Progress and outcomes are announced; modal focus enters a meaningful control, traps traversal, supports permitted Escape/backdrop dismissal, and returns to the opener.",
+      "responsive": "Implemented shell screens contain content at 375px with wrapping or bounded local overflow while preserving the desktop artboard hierarchy."
+    },
+    "activeFindingCount": 0,
+    "historicalFindingCount": 7,
+    "resolvedCount": 6,
+    "supersededCount": 1
+  }
 }

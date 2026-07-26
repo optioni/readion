@@ -1,11 +1,11 @@
 {
   "screen_id": "session-start",
   "screen": "Session start",
-  "totalFindings": 3,
+  "totalFindings": 0,
   "bySeverity": {
-    "high": 1,
-    "medium": 1,
-    "low": 1
+    "high": 0,
+    "medium": 0,
+    "low": 0
   },
   "findings": [
     {
@@ -13,10 +13,12 @@
       "class": "missing",
       "axis": "composition",
       "severity": "high",
-      "design": "A centered pill above the 'Ready to start?' card showing the cert's mono code (e.g. 'SAA-C03') and full name ('Solutions Architect \u2013 Associate'), so the user confirms which certification the session is for.",
-      "app": "absent \u2014 SessionStartQuickStart.vue renders only the MinimalHeader and the main card; no cert code/name element exists anywhere on the page for the given enrollmentId.",
+      "design": "A centered pill above the 'Ready to start?' card showing the cert's mono code (e.g. 'SAA-C03') and full name ('Solutions Architect – Associate'), so the user confirms which certification the session is for.",
+      "app": "absent — SessionStartQuickStart.vue renders only the MinimalHeader and the main card; no cert code/name element exists anywhere on the page for the given enrollmentId.",
       "evidence": "design: openspec/design/SessionStart.html:109-114 (Cert pill block in QuickStartScreen) vs app: apps/web/app/components/SessionStartQuickStart.vue:62-119 (no cert badge markup) and apps/web/app/pages/user-certifications/[id]/session/start.vue:14-30 (page passes only enrollmentId, never fetches/display cert code).",
-      "screen": "Session start \u2014 quick-start"
+      "screen": "Session start — quick-start",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "Defaults summary values (Content mix / Difficulty / Learning style)",
@@ -26,7 +28,9 @@
       "design": "Values are humanized/enumerated display labels distinct from raw enum keys, e.g. 'Mixed', 'Adaptive', 'Spaced rep.'",
       "app": "Values are bound directly to raw SessionDefaults enum strings with no formatting, so they would render as e.g. 'balanced'/'reading-heavy', 'beginner'/'intermediate'/'exam-ready', 'weak-area-focus'/'spaced-repetition'/'cram' instead of user-friendly labels (note 'Adaptive'/'Mixed' as design terms don't even correspond to any value in the shared enum).",
       "evidence": "design: openspec/design/SessionStart.html:122-137 (defaults rows array with polished labels) vs app: apps/web/app/components/SessionStartQuickStart.vue:24-35 (summaryRows maps value.contentMix/difficulty/learningStyle with no format function) and packages/shared/src/sessions/index.ts:6-18 (raw enum values: 'balanced', 'beginner', 'spaced-repetition', etc.).",
-      "screen": "Session start \u2014 quick-start"
+      "screen": "Session start — quick-start",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "MinimalHeader brand mark icon",
@@ -36,7 +40,29 @@
       "design": "Header shows a 22x22 rounded accent-colored icon chip with a star glyph next to the 'Readion' wordmark.",
       "app": "Header renders only the 'Readion' text wordmark with no icon/logo chip.",
       "evidence": "design: openspec/design/SessionStart.html:84-89 (MinimalHeader icon block) vs app: apps/web/app/layouts/minimal.vue:6-8 (NuxtLink contains only a span with 'Readion' text, no icon element).",
-      "screen": "Session start \u2014 quick-start"
+      "screen": "Session start — quick-start",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     }
-  ]
+  ],
+  "reconciliation": {
+    "change": "ui-interaction-state-parity",
+    "snapshotPolicy": "Claude HTML remains visual hierarchy evidence; implemented live, accessible, theme, and responsive behavior is the product contract where static frames cannot demonstrate it.",
+    "statusVocabulary": {
+      "open": "active parity defect",
+      "resolved": "implementation now matches the cited snapshot evidence",
+      "superseded": "snapshot difference is an intentional product contract and is not an active defect"
+    },
+    "intentionalProductContracts": {
+      "colorModes": "Dark and light modes use semantic Readion tokens and meet 4.5:1 normal-text and 3:1 large-text/non-text minimum contrast.",
+      "controls": "Controls expose rest, hover, active, focus-visible, disabled, selected, and action-local busy states with stable dimensions, reduced-motion handling, semantic state, duplicate guards, and operation-specific labels.",
+      "async": "HTTP regions distinguish initial loading, content, successful empty, error with Retry, and content-preserving background refresh.",
+      "accessibility": "Progress and outcomes are announced; modal focus enters a meaningful control, traps traversal, supports permitted Escape/backdrop dismissal, and returns to the opener.",
+      "responsive": "Implemented shell screens contain content at 375px with wrapping or bounded local overflow while preserving the desktop artboard hierarchy."
+    },
+    "activeFindingCount": 0,
+    "historicalFindingCount": 3,
+    "resolvedCount": 3,
+    "supersededCount": 0
+  }
 }

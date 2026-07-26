@@ -1,11 +1,11 @@
 {
   "screen_id": "cert-detail",
   "screen": "Cert detail",
-  "totalFindings": 10,
+  "totalFindings": 1,
   "bySeverity": {
-    "high": 2,
-    "medium": 5,
-    "low": 3
+    "high": 1,
+    "medium": 0,
+    "low": 0
   },
   "findings": [
     {
@@ -13,10 +13,11 @@
       "class": "divergent",
       "axis": "behavioral",
       "severity": "high",
-      "design": "Readiness card shows a week-over-week trend, e.g. '\u21913% this week' (a delta on the same metric).",
+      "design": "Readiness card shows a week-over-week trend, e.g. '↑3% this week' (a delta on the same metric).",
       "app": "Readiness card's sub-label is `trajectoryLabel`, an entirely different metric: 'exam-ready in ~N weeks' (a projected time-to-ready estimate), shown only when a trajectory exists.",
-      "evidence": "design: openspec/design/CertDetail.html:140 (sub: '\u21913% this week'); app: apps/web/app/components/OverviewTab.vue:73-79 + apps/web/app/composables/certStatRow.ts:34-36 (trajectoryLabel = `exam-ready in ~${weeksToReady} weeks`)",
-      "screen": "Cert detail \u2014 overview-tab"
+      "evidence": "design: openspec/design/CertDetail.html:140 (sub: '↑3% this week'); app: apps/web/app/components/OverviewTab.vue:73-79 + apps/web/app/composables/certStatRow.ts:34-36 (trajectoryLabel = `exam-ready in ~${weeksToReady} weeks`)",
+      "screen": "Cert detail — overview-tab",
+      "status": "open"
     },
     {
       "element": "Recent session delta badge",
@@ -24,9 +25,11 @@
       "axis": "composition",
       "severity": "high",
       "design": "Every recent-session row shows a green delta pill (e.g. '+3%', '+2%', '+8%') next to the accuracy percentage.",
-      "app": "RecentSessionsPanel only renders a DeltaBadge for index 0, gated on a `readinessDelta` prop \u2014 but OverviewTab never passes that prop when instantiating the panel, so `deltaFor` always resolves to null and no delta badge is ever rendered for any row.",
+      "app": "RecentSessionsPanel only renders a DeltaBadge for index 0, gated on a `readinessDelta` prop — but OverviewTab never passes that prop when instantiating the panel, so `deltaFor` always resolves to null and no delta badge is ever rendered for any row.",
       "evidence": "design: openspec/design/CertDetail.html:196-213 (delta on every row); app: apps/web/app/components/OverviewTab.vue:137 (`<RecentSessionsPanel :sessions=\"sessions\" />`, no readiness-delta binding) vs apps/web/app/components/RecentSessionsPanel.vue:7,15-16,39",
-      "screen": "Cert detail \u2014 overview-tab"
+      "screen": "Cert detail — overview-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "Right-column layout (Suggested next + Recent sessions stacked)",
@@ -36,7 +39,9 @@
       "design": "A fixed 260px right column stacks 'Suggested next' above 'Recent sessions', beside the wider Domain scores column.",
       "app": "Grid is only 2 columns (`md:grid-cols-[2fr_1fr]`) holding Domain Breakdown and Suggested-next; RecentSessionsPanel is placed as a separate full-width block below that grid, not stacked in the right column.",
       "evidence": "design: openspec/design/CertDetail.html:153,183-219 (width:260 column contains both blocks); app: apps/web/app/components/OverviewTab.vue:95-137 (grid ends at line 135, RecentSessionsPanel at line 137 is a sibling below, full width)",
-      "screen": "Cert detail \u2014 overview-tab"
+      "screen": "Cert detail — overview-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "Stat card individual borders",
@@ -44,39 +49,47 @@
       "axis": "layout",
       "severity": "medium",
       "design": "Each of the 4 stats (Readiness, Sessions, Questions, Avg accuracy) is its own bordered/rounded card (`border: 1px solid`, `borderRadius: rXl`, own background) sitting in a gapped row.",
-      "app": "All 4 stats share a single undifferentiated container (`bg-black/25 p-4` grid) with no per-card border or background \u2014 the individual card affordance is lost.",
+      "app": "All 4 stats share a single undifferentiated container (`bg-black/25 p-4` grid) with no per-card border or background — the individual card affordance is lost.",
       "evidence": "design: openspec/design/CertDetail.html:138-151; app: apps/web/app/components/OverviewTab.vue:66-93 (single `data-testid=\"cert-detail-stat-row\"` div, no per-card border)",
-      "screen": "Cert detail \u2014 overview-tab"
+      "screen": "Cert detail — overview-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "Sessions/Questions/Avg accuracy sub-captions",
       "class": "missing",
       "axis": "composition",
       "severity": "medium",
-      "design": "Each stat card has a small caption under the value: Sessions \u2192 'completed', Questions \u2192 'answered', Avg accuracy \u2192 'per session'.",
+      "design": "Each stat card has a small caption under the value: Sessions → 'completed', Questions → 'answered', Avg accuracy → 'per session'.",
       "app": "ProgressStatCard only renders label + value (+ optional unit); no sub-caption slot is used for Sessions, Questions, or Avg accuracy in OverviewTab.",
       "evidence": "design: openspec/design/CertDetail.html:141-148 (`sub` field per stat); app: apps/web/app/components/ProgressStatCard.vue:11-19 (no sub-caption row) and apps/web/app/components/OverviewTab.vue:81-92 (no sub text passed)",
-      "screen": "Cert detail \u2014 overview-tab"
+      "screen": "Cert detail — overview-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "View all sessions link",
       "class": "missing",
       "axis": "composition",
       "severity": "medium",
-      "design": "Below the Recent sessions card, a right-aligned 'View all sessions \u2192' link is shown, linking presumably to the Sessions tab.",
+      "design": "Below the Recent sessions card, a right-aligned 'View all sessions →' link is shown, linking presumably to the Sessions tab.",
       "app": "No such link/affordance exists in RecentSessionsPanel or OverviewTab; the only way to reach the Sessions tab is the top-level tab bar.",
       "evidence": "design: openspec/design/CertDetail.html:215-217; app: apps/web/app/components/RecentSessionsPanel.vue:19-45 (ends with the card, no link)",
-      "screen": "Cert detail \u2014 overview-tab"
+      "screen": "Cert detail — overview-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "Recent session row content",
       "class": "divergent",
       "axis": "composition",
       "severity": "medium",
-      "design": "Row shows only date, duration (+ ' \u00b7 Mock' suffix when applicable), accuracy% (color-coded by score band), and delta.",
-      "app": "Row shows date, duration, then a combined 'Kind \u00b7 focus-area/domains' label (e.g. 'Study \u00b7 IAM, Networking') in place of design's simple duration/mock-tag line, and accuracy is plain uncolored text (no score-band coloring).",
-      "evidence": "design: openspec/design/CertDetail.html:196-213; app: apps/web/app/components/RecentSessionsPanel.vue:29-38 + apps/web/app/composables/recentSessionLabel.ts:24-25 (`${kind} \u00b7 ${focusArea}`), no color class on accuracy span",
-      "screen": "Cert detail \u2014 overview-tab"
+      "design": "Row shows only date, duration (+ ' · Mock' suffix when applicable), accuracy% (color-coded by score band), and delta.",
+      "app": "Row shows date, duration, then a combined 'Kind · focus-area/domains' label (e.g. 'Study · IAM, Networking') in place of design's simple duration/mock-tag line, and accuracy is plain uncolored text (no score-band coloring).",
+      "evidence": "design: openspec/design/CertDetail.html:196-213; app: apps/web/app/components/RecentSessionsPanel.vue:29-38 + apps/web/app/composables/recentSessionLabel.ts:24-25 (`${kind} · ${focusArea}`), no color class on accuracy span",
+      "screen": "Cert detail — overview-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "Divider lines between rows",
@@ -84,9 +97,11 @@
       "axis": "composition",
       "severity": "low",
       "design": "Both Domain scores and Recent sessions cards have a 1px divider between each row (`i < len-1 && <div border/>`).",
-      "app": "DomainScoreBar rows use `mb-2` spacing only, and RecentSessionsPanel rows use `mb-2`/`last:mb-0` spacing \u2014 no divider element between rows in either list.",
+      "app": "DomainScoreBar rows use `mb-2` spacing only, and RecentSessionsPanel rows use `mb-2`/`last:mb-0` spacing — no divider element between rows in either list.",
       "evidence": "design: openspec/design/CertDetail.html:176,211; app: apps/web/app/components/OverviewTab.vue:97-102 (mb-2, no divider) and apps/web/app/components/RecentSessionsPanel.vue:26 (mb-2, no divider)",
-      "screen": "Cert detail \u2014 overview-tab"
+      "screen": "Cert detail — overview-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "Domain scores section label wording",
@@ -96,7 +111,9 @@
       "design": "Section label reads 'Domain scores'.",
       "app": "CardPanel label reads 'Domain Breakdown'.",
       "evidence": "design: openspec/design/CertDetail.html:156; app: apps/web/app/components/OverviewTab.vue:96 (`label=\"Domain Breakdown\"`)",
-      "screen": "Cert detail \u2014 overview-tab"
+      "screen": "Cert detail — overview-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     },
     {
       "element": "'View progress' link",
@@ -106,7 +123,29 @@
       "design": "No such link exists between the header and the tab bar; the design's header/tabs are adjacent with no intervening row.",
       "app": "An extra right-aligned 'View progress' NuxtLink row is inserted between CertHeaderBar and the tab bar, not present in the design.",
       "evidence": "design: openspec/design/CertDetail.html:98-119,89-95 (CertHeader directly followed by CertTabs); app: apps/web/app/pages/user-certifications/[id]/index.vue:76-84 (extra `view-progress-link` block before the tablist)",
-      "screen": "Cert detail \u2014 overview-tab"
+      "screen": "Cert detail — overview-tab",
+      "status": "resolved",
+      "reconciliation": "Verified against the current implementation; retained as historical snapshot evidence."
     }
-  ]
+  ],
+  "reconciliation": {
+    "change": "ui-interaction-state-parity",
+    "snapshotPolicy": "Claude HTML remains visual hierarchy evidence; implemented live, accessible, theme, and responsive behavior is the product contract where static frames cannot demonstrate it.",
+    "statusVocabulary": {
+      "open": "active parity defect",
+      "resolved": "implementation now matches the cited snapshot evidence",
+      "superseded": "snapshot difference is an intentional product contract and is not an active defect"
+    },
+    "intentionalProductContracts": {
+      "colorModes": "Dark and light modes use semantic Readion tokens and meet 4.5:1 normal-text and 3:1 large-text/non-text minimum contrast.",
+      "controls": "Controls expose rest, hover, active, focus-visible, disabled, selected, and action-local busy states with stable dimensions, reduced-motion handling, semantic state, duplicate guards, and operation-specific labels.",
+      "async": "HTTP regions distinguish initial loading, content, successful empty, error with Retry, and content-preserving background refresh.",
+      "accessibility": "Progress and outcomes are announced; modal focus enters a meaningful control, traps traversal, supports permitted Escape/backdrop dismissal, and returns to the opener.",
+      "responsive": "Implemented shell screens contain content at 375px with wrapping or bounded local overflow while preserving the desktop artboard hierarchy."
+    },
+    "activeFindingCount": 1,
+    "historicalFindingCount": 10,
+    "resolvedCount": 9,
+    "supersededCount": 0
+  }
 }

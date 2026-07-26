@@ -1,6 +1,13 @@
 # Parity — Cert re-verification
 
-10 findings — 4 high · 4 medium · 2 low
+10 active findings — 4 high · 4 medium · 2 low
+
+## Reconciliation — ui-interaction-state-parity
+
+This report keeps 10 snapshot observations as evidence. Counts and the parity index include only the 10 entries still marked `open`; `resolved` and `superseded` entries below are historical.
+
+- Static Claude frames remain the visual hierarchy reference. Live loading/content/empty/error+Retry/background-refresh states, operation-specific busy labels and duplicate guards, semantic dark/light modes, accessibility/focus behavior, and tested 375px containment are intentional product contracts even when no static frame depicts them.
+- Busy identity belongs only to the initiating action; adjacent disabled actions do not display its spinner or progressive label. Dimensions remain stable and reduced-motion preferences are honored.
 
 - **[high] Dedicated re-verification screen/route** — missing/layout
   - design: A standalone full-page screen at route /admin/certifications/:code/re-verify — own AdminSidebar, own header, occupies the whole viewport for one certification's stale-metadata review.

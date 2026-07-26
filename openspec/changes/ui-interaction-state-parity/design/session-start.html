@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Readion — Session Start</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; font-family: Inter, ui-sans-serif, system-ui; background: #c4c0b8; }
+    .canvas-wrap { padding: 48px 56px; }
+    .canvas-section { margin-bottom: 56px; }
+    .canvas-section-head { margin-bottom: 20px; }
+    .canvas-section-title { font-size: 17px; font-weight: 600; color: #2d2520; }
+    .canvas-section-sub { font-size: 12px; color: #7a6e65; margin-top: 3px; }
+    .canvas-row { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+    .artboard-wrap { flex-shrink: 0; }
+    .artboard-label { font-size: 11px; color: #7a6e65; margin-bottom: 7px; font-weight: 500; letter-spacing: 0.02em; }
+    .artboard-frame { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 32px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="_ds/readion-38736cfc-91fa-45ef-8524-8103e746ef9f/_ds_bundle.js"></script>
+<script type="text/babel" src="app-shell.jsx"></script>
+
+<script type="text/babel">
+
+const Canvas = (p) => <div className="canvas-wrap">{p.children}</div>;
+const CanvasSection = (p) => (
+  <div className="canvas-section">
+    <div className="canvas-section-head">
+      <div className="canvas-section-title">{p.title}</div>
+      {p.subtitle && <div className="canvas-section-sub">{p.subtitle}</div>}
+    </div>
+    <div className="canvas-row">{p.children}</div>
+  </div>
+);
+const Artboard = (p) => (
+  <div className="artboard-wrap" style={{ width: p.width }}>
+    <div className="artboard-label" style={{ marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
+        <span style={{ fontSize: 12.5, fontWeight: 600, color: '#2d2520', letterSpacing: '0.01em' }}>{p.screen || p.label}</span>
+        {p.state && <span style={{ fontSize: 10, fontWeight: 500, color: '#5f5349', background: 'rgba(0,0,0,0.055)', border: '1px solid rgba(0,0,0,0.09)', borderRadius: 999, padding: '1px 8px', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{p.state}</span>}
+      </div>
+      {p.route && <div style={{ fontSize: 11, color: '#94897f', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>{p.route}</div>}
+    </div>
+    <div className="artboard-frame" data-screen={p.screen} data-state={p.state} data-route={p.route} data-screen-label={p.screen} style={{ width: p.width, height: p.height, overflow: 'hidden' }}>{p.children}</div>
+  </div>
+);
+
+const T = {
+  base:     'var(--readion-background-base)',
+  surface:  'var(--readion-background-surface)',
+  elevated: 'var(--readion-background-elevated)',
+  overlay:  'var(--readion-background-overlay)',
+  primary:  'var(--readion-primary)',
+  accent:   'var(--readion-accent-label)',
+  tPrimary: 'var(--readion-text-primary)',
+  tSecond:  'var(--readion-text-secondary)',
+  tMuted:   'var(--readion-text-muted)',
+  tSubtle:  'var(--readion-text-subtle)',
+  border:   'var(--readion-border-strong)',
+  borderDef:'var(--readion-border-default)',
+  poor:     'var(--readion-status-poor)',
+  warn:     'var(--readion-status-warning)',
+  good:     'var(--readion-status-good)',
+  rMd:      'var(--readion-rounded-md)',
+  rLg:      'var(--readion-rounded-lg)',
+  rXl:      'var(--readion-rounded-xl)',
+  rFull:    'var(--readion-rounded-full)',
+};
+
+// ── Minimal chrome header ─────────────────────────────────────────────────────
+const MinimalHeader = () => (
+  <div style={{ height: 52, borderBottom: '1px solid ' + T.border, background: T.elevated, display: 'flex', alignItems: 'center', padding: '0 32px', flexShrink: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ width: 22, height: 22, borderRadius: 5, background: T.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M6 1l1.5 3.5L11 5l-2.5 2.5.5 3.5L6 9.5 3 11l.5-3.5L1 5l3.5-.5z" fill="#0f172a"/></svg>
+      </div>
+      <span style={{ fontSize: 13, fontWeight: 700, color: T.tPrimary }}>Readion</span>
+    </div>
+    <div style={{ flex: 1 }} />
+    <span style={{ fontSize: 12, color: T.tMuted, cursor: 'pointer' }}>&#8592; Back to dashboard</span>
+  </div>
+);
+
+// ── Pill selector ─────────────────────────────────────────────────────────────
+const Pill = ({ label, selected }) => (
+  <div style={{ padding: '5px 12px', borderRadius: T.rFull, fontSize: 13, fontWeight: selected ? 500 : 400, background: selected ? T.primary : 'transparent', color: selected ? '#fff' : T.tSecond, border: '1px solid ' + (selected ? T.primary : T.border), cursor: 'pointer' }}>
+    {label}
+  </div>
+);
+
+// ── Screen 1: Quick start ─────────────────────────────────────────────────────
+const QuickStartScreen = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', background: T.base, height: '100%' }}>
+    <MinimalHeader />
+    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
+      <div style={{ width: 480 }}>
+        {/* Cert pill */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 14px', background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rFull }}>
+            <span style={{ fontSize: 11, fontFamily: 'var(--readion-font-mono)', color: T.accent }}>SAA-C03</span>
+            <span style={{ fontSize: 12, color: T.tSecond }}>Solutions Architect – Associate</span>
+          </div>
+        </div>
+
+        {/* Main card */}
+        <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '28px 32px', marginBottom: 14 }}>
+          <div style={{ fontSize: 20, fontWeight: 700, color: T.tPrimary, marginBottom: 4, textAlign: 'center' }}>Ready to start?</div>
+          <div style={{ fontSize: 13, color: T.tMuted, textAlign: 'center', marginBottom: 24 }}>Using your saved defaults</div>
+
+          {/* Defaults summary */}
+          <div style={{ background: T.base, border: '1px solid ' + T.borderDef, borderRadius: T.rLg, padding: '14px 16px', marginBottom: 24 }}>
+            {[
+              ['Duration', '20 min'],
+              ['Content mix', 'Mixed'],
+              ['Difficulty', 'Adaptive'],
+              ['Learning style', 'Spaced rep.'],
+            ].map(([k, v], i, arr) => (
+              <div key={k}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
+                  <span style={{ fontSize: 12, color: T.tMuted }}>{k}</span>
+                  <span style={{ fontSize: 12, color: T.tSecond, fontWeight: 500 }}>{v}</span>
+                </div>
+                {i < arr.length - 1 && <div style={{ height: 1, background: T.borderDef }} />}
+              </div>
+            ))}
+          </div>
+
+          {/* Suggested focus */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.18)', borderRadius: T.rLg, marginBottom: 24 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: T.poor, flexShrink: 0 }} />
+            <div>
+              <span style={{ fontSize: 12, color: T.tSecond }}>Readion will prioritise </span>
+              <span style={{ fontSize: 12, fontWeight: 500, color: T.tPrimary }}>IAM & Security</span>
+              <span style={{ fontSize: 12, color: T.tSecond }}> — your weakest domain (45%)</span>
+            </div>
+          </div>
+
+          <button style={{ width: '100%', padding: '12px 0', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
+            Start session &#8594;
+          </button>
+        </div>
+
+        <div style={{ textAlign: 'center' }}>
+          <span style={{ fontSize: 13, color: T.accent, cursor: 'pointer' }}>Customise this session</span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── Screen 2: Custom config ───────────────────────────────────────────────────
+const DOMAINS = [
+  { name: 'IAM & Security',    score: 45, checked: true  },
+  { name: 'Networking & CDN',  score: 43, checked: true  },
+  { name: 'Cost Optimization', score: 52, checked: false },
+  { name: 'High Availability', score: 68, checked: false },
+  { name: 'Storage Solutions', score: 71, checked: false },
+  { name: 'Compute & Lambda',  score: 79, checked: false },
+  { name: 'Database Services', score: 76, checked: false },
+];
+
+const scoreColor = window.Shell.scoreColor;
+
+const DomainCheckbox = ({ name, score, checked }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid ' + T.borderDef, cursor: 'pointer' }}>
+    <div style={{ width: 16, height: 16, borderRadius: 4, background: checked ? T.primary : 'transparent', border: '1.5px solid ' + (checked ? T.primary : T.border), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      {checked && <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M2 4.5l2 2 3-3" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+    </div>
+    <span style={{ flex: 1, fontSize: 13, color: checked ? T.tPrimary : T.tSecond }}>{name}</span>
+    <span style={{ fontSize: 11, fontWeight: 500, color: scoreColor(score) }}>{score}%</span>
+  </div>
+);
+
+const CustomConfigScreen = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', background: T.base, height: '100%' }}>
+    <MinimalHeader />
+    <div style={{ flex: 1, overflowY: 'auto', display: 'flex', justifyContent: 'center', padding: '28px 32px' }}>
+      <div style={{ width: 700, display: 'flex', gap: 20 }}>
+
+        {/* Left: domain focus */}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 10 }}>Domain focus</div>
+          <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '8px 16px', marginBottom: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', marginBottom: 4 }}>
+              <span style={{ fontSize: 12, color: T.tSecond, fontWeight: 500 }}>2 of 7 selected</span>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <span style={{ fontSize: 12, color: T.accent, cursor: 'pointer' }}>Select all</span>
+                <span style={{ fontSize: 12, color: T.tMuted, cursor: 'pointer' }}>Clear</span>
+              </div>
+            </div>
+            {DOMAINS.map((d) => <DomainCheckbox key={d.name} name={d.name} score={d.score} checked={d.checked} />)}
+            <div style={{ paddingTop: 8 }} />
+          </div>
+          <div style={{ padding: '10px 12px', background: T.elevated, border: '1px solid ' + T.border, borderRadius: T.rLg }}>
+            <span style={{ fontSize: 12, color: T.tMuted }}>Questions will be drawn only from selected domains.</span>
+          </div>
+        </div>
+
+        {/* Right: overrides + start */}
+        <div style={{ width: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Session overrides */}
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 10 }}>Session settings</div>
+            <div style={{ background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rXl, padding: '16px 16px' }}>
+
+              {/* Duration */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <span style={{ fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.tMuted }}>Duration</span>
+                  <span style={{ fontSize: 12, color: T.accent, fontWeight: 500 }}>20 min</span>
+                </div>
+                <div style={{ position: 'relative', height: 16 }}>
+                  <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 3, background: T.border, borderRadius: 2, transform: 'translateY(-50%)' }}>
+                    <div style={{ height: '100%', width: '36%', background: T.primary, borderRadius: 2 }} />
+                    <div style={{ position: 'absolute', top: '50%', left: '36%', width: 12, height: 12, background: '#fff', border: '2px solid ' + T.primary, borderRadius: '50%', transform: 'translate(-50%,-50%)', boxShadow: '0 1px 4px rgba(0,0,0,0.4)' }} />
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+                  {['5m', '20m', '45m', '60m'].map((m) => <span key={m} style={{ fontSize: 9, color: T.tSubtle }}>{m}</span>)}
+                </div>
+              </div>
+
+              <div style={{ height: 1, background: T.borderDef, marginBottom: 14 }} />
+
+              {/* Content mix */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 8 }}>Content mix</div>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                  {['Questions', 'Mixed', 'Concepts'].map((o) => (
+                    <div key={o} style={{ padding: '4px 9px', borderRadius: T.rFull, fontSize: 12, background: o === 'Questions' ? T.primary : 'transparent', color: o === 'Questions' ? '#fff' : T.tSecond, border: '1px solid ' + (o === 'Questions' ? T.primary : T.border), cursor: 'pointer' }}>{o}</div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ height: 1, background: T.borderDef, marginBottom: 14 }} />
+
+              {/* Difficulty */}
+              <div>
+                <div style={{ fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.tMuted, marginBottom: 8 }}>Difficulty</div>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                  {['Adaptive', 'Easy', 'Medium', 'Hard'].map((o) => (
+                    <div key={o} style={{ padding: '4px 9px', borderRadius: T.rFull, fontSize: 12, background: o === 'Adaptive' ? T.primary : 'transparent', color: o === 'Adaptive' ? '#fff' : T.tSecond, border: '1px solid ' + (o === 'Adaptive' ? T.primary : T.border), cursor: 'pointer' }}>{o}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Cert + start */}
+          <div>
+            <div style={{ padding: '10px 12px', background: T.surface, border: '1px solid ' + T.border, borderRadius: T.rLg, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 10, fontFamily: 'var(--readion-font-mono)', color: T.accent, background: T.elevated, padding: '2px 6px', borderRadius: 3 }}>SAA-C03</span>
+              <span style={{ fontSize: 12, color: T.tSecond }}>~20 questions available</span>
+            </div>
+            <button style={{ width: '100%', padding: '11px 0', background: T.primary, color: '#fff', border: 'none', borderRadius: T.rMd, fontSize: 14, fontWeight: 600, cursor: 'pointer', marginBottom: 10 }}>
+              Start session &#8594;
+            </button>
+            <div style={{ textAlign: 'center' }}>
+              <span style={{ fontSize: 12, color: T.tMuted, cursor: 'pointer' }}>Use defaults instead</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ── App ───────────────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <Canvas>
+      <CanvasSection
+        title="Session start / config"
+        subtitle="Minimal chrome — no app sidebar. Quick start uses saved defaults with one tap. Customise expands domain focus checkboxes and setting overrides."
+      >
+        <Artboard screen="Session start" state="quick-start" route="/session/new" width={840} height={620}>
+          <QuickStartScreen />
+        </Artboard>
+        <Artboard screen="Session start" state="custom-config" route="/session/new" width={840} height={660}>
+          <CustomConfigScreen />
+        </Artboard>
+      </CanvasSection>
+    </Canvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

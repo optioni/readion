@@ -154,6 +154,66 @@ The palette uses Tailwind Slate for backgrounds and neutrals, with a Blue/Indigo
 
 **Primary** (#1d4ed8) is used for CTAs, selected states, and the agent chat assistant bubbles. The gradient from primary to accent (#4f46e5) is reserved for the hero certification card only.
 
+### Semantic tokens and color modes
+
+Dark mode is the default presentation, but dark and light are equally supported product modes. Frontend code must use the `--readion-*` semantic tokens (and their `readion-*` utility aliases) for backgrounds, borders, text, focus, status, and interaction states. Fixed Slate, white, or black utilities are permitted only for deliberately invariant artwork whose contrast has been verified in both modes; they must not encode ordinary UI meaning.
+
+Token names describe purpose, not a particular hex value. Use the background layers (`background-base`, `background-surface`, `background-elevated`, `background-overlay`), text hierarchy (`text-primary`, `text-secondary`, `text-muted`, `text-subtle`, `text-on-primary`), border hierarchy, primary and danger interaction states, status tones, warning, and focus tokens. A mode switch changes token values at the document root and persists the user's choice; components must not branch on the mode.
+
+| semantic role | dark | light |
+|---|---:|---:|
+| background base / surface / elevated / overlay | `#0f172a` / `#1e293b` / `#0a0f1e` / `#16213e` | `#f8fafc` / `#ffffff` / `#e2e8f0` / `#f1f5f9` |
+| text primary / secondary / muted / subtle | `#e2e8f0` / `#94a3b8` / `#64748b` / `#475569` | `#0f172a` / `#334155` / `#475569` / `#64748b` |
+| text on primary | `#ffffff` | `#ffffff` |
+| primary / hover / active | `#1d4ed8` / `#1e40af` / `#1e3a8a` | same semantic values |
+| danger / hover / active | `#b91c1c` / `#991b1b` / `#7f1d1d` | same semantic values |
+| border default / strong | `#1e293b` / `#334155` | `#cbd5e1` / `#94a3b8` |
+| accent label | `#7c8cf8` | `#4338ca` |
+| focus | `#60a5fa` | `#2563eb` |
+| poor / warning / medium / good | `#f87171` / `#fb923c` / `#fbbf24` / `#34d399` | `#b91c1c` / `#c2410c` / `#a16207` / `#047857` |
+
+The danger tokens carry destructive intent; do not reuse the poor status tone for destructive controls, or the primary tone for a destructive confirmation. Accent label is the hover-border and label accent, and is the one token whose light value is a deliberately different hue rather than a lightness inversion.
+
+The token values live in `apps/web/app/assets/css/main.css` (document-root custom properties and their Tailwind aliases) and `apps/web/app/design/tokens.ts` (the typed source the theme tests assert against); `useReadionColorMode` owns the root `dark`/`light` class and the persisted preference, defaulting to dark when nothing is stored. Define a new token in the dark block, the light block, and the typed map together — a value present in dark but missing in light silently falls back and breaks contrast.
+
+Normal-size text must have at least 4.5:1 contrast against its rendered background. Large text and essential non-text indicators, including borders that communicate state and focus indicators, must have at least 3:1 contrast. Disabled controls may be visually muted, but their label and unavailable state must remain understandable. Validate computed rendered pairs in both modes rather than assuming that a token name guarantees contrast.
+
+## Interaction states
+
+Every primary, secondary, destructive, toggle, and icon control has a complete state contract:
+
+- **Rest** communicates role and hierarchy without implying selection or progress.
+- **Hover** changes a semantic surface, border, or text color.
+- **Active/pressed** provides immediate in-place feedback, such as a stronger surface or a small transform, without moving surrounding layout.
+- **Focus-visible** uses the Readion focus token, clears nearby clipping, and reaches at least 3:1 contrast.
+- **Disabled** is unavailable and muted; it does not show a spinner, progressive copy, or `aria-busy`.
+- **Selected** is visually distinct and exposes `aria-pressed`, `aria-selected`, `aria-checked`, `aria-current`, or the equivalent native state.
+- **Busy** identifies only the accepted action, exposes `aria-busy="true"`, rejects duplicate activation, and shows a spinner with operation-specific copy such as “Starting…”, “Saving…”, “Adding…”, “Approving…”, or “Deleting…”.
+
+Busy and resting labels share a stable layout footprint. Controls must not change width, height, or the position of adjacent content when progress begins. Routine feedback transitions use color, border, opacity, or an in-place transform and complete in approximately 120–180ms. Under `prefers-reduced-motion: reduce`, remove non-essential transforms, animated spinners, and transitions while retaining a distinguishable state.
+
+Mutation state is action-local. In a row with adjacent actions, only the initiating action shows its busy identity; conflicting actions may be disabled but must not impersonate it. Guard the handler as well as the visual control so repeated pointer, keyboard, or programmatic activation cannot submit a duplicate non-idempotent request. Preserve user input and surrounding evidence on failure. Announce successful non-destructive outcomes politely and destructive failures assertively.
+
+New controls inherit this contract from `ReadionButton` (`variant`: `primary` | `secondary` | `destructive` | `toggle` | `icon`, plus `busy`, `busyLabel`, `selected`, `statusMessage`, `statusTone`) rather than restating state classes per page. It renders resting and busy labels in the same grid cell so the footprint is stable, and disables itself while busy. Controls that cannot use the component still carry the `readion-interactive-control` class, which supplies the reduced-motion overrides.
+
+## Asynchronous regions
+
+Every HTTP-backed region explicitly and exclusively represents these states:
+
+- **Initial loading** — bounded skeleton or status placeholder with `aria-busy="true"`; no content, success, or empty copy is shown yet.
+- **Content** — the last successful non-empty result.
+- **Empty** — shown only after a successful response establishes that no content exists.
+- **Error + Retry** — concise, section-local failure copy and a Retry action that issues one read per activation.
+- **Background refresh** — preserves the last successful content and exposes non-blocking progress instead of replacing content with an initial skeleton.
+
+Mutations use the control-level busy contract rather than replacing a whole successfully loaded region. A mutation error stays next to the initiating action and leaves that action explicitly retryable. Status announcements use `role="status"` or `aria-live="polite"` for normal progress and completion, and `role="alert"` for destructive or blocking failures.
+
+`ReadionAsyncRegion` implements the five states as one exclusive machine driven by `loading`, `error`, `empty`, and `refreshing`, with a `retry` event and slots for section-specific skeleton, error, empty, and content markup. Prefer it over page-local branching so a region cannot accidentally show empty copy before its first successful response. Sibling regions own their own state: one failing read must not blank a successfully loaded neighbour.
+
+## Modal behavior and focus
+
+Opening a modal stores the opener and moves focus to the first meaningful control or field; the backdrop is never the initial focus target. Tab and Shift+Tab cycle within the dialog. Escape and backdrop activation close the dialog when the flow permits dismissal, while a destructive request already in flight may temporarily prevent closure. Closing restores focus to the opener. Icon-only close controls have an accessible name, and focus behavior must be covered without arbitrary timing sleeps.
+
 ## Typography
 
 Inter is the sole typeface. The `label` style is uppercase with letter-spacing and is used for section headings inside cards (e.g. "WEAK AREAS", "RECENT SESSIONS"). The `readinessScore` style is used exclusively for the large readiness percentage display. `mono` is used for code blocks in reading content and agent responses.
@@ -169,6 +229,12 @@ The app uses a full-height layout with a top navigation bar. Page content is cen
 **Mock exam** — full-screen, no sidebar, question navigation panel on the right.
 
 Spacing between major sections uses `xl` (24px). Internal card padding uses `xl` (24px). Gaps between inline elements use `sm` (8px) or `md` (12px).
+
+### Responsive containment
+
+Implemented learner and shared-shell screens support a 375px viewport even when the imported Claude snapshot is desktop-only. The desktop artboard hierarchy, content order, and maximum-width behavior remain the desktop reference; narrow support is a product contract rather than a request to redraw that hierarchy.
+
+At 375px, page and shell containers use `min-width: 0` and stay within the document viewport. Long labels, validation messages, certification names, and action groups wrap. Fixed rows stack only where necessary, focus rings retain clearance, and wide tables, charts, code, or evidence use bounded local overflow. Horizontal scrolling belongs to the smallest meaningful region, never the document. Desktop layouts must retain their intended columns, widths, and alignment after mobile containment is added.
 
 ## Elevation & Depth
 

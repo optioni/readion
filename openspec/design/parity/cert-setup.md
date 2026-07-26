@@ -1,6 +1,13 @@
 # Parity — Cert setup wizard
 
-11 findings — 3 high · 4 medium · 4 low
+11 active findings — 3 high · 4 medium · 4 low
+
+## Reconciliation — ui-interaction-state-parity
+
+This report keeps 11 snapshot observations as evidence. Counts and the parity index include only the 11 entries still marked `open`; `resolved` and `superseded` entries below are historical.
+
+- Static Claude frames remain the visual hierarchy reference. Live loading/content/empty/error+Retry/background-refresh states, operation-specific busy labels and duplicate guards, semantic dark/light modes, accessibility/focus behavior, and tested 375px containment are intentional product contracts even when no static frame depicts them.
+- Busy identity belongs only to the initiating action; adjacent disabled actions do not display its spinner or progressive label. Dimensions remain stable and reduced-motion preferences are honored.
 
 - **[high] Standalone 'Identify certification' step** — divergent/behavioral
   - design: 5-step wizard where step 1 (IdentifyCertScreen) is a dedicated screen for entering name/code/certifying body/known URL, with 'Search for sources →' advancing to a separate step-2 screen (SourceConfirmationScreen) that lists ranked candidates for confirmation.
