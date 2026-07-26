@@ -15,7 +15,7 @@ variable "IMAGE_PREFIX" {
   default = "readion/readion"
 }
 
-# Primary image tag, e.g. `main` (branch push) or `v1.4.0` (release).
+# Primary image tag, e.g. `main` (branch push) or `v2026.7.0` (CalVer release).
 variable "TAG" {
   default = "latest"
 }

@@ -20,15 +20,21 @@ metadata:
   name: readion
   namespace: argocd
   annotations:
-    # Image Updater watches these GHCR images for new digests on the
-    # latest/sha-* tags .github/workflows/main.yml pushes on every push to
-    # main. The db-migrate PreSync Job reuses the api image, so the single
+    # Image Updater watches these GHCR images for new digests.
+    # .github/workflows/images.yml pushes a `main`-tagged image on every push to
+    # main and a `v<CalVer>`-tagged one on a manual release dispatch, in both
+    # cases only for the apps the change affected.
+    # The db-migrate PreSync Job reuses the api image, so the single
     # `api` alias pins both the api Deployment and the Job to the same digest —
     # schema and code from the same commit move together by construction.
     argocd-image-updater.argoproj.io/image-list: "api=ghcr.io/OWNER/REPO/api,web=ghcr.io/OWNER/REPO/web,worker=ghcr.io/OWNER/REPO/worker"
-    # `digest` strategy watches a mutable tag (latest) for digest changes,
-    # rather than requiring semver — matches main.yml's tag scheme, which
-    # only ever emits `latest` + `sha-<short-sha>`, never a version tag.
+    # `digest` strategy watches a mutable tag for digest changes rather than
+    # requiring semver, which suits tracking the moving `main` tag.
+    # NOTE: the allow-tags values below still expect `latest`/`sha-*`, which
+    # images.yml has never pushed — so this Application currently matches no
+    # tag at all. Correcting it changes what rolls to the cluster and is
+    # deliberately left to its own change, together with the question of
+    # whether production should pin the `v*` release tags instead.
     argocd-image-updater.argoproj.io/api.update-strategy: digest
     argocd-image-updater.argoproj.io/web.update-strategy: digest
     argocd-image-updater.argoproj.io/worker.update-strategy: digest
