@@ -1,0 +1,269 @@
+name: Images
+
+# Builds and publishes the api/worker/web images. Replaces the previous
+# main.yml + release.yml pair, whose build and Sentry halves were duplicated
+# and had drifted apart.
+#
+# Two triggers:
+#   - push -> main: publishes the affected apps tagged with the branch name
+#     (diff base = the previous commit, github.event.before). Never releases.
+#   - workflow_dispatch (manual, NO input): derives a CalVer version from the
+#     release date -- vYYYY.M.MICRO, MICRO auto-incrementing per release within
+#     the same UTC month (v2026.7.0, then v2026.7.1) -- publishes the affected
+#     apps at that version (diff base = the last v* release tag), and only
+#     after that succeeds creates the tag + GitHub Release. A failed build
+#     therefore publishes nothing; the operator invents no version number.
+#
+# Three deliberate deviations from the sibling tv-guide/katsain images.yml this
+# is ported from:
+#   1. Only build-and-push runs on the self-hosted `arm-runners` group. That
+#      group exists so arm64 images build natively (no QEMU); a git-describe
+#      and a turbo query have no business occupying one of its slots.
+#   2. Affected apps feed bake's `targets` instead of a job matrix. One bake
+#      invocation compiles the shared base/deps/packages-build stages once for
+#      every target; a matrix would recompile them per app and cost more than
+#      building all three does today.
+#   3. A concurrency group serializes runs. The CalVer MICRO counter is derived
+#      from existing tags, so two overlapping same-month runs would derive the
+#      same version and the second release would fail.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Queue rather than cancel: cancelling would abort a half-finished publish.
+concurrency:
+  group: images
+  cancel-in-progress: false
+
+# Least privilege, inherited by every job that declares no `permissions` of its
+# own. contents:read is the minimum actions/checkout needs; packages:write lets
+# build-and-push push to GHCR. contents:WRITE is granted only where it is
+# actually used — the release job's own job-level block.
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
+jobs:
+  # Computed once and shared with every job that needs it, so the image tag,
+  # the Sentry release and the release tag are the same string. Runs on push
+  # too, where the value is simply unused: a skipped job skips everything that
+  # `needs` it, which would silently disable the build on push.
+  version:
+    name: Compute release version (CalVer)
+    runs-on: ubuntu-latest
+    outputs:
+      value: ${{ steps.calver.outputs.version }}
+    steps:
+      # fetch-depth: 0 — the action derives the same-month MICRO counter from
+      # existing tags. A shallow (tag-less) checkout restarts it at .0 and
+      # collides on the second release of a month.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # dateFormat's MM is the SHORT (non-padded) month specifier, so
+      # `v%NOW%.%MICRO%` yields v2026.7.0. The action is UTC-only; only the
+      # release-tag string is affected, never application data.
+      - name: Compute CalVer version
+        id: calver
+        uses: alepee/calendar-version-action@v2
+        with:
+          dateFormat: "YYYY.MM"
+          format: "v%NOW%.%MICRO%"
+
+  # Which of api/worker/web are affected since the trigger's diff base, read
+  # from the real workspace dependency graph so a packages/* change fans out to
+  # every consuming app. Emits a JSON array consumed by the build's bake
+  # targets and by the source-map job's per-app gates.
+  detect:
+    name: Detect affected apps
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.affected.outputs.apps }}
+    steps:
+      # fetch-depth: 0 — resolving the diff base needs the last v* tag on
+      # dispatch and the full commit range on push.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      # turbo runs from node_modules, so the toolchain preamble above is
+      # required. Inlined rather than extracted into a composite action —
+      # pr.yml's five copies are a separate cleanup.
+      - run: yarn install --immutable
+
+      - name: Compute affected apps
+        id: affected
+        run: |
+          set -euo pipefail
+          ALL='["api","worker","web"]'
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            BASE="$(git describe --tags --match 'v*' --abbrev=0 2>/dev/null || true)"
+          else
+            BASE="${{ github.event.before }}"
+            # The all-zero sha is a first push / force-push with no real
+            # predecessor commit — treat as unresolvable.
+            if [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+              BASE=""
+            fi
+          fi
+
+          # Every untrustworthy path below fails safe to all three apps: an
+          # under-built set leaves GitOps running a stale image, while an
+          # over-built one only costs minutes.
+          if [ -z "$BASE" ]; then
+            echo "Diff base unresolvable — building every app." >&2
+            echo "apps=$ALL" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # turbo writes its banner to stderr, so stdout is pure JSON.
+          if ! AFFECTED="$(TURBO_SCM_BASE="$BASE" yarn turbo ls --affected --output=json 2>/dev/null)"; then
+            echo "turbo query failed — building every app." >&2
+            echo "apps=$ALL" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if ! APPS="$(printf '%s' "$AFFECTED" | node .github/scripts/affected-apps.mts)" || [ -z "$APPS" ]; then
+            echo "Affected-set mapping failed — building every app." >&2
+            echo "apps=$ALL" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # A dispatch is an explicit intent to publish a release, never a
+          # no-op. An empty set on push legitimately builds nothing.
+          if [ "$APPS" = "[]" ] && [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            APPS="$ALL"
+          fi
+
+          echo "Affected apps: $APPS" >&2
+          echo "apps=$APPS" >> "$GITHUB_OUTPUT"
+
+  build-and-push:
+    name: Build & push affected images
+    needs: [version, detect]
+    # Nothing changed that produces an image (push only — dispatch always
+    # resolves to a non-empty set).
+    if: needs.detect.outputs.apps != '[]'
+    runs-on:
+      group: arm-runners
+    steps:
+      # No ref pin: the dispatched commit IS the commit the release job will
+      # tag afterwards, so there is no pre-created tag to check out.
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The arm-runners group is arm64 hardware, so buildx builds natively —
+      # no setup-qemu-action and no `platforms:` cross-emulation.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # `targets` restricts one bake invocation to the affected apps, so the
+      # shared base/deps/packages-build stages still compile once. bake reads
+      # TAG/REGISTRY/etc. from the env below (each matches a `variable` in
+      # docker-bake.hcl). Tags are set explicitly here rather than via
+      # docker/metadata-action, whose auto-latest-on-default-branch behavior
+      # would inject a moving tag production must never pin.
+      - name: Build & push affected images
+        uses: docker/bake-action@v6
+        with:
+          files: ./docker-bake.hcl
+          targets: ${{ join(fromJSON(needs.detect.outputs.apps), ',') }}
+          push: true
+        env:
+          REGISTRY: ${{ env.REGISTRY }}
+          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && needs.version.outputs.value || github.ref_name }}
+          SENTRY_RELEASE: ${{ github.event_name == 'workflow_dispatch' && needs.version.outputs.value || github.sha }}
+
+  upload-sourcemaps:
+    name: Upload source maps to Sentry
+    runs-on: ubuntu-latest
+    needs: [version, detect, build-and-push]
+    # Only api and worker ship Node source maps; skip the whole job when
+    # neither was rebuilt, so maps are never attached to a release with no
+    # corresponding image.
+    if: contains(fromJSON(needs.detect.outputs.apps), 'api') || contains(fromJSON(needs.detect.outputs.apps), 'worker')
+    env:
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+      SENTRY_AUTH_TOKEN_SET: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
+      # Must match the SENTRY_RELEASE baked into the images above so runtime
+      # errors symbolicate against these maps.
+      RELEASE: ${{ github.event_name == 'workflow_dispatch' && needs.version.outputs.value || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+
+      - run: corepack enable
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+
+      - uses: actions/setup-node@v4
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - run: yarn install --immutable
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+
+      - run: yarn workspace @readion/api build
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true' && contains(fromJSON(needs.detect.outputs.apps), 'api')
+
+      - run: yarn workspace @readion/worker build
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true' && contains(fromJSON(needs.detect.outputs.apps), 'worker')
+
+      - name: Create Sentry release
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        run: npx @sentry/cli@latest releases new "$RELEASE"
+
+      - name: Upload api source maps
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true' && contains(fromJSON(needs.detect.outputs.apps), 'api')
+        run: npx @sentry/cli@latest releases files "$RELEASE" upload-sourcemaps apps/api/dist --url-prefix "~/"
+
+      - name: Upload worker source maps
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true' && contains(fromJSON(needs.detect.outputs.apps), 'worker')
+        run: npx @sentry/cli@latest releases files "$RELEASE" upload-sourcemaps apps/worker/dist --url-prefix "~/"
+
+      - name: Finalize Sentry release
+        if: env.SENTRY_AUTH_TOKEN_SET == 'true'
+        run: npx @sentry/cli@latest releases finalize "$RELEASE"
+
+  # Dispatch-only, and last: the tag and the Release are created from the
+  # already-published images, so a failed build leaves nothing behind to clean
+  # up. The action creates the tag itself at the built commit.
+  release:
+    name: Cut GitHub Release
+    needs: [version, build-and-push]
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create GitHub Release (auto-generated notes)
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.version.outputs.value }}
+          generate_release_notes: true
