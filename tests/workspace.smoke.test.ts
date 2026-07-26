@@ -27,9 +27,9 @@ describe('Workspace topology', () => {
     expect(existsSync(join(ROOT, 'node_modules'))).toBe(true)
   })
 
-  it('.nvmrc is 24.15', () => {
+  it('.nvmrc is 24.18', () => {
     const nvmrc = readFileSync(join(ROOT, '.nvmrc'), 'utf-8').trim()
-    expect(nvmrc).toBe('24.15')
+    expect(nvmrc).toBe('24.18')
   })
 
   it('TypeScript base config has strict mode enabled', () => {

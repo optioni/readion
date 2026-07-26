@@ -6,7 +6,7 @@ A multi-user web application for preparing for certification exams. Study with p
 
 ## Prerequisites
 
-- Node.js 24.15 (`nvm use`)
+- Node.js 24.18 (`nvm use`)
 - Yarn v4 (`corepack enable`)
 - Docker + Docker Compose
 

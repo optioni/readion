@@ -6,7 +6,7 @@ Yarn v4 workspace topology, Node version pinning, root scripts, TypeScript base 
 
 ### Requirement: Yarn v4 workspace topology
 
-The repository SHALL be a Yarn v4 workspace whose members are exactly `apps/api`, `apps/web`, `apps/worker`, `packages/shared`, and `packages/db`, using `nodeLinker: node-modules`, pinned to Node 24.15 via `.nvmrc`.
+The repository SHALL be a Yarn v4 workspace whose members are exactly `apps/api`, `apps/web`, `apps/worker`, `packages/shared`, and `packages/db`, using `nodeLinker: node-modules`, pinned to Node 24.18 via `.nvmrc`.
 
 #### Scenario: Install resolves all workspaces
 
@@ -18,7 +18,7 @@ The repository SHALL be a Yarn v4 workspace whose members are exactly `apps/api`
 #### Scenario: Node version is pinned
 
 - **WHEN** the `.nvmrc` file is read
-- **THEN** it contains `24.15`
+- **THEN** it contains `24.18`
 
 ### Requirement: Root scripts fan out across workspaces
 

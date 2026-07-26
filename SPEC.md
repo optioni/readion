@@ -47,7 +47,7 @@ A multi-user web application for preparing for certification exams (e.g. AWS Clo
 | Linting & formatting | Biome (single config at workspace root) |
 | Testing | Vitest + Playwright + Testcontainers |
 | NestJS compiler | SWC (`@swc/core` + `unplugin-swc`) |
-| Runtime | Node.js 24.15 |
+| Runtime | Node.js 24.18 |
 | Error reporting | Sentry (`@sentry/nestjs`, `@sentry/nuxt`) |
 | Logging | Pino (`nestjs-pino`) |
 | Metrics | Prometheus (`@willsoto/nestjs-prometheus`) |

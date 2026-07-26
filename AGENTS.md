@@ -26,7 +26,7 @@ readion/
 
 ## Prerequisites
 
-- Node.js 24.15 (use `.nvmrc` — `nvm use`)
+- Node.js 24.18 (use `.nvmrc` — `nvm use`)
 - Yarn v4 (`corepack enable`)
 - Docker + Docker Compose (for local dev services)
 
