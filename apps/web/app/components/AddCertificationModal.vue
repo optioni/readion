@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
+import ReadionAsyncRegion from '~/components/ReadionAsyncRegion.vue'
 import ReadionButton from '~/components/ReadionButton.vue'
 import { dashboardQueryKeys } from '~/composables/dashboardQueryKeys'
 import { certificationsControllerList } from '~~/src/api/certifications/certifications'
@@ -41,9 +42,52 @@ const options = computed(() => {
   return certifications.filter((certification) => !enrolledIds.has(certification.id))
 })
 
+const listsReady = computed(
+  () => certificationsQuery.data.value !== undefined && enrollmentsQuery.data.value !== undefined,
+)
+const listsFailed = computed(
+  () => certificationsQuery.isError.value || enrollmentsQuery.isError.value,
+)
+const listsUnresolved = computed(
+  () =>
+    (certificationsQuery.data.value === undefined && !certificationsQuery.isError.value) ||
+    (enrollmentsQuery.data.value === undefined && !enrollmentsQuery.isError.value),
+)
+const initialListsLoading = computed(() => !listsReady.value && listsUnresolved.value)
+const initialListsError = computed(() =>
+  !listsReady.value && !listsUnresolved.value && listsFailed.value
+    ? 'Couldn’t load available certifications.'
+    : undefined,
+)
+const refreshingLists = computed(
+  () =>
+    listsReady.value && (certificationsQuery.isFetching.value || enrollmentsQuery.isFetching.value),
+)
+const refreshListsError = computed(() =>
+  listsReady.value && listsFailed.value ? 'Couldn’t refresh available certifications.' : undefined,
+)
+
 const enrollingId = ref<string | null>(null)
 const selectedId = ref<string | null>(null)
 const enrollError = ref<string | null>(null)
+const retryingLists = ref(false)
+
+async function retryLists() {
+  if (retryingLists.value) return
+  retryingLists.value = true
+  try {
+    const retries: Promise<unknown>[] = []
+    if (certificationsQuery.isError.value) {
+      retries.push(certificationsQuery.refetch())
+    }
+    if (enrollmentsQuery.isError.value) {
+      retries.push(enrollmentsQuery.refetch())
+    }
+    await Promise.all(retries)
+  } finally {
+    retryingLists.value = false
+  }
+}
 
 async function selectCertification(certificationId: string) {
   if (enrollingId.value) {
@@ -109,42 +153,89 @@ function close() {
         </button>
       </div>
 
-      <p
-        v-if="options.length === 0"
-        data-testid="add-cert-empty-options"
-        class="rounded-lg border border-readion-background-surface border-dashed px-4 py-8 text-center text-slate-400 text-sm"
+      <ReadionAsyncRegion
+        :loading="initialListsLoading"
+        :error="initialListsError"
+        :empty="listsReady && options.length === 0"
+        :refreshing="refreshingLists"
+        :retrying="retryingLists"
+        loading-label="Loading available certifications…"
+        refresh-label="Refreshing available certifications…"
+        retrying-label="Retrying…"
+        aria-label="Available certifications"
+        @retry="retryLists"
       >
-        You are enrolled in every available certification.
-      </p>
-
-      <ul v-else class="flex flex-col gap-2">
-        <li v-for="option in options" :key="option.id">
-          <ReadionButton
-            data-testid="add-cert-option"
-            :data-cert-id="option.id"
-            :data-selected="selectedId === option.id ? 'true' : undefined"
-            variant="secondary"
-            :busy="enrollingId === option.id"
-            :busy-label="`Adding… ${option.name}`"
-            :disabled="enrollingId !== null && enrollingId !== option.id"
-            class="w-full justify-between text-left"
-            :class="{ 'border-readion-status-poor': selectedId === option.id && enrollError }"
-            @click="selectCertification(option.id)"
+        <template #loading>
+          <div
+            data-testid="add-cert-loading"
+            class="flex flex-col gap-2"
+            aria-hidden="true"
           >
-            <span class="font-medium">{{ option.name }}</span>
-            <span class="text-readion-text-secondary text-xs uppercase tracking-wide">
-              {{ option.provider }}
-            </span>
-          </ReadionButton>
+            <div
+              v-for="index in 3"
+              :key="index"
+              class="h-10 animate-pulse rounded-lg bg-readion-background-surface motion-reduce:animate-none"
+            />
+          </div>
+        </template>
+        <template #error>
+          <span data-testid="add-cert-list-error">{{ initialListsError }}</span>
+        </template>
+        <template #empty>
           <p
-            v-if="selectedId === option.id && enrollError"
-            class="mt-2 text-readion-status-poor text-xs"
-            role="alert"
+            data-testid="add-cert-empty-options"
+            class="rounded-lg border border-readion-background-surface border-dashed px-4 py-8 text-center text-slate-400 text-sm"
           >
-            {{ enrollError }}
+            You are enrolled in every available certification.
           </p>
-        </li>
-      </ul>
+        </template>
+
+        <div
+          v-if="refreshListsError"
+          data-testid="add-cert-list-refresh-error"
+          class="mb-3 flex items-center justify-between gap-3 rounded-lg border border-readion-status-poor/30 bg-readion-status-poor/10 px-3 py-2 text-readion-status-poor text-xs"
+          role="alert"
+        >
+          <span>{{ refreshListsError }}</span>
+          <ReadionButton
+            variant="secondary"
+            :busy="retryingLists"
+            busy-label="Retrying…"
+            @click="retryLists"
+          >
+            Retry
+          </ReadionButton>
+        </div>
+
+        <ul class="flex flex-col gap-2">
+          <li v-for="option in options" :key="option.id">
+            <ReadionButton
+              data-testid="add-cert-option"
+              :data-cert-id="option.id"
+              :data-selected="selectedId === option.id ? 'true' : undefined"
+              variant="secondary"
+              :busy="enrollingId === option.id"
+              :busy-label="`Adding… ${option.name}`"
+              :disabled="enrollingId !== null && enrollingId !== option.id"
+              class="w-full justify-between text-left"
+              :class="{ 'border-readion-status-poor': selectedId === option.id && enrollError }"
+              @click="selectCertification(option.id)"
+            >
+              <span class="font-medium">{{ option.name }}</span>
+              <span class="text-readion-text-secondary text-xs uppercase tracking-wide">
+                {{ option.provider }}
+              </span>
+            </ReadionButton>
+            <p
+              v-if="selectedId === option.id && enrollError"
+              class="mt-2 text-readion-status-poor text-xs"
+              role="alert"
+            >
+              {{ enrollError }}
+            </p>
+          </li>
+        </ul>
+      </ReadionAsyncRegion>
     </div>
   </div>
 </template>

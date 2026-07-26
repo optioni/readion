@@ -185,6 +185,15 @@ afterEach(() => {
 })
 
 describe('Review page — queue scene', () => {
+  it('models the queue as unresolved on the initial synchronous render', () => {
+    vi.mocked(fetchReviewQueue).mockReturnValue(new Promise(() => {}))
+    const wrapper = mountPage()
+
+    expect(wrapper.get('[data-testid="review-queue-region"]').attributes('aria-busy')).toBe('true')
+    expect(wrapper.find('[data-testid="review-queue-entry-stub"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('All caught up')
+  })
+
   it('shows a bounded loading state without flashing queue success or caught-up content', async () => {
     vi.mocked(fetchReviewQueue).mockReturnValue(new Promise(() => {}))
     const wrapper = mountPage()

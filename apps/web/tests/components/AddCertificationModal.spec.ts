@@ -34,8 +34,8 @@ const enrollment = (certificationId: string) => ({
 })
 
 const okEnvelope = <T>(rows: T[]) => ({
-  data: { data: rows, meta: { total: rows.length } },
-  status: 200,
+  data: { data: rows, meta: { total: rows.length, page: 1, limit: 20 } },
+  status: 200 as const,
   headers: new Headers(),
 })
 
@@ -70,6 +70,146 @@ afterEach(() => {
 })
 
 describe('AddCertificationModal options', () => {
+  it('shows loading synchronously while both lists are unresolved', () => {
+    vi.mocked(certificationsControllerList).mockReturnValue(new Promise(() => {}))
+    vi.mocked(userCertificationsControllerList).mockReturnValue(new Promise(() => {}))
+
+    const { wrapper } = mountModal()
+
+    expect(wrapper.find('[data-testid="add-cert-loading"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="add-cert-empty-options"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="add-cert-option"]').exists()).toBe(false)
+  })
+
+  it('keeps loading until both certification and enrollment lists resolve', async () => {
+    let resolveCertifications: (
+      value: Awaited<ReturnType<typeof certificationsControllerList>>,
+    ) => void = () => {}
+    let resolveEnrollments: (
+      value: Awaited<ReturnType<typeof userCertificationsControllerList>>,
+    ) => void = () => {}
+    vi.mocked(certificationsControllerList).mockReturnValue(
+      new Promise((resolve) => {
+        resolveCertifications = resolve
+      }),
+    )
+    vi.mocked(userCertificationsControllerList).mockReturnValue(
+      new Promise((resolve) => {
+        resolveEnrollments = resolve
+      }),
+    )
+
+    const { wrapper } = mountModal()
+    resolveCertifications(
+      okEnvelope([certification({ id: 'cert-1', name: 'AWS SA' })]) as Awaited<
+        ReturnType<typeof certificationsControllerList>
+      >,
+    )
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="add-cert-loading"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="add-cert-empty-options"]').exists()).toBe(false)
+
+    resolveEnrollments(
+      okEnvelope([]) as Awaited<ReturnType<typeof userCertificationsControllerList>>,
+    )
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="add-cert-loading"]').exists()).toBe(false)
+    expect(wrapper.find('[data-cert-id="cert-1"]').exists()).toBe(true)
+  })
+
+  it('keeps loading while one list is pending even if its sibling has failed', async () => {
+    let resolveEnrollments: (
+      value: Awaited<ReturnType<typeof userCertificationsControllerList>>,
+    ) => void = () => {}
+    vi.mocked(certificationsControllerList).mockRejectedValue(new Error('Unavailable'))
+    vi.mocked(userCertificationsControllerList).mockReturnValue(
+      new Promise((resolve) => {
+        resolveEnrollments = resolve
+      }),
+    )
+
+    const { wrapper } = mountModal()
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="add-cert-loading"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="add-cert-list-error"]').exists()).toBe(false)
+
+    resolveEnrollments(
+      okEnvelope([]) as Awaited<ReturnType<typeof userCertificationsControllerList>>,
+    )
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="add-cert-loading"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="add-cert-list-error"]').exists()).toBe(true)
+  })
+
+  it('shows a retryable list error without flashing the empty state', async () => {
+    vi.mocked(certificationsControllerList)
+      .mockRejectedValueOnce(new Error('Unavailable'))
+      .mockResolvedValueOnce(
+        // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+        okEnvelope([certification({ id: 'cert-2', name: 'Azure Fundamentals' })]) as any,
+      )
+    vi.mocked(userCertificationsControllerList).mockResolvedValue(
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      okEnvelope([]) as any,
+    )
+
+    const { wrapper } = mountModal()
+    await flushPromises()
+
+    expect(wrapper.get('[data-testid="add-cert-list-error"]').text()).toContain(
+      'Couldn’t load available certifications.',
+    )
+    expect(wrapper.get('[data-testid="readion-async-error"]').attributes('role')).toBe('alert')
+    expect(wrapper.find('[data-testid="add-cert-empty-options"]').exists()).toBe(false)
+
+    await wrapper.get('[data-testid="readion-async-retry"]').trigger('click')
+    await flushPromises()
+
+    expect(certificationsControllerList).toHaveBeenCalledTimes(2)
+    expect(userCertificationsControllerList).toHaveBeenCalledTimes(1)
+    expect(wrapper.find('[data-cert-id="cert-2"]').exists()).toBe(true)
+  })
+
+  it('preserves successful options while a list refetches and after its failure', async () => {
+    stubData({
+      certifications: [
+        certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' }),
+      ],
+      enrollments: [],
+    })
+
+    const { wrapper, queryClient } = mountModal()
+    await flushPromises()
+    expect(wrapper.find('[data-cert-id="cert-2"]').exists()).toBe(true)
+
+    let rejectRefresh = (_error: Error) => {}
+    vi.mocked(certificationsControllerList).mockReturnValueOnce(
+      new Promise((_resolve, reject) => {
+        rejectRefresh = reject
+      }),
+    )
+    const refresh = queryClient.refetchQueries({
+      queryKey: dashboardQueryKeys.certifications(),
+    })
+    await vi.waitFor(() => expect(certificationsControllerList).toHaveBeenCalledTimes(2))
+
+    expect(wrapper.find('[data-cert-id="cert-2"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="readion-async-refresh"]').exists()).toBe(true)
+
+    rejectRefresh(new Error('Refresh failed'))
+    await refresh
+    await flushPromises()
+
+    expect(wrapper.find('[data-cert-id="cert-2"]').exists()).toBe(true)
+    expect(wrapper.get('[data-testid="add-cert-list-refresh-error"]').attributes('role')).toBe(
+      'alert',
+    )
+  })
+
   it('lists certifications that are not in the active enrollments', async () => {
     stubData({
       certifications: [

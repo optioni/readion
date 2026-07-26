@@ -316,8 +316,10 @@ export function useProgressData(enrollmentId: string) {
     if (enrollmentQuery.isError.value) {
       await enrollmentQuery.refetch()
     }
-    await readinessQuery.refetch()
-    if (certificationId.value !== null) {
+    if (readinessQuery.isError.value) {
+      await readinessQuery.refetch()
+    }
+    if (certificationId.value !== null && sessionsQuery.isError.value) {
       await sessionsQuery.refetch()
     }
   }
@@ -326,8 +328,10 @@ export function useProgressData(enrollmentId: string) {
     if (enrollmentQuery.isError.value) {
       await enrollmentQuery.refetch()
     }
-    await weakAreasQuery.refetch()
-    if (certificationId.value !== null) {
+    if (weakAreasQuery.isError.value) {
+      await weakAreasQuery.refetch()
+    }
+    if (certificationId.value !== null && certQuery.isError.value) {
       await certQuery.refetch()
     }
   }
@@ -336,8 +340,10 @@ export function useProgressData(enrollmentId: string) {
     if (enrollmentQuery.isError.value) {
       await enrollmentQuery.refetch()
     }
-    await mockExamsQuery.refetch()
-    if (certificationId.value !== null) {
+    if (mockExamsQuery.isError.value) {
+      await mockExamsQuery.refetch()
+    }
+    if (certificationId.value !== null && sessionsQuery.isError.value) {
       await sessionsQuery.refetch()
     }
   }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import ReadionButton from '~/components/ReadionButton.vue'
 
 const props = withDefaults(
@@ -34,6 +34,7 @@ const props = withDefaults(
 const emit = defineEmits<{ retry: [] }>()
 
 const retryRequested = ref(false)
+let retryFallback: ReturnType<typeof setTimeout> | undefined
 const _state = computed(() => {
   if (props.loading) return 'loading'
   if (props.error) return 'error'
@@ -44,18 +45,40 @@ const _state = computed(() => {
 const retryBusy = computed(() => props.retrying || retryRequested.value)
 const _busy = computed(() => props.loading || props.refreshing || retryBusy.value)
 
+function _settleRetry() {
+  retryRequested.value = false
+  if (retryFallback !== undefined) {
+    clearTimeout(retryFallback)
+    retryFallback = undefined
+  }
+}
+
 function _requestRetry() {
   if (retryBusy.value) return
   retryRequested.value = true
   emit('retry')
+  retryFallback = setTimeout(_settleRetry, 0)
 }
 
 watch(
   () => props.retrying,
   (isRetrying, wasRetrying) => {
-    if (wasRetrying && !isRetrying) retryRequested.value = false
+    if (isRetrying && retryFallback !== undefined) {
+      clearTimeout(retryFallback)
+      retryFallback = undefined
+    }
+    if (wasRetrying && !isRetrying) _settleRetry()
   },
 )
+
+watch(
+  () => props.error,
+  (error, previousError) => {
+    if (retryRequested.value && error !== previousError) _settleRetry()
+  },
+)
+
+onBeforeUnmount(_settleRetry)
 </script>
 
 <template>

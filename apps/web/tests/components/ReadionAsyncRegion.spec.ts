@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import ReadionAsyncRegion from '~/components/ReadionAsyncRegion.vue'
 import ReadionButton from '~/components/ReadionButton.vue'
 
@@ -29,6 +29,10 @@ function mountRegion(
 }
 
 describe('ReadionAsyncRegion', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('renders only a structural loading presentation during the initial read', () => {
     const wrapper = mountRegion({
       loading: true,
@@ -125,6 +129,36 @@ describe('ReadionAsyncRegion', () => {
     expect(
       wrapper.get('[data-testid="readion-async-region"]').attributes('aria-busy'),
     ).toBeUndefined()
+    await retry.trigger('click')
+    expect(wrapper.emitted('retry')).toHaveLength(2)
+  })
+
+  it('settles its retry latch after success when the consumer omits retrying', async () => {
+    const wrapper = mountRegion({ error: 'Could not load study history.' })
+
+    await wrapper.get('[data-testid="readion-async-retry"]').trigger('click')
+    expect(wrapper.get('[data-testid="readion-async-region"]').attributes('aria-busy')).toBe('true')
+
+    await wrapper.setProps({ error: undefined })
+
+    expect(
+      wrapper.get('[data-testid="readion-async-region"]').attributes('aria-busy'),
+    ).toBeUndefined()
+    expect(wrapper.get('[data-testid="async-content"]').text()).toBe('Loaded history')
+  })
+
+  it('settles its retry latch after a repeated failure when the consumer omits retrying', async () => {
+    vi.useFakeTimers()
+    const wrapper = mountRegion({ error: 'Could not load study history.' })
+    const retry = wrapper.get('[data-testid="readion-async-retry"]')
+
+    await retry.trigger('click')
+    await retry.trigger('click')
+    expect(wrapper.emitted('retry')).toHaveLength(1)
+
+    await vi.runOnlyPendingTimersAsync()
+
+    expect(retry.attributes('aria-busy')).toBeUndefined()
     await retry.trigger('click')
     expect(wrapper.emitted('retry')).toHaveLength(2)
   })

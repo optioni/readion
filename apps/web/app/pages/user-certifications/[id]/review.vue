@@ -49,6 +49,7 @@ const queueItems = ref<ReviewItemResponse[]>([])
 const dueCount = ref(0)
 const isLoadingQueue = ref(false)
 const isRetryingQueue = ref(false)
+const queueSettled = ref(false)
 const queueError = ref<string | null>(null)
 const isStartingReview = ref(false)
 const startReviewError = ref<string | null>(null)
@@ -76,6 +77,7 @@ const selfGradeBreakdown = ref<Record<ReviewGrade, number>>({
 })
 
 const currentSelfGradeItem = computed(() => selfGradeItems.value[selfGradePos.value] ?? null)
+const queueLoading = computed(() => !queueSettled.value || isLoadingQueue.value)
 
 // --- Utilities ---
 function narrowType(type: string): SessionItemType {
@@ -110,6 +112,7 @@ async function loadQueue(retrying = false): Promise<boolean> {
     queueError.value = 'Couldn’t load your review queue.'
     return false
   } finally {
+    queueSettled.value = true
     isLoadingQueue.value = false
     isRetryingQueue.value = false
   }
@@ -259,10 +262,10 @@ const headerTotal = computed<number>(() => {
       <template v-if="scene === 'queue'">
         <div
           data-testid="review-queue-region"
-          :aria-busy="isLoadingQueue || isRetryingQueue ? 'true' : undefined"
+          :aria-busy="queueLoading || isRetryingQueue ? 'true' : undefined"
         >
           <ReadionAsyncRegion
-            :loading="isLoadingQueue"
+            :loading="queueLoading"
             :error="queueError ?? undefined"
             :retrying="isRetryingQueue"
             loading-label="Loading review queue…"
