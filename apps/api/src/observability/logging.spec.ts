@@ -40,6 +40,7 @@ describe('logging integration', () => {
     process.env.REDIS_URL = 'redis://localhost:6379'
     process.env.CORS_ORIGIN = 'http://localhost:3000'
     process.env.PORT = '0'
+    process.env.LOG_LEVEL = 'info'
 
     const { stream, lines } = createLogStream()
     logLines = lines
