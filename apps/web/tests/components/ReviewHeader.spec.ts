@@ -54,6 +54,18 @@ describe('ReviewHeader', () => {
     expect(wrapper.find('[data-testid="review-header"]').exists()).toBe(true)
   })
 
+  it('uses compact mobile chrome and expands the progress track at the small breakpoint', () => {
+    const wrapper = mountHeader()
+    const header = wrapper.find('[data-testid="review-header"]')
+    const progress = wrapper.find('[data-testid="review-header-progress"]')
+
+    expect(header.classes()).toEqual(expect.arrayContaining(['min-w-0', 'px-3', 'sm:px-7']))
+    expect(progress.classes()).toEqual(expect.arrayContaining(['w-16', 'sm:w-[120px]']))
+    expect(wrapper.find('a[href="/"] span').classes()).toEqual(
+      expect.arrayContaining(['hidden', 'sm:inline']),
+    )
+  })
+
   it('resolves the cert code for the enrollment and shows it in the chip', () => {
     const wrapper = mountHeader({ userCertificationId: 'enr-1' })
     expect(useCertDetail).toHaveBeenCalledWith('enr-1')

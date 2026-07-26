@@ -91,6 +91,21 @@ describe('useQuickStartActions startSession', () => {
 
     expect(enrollmentSessionsControllerCreate).toHaveBeenCalledTimes(1)
   })
+
+  it('clears a stale mock-exam error when a session launch starts', async () => {
+    vi.mocked(enrollmentMockExamControllerCreate).mockRejectedValueOnce(new Error('mock failed'))
+    vi.mocked(enrollmentSessionsControllerCreate).mockRejectedValueOnce(new Error('session failed'))
+    const { startSession, startMockExam, sessionError, mockExamError } =
+      useQuickStartActions('enr-1')
+
+    await startMockExam()
+    expect(mockExamError?.value).toContain('mock exam')
+
+    const pending = startSession()
+    expect(mockExamError?.value).toBeNull()
+    await pending
+    expect(sessionError?.value).toContain('session')
+  })
 })
 
 describe('useQuickStartActions startMockExam', () => {
@@ -113,6 +128,21 @@ describe('useQuickStartActions startMockExam', () => {
     expect(isStartingMockExam.value).toBe(true)
     await pending
     expect(isStartingMockExam.value).toBe(false)
+  })
+
+  it('clears a stale session error when a mock-exam launch starts', async () => {
+    vi.mocked(enrollmentSessionsControllerCreate).mockRejectedValueOnce(new Error('session failed'))
+    vi.mocked(enrollmentMockExamControllerCreate).mockRejectedValueOnce(new Error('mock failed'))
+    const { startSession, startMockExam, sessionError, mockExamError } =
+      useQuickStartActions('enr-1')
+
+    await startSession()
+    expect(sessionError?.value).toContain('session')
+
+    const pending = startMockExam()
+    expect(sessionError?.value).toBeNull()
+    await pending
+    expect(mockExamError?.value).toContain('mock exam')
   })
 })
 

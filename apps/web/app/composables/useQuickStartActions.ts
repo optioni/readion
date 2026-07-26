@@ -17,6 +17,7 @@ export function useQuickStartActions(enrollmentId: string) {
       return
     }
     sessionError.value = null
+    mockExamError.value = null
     isStartingSession.value = true
     try {
       const response = await enrollmentSessionsControllerCreate(enrollmentId)
@@ -34,6 +35,7 @@ export function useQuickStartActions(enrollmentId: string) {
       return
     }
     mockExamError.value = null
+    sessionError.value = null
     isStartingMockExam.value = true
     try {
       const response = await enrollmentMockExamControllerCreate(enrollmentId)

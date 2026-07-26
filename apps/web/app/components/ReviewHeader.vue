@@ -30,7 +30,7 @@ const timerClass = computed<string>(() =>
 <template>
   <div
     data-testid="review-header"
-    class="flex h-13 flex-shrink-0 items-center gap-4 border-readion-border-strong border-b bg-readion-background-elevated px-7"
+    class="flex min-h-13 min-w-0 flex-shrink-0 items-center gap-2 border-readion-border-strong border-b bg-readion-background-elevated px-3 sm:h-13 sm:gap-4 sm:px-7"
   >
     <NuxtLink
       to="/"
@@ -48,7 +48,7 @@ const timerClass = computed<string>(() =>
       >
         <path d="M19 12H5M12 5l-7 7 7 7" />
       </svg>
-      <span>Dashboard</span>
+      <span class="hidden sm:inline">Dashboard</span>
     </NuxtLink>
 
     <div class="h-4 w-px flex-shrink-0 bg-readion-border-strong" />
@@ -60,7 +60,7 @@ const timerClass = computed<string>(() =>
       >
         {{ code }}
       </span>
-      <span class="text-readion-text-secondary text-xs">Quick review</span>
+      <span class="hidden text-readion-text-secondary text-xs sm:inline">Quick review</span>
     </div>
 
     <div class="flex-1" />
@@ -68,7 +68,7 @@ const timerClass = computed<string>(() =>
     <div class="flex flex-shrink-0 items-center gap-2.5">
       <div
         data-testid="review-header-progress"
-        class="h-[3px] w-[120px] rounded-full bg-readion-border-strong"
+        class="h-[3px] w-16 rounded-full bg-readion-border-strong sm:w-[120px]"
       >
         <div
           class="h-full rounded-full bg-readion-accent-label transition-[width] duration-300"
