@@ -15,9 +15,14 @@ import { useQuickStartActions } from '~/composables/useQuickStartActions'
 
 const props = defineProps<{ card: EnrollmentCard; variant: 'hero' | 'standard' }>()
 
-const { startSession, startMockExam, isStartingSession, isStartingMockExam } = useQuickStartActions(
-  props.card.enrollmentId,
-)
+const {
+  startSession,
+  startMockExam,
+  isStartingSession,
+  isStartingMockExam,
+  sessionError,
+  mockExamError,
+} = useQuickStartActions(props.card.enrollmentId)
 
 const { readiness } = useCardReadiness(props.card.enrollmentId)
 const { weakAreas } = useCardWeakAreas(props.card.enrollmentId)
@@ -106,6 +111,8 @@ const cardStyle = computed(() =>
         :variant="variant"
         :is-starting-session="isStartingSession"
         :is-starting-mock-exam="isStartingMockExam"
+        :session-error="sessionError"
+        :mock-exam-error="mockExamError"
         @start-session="startSession"
         @mock-exam="startMockExam"
       />

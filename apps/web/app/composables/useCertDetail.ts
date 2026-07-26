@@ -50,6 +50,16 @@ export function useCertDetail(enrollmentId: string) {
   const isError = computed(
     () => (enrollmentQuery.isError.value && !notFound.value) || certificationQuery.isError.value,
   )
+  const isFetching = computed(
+    () => enrollmentQuery.isFetching.value || certificationQuery.isFetching.value,
+  )
+
+  async function retry() {
+    await enrollmentQuery.refetch()
+    if (certificationId.value !== null) {
+      await certificationQuery.refetch()
+    }
+  }
 
   return {
     name,
@@ -61,6 +71,21 @@ export function useCertDetail(enrollmentId: string) {
     passingScore,
     isLoading,
     isError,
+    isFetching,
+    retry,
     notFound,
+  } as {
+    name: typeof name
+    provider: typeof provider
+    code: typeof code
+    certificationId: typeof certificationId
+    domains: typeof domains
+    questionCount: typeof questionCount
+    passingScore: typeof passingScore
+    isLoading: typeof isLoading
+    isError: typeof isError
+    isFetching?: typeof isFetching
+    retry?: typeof retry
+    notFound: typeof notFound
   }
 }

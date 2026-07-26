@@ -17,14 +17,25 @@ const historyRow = (overrides: Partial<SessionHistoryRow> & { id: string }): Ses
   accuracy: overrides.accuracy ?? null,
 })
 
-function stubHistory(rows: SessionHistoryRow[], meta?: { total?: number }) {
+function stubHistory(
+  rows: SessionHistoryRow[],
+  meta?: {
+    total?: number
+    isLoading?: boolean
+    isError?: boolean
+    isFetching?: boolean
+    retry?: () => Promise<void>
+  },
+) {
   vi.mocked(useSessionsHistory).mockReturnValue({
     rows: computed(() => rows),
     total: computed(() => meta?.total ?? rows.length),
     page: ref(1),
     limit: ref(10),
-    isLoading: ref(false),
-    isError: ref(false),
+    isLoading: ref(meta?.isLoading ?? false),
+    isError: ref(meta?.isError ?? false),
+    isFetching: ref(meta?.isFetching ?? false),
+    retry: meta?.retry ?? vi.fn(async () => {}),
   })
 }
 
@@ -150,6 +161,24 @@ describe('SessionsTab empty state', () => {
     expect(wrapper.find('[data-testid="sessions-empty"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="sessions-history-table"]').exists()).toBe(false)
   })
+
+  it('renders an aria-busy loading region without flashing empty content', () => {
+    stubHistory([], { isLoading: true })
+    const wrapper = mountTab()
+    expect(wrapper.get('[data-testid="sessions-async-region"]').attributes('aria-busy')).toBe(
+      'true',
+    )
+    expect(wrapper.find('[data-testid="sessions-empty"]').exists()).toBe(false)
+  })
+
+  it('renders a section-local failure and retries once', async () => {
+    const retry = vi.fn()
+    stubHistory([], { isError: true, retry })
+    const wrapper = mountTab()
+    expect(wrapper.get('[role="alert"]').text()).toContain("Couldn't load session history")
+    await wrapper.get('[data-testid="readion-async-retry"]').trigger('click')
+    expect(retry).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('SessionsTab pagination', () => {
@@ -161,6 +190,8 @@ describe('SessionsTab pagination', () => {
       limit: ref(limit),
       isLoading: ref(false),
       isError: ref(false),
+      isFetching: ref(false),
+      retry: vi.fn(async () => {}),
     })
   }
 

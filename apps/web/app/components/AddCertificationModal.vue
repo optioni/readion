@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import { dashboardQueryKeys } from '~/composables/dashboardQueryKeys'
 import { certificationsControllerList } from '~~/src/api/certifications/certifications'
 import {
@@ -41,11 +42,15 @@ const options = computed(() => {
 })
 
 const enrollingId = ref<string | null>(null)
+const selectedId = ref<string | null>(null)
+const enrollError = ref<string | null>(null)
 
 async function selectCertification(certificationId: string) {
   if (enrollingId.value) {
     return
   }
+  selectedId.value = certificationId
+  enrollError.value = null
   enrollingId.value = certificationId
   try {
     await userCertificationsControllerEnroll({
@@ -54,6 +59,9 @@ async function selectCertification(certificationId: string) {
     })
     await queryClient.invalidateQueries({ queryKey: dashboardQueryKeys.enrollments() })
     close()
+  } catch {
+    const selected = options.value.find((option) => option.id === certificationId)
+    enrollError.value = `Couldn't add ${selected?.name ?? 'this certification'}. Try again.`
   } finally {
     enrollingId.value = null
   }
@@ -111,17 +119,30 @@ function close() {
 
       <ul v-else class="flex flex-col gap-2">
         <li v-for="option in options" :key="option.id">
-          <button
-            type="button"
+          <ReadionButton
             data-testid="add-cert-option"
             :data-cert-id="option.id"
-            :disabled="enrollingId !== null"
-            class="flex w-full items-center justify-between gap-3 rounded-lg border border-readion-background-surface px-4 py-3 text-left transition-colors hover:border-readion-primary disabled:opacity-60"
+            :data-selected="selectedId === option.id ? 'true' : undefined"
+            variant="secondary"
+            :busy="enrollingId === option.id"
+            :busy-label="`Adding… ${option.name}`"
+            :disabled="enrollingId !== null && enrollingId !== option.id"
+            class="w-full justify-between text-left"
+            :class="{ 'border-readion-status-poor': selectedId === option.id && enrollError }"
             @click="selectCertification(option.id)"
           >
-            <span class="font-medium text-slate-100 text-sm">{{ option.name }}</span>
-            <span class="text-slate-400 text-xs uppercase tracking-wide">{{ option.provider }}</span>
-          </button>
+            <span class="font-medium">{{ option.name }}</span>
+            <span class="text-readion-text-secondary text-xs uppercase tracking-wide">
+              {{ option.provider }}
+            </span>
+          </ReadionButton>
+          <p
+            v-if="selectedId === option.id && enrollError"
+            class="mt-2 text-readion-status-poor text-xs"
+            role="alert"
+          >
+            {{ enrollError }}
+          </p>
         </li>
       </ul>
     </div>

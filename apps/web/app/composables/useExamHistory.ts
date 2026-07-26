@@ -36,5 +36,21 @@ export function useExamHistory(enrollmentId: string) {
 
   const rows = computed<ExamHistoryRow[]>(() => query.data.value ?? [])
 
-  return { rows, isLoading: query.isLoading, isError: query.isError }
+  async function retry() {
+    await query.refetch()
+  }
+
+  return {
+    rows,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    isFetching: query.isFetching,
+    retry,
+  } as {
+    rows: typeof rows
+    isLoading: typeof query.isLoading
+    isError: typeof query.isError
+    isFetching?: typeof query.isFetching
+    retry?: typeof retry
+  }
 }

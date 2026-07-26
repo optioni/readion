@@ -87,6 +87,10 @@ export function useSessionsHistory(
   const rows = computed<SessionHistoryRow[]>(() => query.data.value?.rows ?? [])
   const total = computed<number>(() => query.data.value?.total ?? 0)
 
+  async function retry() {
+    await query.refetch()
+  }
+
   return {
     rows,
     total,
@@ -94,5 +98,16 @@ export function useSessionsHistory(
     limit,
     isLoading: query.isLoading,
     isError: query.isError,
+    isFetching: query.isFetching,
+    retry,
+  } as {
+    rows: typeof rows
+    total: typeof total
+    page: typeof page
+    limit: typeof limit
+    isLoading: typeof query.isLoading
+    isError: typeof query.isError
+    isFetching?: typeof query.isFetching
+    retry?: typeof retry
   }
 }

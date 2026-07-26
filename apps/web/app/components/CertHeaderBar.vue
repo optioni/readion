@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import ReadionButton from '~/components/ReadionButton.vue'
+
 defineProps<{
   name: string
   provider: string
   code: string
   isStartingSession: boolean
   isStartingMockExam: boolean
+  sessionError?: string | null
+  mockExamError?: string | null
 }>()
 
 defineEmits<{
@@ -40,25 +44,33 @@ defineEmits<{
         </div>
         <p data-testid="cert-detail-provider" class="text-slate-400 text-xs">{{ provider }}</p>
       </div>
-      <div class="flex flex-shrink-0 gap-2">
-        <button
-          type="button"
+      <div class="flex flex-shrink-0 flex-col items-end gap-2">
+        <div class="flex gap-2">
+        <ReadionButton
           data-testid="cert-header-mock-exam"
-          :disabled="isStartingMockExam"
-          class="rounded-md border border-readion-background-surface px-3.5 py-1.5 text-slate-300 text-sm transition-colors hover:text-slate-100 disabled:opacity-50"
+          variant="secondary"
+          busy-label="Starting…"
+          :busy="isStartingMockExam"
           @click="$emit('start-mock-exam')"
         >
           Mock exam
-        </button>
-        <button
-          type="button"
+        </ReadionButton>
+        <ReadionButton
           data-testid="cert-header-start-session"
-          :disabled="isStartingSession"
-          class="rounded-md bg-readion-primary px-4 py-1.5 font-medium text-sm text-white disabled:opacity-50"
+          busy-label="Starting…"
+          :busy="isStartingSession"
           @click="$emit('start-session')"
         >
           Start session →
-        </button>
+        </ReadionButton>
+        </div>
+        <p
+          v-if="sessionError || mockExamError"
+          class="max-w-xs text-right text-readion-status-poor text-xs"
+          role="alert"
+        >
+          {{ sessionError ?? mockExamError }}
+        </p>
       </div>
     </div>
   </header>

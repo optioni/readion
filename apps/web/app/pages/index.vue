@@ -4,10 +4,11 @@ import AddCertificationModal from '~/components/AddCertificationModal.vue'
 import CertCard from '~/components/CertCard.vue'
 import DiagnosticRePromptNudge from '~/components/DiagnosticRePromptNudge.vue'
 import PageHeader from '~/components/PageHeader.vue'
+import ReadionAsyncRegion from '~/components/ReadionAsyncRegion.vue'
 import { selectHeroAndOrder } from '~/composables/dashboardOrdering'
 import { useEnrollments } from '~/composables/useEnrollments'
 
-const { cards, isLoading, isError } = useEnrollments()
+const { cards, isLoading, isError, isFetching, retry } = useEnrollments()
 
 const ordering = computed(() => selectHeroAndOrder(cards.value))
 const hasEnrollments = computed(() => cards.value.length > 0)
@@ -22,29 +23,50 @@ function openAddCert() {
   <section class="mx-auto max-w-[1100px]">
     <PageHeader eyebrow="DASHBOARD" title="Your certifications" :active-count="cards.length" />
 
-    <div
-      v-if="isLoading"
-      data-testid="dashboard-loading"
-      class="flex flex-col gap-3.5"
+    <ReadionAsyncRegion
+      data-testid="dashboard-certifications"
+      aria-label="Dashboard certifications"
+      :loading="isLoading"
+      :error="isError && !hasEnrollments ? `Couldn't load your certifications` : undefined"
+      :empty="!hasEnrollments"
+      :refreshing="isFetching && !isLoading"
+      :retrying="isFetching && isError"
+      loading-label="Loading certifications…"
+      refresh-label="Refreshing certifications…"
+      empty-label="No certifications yet"
+      @retry="retry"
     >
+      <template #loading>
+        <div data-testid="dashboard-loading" class="flex flex-col gap-3.5">
+          <div
+            v-for="n in 2"
+            :key="n"
+            data-testid="cert-card-skeleton"
+            class="h-40 animate-pulse rounded-xl bg-readion-background-surface motion-reduce:animate-none"
+          />
+        </div>
+      </template>
+      <template #empty>
+        <div
+          data-testid="dashboard-empty"
+          class="flex flex-col items-center gap-4 rounded-xl border border-readion-background-surface border-dashed px-6 py-16 text-center"
+        >
+          <p class="font-medium text-lg text-slate-200">No certifications yet</p>
+          <p class="max-w-sm text-slate-400 text-sm">
+            Add a certification to start building your personalized study plan.
+          </p>
+          <button
+            data-testid="add-cert-empty"
+            type="button"
+            :aria-expanded="isAddCertOpen"
+            class="rounded-md bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary-hover"
+            @click="openAddCert"
+          >
+            + Add certification
+          </button>
+        </div>
+      </template>
       <div
-        v-for="n in 2"
-        :key="n"
-        class="h-40 animate-pulse rounded-xl bg-readion-background-surface"
-      />
-    </div>
-
-    <template v-else>
-      <p
-        v-if="isError"
-        data-testid="dashboard-error"
-        class="mb-4 rounded-lg border border-readion-status-warning/30 bg-readion-status-warning/10 px-4 py-3 text-readion-status-warning text-sm"
-      >
-        Some of your certifications could not be loaded. Showing what we have.
-      </p>
-
-      <div
-        v-if="hasEnrollments"
         data-testid="dashboard-list"
         class="flex flex-col gap-3.5"
       >
@@ -80,27 +102,7 @@ function openAddCert() {
           </span>
         </button>
       </div>
-
-      <div
-        v-else-if="!isError"
-        data-testid="dashboard-empty"
-        class="flex flex-col items-center gap-4 rounded-xl border border-readion-background-surface border-dashed px-6 py-16 text-center"
-      >
-        <p class="font-medium text-lg text-slate-200">No certifications yet</p>
-        <p class="max-w-sm text-slate-400 text-sm">
-          Add a certification to start building your personalized study plan.
-        </p>
-        <button
-          data-testid="add-cert-empty"
-          type="button"
-          :aria-expanded="isAddCertOpen"
-          class="rounded-md bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary-hover"
-          @click="openAddCert"
-        >
-          + Add certification
-        </button>
-      </div>
-    </template>
+    </ReadionAsyncRegion>
 
     <AddCertificationModal v-model:open="isAddCertOpen" />
   </section>

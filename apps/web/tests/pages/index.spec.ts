@@ -49,12 +49,16 @@ function stubEnrollments(options: {
   cards?: EnrollmentCard[]
   isLoading?: boolean
   isError?: boolean
+  isFetching?: boolean
+  retry?: () => Promise<void>
 }) {
   const cards = options.cards ?? []
   vi.mocked(useEnrollments).mockReturnValue({
     cards: computed(() => cards),
     isLoading: computed(() => options.isLoading ?? false),
     isError: computed(() => options.isError ?? false),
+    isFetching: computed(() => options.isFetching ?? false),
+    retry: options.retry ?? vi.fn(async () => {}),
   })
 }
 
@@ -171,28 +175,37 @@ describe('Dashboard empty state', () => {
 })
 
 describe('Dashboard loading and error degradation', () => {
-  it('shows a loading state while enrollments are loading', () => {
+  it('shows an aria-busy card skeleton without flashing the empty state', () => {
     stubEnrollments({ cards: [], isLoading: true })
     const wrapper = mountPage()
-    expect(wrapper.find('[data-testid="dashboard-loading"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="dashboard-certifications"]').attributes('aria-busy')).toBe(
+      'true',
+    )
+    expect(wrapper.find('[data-testid="cert-card-skeleton"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="dashboard-empty"]').exists()).toBe(false)
   })
 
-  it('shows a non-fatal error message but still renders loaded cards', () => {
+  it('preserves loaded cards while a background refresh is pending', () => {
     stubEnrollments({
       cards: [card({ name: 'A', readinessScore: 50 })],
-      isError: true,
+      isFetching: true,
     })
     const wrapper = mountPage()
-    expect(wrapper.find('[data-testid="dashboard-error"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="dashboard-certifications"]').attributes('aria-busy')).toBe(
+      'true',
+    )
     expect(renderedCards(wrapper)).toHaveLength(1)
+    expect(wrapper.text()).toContain('Refreshing certifications…')
   })
 
-  it('shows the error message instead of the empty state when loading fails with no cards', () => {
-    stubEnrollments({ cards: [], isError: true })
+  it('shows the exact failure message and retries without rendering the empty state', async () => {
+    const retry = vi.fn()
+    stubEnrollments({ cards: [], isError: true, retry })
     const wrapper = mountPage()
-    expect(wrapper.find('[data-testid="dashboard-error"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain("Couldn't load your certifications")
     expect(wrapper.find('[data-testid="dashboard-empty"]').exists()).toBe(false)
+    await wrapper.find('[data-testid="readion-async-retry"]').trigger('click')
+    expect(retry).toHaveBeenCalledTimes(1)
   })
 })
 

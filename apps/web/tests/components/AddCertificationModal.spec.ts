@@ -113,6 +113,69 @@ describe('AddCertificationModal options', () => {
 })
 
 describe('AddCertificationModal enroll', () => {
+  it('keeps the selected certification identifiable with Adding… while enrollment is pending', async () => {
+    stubData({
+      certifications: [
+        certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' }),
+        certification({ id: 'cert-3', name: 'CKA', provider: 'CNCF' }),
+      ],
+      enrollments: [],
+    })
+    let resolveEnroll = () => {}
+    vi.mocked(userCertificationsControllerEnroll).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveEnroll = () =>
+            resolve(
+              // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+              okEnvelope([]) as any,
+            )
+        }),
+    )
+
+    const { wrapper } = mountModal()
+    await flushPromises()
+    const selected = wrapper.get('[data-cert-id="cert-2"]')
+    await selected.trigger('click')
+
+    expect(selected.attributes('aria-busy')).toBe('true')
+    expect(selected.text()).toContain('Azure Fundamentals')
+    expect(selected.text()).toContain('Adding…')
+    await selected.trigger('click')
+    expect(userCertificationsControllerEnroll).toHaveBeenCalledTimes(1)
+    expect(wrapper.get('[data-cert-id="cert-3"]').attributes('disabled')).toBeDefined()
+
+    resolveEnroll()
+    await flushPromises()
+  })
+
+  it('preserves the selected context and explicit retry after enrollment fails', async () => {
+    stubData({
+      certifications: [
+        certification({ id: 'cert-2', name: 'Azure Fundamentals', provider: 'Azure' }),
+      ],
+      enrollments: [],
+    })
+    vi.mocked(userCertificationsControllerEnroll).mockRejectedValueOnce(new Error('Unavailable'))
+    vi.mocked(userCertificationsControllerEnroll).mockResolvedValueOnce(
+      // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      okEnvelope([]) as any,
+    )
+
+    const { wrapper } = mountModal()
+    await flushPromises()
+    await wrapper.get('[data-cert-id="cert-2"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('[role="alert"]').text()).toContain("Couldn't add Azure Fundamentals")
+    expect(wrapper.get('[data-cert-id="cert-2"]').attributes('data-selected')).toBe('true')
+    expect(wrapper.get('[data-cert-id="cert-2"]').attributes('disabled')).toBeUndefined()
+
+    await wrapper.get('[data-cert-id="cert-2"]').trigger('click')
+    await flushPromises()
+    expect(userCertificationsControllerEnroll).toHaveBeenCalledTimes(2)
+  })
+
   it('enrolls in the selected certification with defaults', async () => {
     stubData({
       certifications: [

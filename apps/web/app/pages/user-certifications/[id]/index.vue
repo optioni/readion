@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import CertHeaderBar from '~/components/CertHeaderBar.vue'
 import ExamHistoryTab from '~/components/ExamHistoryTab.vue'
 import OverviewTab from '~/components/OverviewTab.vue'
+import ReadionAsyncRegion from '~/components/ReadionAsyncRegion.vue'
 import SessionsTab from '~/components/SessionsTab.vue'
 import { useCertDetail } from '~/composables/useCertDetail'
 import { useQuickStartActions } from '~/composables/useQuickStartActions'
@@ -12,12 +13,27 @@ type TabId = 'overview' | 'sessions' | 'exam-history'
 const route = useRoute()
 const enrollmentId = computed(() => String(route.params.id))
 
-const { name, provider, code, certificationId, domains, isLoading, isError, notFound } =
-  useCertDetail(enrollmentId.value)
+const {
+  name,
+  provider,
+  code,
+  certificationId,
+  domains,
+  isLoading,
+  isError,
+  isFetching,
+  retry,
+  notFound,
+} = useCertDetail(enrollmentId.value)
 
-const { startSession, startMockExam, isStartingSession, isStartingMockExam } = useQuickStartActions(
-  enrollmentId.value,
-)
+const {
+  startSession,
+  startMockExam,
+  isStartingSession,
+  isStartingMockExam,
+  sessionError,
+  mockExamError,
+} = useQuickStartActions(enrollmentId.value)
 
 const tabs: { id: TabId; label: string; panelTestId: string }[] = [
   { id: 'overview', label: 'Overview', panelTestId: 'cert-detail-tab-overview' },
@@ -44,33 +60,37 @@ function selectTab(id: TabId) {
       </p>
     </div>
 
-    <template v-else>
-      <div
-        v-if="isLoading"
-        data-testid="cert-detail-loading"
-        class="-mx-4 -mt-8 space-y-2 border-readion-background-surface border-b px-4 py-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10"
-      >
-        <div class="h-7 w-64 animate-pulse rounded bg-readion-background-surface" />
-        <div class="h-4 w-32 animate-pulse rounded bg-readion-background-surface" />
-      </div>
+    <ReadionAsyncRegion
+      v-else
+      aria-label="Certification detail"
+      :loading="isLoading"
+      :error="isError ? `Couldn't load certification details.` : undefined"
+      :refreshing="isFetching && !isLoading"
+      :retrying="isFetching && isError"
+      loading-label="Loading certification details…"
+      refresh-label="Refreshing certification details…"
+      @retry="retry"
+    >
+      <template #loading>
+        <div
+          data-testid="cert-detail-loading"
+          class="-mx-4 -mt-8 space-y-2 border-readion-background-surface border-b px-4 py-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10"
+        >
+          <div class="h-7 w-64 animate-pulse rounded bg-readion-background-surface" />
+          <div class="h-4 w-32 animate-pulse rounded bg-readion-background-surface" />
+        </div>
+      </template>
       <CertHeaderBar
-        v-else
         :name="name"
         :provider="provider"
         :code="code"
         :is-starting-session="isStartingSession"
         :is-starting-mock-exam="isStartingMockExam"
+        :session-error="sessionError"
+        :mock-exam-error="mockExamError"
         @start-session="startSession"
         @start-mock-exam="startMockExam"
       />
-
-      <p
-        v-if="isError"
-        data-testid="cert-detail-error"
-        class="mt-3 rounded-lg border border-readion-status-warning/30 bg-readion-status-warning/10 px-4 py-3 text-readion-status-warning text-sm"
-      >
-        Some details could not be loaded. Showing what we have.
-      </p>
 
       <div
         role="tablist"
@@ -111,6 +131,6 @@ function selectTab(id: TabId) {
         <SessionsTab v-if="tab.id === 'sessions'" :certification-id="certificationId" />
         <ExamHistoryTab v-if="tab.id === 'exam-history'" :enrollment-id="enrollmentId" />
       </div>
-    </template>
+    </ReadionAsyncRegion>
   </section>
 </template>

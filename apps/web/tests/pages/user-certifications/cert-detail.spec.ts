@@ -34,6 +34,8 @@ function stubCertDetail(
     passingScore: computed(() => null),
     isLoading: computed(() => options.isLoading ?? false),
     isError: computed(() => options.isError ?? false),
+    isFetching: computed(() => false),
+    retry: vi.fn(),
     notFound: computed(() => options.notFound ?? false),
   })
 }
@@ -67,6 +69,8 @@ beforeEach(() => {
     startMockExam,
     isStartingSession: ref(false),
     isStartingMockExam: ref(false),
+    sessionError: ref<string | null>(null),
+    mockExamError: ref<string | null>(null),
   })
 })
 
@@ -102,6 +106,23 @@ describe('Cert detail page header', () => {
     await wrapper.find('[data-testid="cert-header-start-session"]').trigger('click')
     expect(startMockExam).toHaveBeenCalledTimes(1)
     expect(startSession).toHaveBeenCalledTimes(1)
+  })
+
+  it('passes shared launch progress and failure state into the header', () => {
+    vi.mocked(useQuickStartActions).mockReturnValue({
+      startSession,
+      startMockExam,
+      isStartingSession: ref(true),
+      isStartingMockExam: ref(false),
+      sessionError: ref("Couldn't start the session. Try again."),
+      mockExamError: ref<string | null>(null),
+    })
+    const wrapper = mountPage()
+
+    expect(wrapper.get('[data-testid="cert-header-start-session"]').attributes('aria-busy')).toBe(
+      'true',
+    )
+    expect(wrapper.get('[role="alert"]').text()).toContain("Couldn't start the session")
   })
 })
 

@@ -62,6 +62,19 @@ export function useEnrollments() {
   const isError = computed(
     () => enrollmentsQuery.isError.value || certificationsQuery.isError.value,
   )
+  const isFetching = computed(
+    () => enrollmentsQuery.isFetching.value || certificationsQuery.isFetching.value,
+  )
 
-  return { cards, isLoading, isError }
+  async function retry() {
+    await Promise.all([enrollmentsQuery.refetch(), certificationsQuery.refetch()])
+  }
+
+  return { cards, isLoading, isError, isFetching, retry } as {
+    cards: typeof cards
+    isLoading: typeof isLoading
+    isError: typeof isError
+    isFetching?: typeof isFetching
+    retry?: typeof retry
+  }
 }

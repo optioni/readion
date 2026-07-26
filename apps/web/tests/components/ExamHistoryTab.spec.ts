@@ -16,11 +16,21 @@ const examRow = (overrides: Partial<ExamHistoryRow> & { id: string }): ExamHisto
   passed: overrides.passed ?? null,
 })
 
-function stubHistory(rows: ExamHistoryRow[]) {
+function stubHistory(
+  rows: ExamHistoryRow[],
+  state?: {
+    isLoading?: boolean
+    isError?: boolean
+    isFetching?: boolean
+    retry?: () => Promise<void>
+  },
+) {
   vi.mocked(useExamHistory).mockReturnValue({
     rows: computed(() => rows),
-    isLoading: ref(false),
-    isError: ref(false),
+    isLoading: ref(state?.isLoading ?? false),
+    isError: ref(state?.isError ?? false),
+    isFetching: ref(state?.isFetching ?? false),
+    retry: state?.retry ?? vi.fn(async () => {}),
   })
 }
 
@@ -92,5 +102,23 @@ describe('ExamHistoryTab empty state', () => {
     const wrapper = mountTab()
     expect(wrapper.find('[data-testid="exam-history-empty"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="exam-history-list"]').exists()).toBe(false)
+  })
+
+  it('renders an aria-busy loading region without flashing the empty state', () => {
+    stubHistory([], { isLoading: true })
+    const wrapper = mountTab()
+    expect(wrapper.get('[data-testid="exam-history-async-region"]').attributes('aria-busy')).toBe(
+      'true',
+    )
+    expect(wrapper.find('[data-testid="exam-history-empty"]').exists()).toBe(false)
+  })
+
+  it('renders a section-local failure and retries once', async () => {
+    const retry = vi.fn()
+    stubHistory([], { isError: true, retry })
+    const wrapper = mountTab()
+    expect(wrapper.get('[role="alert"]').text()).toContain("Couldn't load exam history")
+    await wrapper.get('[data-testid="readion-async-retry"]').trigger('click')
+    expect(retry).toHaveBeenCalledTimes(1)
   })
 })
