@@ -3,17 +3,31 @@
 
 @theme {
   --font-sans: Inter, ui-sans-serif, system-ui;
-  --color-readion-background-base: #0f172a;
-  --color-readion-background-surface: #1e293b;
-  --color-readion-background-elevated: #0a0f1e;
-  --color-readion-background-overlay: #16213e;
-  --color-readion-primary: #1d4ed8;
-  --color-readion-accent-label: #7c8cf8;
-  --color-readion-text-primary: #e2e8f0;
-  --color-readion-text-secondary: #94a3b8;
-  --color-readion-text-muted: #64748b;
-  --color-readion-text-subtle: #475569;
-  --color-readion-primary-hover: #1e40af;
+  --color-readion-background-base: var(--readion-background-base);
+  --color-readion-background-surface: var(--readion-background-surface);
+  --color-readion-background-elevated: var(--readion-background-elevated);
+  --color-readion-background-overlay: var(--readion-background-overlay);
+  --color-readion-surface: var(--readion-surface);
+  --color-readion-primary: var(--readion-primary);
+  --color-readion-primary-hover: var(--readion-primary-hover);
+  --color-readion-primary-active: var(--readion-primary-active);
+  --color-readion-accent-label: var(--readion-accent-label);
+  --color-readion-text-primary: var(--readion-text-primary);
+  --color-readion-text-secondary: var(--readion-text-secondary);
+  --color-readion-text-muted: var(--readion-text-muted);
+  --color-readion-text-subtle: var(--readion-text-subtle);
+  --color-readion-text-on-primary: var(--readion-text-on-primary);
+  --color-readion-focus: var(--readion-focus);
+  --color-readion-warning: var(--readion-warning);
+  --color-readion-danger: var(--readion-danger);
+  --color-readion-danger-hover: var(--readion-danger-hover);
+  --color-readion-danger-active: var(--readion-danger-active);
+  --color-readion-border-default: var(--readion-border-default);
+  --color-readion-border-strong: var(--readion-border-strong);
+  --color-readion-status-poor: var(--readion-status-poor);
+  --color-readion-status-warning: var(--readion-status-warning);
+  --color-readion-status-medium: var(--readion-status-medium);
+  --color-readion-status-good: var(--readion-status-good);
   --color-readion-primary-50: #eff6ff;
   --color-readion-primary-100: #dbeafe;
   --color-readion-primary-200: #bfdbfe;
@@ -25,11 +39,6 @@
   --color-readion-primary-800: #172554;
   --color-readion-primary-900: #111827;
   --color-readion-primary-950: #0a0f1e;
-  --color-readion-status-poor: #f87171;
-  --color-readion-status-warning: #fb923c;
-  --color-readion-status-medium: #fbbf24;
-  --color-readion-status-good: #34d399;
-  --color-readion-border-strong: #334155;
 }
 
 :root {
@@ -38,21 +47,69 @@
   --readion-background-surface: #1e293b;
   --readion-background-elevated: #0a0f1e;
   --readion-background-overlay: #16213e;
+  --readion-surface: #1e293b;
   --readion-primary: #1d4ed8;
+  --readion-primary-hover: #1e40af;
+  --readion-primary-active: #1e3a8a;
   --readion-accent-label: #7c8cf8;
   --readion-text-primary: #e2e8f0;
   --readion-text-secondary: #94a3b8;
   --readion-text-muted: #64748b;
   --readion-text-subtle: #475569;
+  --readion-text-on-primary: #ffffff;
   --ui-primary: #1d4ed8;
   --readion-status-poor: #f87171;
   --readion-status-warning: #fb923c;
   --readion-status-medium: #fbbf24;
   --readion-status-good: #34d399;
+  --readion-border-default: #1e293b;
   --readion-border-strong: #334155;
+  --readion-focus: #60a5fa;
+  --readion-warning: #fb923c;
+  --readion-danger: #b91c1c;
+  --readion-danger-hover: #991b1b;
+  --readion-danger-active: #7f1d1d;
+}
+
+html.light {
+  color-scheme: light;
+  --readion-background-base: #f8fafc;
+  --readion-background-surface: #ffffff;
+  --readion-background-elevated: #e2e8f0;
+  --readion-background-overlay: #f1f5f9;
+  --readion-surface: #ffffff;
+  --readion-primary: #1d4ed8;
+  --readion-primary-hover: #1e40af;
+  --readion-primary-active: #1e3a8a;
+  --readion-accent-label: #4338ca;
+  --readion-text-primary: #0f172a;
+  --readion-text-secondary: #334155;
+  --readion-text-muted: #475569;
+  --readion-text-subtle: #64748b;
+  --readion-text-on-primary: #ffffff;
+  --ui-primary: #1d4ed8;
+  --readion-status-poor: #b91c1c;
+  --readion-status-warning: #c2410c;
+  --readion-status-medium: #a16207;
+  --readion-status-good: #047857;
+  --readion-border-default: #cbd5e1;
+  --readion-border-strong: #94a3b8;
+  --readion-focus: #2563eb;
+  --readion-warning: #c2410c;
+  --readion-danger: #b91c1c;
+  --readion-danger-hover: #991b1b;
+  --readion-danger-active: #7f1d1d;
 }
 
 html {
   font-family: Inter, ui-sans-serif, system-ui;
   background: var(--readion-background-base);
+  color: var(--readion-text-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .readion-interactive-control {
+    transition-duration: 0ms;
+    transform: none;
+  }
 }
