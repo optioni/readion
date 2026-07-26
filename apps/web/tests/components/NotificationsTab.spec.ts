@@ -141,4 +141,18 @@ describe('NotificationsTab weekly digest switch', () => {
     expect(copy).toContain('unsubscribe')
     expect(copy).toContain('email')
   })
+
+  it('exposes busy state and rejects duplicate toggles while saving', async () => {
+    stubProfile(false)
+    vi.mocked(usersControllerUpdateMe).mockReturnValue(new Promise(() => {}))
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    const toggle = wrapper.get('[data-testid="digest-toggle"]')
+    await toggle.trigger('click')
+    await toggle.trigger('click')
+
+    expect(usersControllerUpdateMe).toHaveBeenCalledTimes(1)
+    expect(toggle.attributes('aria-busy')).toBe('true')
+  })
 })

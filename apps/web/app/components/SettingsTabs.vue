@@ -21,7 +21,7 @@ defineEmits<{ select: [id: SettingsTabId] }>()
 <template>
   <div
     role="tablist"
-    class="flex border-readion-border-strong border-b px-2"
+    class="flex w-full max-w-full min-w-0 overflow-x-auto border-readion-border-strong border-b px-2"
   >
     <button
       v-for="tab in TABS"
@@ -30,11 +30,11 @@ defineEmits<{ select: [id: SettingsTabId] }>()
       type="button"
       role="tab"
       :aria-selected="active === tab.id ? 'true' : 'false'"
-      class="-mb-px border-b-2 px-4 py-3 font-medium text-sm transition-colors"
+      class="-mb-px shrink-0 border-b-2 px-4 py-3 font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-readion-focus focus-visible:ring-inset"
       :class="
         active === tab.id
-          ? 'border-readion-accent-label text-white'
-          : 'border-transparent text-slate-400 hover:text-slate-200'
+          ? 'border-readion-accent-label text-readion-text-primary'
+          : 'border-transparent text-readion-text-secondary hover:text-readion-text-primary'
       "
       @click="$emit('select', tab.id)"
     >

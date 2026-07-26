@@ -34,4 +34,14 @@ describe('SettingsLayout content column alignment', () => {
     expect(classList).toContain('sm:px-6')
     expect(classList).toContain('lg:px-8')
   })
+
+  it('constrains the settings frame and tab strip without clipping phone content', () => {
+    const wrapper = mount(SettingsLayout)
+    const page = wrapper.get('[data-testid="settings-page"]')
+    const column = wrapper.get('[data-testid="settings-content-column"]')
+
+    expect(page.classes()).toEqual(expect.arrayContaining(['w-full', 'max-w-full', 'min-w-0']))
+    expect(page.classes()).not.toContain('overflow-x-hidden')
+    expect(column.classes()).toEqual(expect.arrayContaining(['w-full', 'max-w-full', 'min-w-0']))
+  })
 })

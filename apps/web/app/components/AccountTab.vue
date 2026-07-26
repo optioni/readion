@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref, watch } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import FormActions from '~/components/FormActions.vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import SettingsFieldRow from '~/components/SettingsFieldRow.vue'
 import { emailInitials } from '~/composables/emailInitials'
 import { settingsQueryKeys } from '~/composables/settingsQueryKeys'
@@ -26,6 +27,7 @@ const timeZones = Intl.supportedValuesOf('timeZone')
 const selectedTimezone = ref('')
 const saving = ref(false)
 const errorMessage = ref<string | null>(null)
+const timezoneSaved = ref(false)
 
 watch(
   () => profileQuery.data.value?.displayTimezone,
@@ -38,13 +40,18 @@ watch(
 )
 
 async function saveTimezone() {
+  if (saving.value) {
+    return
+  }
   errorMessage.value = null
+  timezoneSaved.value = false
   const body = updateUserProfileRequestSchema.parse({ displayTimezone: selectedTimezone.value })
 
   saving.value = true
   try {
     await usersControllerUpdateMe(body)
     await queryClient.invalidateQueries({ queryKey: settingsQueryKeys.profile() })
+    timezoneSaved.value = true
   } catch (error) {
     errorMessage.value =
       error instanceof ReadionProblemDetailsError
@@ -65,6 +72,9 @@ const newPasswordError = ref<string | null>(null)
 const confirmPasswordError = ref<string | null>(null)
 
 async function changePassword() {
+  if (changingPassword.value) {
+    return
+  }
   currentPasswordError.value = null
   newPasswordError.value = null
   confirmPasswordError.value = null
@@ -101,6 +111,9 @@ async function changePassword() {
     } else {
       newPasswordError.value = message
     }
+    currentPassword.value = ''
+    newPassword.value = ''
+    confirmPassword.value = ''
   } finally {
     changingPassword.value = false
   }
@@ -124,6 +137,9 @@ function openDeleteModal() {
 }
 
 function closeDeleteModal() {
+  if (deletingAccount.value) {
+    return
+  }
   deleteModalOpen.value = false
 }
 
@@ -145,6 +161,7 @@ async function confirmDeleteAccount() {
         : error instanceof ReadionProblemDetailsError
           ? (error.detail ?? error.title)
           : 'Could not delete your account. Please try again.'
+    deletePassword.value = ''
   } finally {
     deletingAccount.value = false
   }
@@ -152,8 +169,8 @@ async function confirmDeleteAccount() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-8">
-    <section class="flex flex-col gap-1">
+  <div class="flex w-full min-w-0 flex-col gap-8">
+    <section class="flex min-w-0 flex-col gap-1">
       <h2 class="mb-3 font-medium text-slate-100 text-sm">Profile</h2>
 
       <SettingsFieldRow label="Avatar">
@@ -166,7 +183,9 @@ async function confirmDeleteAccount() {
       </SettingsFieldRow>
 
       <SettingsFieldRow label="Email" hint="Used for login and notifications">
-        <span data-testid="account-email" class="text-slate-100 text-sm">{{ email }}</span>
+        <span data-testid="account-email" class="break-all text-readion-text-primary text-sm">
+          {{ email }}
+        </span>
       </SettingsFieldRow>
 
       <SettingsFieldRow label="Display timezone" for="timezone-select">
@@ -175,31 +194,43 @@ async function confirmDeleteAccount() {
             id="timezone-select"
             v-model="selectedTimezone"
             data-testid="timezone-select"
-            class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
+          class="w-full max-w-full min-w-0 truncate rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-readion-text-primary text-sm"
           >
             <option v-for="zone in timeZones" :key="zone" :value="zone">{{ zone }}</option>
           </select>
 
-          <p v-if="errorMessage" data-testid="timezone-error" class="text-red-400 text-sm">
+          <p
+            v-if="errorMessage"
+            data-testid="timezone-error"
+            class="break-words text-readion-status-poor text-sm"
+            role="alert"
+          >
             {{ errorMessage }}
           </p>
         </div>
       </SettingsFieldRow>
 
       <FormActions>
-        <button
-          type="button"
+        <ReadionButton
           data-testid="save-timezone-btn"
-          :disabled="saving"
-          class="rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
+          :busy="saving"
+          busy-label="Saving…"
           @click="saveTimezone"
         >
           Save
-        </button>
+        </ReadionButton>
       </FormActions>
+      <p
+        v-if="timezoneSaved"
+        data-testid="timezone-confirmation"
+        class="text-readion-status-good text-sm"
+        role="status"
+      >
+        Timezone saved.
+      </p>
     </section>
 
-    <section class="flex flex-col gap-1">
+    <section class="flex min-w-0 flex-col gap-1">
       <h2 class="mb-3 font-medium text-slate-100 text-sm">Password</h2>
 
       <SettingsFieldRow label="Current password" for="current-password">
@@ -209,12 +240,13 @@ async function confirmDeleteAccount() {
             v-model="currentPassword"
             type="password"
             data-testid="current-password-input"
-            class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
+            class="w-full min-w-0 rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-readion-text-primary text-sm"
           />
           <p
             v-if="currentPasswordError"
             data-testid="current-password-error"
-            class="text-red-400 text-sm"
+            class="break-words text-readion-status-poor text-sm"
+            role="alert"
           >
             {{ currentPasswordError }}
           </p>
@@ -228,12 +260,13 @@ async function confirmDeleteAccount() {
             v-model="newPassword"
             type="password"
             data-testid="new-password-input"
-            class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
+            class="w-full min-w-0 rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-readion-text-primary text-sm"
           />
           <p
             v-if="newPasswordError"
             data-testid="new-password-error"
-            class="text-red-400 text-sm"
+            class="break-words text-readion-status-poor text-sm"
+            role="alert"
           >
             {{ newPasswordError }}
           </p>
@@ -247,12 +280,13 @@ async function confirmDeleteAccount() {
             v-model="confirmPassword"
             type="password"
             data-testid="confirm-password-input"
-            class="rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-slate-100 text-sm"
+            class="w-full min-w-0 rounded-lg border border-readion-background-surface bg-readion-background-elevated px-3 py-2 text-readion-text-primary text-sm"
           />
           <p
             v-if="confirmPasswordError"
             data-testid="confirm-password-error"
-            class="text-red-400 text-sm"
+            class="break-words text-readion-status-poor text-sm"
+            role="alert"
           >
             {{ confirmPasswordError }}
           </p>
@@ -262,39 +296,38 @@ async function confirmDeleteAccount() {
       <p
         v-if="passwordChanged"
         data-testid="change-password-confirmation"
-        class="text-emerald-400 text-sm"
+        class="text-readion-status-good text-sm"
+        role="status"
       >
         Your password has been changed.
       </p>
 
       <FormActions>
-        <button
-          type="button"
+        <ReadionButton
           data-testid="change-password-btn"
-          :disabled="changingPassword"
-          class="rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
+          :busy="changingPassword"
+          busy-label="Updating…"
           @click="changePassword"
         >
           Update password
-        </button>
+        </ReadionButton>
       </FormActions>
     </section>
 
-    <section class="flex flex-col gap-3 rounded-xl border border-red-500/30 bg-red-500/5 p-5">
+    <section class="flex min-w-0 flex-col gap-3 rounded-xl border border-red-500/30 bg-red-500/5 p-5">
       <h2 class="font-medium text-red-300 text-sm">Danger zone</h2>
-      <p class="text-slate-400 text-sm">
+      <p class="break-words text-readion-text-secondary text-sm">
         Deleting your account is permanent. Your sessions, progress, and certifications are removed.
       </p>
 
       <FormActions>
-        <button
-          type="button"
+        <ReadionButton
           data-testid="delete-account-btn"
-          class="rounded-lg border border-red-500/50 bg-red-500/10 px-5 py-2.5 font-medium text-red-200 text-sm transition-colors hover:bg-red-500/20"
+          variant="destructive"
           @click="openDeleteModal"
         >
           Delete account
-        </button>
+        </ReadionButton>
       </FormActions>
     </section>
 
@@ -314,7 +347,7 @@ async function confirmDeleteAccount() {
       />
 
       <div
-        class="relative z-10 w-full max-w-md rounded-xl border border-readion-background-surface bg-readion-background-elevated p-6 shadow-xl"
+        class="relative z-10 max-h-[calc(100dvh-2rem)] w-full max-w-md min-w-0 overflow-y-auto rounded-xl border border-readion-background-surface bg-readion-background-elevated p-4 sm:p-6"
       >
         <h2 class="font-semibold text-slate-100 text-lg">Delete account</h2>
         <p class="mt-1 text-slate-400 text-sm">
@@ -328,32 +361,38 @@ async function confirmDeleteAccount() {
               v-model="deletePassword"
               type="password"
               data-testid="delete-password-input"
-              class="rounded-lg border border-readion-background-surface bg-readion-background-overlay px-3 py-2 text-slate-100 text-sm"
+              class="w-full min-w-0 rounded-lg border border-readion-background-surface bg-readion-background-overlay px-3 py-2 text-readion-text-primary text-sm"
             />
 
-            <p v-if="deleteError" data-testid="delete-account-error" class="text-red-400 text-sm">
+            <p
+              v-if="deleteError"
+              data-testid="delete-account-error"
+              class="break-words text-readion-status-poor text-sm"
+              role="alert"
+            >
               {{ deleteError }}
             </p>
           </div>
         </SettingsFieldRow>
 
-        <div class="mt-6 flex justify-end gap-3">
-          <button
-            type="button"
-            class="rounded-lg border border-readion-background-surface px-5 py-2.5 font-medium text-slate-100 text-sm transition-colors hover:bg-readion-background-surface"
+        <div class="mt-6 flex flex-wrap justify-end gap-3">
+          <ReadionButton
+            variant="secondary"
+            :disabled="deletingAccount"
             @click="closeDeleteModal"
           >
             Cancel
-          </button>
-          <button
-            type="button"
+          </ReadionButton>
+          <ReadionButton
             data-testid="confirm-delete-btn"
+            variant="destructive"
             :disabled="!canConfirmDelete"
-            class="rounded-lg bg-red-500 px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-red-500/90 disabled:opacity-60"
+            :busy="deletingAccount"
+            busy-label="Deleting…"
             @click="confirmDeleteAccount"
           >
             Delete account
-          </button>
+          </ReadionButton>
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
 import FormActions from '~/components/FormActions.vue'
 import OnboardingSessionPrefs from '~/components/OnboardingSessionPrefs.vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import { settingsQueryKeys } from '~/composables/settingsQueryKeys'
 import { usersControllerUpdateMe } from '~~/src/api/users/users'
 
@@ -14,19 +15,25 @@ const queryClient = useQueryClient()
 const selected = ref<SessionDefaults>({ ...DEFAULT_SESSION_DEFAULTS })
 const saving = ref(false)
 const errorMessage = ref<string | null>(null)
+const saved = ref(false)
 
 function trackSelection(defaults: SessionDefaults) {
   selected.value = defaults
 }
 
 async function saveDefaults() {
+  if (saving.value) {
+    return
+  }
   errorMessage.value = null
+  saved.value = false
   const sessionDefaults = sessionDefaultsSchema.parse(selected.value)
 
   saving.value = true
   try {
     await usersControllerUpdateMe({ sessionDefaults })
     await queryClient.invalidateQueries({ queryKey: settingsQueryKeys.profile() })
+    saved.value = true
   } catch (error) {
     errorMessage.value =
       error instanceof ReadionProblemDetailsError
@@ -39,7 +46,7 @@ async function saveDefaults() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="flex w-full min-w-0 flex-col gap-6">
     <div>
       <h2 data-testid="study-defaults-title" class="mb-1 font-medium text-slate-100 text-sm">
         Session preferences
@@ -56,20 +63,33 @@ async function saveDefaults() {
       @update="trackSelection"
     />
 
-    <p v-if="errorMessage" data-testid="study-defaults-error" class="text-red-400 text-sm">
+    <p
+      v-if="errorMessage"
+      data-testid="study-defaults-error"
+      class="break-words text-readion-status-poor text-sm"
+      role="alert"
+    >
       {{ errorMessage }}
     </p>
 
     <FormActions>
-      <button
-        type="button"
+      <ReadionButton
         data-testid="save-defaults-btn"
-        :disabled="saving"
-        class="rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
+        :busy="saving"
+        busy-label="Saving…"
         @click="saveDefaults"
       >
         Save defaults
-      </button>
+      </ReadionButton>
     </FormActions>
+
+    <p
+      v-if="saved"
+      data-testid="study-defaults-confirmation"
+      class="text-readion-status-good text-sm"
+      role="status"
+    >
+      Study defaults saved.
+    </p>
   </div>
 </template>

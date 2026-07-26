@@ -6,8 +6,8 @@ import SettingsFieldRow from '~/components/SettingsFieldRow.vue'
 
 const mainCss = readFileSync(resolve(__dirname, '../../app/assets/css/main.css'), 'utf-8')
 
-describe('SettingsFieldRow horizontal layout', () => {
-  it('renders a sentence-case label in a fixed-width column beside the control, not stacked above', () => {
+describe('SettingsFieldRow responsive layout', () => {
+  it('stacks on phones and restores the fixed-width label column from the small breakpoint', () => {
     const wrapper = mount(SettingsFieldRow, {
       props: { label: 'Display timezone', for: 'timezone-select' },
       slots: { default: '<select id="timezone-select" />' },
@@ -15,7 +15,8 @@ describe('SettingsFieldRow horizontal layout', () => {
 
     const row = wrapper.element
     expect(Array.from(row.classList)).toContain('flex')
-    expect(Array.from(row.classList)).not.toContain('flex-col')
+    expect(Array.from(row.classList)).toContain('flex-col')
+    expect(Array.from(row.classList)).toContain('sm:flex-row')
     expect(Array.from(row.classList)).toContain('items-start')
 
     const label = wrapper.find('label')
@@ -32,8 +33,12 @@ describe('SettingsFieldRow horizontal layout', () => {
     if (!labelColumn) {
       throw new Error('missing label column parent element')
     }
-    expect(Array.from(labelColumn.classList)).toContain('w-40')
-    expect(Array.from(labelColumn.classList)).toContain('shrink-0')
+    expect(Array.from(labelColumn.classList)).toContain('w-full')
+    expect(Array.from(labelColumn.classList)).toContain('sm:w-40')
+    expect(Array.from(labelColumn.classList)).toContain('sm:shrink-0')
+
+    const controlColumn = wrapper.get('[data-testid="settings-field-control"]')
+    expect(controlColumn.classes()).toEqual(expect.arrayContaining(['w-full', 'min-w-0']))
   })
 
   it('renders an optional hint beneath the label in the muted token', () => {
@@ -64,13 +69,11 @@ describe('SettingsFieldRow label colour token', () => {
   it('defines --color-readion-text-secondary and --color-readion-text-muted, not left undefined', () => {
     // The label/hint tokens only resolve if `@theme` defines the matching --color-readion-*
     // custom property (same requirement Group 1 found for --color-readion-accent-label).
-    const secondary = mainCss.match(/--color-readion-text-secondary:\s*(#[0-9a-fA-F]{6})/)
-    const muted = mainCss.match(/--color-readion-text-muted:\s*(#[0-9a-fA-F]{6})/)
-
-    expect(secondary).not.toBeNull()
-    expect(secondary?.[1]?.toLowerCase()).toBe('#94a3b8')
-
-    expect(muted).not.toBeNull()
-    expect(muted?.[1]?.toLowerCase()).toBe('#64748b')
+    expect(mainCss).toContain('--color-readion-text-secondary: var(--readion-text-secondary);')
+    expect(mainCss).toContain('--color-readion-text-muted: var(--readion-text-muted);')
+    expect(mainCss).toContain('--readion-text-secondary: #94a3b8;')
+    expect(mainCss).toContain('--readion-text-muted: #64748b;')
+    expect(mainCss).toContain('html.light {')
+    expect(mainCss).toContain('--readion-text-secondary: #334155;')
   })
 })

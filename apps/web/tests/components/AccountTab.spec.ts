@@ -48,6 +48,14 @@ const profileEnvelope = (profile: UserProfileResponse) => ({
   headers: new Headers(),
 })
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((resolvePromise) => {
+    resolve = resolvePromise
+  })
+  return { promise, resolve }
+}
+
 function stubProfile(profile: UserProfileResponse = PROFILE) {
   vi.mocked(usersControllerGetMe).mockResolvedValue(
     // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
@@ -175,6 +183,27 @@ describe('AccountTab timezone control', () => {
     expect(select.attributes('disabled')).toBeUndefined()
     expect((select.element as HTMLSelectElement).value).toBe('America/New_York')
   })
+
+  it('shows Saving progress, rejects duplicates, and announces success', async () => {
+    stubProfile()
+    const request = deferred<Awaited<ReturnType<typeof usersControllerUpdateMe>>>()
+    vi.mocked(usersControllerUpdateMe).mockReturnValue(request.promise)
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    const save = wrapper.get('[data-testid="save-timezone-btn"]')
+    await save.trigger('click')
+    await save.trigger('click')
+
+    expect(usersControllerUpdateMe).toHaveBeenCalledTimes(1)
+    expect(save.attributes('aria-busy')).toBe('true')
+    expect(save.text()).toContain('Saving…')
+
+    // biome-ignore lint/suspicious/noExplicitAny: generated response is irrelevant to the UI contract
+    request.resolve(profileEnvelope(PROFILE) as any)
+    await flushPromises()
+    expect(wrapper.get('[data-testid="timezone-confirmation"]').attributes('role')).toBe('status')
+  })
 })
 
 async function fillPasswordForm(
@@ -251,7 +280,7 @@ describe('AccountTab change password', () => {
     ).toBe('')
   })
 
-  it('shows an error on the new-password field and keeps the form on 422', async () => {
+  it('shows an error on the new-password field and clears secret values on 422', async () => {
     stubProfile()
     vi.mocked(authControllerChangePassword).mockRejectedValue(
       new ReadionProblemDetailsError({
@@ -272,7 +301,7 @@ describe('AccountTab change password', () => {
     expect(wrapper.find('[data-testid="change-password-confirmation"]').exists()).toBe(false)
     expect(
       (wrapper.find('[data-testid="new-password-input"]').element as HTMLInputElement).value,
-    ).toBe('weak1234')
+    ).toBe('')
   })
 
   it('shows an error on the current-password field on 401', async () => {
@@ -440,5 +469,23 @@ describe('AccountTab delete account danger zone', () => {
     expect(auth.isAuthenticated).toBe(true)
     expect(auth.user).not.toBeNull()
     expect(mockNavigate).not.toHaveBeenCalled()
+  })
+
+  it('shows Deleting progress and rejects duplicate confirmation', async () => {
+    stubProfile()
+    const request = deferred<Awaited<ReturnType<typeof usersControllerDeleteMe>>>()
+    vi.mocked(usersControllerDeleteMe).mockReturnValue(request.promise)
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    await wrapper.get('[data-testid="delete-account-btn"]').trigger('click')
+    await wrapper.get('[data-testid="delete-password-input"]').setValue('hunter2')
+    const confirm = wrapper.get('[data-testid="confirm-delete-btn"]')
+    await confirm.trigger('click')
+    await confirm.trigger('click')
+
+    expect(usersControllerDeleteMe).toHaveBeenCalledTimes(1)
+    expect(confirm.attributes('aria-busy')).toBe('true')
+    expect(confirm.text()).toContain('Deleting…')
   })
 })

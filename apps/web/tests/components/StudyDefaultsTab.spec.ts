@@ -205,4 +205,30 @@ describe('StudyDefaultsTab save defaults', () => {
       'Could not save your study defaults',
     )
   })
+
+  it('shows Saving progress and announces success', async () => {
+    stubProfile()
+    let resolve!: (value: Awaited<ReturnType<typeof usersControllerUpdateMe>>) => void
+    vi.mocked(usersControllerUpdateMe).mockReturnValue(
+      new Promise<Awaited<ReturnType<typeof usersControllerUpdateMe>>>((done) => {
+        resolve = done
+      }),
+    )
+    const { wrapper } = mountTab()
+    await flushPromises()
+
+    const save = wrapper.get('[data-testid="save-defaults-btn"]')
+    await save.trigger('click')
+    await save.trigger('click')
+    expect(usersControllerUpdateMe).toHaveBeenCalledTimes(1)
+    expect(save.attributes('aria-busy')).toBe('true')
+    expect(save.text()).toContain('Saving…')
+
+    // biome-ignore lint/suspicious/noExplicitAny: generated response is irrelevant to the UI contract
+    resolve(profileEnvelope(DEFAULT_SESSION_DEFAULTS) as any)
+    await flushPromises()
+    expect(wrapper.get('[data-testid="study-defaults-confirmation"]').attributes('role')).toBe(
+      'status',
+    )
+  })
 })
