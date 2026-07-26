@@ -90,6 +90,10 @@ describe('selectImageTargets fail-safes', () => {
   it('falls back to every app when the payload is not an object', () => {
     expect(selectImageTargets('42')).toEqual(ALL)
   })
+
+  it('falls back to every app when the payload is null', () => {
+    expect(selectImageTargets('null')).toEqual(ALL)
+  })
 })
 
 // The workflow invokes this script as `node .github/scripts/affected-apps.mts`

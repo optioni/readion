@@ -1,7 +1,7 @@
 // Maps `turbo ls --affected --output=json` onto the docker-bake targets that
 // produce an image, for the `detect` job in .github/workflows/images.yml.
 //
-// Run by Node directly (`node .github/scripts/affected-apps.ts`) — no build
+// Run by Node directly (`node .github/scripts/affected-apps.mts`) — no build
 // step, no flag: Node strips the types natively. Reads the turbo payload on
 // stdin, prints a JSON array of bake target names on stdout.
 
@@ -34,7 +34,9 @@ export function selectImageTargets(raw: string): string[] {
   const affected = new Set(
     items
       .map((item) => item?.name)
-      .filter((name): name is string => typeof name === 'string' && name.startsWith(WORKSPACE_SCOPE))
+      .filter(
+        (name): name is string => typeof name === 'string' && name.startsWith(WORKSPACE_SCOPE),
+      )
       .map((name) => name.slice(WORKSPACE_SCOPE.length)),
   )
 

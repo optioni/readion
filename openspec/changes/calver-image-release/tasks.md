@@ -38,28 +38,28 @@
 
 ## 5. Ripple — stale in-repo references
 
-- [ ] 5.1 Update the `TAG` variable comment in `docker-bake.hcl` so the release example reads `v2026.7.0` instead of `v1.4.0`
-- [ ] 5.2 Update the comments in `k8s/argocd/application.yaml` that name `.github/workflows/main.yml` to name `images.yml`, and correct the claim that the workflow emits `latest` + `sha-<short-sha>` to what it actually pushes (the branch name on push, `v*` on release). Leave the `allow-tags` / `update-strategy` **values** untouched — correcting that mismatch changes what rolls to the cluster and is explicitly out of scope (design.md Non-Goals)
+- [x] 5.1 Update the `TAG` variable comment in `docker-bake.hcl` so the release example reads `v2026.7.0` instead of `v1.4.0`
+- [x] 5.2 Update the comments in `k8s/argocd/application.yaml` that name `.github/workflows/main.yml` to name `images.yml`, and correct the claim that the workflow emits `latest` + `sha-<short-sha>` to what it actually pushes (the branch name on push, `v*` on release). Leave the `allow-tags` / `update-strategy` **values** untouched — correcting that mismatch changes what rolls to the cluster and is explicitly out of scope (design.md Non-Goals)
 
 ## 6. Acceptance Test — Outer Loop GREEN
 
-- [ ] 6.1 Confirm the full acceptance suite passes: `yarn vitest run --project root-smoke` green, including the `node .github/scripts/affected-apps.mts` execution case
-- [ ] 6.2 Smoke-verify the change's real surface (there is no app to boot for a CI-only change): `yarn install --immutable` clean from scratch, `docker buildx bake --print` resolves for both a full and a restricted target set, `bash k8s/validate.sh` still passes, and `images.yml` parses under `actionlint` if available locally
-- [ ] 6.3 REFACTOR: de-duplicate the workflow fixtures/helpers shared between `tests/images-workflow.spec.ts` and `tests/affected-apps.spec.ts`
-- [ ] 6.4 Record the post-merge live verification that no local test can cover (design.md Test Boundaries — the CalVer action is never invoked in tests): the first dispatch after this lands must produce tag `v2026.7.0`, a GitHub Release with generated notes, and one GHCR image per affected app at that tag; a second same-month dispatch must produce `v2026.7.1` while leaving the first tag, Release and images untouched. Note it in the change's completion summary rather than leaving it implicit
+- [x] 6.1 Confirm the full acceptance suite passes: `yarn vitest run --project root-smoke` green, including the `node .github/scripts/affected-apps.mts` execution case
+- [x] 6.2 Smoke-verify the change's real surface (there is no app to boot for a CI-only change): `yarn install --immutable` clean from scratch, `docker buildx bake --print` resolves for both a full and a restricted target set, `bash k8s/validate.sh` still passes, and `images.yml` parses under `actionlint` if available locally
+- [x] 6.3 REFACTOR: de-duplicate the workflow fixtures/helpers shared between `tests/images-workflow.spec.ts` and `tests/affected-apps.spec.ts`
+- [x] 6.4 Record the post-merge live verification that no local test can cover (design.md Test Boundaries — the CalVer action is never invoked in tests): the first dispatch after this lands must produce tag `v2026.7.0`, a GitHub Release with generated notes, and one GHCR image per affected app at that tag; a second same-month dispatch must produce `v2026.7.1` while leaving the first tag, Release and images untouched. Note it in the change's completion summary rather than leaving it implicit
 
 ## 7. Change Review — Subagent Verification
 
-- [ ] 7.1 Dispatch a subagent to review the change against `proposal.md`, the `ci-pipeline` spec scenarios, and `design.md` (reviewer reports findings only, does not edit code)
-- [ ] 7.2 Triage findings: fix every CRITICAL, resolve or accept each WARNING (one-line reason per accepted WARNING), note SUGGESTIONs; re-run affected tests
+- [x] 7.1 Dispatch a subagent to review the change against `proposal.md`, the `ci-pipeline` spec scenarios, and `design.md` (reviewer reports findings only, does not edit code)
+- [x] 7.2 Triage findings: fix every CRITICAL, resolve or accept each WARNING (one-line reason per accepted WARNING), note SUGGESTIONs; re-run affected tests
 
 ## 8. Polish
 
-- [ ] 8.1 Run linter and fix all errors (`yarn lint`)
-- [ ] 8.2 Run formatter and apply fixes (`yarn format:fix`, then `yarn format`)
-- [ ] 8.3 Run type checker with zero errors (`yarn typecheck`)
-- [ ] 8.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn test:coverage`); note that `tests/` at the root is outside the per-workspace coverage run, so also confirm the unit tests exercise every branch of `.github/scripts/affected-apps.mts`, including each fail-safe path
+- [x] 8.1 Run linter and fix all errors (`yarn lint`)
+- [x] 8.2 Run formatter and apply fixes (`yarn format:fix`, then `yarn format`)
+- [x] 8.3 Run type checker with zero errors (`yarn typecheck`)
+- [x] 8.4 Run coverage report and confirm ≥80% lines/branches/functions (`yarn test:coverage`); note that `tests/` at the root is outside the per-workspace coverage run, so also confirm the unit tests exercise every branch of `.github/scripts/affected-apps.mts`, including each fail-safe path
 
 ## 9. Documentation
 
-- [ ] 9.1 Update `SPEC.md` §CI/CD (audience: maintainers making deployment decisions) — replace the current push-to-`main` bullet list with the merged workflow: both triggers in one workflow, images built only for apps affected since the diff base with a documented fail-safe to all apps, and a manual dispatch that takes no input, derives CalVer `vYYYY.M.MICRO`, and cuts the git tag + GitHub Release only after a successful build. This stays useful because it is the only place the release procedure is described for a human deciding how to ship
+- [x] 9.1 Update `SPEC.md` §CI/CD (audience: maintainers making deployment decisions) — replace the current push-to-`main` bullet list with the merged workflow: both triggers in one workflow, images built only for apps affected since the diff base with a documented fail-safe to all apps, and a manual dispatch that takes no input, derives CalVer `vYYYY.M.MICRO`, and cuts the git tag + GitHub Release only after a successful build. This stays useful because it is the only place the release procedure is described for a human deciding how to ship

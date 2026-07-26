@@ -29,8 +29,7 @@ type Workflow = {
   jobs: Record<string, Job>
 }
 
-const workflow = () =>
-  parse(readFileSync(join(WORKFLOWS, 'images.yml'), 'utf-8')) as Workflow
+const workflow = () => parse(readFileSync(join(WORKFLOWS, 'images.yml'), 'utf-8')) as Workflow
 
 const job = (id: string) => workflow().jobs[id]
 
@@ -79,12 +78,14 @@ describe('Images workflow — runner placement', () => {
     expect(job('build-and-push')['runs-on']).toEqual({ group: 'arm-runners' })
   })
 
-  it.each(['version', 'detect', 'upload-sourcemaps', 'release'])(
-    'runs %s on a GitHub-hosted runner',
-    (id) => {
-      expect(job(id)['runs-on']).toBe('ubuntu-latest')
-    },
-  )
+  it.each([
+    'version',
+    'detect',
+    'upload-sourcemaps',
+    'release',
+  ])('runs %s on a GitHub-hosted runner', (id) => {
+    expect(job(id)['runs-on']).toBe('ubuntu-latest')
+  })
 })
 
 describe('Images workflow — CalVer version', () => {
@@ -105,6 +106,12 @@ describe('Images workflow — CalVer version', () => {
 
   it('computes the version on both triggers so downstream needs are not skipped', () => {
     expect(job('version').if).toBeUndefined()
+  })
+
+  it('refuses to publish a release when the version fails to resolve', () => {
+    const guard = job('version').steps.find((s) => s.if?.includes("outputs.version == ''"))
+    expect(guard?.if).toContain("github.event_name == 'workflow_dispatch'")
+    expect(guard?.run).toContain('exit 1')
   })
 })
 
@@ -148,7 +155,11 @@ describe('Images workflow — affected-app detection', () => {
   })
 
   it('publishes every app when a dispatch resolves to an empty set', () => {
-    expect(detectScript()).toMatch(/APPS.*=.*"\[\]".*workflow_dispatch|workflow_dispatch[\s\S]*APPS="\$ALL"/)
+    const promotion = detectScript()
+      .split('\n')
+      .find((line) => line.includes('"[]"') && line.includes('workflow_dispatch'))
+    expect(promotion).toBeDefined()
+    expect(detectScript()).toContain('APPS="$ALL"')
   })
 
   it('exposes the affected apps as a JSON array output', () => {
@@ -159,6 +170,13 @@ describe('Images workflow — affected-app detection', () => {
 describe('Images workflow — build and push', () => {
   it('builds nothing when a push affects no app', () => {
     expect(job('build-and-push').if).toContain("needs.detect.outputs.apps != '[]'")
+  })
+
+  it('waits for both the version and the affected set', () => {
+    expect(job('build-and-push').needs).toEqual(expect.arrayContaining(['version', 'detect']))
+    expect(job('upload-sourcemaps').needs).toEqual(
+      expect.arrayContaining(['version', 'detect', 'build-and-push']),
+    )
   })
 
   it('bakes only the affected targets in a single invocation', () => {

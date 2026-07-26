@@ -3,6 +3,7 @@
   "files": {
     "includes": [
       "**/*.ts",
+      "**/*.mts",
       "**/*.tsx",
       "**/*.vue",
       "**/*.json",

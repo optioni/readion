@@ -507,10 +507,18 @@ MikroORM migrations run as a Kubernetes `Job` managed by ArgoCD on each deploy. 
 
 ### CI/CD — GitHub Actions
 
+One workflow (`images.yml`) publishes images on two triggers; `pr.yml` is the verify-only gate and never publishes.
+
 **On push to `main`:**
-- Build Docker image for each app (`apps/api`, `apps/web`, `apps/worker`)
-- Tag images with the branch name (e.g. `main`) — ArgoCD Image Updater detects the digest change and triggers a rollout
-- Push images to the container registry
+- Build and push an image for each **affected** app, tagged with the branch name (e.g. `main`) — ArgoCD Image Updater detects the digest change and triggers a rollout
+- Never creates a tag or a GitHub Release
+
+**On manual dispatch (production release):**
+- Takes **no input**. The version is derived from the release date as CalVer `vYYYY.M.MICRO` — `v2026.7.0` for the first release of a month, `v2026.7.1` for the second — computed once and shared by every job, so the image tag, the Sentry release and the release tag are the same string
+- Build and push an image for each **affected** app at that version, then — only after that succeeds — create the tag and a GitHub Release with generated notes. A failed build publishes nothing
+- Deployment stays out-of-band: GitOps decides when to move to a released tag
+
+**Affected apps** are resolved from the workspace dependency graph (`turbo ls --affected`) against a per-trigger diff base: the last `v*` tag on dispatch, the previous commit on push. A change to a shared `packages/*` workspace therefore rebuilds every consuming app, and a change to a root-level file (`Dockerfile`, `docker-bake.hcl`, `yarn.lock`, `.nvmrc`, `tsconfig.base.json`, or anything else outside a workspace) rebuilds all three — so in practice a large share of commits still build everything. Anything ambiguous — unresolvable diff base, a failed graph query, unusable output — fails safe to building all three, because an under-built set would leave GitOps running a stale image. Filtering is applied to `docker-bake.hcl` targets inside one bake invocation, so the shared `base`/`deps`/`packages-build` stages still compile once per run.
 
 **On pull request:**
 - Typecheck (`tsc --noEmit`) across all apps and packages

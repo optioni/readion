@@ -76,6 +76,17 @@ jobs:
           dateFormat: "YYYY.MM"
           format: "v%NOW%.%MICRO%"
 
+      # Downstream `TAG`/`SENTRY_RELEASE`/`tag_name` resolve the version with
+      # the `A && B || C` idiom, which falls through to the push-trigger value
+      # when B is empty. Without this guard, a version that failed to resolve
+      # would silently publish release images over the mutable `main` tag
+      # instead of failing the run.
+      - name: Fail fast on an unresolved version
+        if: github.event_name == 'workflow_dispatch' && steps.calver.outputs.version == ''
+        run: |
+          echo "CalVer action produced no version — refusing to publish a release." >&2
+          exit 1
+
   # Which of api/worker/web are affected since the trigger's diff base, read
   # from the real workspace dependency graph so a packages/* change fans out to
   # every consuming app. Emits a JSON array consumed by the build's bake
@@ -260,8 +271,8 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-
+      # No checkout: the action creates the tag and the Release through the
+      # API at the run's commit. A working tree is only needed to attach files.
       - name: Create GitHub Release (auto-generated notes)
         uses: softprops/action-gh-release@v3
         with:

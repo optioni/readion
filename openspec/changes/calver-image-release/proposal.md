@@ -21,6 +21,7 @@ None — the release path belongs to the existing `ci-pipeline` capability, whic
 
 ### Modified Capabilities
 
+- `kubernetes-deployment`: two requirements name `.github/workflows/main.yml` as the workflow that builds the deployed images, and one asserts Image Updater watches `latest`/`sha-*` tags — a scheme that workflow never actually pushed. Both are re-pointed at `images.yml`, and the false tag-scheme claim is dropped rather than replaced, leaving the `allow-tags` correction to its own change. No deployment behavior changes.
 - `ci-pipeline`: the release path is entirely uncovered by the spec today, so four requirements are **added** — *Manual CalVer release* (dispatch with no input, version derived from the release date, computed once, serialized runs), *Release published only after a successful build* (nothing published when the build fails; push never releases), *Affected-app image builds* (diff base per trigger, dependency-graph fan-out, explicit fail-safes), and *Source maps scoped to the published release* (release identifier matches what was baked into the images, no maps for unbuilt apps). The **Main-branch image build and tag** requirement is **modified** so only affected apps are built. The **Per-app Dockerfiles** requirement is **removed** and replaced by an added *Single-Dockerfile image build* requirement: all three images come from one root `Dockerfile` driven by `docker-bake.hcl` targets, which the removed wording contradicts.
 
 ## Impact
