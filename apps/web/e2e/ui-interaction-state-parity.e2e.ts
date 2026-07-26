@@ -12,9 +12,9 @@ import { gotoAuthenticated } from './support/session-view-seed'
 import { mockSettings, SETTINGS_PROFILE } from './support/settings-seed'
 
 function deferred(): { promise: Promise<void>; resolve: () => void } {
-  let resolve = () => undefined
+  let resolve = () => {}
   const promise = new Promise<void>((done) => {
-    resolve = done
+    resolve = () => done()
   })
   return { promise, resolve }
 }
