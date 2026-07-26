@@ -83,6 +83,41 @@ describe('Agent chat endpoint contract', () => {
 })
 
 describe('Agent chat page lifecycle', () => {
+  it('shows a busy loading region without flashing suggestions before initialization resolves', async () => {
+    let finishCreate = () => {}
+    vi.mocked(createStandaloneAgentConversation).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishCreate = () =>
+            // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
+            resolve(standaloneConversationDetail() as any)
+        }),
+    )
+    const wrapper = mount(AgentPage)
+
+    expect(wrapper.get('[data-testid="agent-chat-page"]').attributes('aria-busy')).toBe('true')
+    expect(wrapper.find('[data-testid="agent-empty-state"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="agent-suggestion"]').exists()).toBe(false)
+
+    finishCreate()
+    await flushPromises()
+    expect(wrapper.find('[data-testid="agent-empty-state"]').exists()).toBe(true)
+  })
+
+  it('renders an initialization error and retries once without reloading', async () => {
+    vi.mocked(createStandaloneAgentConversation).mockRejectedValueOnce(new Error('unavailable'))
+    const wrapper = mount(AgentPage)
+    await flushPromises()
+
+    expect(wrapper.get('[role="alert"]').text()).toContain("Couldn't start the conversation")
+    expect(wrapper.find('[data-testid="agent-empty-state"]').exists()).toBe(false)
+
+    await wrapper.get('[data-testid="readion-async-retry"]').trigger('click')
+    await flushPromises()
+    expect(createStandaloneAgentConversation).toHaveBeenCalledTimes(2)
+    expect(wrapper.find('[data-testid="agent-empty-state"]').exists()).toBe(true)
+  })
+
   it('creates a standalone conversation exactly once on mount', async () => {
     const wrapper = await mountPage()
 
@@ -160,9 +195,10 @@ describe('Agent chat composer conditional send state', () => {
 })
 
 describe('Agent chat TTL/new-chat icons', () => {
-  it('renders a clock icon inside the TTL chip', async () => {
+  it('does not render persistent TTL chrome for a fresh conversation', async () => {
     const wrapper = await mountPage()
-    expect(wrapper.find('[data-testid="agent-ttl-chip"] svg').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="agent-ttl-chip"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="agent-expiry-banner"]').exists()).toBe(false)
   })
 
   it('renders a refresh icon inside the New-chat button', async () => {
@@ -419,68 +455,43 @@ describe('Agent chat TTL chip and expiry banner', () => {
     vi.useRealTimers()
   })
 
-  it('shows chip with ~3h 50m remaining when lastActivityAt is 10 min ago', async () => {
+  it('shows no TTL chrome when about 3h 50m remain', async () => {
     const wrapper = await mountPage()
 
-    const chip = wrapper.find('[data-testid="agent-ttl-chip"]')
-    expect(chip.exists()).toBe(true)
-    expect(chip.text()).toContain('3h 50m')
+    expect(wrapper.find('[data-testid="agent-ttl-chip"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="agent-expiry-banner"]').exists()).toBe(false)
   })
 
-  it('shows expiry banner when conversation is near expiry (5 min remaining)', async () => {
-    // 3h 55min after lastActivityAt (09:05) → only 5 min left < 15 min threshold
-    vi.setSystemTime(new Date('2026-06-29T13:00:00.000Z'))
+  it('shows a polite expiry banner at the 30-minute threshold with rounded minutes', async () => {
+    vi.setSystemTime(new Date('2026-06-29T12:39:30.000Z'))
     const wrapper = await mountPage()
 
-    expect(wrapper.find('[data-testid="agent-expiry-banner"]').exists()).toBe(true)
-    expect(wrapper.text()).toContain('5 minutes')
+    const banner = wrapper.get('[data-testid="agent-expiry-banner"]')
+    expect(banner.attributes('role')).toBe('status')
+    expect(banner.attributes('aria-live')).toBe('polite')
+    expect(banner.text()).toContain('26 minutes')
+    expect(banner.text()).toContain('expires after inactivity')
   })
 
-  it('chip keeps the calm copy and never reads "Expires in" even near expiry', async () => {
-    // Near expiry (5 min remaining) — the prominent warning is the banner, not the chip
+  it('keeps the warning while sending and hides it only after the turn succeeds', async () => {
     vi.setSystemTime(new Date('2026-06-29T13:00:00.000Z'))
-    const wrapper = await mountPage()
-
-    const chip = wrapper.find('[data-testid="agent-ttl-chip"]')
-    expect(chip.exists()).toBe(true)
-    expect(chip.text()).not.toContain('Expires in')
-    expect(chip.text()).toContain('Resets after 4h idle')
-    expect(chip.text()).toContain('5m')
-  })
-
-  it('hides banner after send due to optimistic lastActivityAt reset', async () => {
-    // Start near expiry
-    vi.setSystemTime(new Date('2026-06-29T13:00:00.000Z'))
-    emitEvents([{ type: 'text-delta', textDelta: 'Sure!' }])
+    let finishTurn = () => {}
+    streamTurnMock.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finishTurn = resolve
+        }),
+    )
 
     const wrapper = await mountPage()
     expect(wrapper.find('[data-testid="agent-expiry-banner"]').exists()).toBe(true)
 
     await wrapper.find('[data-testid="agent-input"]').setValue('Hello')
     await wrapper.find('[data-testid="agent-send-button"]').trigger('click')
+    expect(wrapper.find('[data-testid="agent-expiry-banner"]').exists()).toBe(true)
+    finishTurn()
     await flushPromises()
-
-    // Optimistic reset sets lastActivityAt to now (13:00:00), remaining becomes ~4h
     expect(wrapper.find('[data-testid="agent-expiry-banner"]').exists()).toBe(false)
-  })
-
-  it('chip text jumps back to ~4h after send', async () => {
-    // Start near expiry
-    vi.setSystemTime(new Date('2026-06-29T13:00:00.000Z'))
-    emitEvents([{ type: 'text-delta', textDelta: 'Reply' }])
-
-    const wrapper = await mountPage()
-    const chip = wrapper.find('[data-testid="agent-ttl-chip"]')
-    // Before send: 5 min remaining
-    expect(chip.text()).toContain('5m')
-
-    await wrapper.find('[data-testid="agent-input"]').setValue('Question')
-    await wrapper.find('[data-testid="agent-send-button"]').trigger('click')
-    await flushPromises()
-
-    // After send: lastActivityAt reset to now, remaining ~4h
-    expect(chip.text()).toContain('4h')
   })
 })
 

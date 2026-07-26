@@ -1,31 +1,30 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import AgentBubble from '~/components/AgentBubble.vue'
 import AgentStarAvatar from '~/components/agent/AgentStarAvatar.vue'
+import ReadionAsyncRegion from '~/components/ReadionAsyncRegion.vue'
 import { AGENT_COPY, AGENT_SUGGESTIONS } from '~/composables/agentChatCopy'
-import { formatTtlRemaining, isTtlWarning, ttlRemainingMs } from '~/composables/agentChatTtl'
+import { useAgentChatTtl } from '~/composables/agentChatTtl'
 import { useStandaloneAgentChat } from '~/composables/useStandaloneAgentChat'
 
 definePageMeta({ layout: 'minimal' })
 
-const { messages, isStreaming, lastActivityAt, send, newChat } = useStandaloneAgentChat()
+const {
+  messages,
+  isStreaming,
+  lastActivityAt,
+  isInitializing,
+  isInitialized,
+  initializationError,
+  isRefreshing,
+  retryInitialization,
+  send,
+  newChat,
+} = useStandaloneAgentChat()
 const input = ref('')
 const hasInput = computed(() => input.value.trim().length > 0)
 
-const now = ref(Date.now())
-const nowInterval = setInterval(() => {
-  now.value = Date.now()
-}, 60_000)
-onUnmounted(() => clearInterval(nowInterval))
-
-const ttlRemaining = computed(() => ttlRemainingMs(lastActivityAt.value, now.value))
-const ttlWarning = computed(() => isTtlWarning(ttlRemaining.value))
-
-const ttlChipText = computed(
-  () => `Resets after 4h idle · ${formatTtlRemaining(ttlRemaining.value)} remaining`,
-)
-
-const ttlBannerMinutes = computed(() => Math.floor(ttlRemaining.value / (60 * 1000)))
+const { warning: ttlWarning, warningMinutes: ttlBannerMinutes } = useAgentChatTtl(lastActivityAt)
 
 async function handleSend(): Promise<void> {
   const content = input.value
@@ -47,6 +46,7 @@ async function handleNewChat(): Promise<void> {
   <div
     data-testid="agent-chat-page"
     class="flex min-h-0 flex-1 flex-col"
+    :aria-busy="isInitializing || isRefreshing ? 'true' : undefined"
   >
     <div
       data-testid="agent-header"
@@ -63,19 +63,10 @@ async function handleNewChat(): Promise<void> {
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <span
-          data-testid="agent-ttl-chip"
-          class="flex items-center gap-1 rounded-full border border-readion-border-strong px-2 py-0.5 text-[10px] text-readion-text-muted"
-        >
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 6v6l4 2" />
-          </svg>
-          {{ ttlChipText }}
-        </span>
         <button
           type="button"
           data-testid="agent-new-chat-button"
+          :disabled="isInitializing"
           class="flex items-center gap-1 rounded-md border border-readion-border-strong bg-readion-background-surface px-2.5 py-1 text-[11px] text-readion-text-muted transition-colors hover:text-readion-text-secondary"
           @click="handleNewChat"
         >
@@ -92,14 +83,28 @@ async function handleNewChat(): Promise<void> {
       v-if="ttlWarning"
       data-testid="agent-expiry-banner"
       class="border-b border-readion-warning/30 bg-readion-warning/10 px-5 py-2 text-[11px] text-readion-text-secondary"
+      role="status"
+      aria-live="polite"
     >
-      This conversation resets in {{ ttlBannerMinutes }} minutes due to inactivity. Send a message to reset the timer.
+      This conversation expires after inactivity. {{ ttlBannerMinutes }} minutes remaining. Send a
+      message to reset the timer.
     </div>
 
     <div data-testid="agent-message-list" class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-      <div class="mx-auto flex w-full max-w-[760px] flex-col">
+      <ReadionAsyncRegion
+        data-testid="agent-conversation-region"
+        aria-label="Agent conversation"
+        class="mx-auto w-full max-w-[760px]"
+        :loading="isInitializing && !isInitialized"
+        :error="initializationError ?? undefined"
+        :empty="isInitialized && messages.length === 0"
+        :refreshing="isRefreshing"
+        loading-label="Starting conversation…"
+        refresh-label="Refreshing conversation…"
+        @retry="retryInitialization"
+      >
+        <template #empty>
         <div
-          v-if="messages.length === 0"
           data-testid="agent-empty-state"
           class="flex flex-col items-center gap-4 py-10 text-center"
         >
@@ -145,16 +150,15 @@ async function handleNewChat(): Promise<void> {
             </div>
           </div>
         </div>
-
-        <template v-else>
-          <AgentBubble
-            v-for="(message, index) in messages"
-            :key="index"
-            :message="message"
-            :streaming="isStreaming && index === messages.length - 1"
-          />
         </template>
-      </div>
+
+        <AgentBubble
+          v-for="(message, index) in messages"
+          :key="index"
+          :message="message"
+          :streaming="isStreaming && index === messages.length - 1"
+        />
+      </ReadionAsyncRegion>
     </div>
 
     <div
@@ -176,7 +180,7 @@ async function handleNewChat(): Promise<void> {
           <button
             type="button"
             data-testid="agent-send-button"
-            :disabled="isStreaming || !hasInput"
+            :disabled="isStreaming || !isInitialized || !hasInput"
             aria-label="Send message"
             class="flex h-6.5 w-6.5 flex-shrink-0 items-center justify-center rounded-md text-white transition-colors disabled:opacity-60"
             :class="hasInput ? 'bg-readion-primary' : 'bg-readion-border-strong'"

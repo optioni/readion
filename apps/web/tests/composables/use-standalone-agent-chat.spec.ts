@@ -38,7 +38,7 @@ function renderChat() {
   return { api, wrapper }
 }
 
-describe('useStandaloneAgentChat analytics', () => {
+describe('useStandaloneAgentChat', () => {
   let recorder: ReturnType<typeof installUmamiRecorder>
 
   beforeEach(() => {
@@ -60,6 +60,45 @@ describe('useStandaloneAgentChat analytics', () => {
     expect(recorder.track).toHaveBeenCalledWith('agent_chat_opened', { standalone: true })
   })
 
+  it('exposes explicit initialization failure and retries exactly once', async () => {
+    vi.mocked(createStandaloneAgentConversation).mockRejectedValueOnce(new Error('unavailable'))
+    const { api } = renderChat()
+
+    expect(api.isInitializing.value).toBe(true)
+    await flushPromises()
+    expect(api.isInitialized.value).toBe(false)
+    expect(api.initializationError.value).toContain("Couldn't start the conversation")
+
+    const firstRetry = api.retryInitialization()
+    const duplicateRetry = api.retryInitialization()
+    await Promise.all([firstRetry, duplicateRetry])
+
+    expect(createStandaloneAgentConversation).toHaveBeenCalledTimes(2)
+    expect(api.isInitialized.value).toBe(true)
+    expect(api.initializationError.value).toBeNull()
+  })
+
+  it('preserves hydrated messages while a background refresh is pending', async () => {
+    const { api } = renderChat()
+    await flushPromises()
+    api.messages.value = [{ role: 'user', content: 'Keep me', toolResults: [], error: null }]
+
+    let finishRefresh = () => {}
+    vi.mocked(fetchAgentConversation).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishRefresh = () => resolve(conversation('conv-1'))
+        }),
+    )
+    const refresh = api.refreshConversation()
+
+    expect(api.isRefreshing.value).toBe(true)
+    expect(api.messages.value[0]?.content).toBe('Keep me')
+    finishRefresh()
+    await refresh
+    expect(api.isRefreshing.value).toBe(false)
+  })
+
   it('emits agent_message_sent { inSession: false } for a non-empty message', async () => {
     const { api } = renderChat()
     await flushPromises()
@@ -78,6 +117,28 @@ describe('useStandaloneAgentChat analytics', () => {
     await api.send('   ')
 
     expect(recorder.events.map((e) => e.event)).not.toContain('agent_message_sent')
+  })
+
+  it('resets lastActivityAt only after a successful turn completes', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-29T13:00:00.000Z'))
+    let finishTurn = () => {}
+    streamTurnMock.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finishTurn = resolve
+        }),
+    )
+    const { api } = renderChat()
+    await flushPromises()
+    const staleActivity = api.lastActivityAt.value
+
+    const pending = api.send('hello')
+    expect(api.lastActivityAt.value).toBe(staleActivity)
+    finishTurn()
+    await pending
+    expect(api.lastActivityAt.value).toBe('2026-06-29T13:00:00.000Z')
+    vi.useRealTimers()
   })
 
   it('emits agent_new_chat when the user starts a new chat', async () => {

@@ -1,10 +1,13 @@
-import { describe, expect, it } from 'vitest'
+import { mount } from '@vue/test-utils'
+import { describe, expect, it, vi } from 'vitest'
+import { defineComponent, ref } from 'vue'
 import {
   formatTtlRemaining,
   isTtlWarning,
   TTL_WARNING_THRESHOLD_MS,
   TTL_WINDOW_MS,
   ttlRemainingMs,
+  useAgentChatTtl,
 } from '~/composables/agentChatTtl'
 
 const FIXED_NOW = new Date('2026-06-29T10:00:00.000Z').getTime()
@@ -14,8 +17,8 @@ describe('TTL constants', () => {
     expect(TTL_WINDOW_MS).toBe(4 * 60 * 60 * 1000)
   })
 
-  it('TTL_WARNING_THRESHOLD_MS is exactly 15 minutes', () => {
-    expect(TTL_WARNING_THRESHOLD_MS).toBe(15 * 60 * 1000)
+  it('TTL_WARNING_THRESHOLD_MS is exactly 30 minutes', () => {
+    expect(TTL_WARNING_THRESHOLD_MS).toBe(30 * 60 * 1000)
   })
 })
 
@@ -98,6 +101,10 @@ describe('formatTtlRemaining', () => {
     expect(formatTtlRemaining(12 * 60 * 1000)).toBe('12m')
   })
 
+  it('rounds a partial remaining minute up for actionable warning copy', () => {
+    expect(formatTtlRemaining(25 * 60 * 1000 + 1)).toBe('26m')
+  })
+
   it('formats 0m when remaining is 0', () => {
     expect(formatTtlRemaining(0)).toBe('0m')
   })
@@ -108,6 +115,37 @@ describe('formatTtlRemaining', () => {
 
   it('formats 1h 1m for 61 minutes', () => {
     expect(formatTtlRemaining(61 * 60 * 1000)).toBe('1h 1m')
+  })
+})
+
+describe('useAgentChatTtl timer lifecycle', () => {
+  it('derives rounded warning minutes live and stops its timer when unmounted', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(FIXED_NOW)
+    const clearIntervalSpy = vi.spyOn(globalThis, 'clearInterval')
+    const activity = ref(
+      new Date(FIXED_NOW - (TTL_WINDOW_MS - (25 * 60 * 1000 + 30_000))).toISOString(),
+    )
+    let ttl!: ReturnType<typeof useAgentChatTtl>
+    const wrapper = mount(
+      defineComponent({
+        setup() {
+          ttl = useAgentChatTtl(activity)
+          return () => null
+        },
+      }),
+    )
+
+    expect(ttl.warning.value).toBe(true)
+    expect(ttl.warningMinutes.value).toBe(26)
+
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(ttl.warningMinutes.value).toBe(25)
+
+    wrapper.unmount()
+    expect(clearIntervalSpy).toHaveBeenCalledTimes(1)
+    clearIntervalSpy.mockRestore()
+    vi.useRealTimers()
   })
 })
 
