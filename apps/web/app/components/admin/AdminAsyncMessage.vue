@@ -1,16 +1,40 @@
 <script setup lang="ts">
-defineProps<{
-  kind: 'loading' | 'error'
-  message: string
-}>()
+import { computed, ref, watch } from 'vue'
+import ReadionButton from '~/components/ReadionButton.vue'
+
+const props = withDefaults(
+  defineProps<{
+    kind: 'loading' | 'error'
+    message: string
+    retrying?: boolean
+  }>(),
+  { retrying: false },
+)
 
 const emit = defineEmits<{ retry: [] }>()
+const retryRequested = ref(false)
+const retryBusy = computed(() => props.retrying || retryRequested.value)
+
+function requestRetry(): void {
+  if (retryBusy.value) return
+  retryRequested.value = true
+  emit('retry')
+}
+
+watch(
+  () => props.retrying,
+  (isRetrying, wasRetrying) => {
+    if (wasRetrying && !isRetrying) retryRequested.value = false
+  },
+)
 </script>
 
 <template>
   <div
     data-testid="admin-async-message"
     :data-kind="kind"
+    :aria-busy="kind === 'loading' ? 'true' : undefined"
+    :role="kind === 'loading' ? 'status' : 'alert'"
     class="flex items-center justify-center gap-2.5 px-4 py-8 text-sm"
   >
     <span
@@ -38,14 +62,16 @@ const emit = defineEmits<{ retry: [] }>()
     <span :class="kind === 'error' ? 'text-readion-status-poor' : 'text-slate-400'">
       {{ message }}
     </span>
-    <button
+    <ReadionButton
       v-if="kind === 'error'"
-      type="button"
       data-testid="admin-async-retry-btn"
-      class="ml-1 rounded-md border border-readion-status-poor/35 px-2.5 py-1 font-medium text-readion-status-poor text-xs transition-colors hover:bg-readion-status-poor/10"
-      @click="emit('retry')"
+      variant="secondary"
+      :busy="retryBusy"
+      busy-label="Retrying…"
+      class="ml-1 !min-h-0 px-2.5 py-1 text-xs"
+      @click="requestRetry"
     >
       Retry
-    </button>
+    </ReadionButton>
   </div>
 </template>

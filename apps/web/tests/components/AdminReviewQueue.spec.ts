@@ -129,6 +129,7 @@ const DETAIL_B: QuarantinedItemDetail = {
 }
 
 const META: CollectionMeta = { total: 2, page: 1, limit: 25 }
+const quarantineRefetch = vi.fn()
 
 function stubQuarantine(
   items: QuarantinedItemListItem[] = ITEMS,
@@ -138,7 +139,7 @@ function stubQuarantine(
     data: computed(() => ({ data: items, meta: META })),
     isLoading: computed(() => options.isLoading ?? false),
     isError: computed(() => options.isError ?? false),
-    refetch: vi.fn(),
+    refetch: quarantineRefetch,
     // biome-ignore lint/suspicious/noExplicitAny: vue-query return shape narrowed in tests
   } as any)
 }
@@ -230,6 +231,26 @@ describe('AdminReviewQueue render', () => {
     expect(wrapper.findAll('[data-testid="review-queue-item"]')).toHaveLength(0)
   })
 
+  it('preserves successful queue rows when a background refresh fails', () => {
+    stubQuarantine(ITEMS, { isError: true })
+    stubQuarantineDetail()
+    const { wrapper } = mountQueue()
+
+    expect(wrapper.findAll('[data-testid="review-queue-item"]')).toHaveLength(2)
+    expect(wrapper.find('[data-testid="admin-review-queue-error"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="review-queue-empty"]').exists()).toBe(false)
+  })
+
+  it('retries the failed queue read once per activation', async () => {
+    stubQuarantine([], { isError: true })
+    stubQuarantineDetail()
+    const { wrapper } = mountQueue()
+
+    await wrapper.find('[data-testid="admin-async-retry-btn"]').trigger('click')
+
+    expect(quarantineRefetch).toHaveBeenCalledTimes(1)
+  })
+
   it('shows an empty state when there are no pending items', () => {
     stubQuarantine([])
     stubQuarantineDetail()
@@ -296,6 +317,37 @@ describe('AdminReviewQueue approve', () => {
     expect(wrapper.find('[data-testid="review-queue-detail-empty"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="review-queue-detail"]').exists()).toBe(false)
   })
+
+  it('shows only Approve as busy and rejects duplicate approval while pending', async () => {
+    stubQuarantine()
+    stubQuarantineDetail()
+    let resolveApprove: ((value: ReturnType<typeof okResolution>) => void) | undefined
+    vi.mocked(quarantineAdminControllerApprove).mockReturnValue(
+      new Promise((resolve) => {
+        resolveApprove = resolve
+      }) as never,
+    )
+    const { wrapper } = mountQueue()
+
+    await rowFor(wrapper, ITEM_A_ID).trigger('click')
+    await flushPromises()
+
+    const approve = wrapper.find('[data-testid="approve-item-btn"]')
+    await approve.trigger('click')
+    await flushPromises()
+
+    const reject = wrapper.find('[data-testid="reject-item-btn"]')
+    expect(approve.attributes('aria-busy')).toBe('true')
+    expect(approve.text()).toContain('Approving…')
+    expect(reject.attributes('disabled')).toBeDefined()
+    expect(reject.attributes('aria-busy')).toBeUndefined()
+
+    await approve.trigger('click')
+    expect(quarantineAdminControllerApprove).toHaveBeenCalledTimes(1)
+
+    resolveApprove?.(okResolution(ITEM_A_ID, 'approved'))
+    await flushPromises()
+  })
 })
 
 describe('AdminReviewQueue reject', () => {
@@ -342,6 +394,30 @@ describe('AdminReviewQueue reject', () => {
     expect(error.exists()).toBe(true)
     expect(error.text()).toContain('already been resolved')
     expect(invalidateSpy).not.toHaveBeenCalled()
+  })
+
+  it('preserves the reviewed evidence and restores Reject after an RFC 7807 failure', async () => {
+    stubQuarantine()
+    stubQuarantineDetail()
+    vi.mocked(quarantineAdminControllerReject).mockRejectedValue(
+      new ReadionProblemDetailsError({
+        title: 'Unprocessable Entity',
+        status: 422,
+        detail: 'The rejection reason could not be recorded.',
+      }),
+    )
+    const { wrapper } = mountQueue()
+
+    await rowFor(wrapper, ITEM_B_ID).trigger('click')
+    await flushPromises()
+    await wrapper.find('[data-testid="reject-item-btn"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="review-queue-evidence-card"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="review-queue-action-error"]').text()).toContain(
+      'The rejection reason could not be recorded.',
+    )
+    expect(wrapper.find('[data-testid="reject-item-btn"]').attributes('disabled')).toBeUndefined()
   })
 })
 

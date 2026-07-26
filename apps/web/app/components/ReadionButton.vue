@@ -84,7 +84,7 @@ const _pressedState = computed(() =>
         data-testid="readion-button-busy-label"
         class="col-start-1 row-start-1 inline-flex items-center justify-center gap-2"
       >
-        <span
+        <svg
           data-testid="readion-button-spinner"
           class="size-3.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none"
           aria-hidden="true"

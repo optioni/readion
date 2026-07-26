@@ -106,6 +106,30 @@ describe('CertSetupReviewStep submit', () => {
     expect(registerCreatedDraft).toHaveBeenCalledWith(NEW_CERT_ID)
   })
 
+  it('shows Creating… and rejects duplicate submission while the create request is pending', async () => {
+    let resolveCreate: ((value: ReturnType<typeof createdEnvelope>) => void) | undefined
+    vi.mocked(certSetupControllerCreate).mockReturnValue(
+      new Promise((resolve) => {
+        resolveCreate = resolve
+      }) as never,
+    )
+    const { wrapper } = mountReview(setupWizard())
+
+    const submit = wrapper.find('[data-testid="submit-draft-btn"]')
+    await submit.trigger('click')
+    await flushPromises()
+
+    expect(submit.attributes('aria-busy')).toBe('true')
+    expect(submit.text()).toContain('Creating…')
+    expect(submit.find('[data-testid="readion-button-spinner"]').exists()).toBe(true)
+
+    await submit.trigger('click')
+    expect(certSetupControllerCreate).toHaveBeenCalledTimes(1)
+
+    resolveCreate?.(createdEnvelope())
+    await flushPromises()
+  })
+
   it('surfaces a 409 duplicate-code error and keeps fields editable', async () => {
     vi.mocked(certSetupControllerCreate).mockRejectedValue(
       new ReadionProblemDetailsError({

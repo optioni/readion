@@ -8,6 +8,7 @@ import {
   certSetupControllerDiscoverSources,
   certSetupControllerExtract,
   certSetupControllerReadExtraction,
+  certSetupControllerReverify,
 } from '~~/src/api/cert-setup/cert-setup'
 import { certificationsControllerDetail } from '~~/src/api/certifications/certifications'
 
@@ -31,7 +32,7 @@ const CURRENT_CERT = {
   name: 'AWS Certified Solutions Architect — Associate',
   provider: 'AWS',
   code: CODE,
-  domains: [],
+  domains: [{ name: 'Secure Architectures', weight: 100 }],
   questionCount: 65,
   passingScore: 72,
   timeLimitMinutes: 130,
@@ -39,7 +40,10 @@ const CURRENT_CERT = {
 }
 
 const EXTRACTION_FIELDS: CertExtractionFields = {
-  domains: { value: [], citation: { url: SOURCE_URL, passage: 'domains' } },
+  domains: {
+    value: [{ name: 'Secure Architectures', weight: 100 }],
+    citation: { url: SOURCE_URL, passage: 'domains' },
+  },
   questionCount: { unverified: true },
   passingScore: { value: 67, citation: { url: SOURCE_URL, passage: 'passing' } },
   timeLimitMinutes: { value: 130, citation: { url: SOURCE_URL, passage: 'time' } },
@@ -48,12 +52,14 @@ const EXTRACTION_FIELDS: CertExtractionFields = {
 const dueData = ref<unknown[]>([DUE_ITEM])
 const dueLoading = ref(false)
 const dueError = ref(false)
+const dueRefetch = vi.fn()
 
 vi.mock('~/composables/useDueForReverification', () => ({
   useDueForReverification: () => ({
     data: dueData,
     isLoading: dueLoading,
     isError: dueError,
+    refetch: dueRefetch,
   }),
 }))
 
@@ -80,6 +86,8 @@ async function flush(times = 8) {
 beforeEach(() => {
   vi.clearAllMocks()
   dueData.value = [DUE_ITEM]
+  dueLoading.value = false
+  dueError.value = false
   vi.mocked(certificationsControllerDetail).mockResolvedValue(envelope(CURRENT_CERT))
   vi.mocked(certSetupControllerDiscoverSources).mockResolvedValue(
     envelope({
@@ -93,6 +101,7 @@ beforeEach(() => {
   vi.mocked(certSetupControllerReadExtraction).mockResolvedValue(
     envelope({ state: 'completed', fields: EXTRACTION_FIELDS }),
   )
+  vi.mocked(certSetupControllerReverify).mockResolvedValue(envelope(CURRENT_CERT))
 })
 
 afterEach(() => {
@@ -152,5 +161,57 @@ describe('AdminCertReverify', () => {
 
     expect(wrapper.find('[data-testid="reverify-not-found"]').exists()).toBe(true)
     expect(certificationsControllerDetail).not.toHaveBeenCalled()
+  })
+
+  it('does not flash not-found while the due-certification read is unresolved', async () => {
+    dueData.value = []
+    dueLoading.value = true
+    const wrapper = mountReverify()
+    await nextTick()
+
+    expect(wrapper.find('[data-testid="reverify-due-loading"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="reverify-not-found"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('shows a retryable due-certification read failure without a false not-found state', async () => {
+    dueData.value = []
+    dueError.value = true
+    const wrapper = mountReverify()
+    await nextTick()
+
+    expect(wrapper.find('[data-testid="reverify-due-error"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="reverify-not-found"]').exists()).toBe(false)
+
+    await wrapper.find('[data-testid="admin-async-retry-btn"]').trigger('click')
+    expect(dueRefetch).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  it('shows Re-verifying… and rejects duplicate submit while re-verification is pending', async () => {
+    let resolveReverify: ((value: ReturnType<typeof envelope>) => void) | undefined
+    vi.mocked(certSetupControllerReverify).mockReturnValue(
+      new Promise((resolve) => {
+        resolveReverify = resolve
+      }) as never,
+    )
+    const wrapper = mountReverify()
+    await flush()
+
+    const submit = wrapper.find('[data-testid="reverify-submit-btn"]')
+    await submit.trigger('click')
+    await flushPromises()
+
+    expect(certSetupControllerReverify).toHaveBeenCalledTimes(1)
+    expect(submit.attributes('aria-busy')).toBe('true')
+    expect(submit.text()).toContain('Re-verifying…')
+    expect(submit.find('[data-testid="readion-button-spinner"]').exists()).toBe(true)
+
+    await submit.trigger('click')
+    expect(certSetupControllerReverify).toHaveBeenCalledTimes(1)
+
+    resolveReverify?.(envelope(CURRENT_CERT))
+    await flush()
+    wrapper.unmount()
   })
 })

@@ -35,12 +35,13 @@ const DETAIL: QuarantinedItemDetail = {
 
 function stubDetail(
   data: QuarantinedItemDetail | undefined,
-  options: { isLoading?: boolean; isError?: boolean } = {},
+  options: { isLoading?: boolean; isError?: boolean; refetch?: ReturnType<typeof vi.fn> } = {},
 ) {
   vi.mocked(useAdminQuarantineDetail).mockReturnValue({
     data: computed(() => data),
     isLoading: computed(() => options.isLoading ?? false),
     isError: computed(() => options.isError ?? false),
+    refetch: options.refetch ?? vi.fn(),
     // biome-ignore lint/suspicious/noExplicitAny: vue-query return shape narrowed in tests
   } as any)
 }
@@ -131,12 +132,58 @@ describe('AdminReviewQueueDetail loaded state', () => {
     expect(wrapper.emitted('reject')).toEqual([[ITEM_ID]])
   })
 
-  it('disables the resolve buttons while the item id matches pendingId', () => {
+  it('identifies Approve as busy while keeping Reject distinctly unavailable', () => {
     stubDetail(DETAIL)
-    const wrapper = mount(AdminReviewQueueDetail, { props: { id: ITEM_ID, pendingId: ITEM_ID } })
+    const wrapper = mount(AdminReviewQueueDetail, {
+      props: { id: ITEM_ID, pendingId: ITEM_ID, pendingAction: 'approve' },
+    })
 
-    expect(wrapper.find('[data-testid="approve-item-btn"]').attributes('disabled')).toBeDefined()
-    expect(wrapper.find('[data-testid="reject-item-btn"]').attributes('disabled')).toBeDefined()
+    const approve = wrapper.find('[data-testid="approve-item-btn"]')
+    const reject = wrapper.find('[data-testid="reject-item-btn"]')
+
+    expect(approve.attributes('aria-busy')).toBe('true')
+    expect(approve.text()).toContain('Approving…')
+    expect(
+      approve.find('svg[data-testid="readion-button-spinner"][aria-hidden="true"]').exists(),
+    ).toBe(true)
+    expect(reject.attributes('disabled')).toBeDefined()
+    expect(reject.attributes('aria-busy')).toBeUndefined()
+    expect(reject.text()).toContain('Reject')
+    expect(reject.find('[data-testid="readion-button-spinner"]').exists()).toBe(false)
+  })
+
+  it('identifies Reject as busy while keeping Approve distinctly unavailable', () => {
+    stubDetail(DETAIL)
+    const wrapper = mount(AdminReviewQueueDetail, {
+      props: { id: ITEM_ID, pendingId: ITEM_ID, pendingAction: 'reject' },
+    })
+
+    const approve = wrapper.find('[data-testid="approve-item-btn"]')
+    const reject = wrapper.find('[data-testid="reject-item-btn"]')
+
+    expect(reject.attributes('aria-busy')).toBe('true')
+    expect(reject.text()).toContain('Rejecting…')
+    expect(approve.attributes('disabled')).toBeDefined()
+    expect(approve.attributes('aria-busy')).toBeUndefined()
+    expect(approve.text()).toContain('Approve')
+  })
+
+  it('preserves evidence and enables recovery after an operation failure', () => {
+    stubDetail(DETAIL)
+    const wrapper = mount(AdminReviewQueueDetail, {
+      props: {
+        id: ITEM_ID,
+        pendingId: null,
+        pendingAction: null,
+        actionError: 'Could not reject this item.',
+      },
+    })
+
+    expect(wrapper.find('[data-testid="review-queue-evidence-card"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="review-queue-action-error"]').text()).toContain(
+      'Could not reject this item.',
+    )
+    expect(wrapper.find('[data-testid="reject-item-btn"]').attributes('disabled')).toBeUndefined()
   })
 
   it('falls back to provenance.score when the nested verdict is absent (legacy/mocked payloads)', () => {
@@ -159,12 +206,25 @@ describe('AdminReviewQueueDetail loaded state', () => {
 })
 
 describe('AdminReviewQueueDetail error state', () => {
-  it('shows an error state and no detail pane when the fetch fails', () => {
-    stubDetail(undefined, { isError: true })
+  it('shows a retryable error state and no detail pane when the fetch fails', async () => {
+    const refetch = vi.fn()
+    stubDetail(undefined, { isError: true, refetch })
     const wrapper = mount(AdminReviewQueueDetail, { props: { id: ITEM_ID } })
 
     expect(wrapper.find('[data-testid="review-queue-detail-error"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="review-queue-detail"]').exists()).toBe(false)
+
+    await wrapper.find('[data-testid="admin-async-retry-btn"]').trigger('click')
+    expect(refetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('preserves successful detail evidence when a background refresh fails', () => {
+    stubDetail(DETAIL, { isError: true })
+    const wrapper = mount(AdminReviewQueueDetail, { props: { id: ITEM_ID } })
+
+    expect(wrapper.find('[data-testid="review-queue-detail"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="review-queue-evidence-card"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="review-queue-detail-error"]').exists()).toBe(false)
   })
 })
 

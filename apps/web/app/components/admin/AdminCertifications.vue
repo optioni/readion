@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import AdminAsyncMessage from '~/components/admin/AdminAsyncMessage.vue'
 import AdminHeaderBar from '~/components/admin/AdminHeaderBar.vue'
 import AdminTableShell from '~/components/admin/AdminTableShell.vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import { adminQueryKeys } from '~/composables/adminQueryKeys'
 import { useAdminCertificationsList } from '~/composables/useAdminCertificationsList'
 import { useCertReverifyFlow } from '~/composables/useCertReverifyFlow'
@@ -15,17 +16,28 @@ const queryClient = useQueryClient()
 const dueQuery = useDueForReverification()
 
 const dueItems = computed<DueForReverificationItem[]>(() => dueQuery.data.value ?? [])
-const isLoading = computed(() => dueQuery.isLoading.value)
-const isError = computed(() => dueQuery.isError.value)
+const isLoading = computed(() => dueQuery.isLoading.value && dueItems.value.length === 0)
+const isError = computed(() => dueQuery.isError.value && dueItems.value.length === 0)
 
 const existingCertsQuery = useAdminCertificationsList()
 const existingCerts = computed<CertificationResponseDto[]>(
   () => existingCertsQuery.data.value ?? [],
 )
-
-const { diff, reverifyError, submitting, start, submit, reset } = useCertReverifyFlow(() =>
-  queryClient.invalidateQueries({ queryKey: adminQueryKeys.dueForReverification() }),
+const existingCertsLoading = computed(
+  () => existingCertsQuery.isLoading.value && existingCerts.value.length === 0,
 )
+const existingCertsError = computed(
+  () => existingCertsQuery.isError.value && existingCerts.value.length === 0,
+)
+
+const { activeCertId, diff, reverifyError, starting, submitting, start, submit, reset } =
+  useCertReverifyFlow(() =>
+    queryClient.invalidateQueries({ queryKey: adminQueryKeys.dueForReverification() }),
+  )
+
+function isStarting(itemId: string): boolean {
+  return starting.value === true && activeCertId.value === itemId
+}
 
 function startReverify(item: DueForReverificationItem): Promise<void> {
   return start(item)
@@ -94,8 +106,22 @@ function formatVerifiedAt(verifiedAt: string | null): string {
       </span>
     </div>
 
+    <AdminAsyncMessage
+      v-if="existingCertsLoading"
+      kind="loading"
+      message="Loading certifications…"
+      data-testid="existing-certs-loading"
+    />
+    <AdminAsyncMessage
+      v-else-if="existingCertsError"
+      kind="error"
+      message="Could not load certifications. Please try again."
+      :retrying="existingCertsQuery.isFetching.value"
+      data-testid="existing-certs-error"
+      @retry="existingCertsQuery.refetch()"
+    />
     <p
-      v-if="existingCerts.length === 0"
+      v-else-if="existingCerts.length === 0"
       data-testid="existing-certs-empty"
       class="text-slate-400 text-sm"
     >
@@ -153,6 +179,7 @@ function formatVerifiedAt(verifiedAt: string | null): string {
       v-else-if="isError"
       kind="error"
       message="Could not load certifications. Please try again."
+      :retrying="dueQuery.isFetching?.value ?? false"
       data-testid="due-error"
       @retry="dueQuery.refetch()"
     />
@@ -184,14 +211,17 @@ function formatVerifiedAt(verifiedAt: string | null): string {
           </td>
           <td class="px-3 py-3 text-slate-300">{{ formatVerifiedAt(item.verifiedAt) }}</td>
           <td class="px-3 py-3">
-            <button
-              type="button"
+            <ReadionButton
               data-testid="reverify-btn"
-              class="rounded-md border border-readion-background-surface px-3 py-1.5 font-medium text-slate-100 text-xs transition-colors hover:bg-readion-background-surface"
+              variant="secondary"
+              :disabled="starting"
+              :busy="isStarting(item.id)"
+              busy-label="Re-verifying…"
+              class="!min-h-0 px-3 py-1.5 text-xs"
               @click="startReverify(item)"
             >
               Re-verify
-            </button>
+            </ReadionButton>
           </td>
         </tr>
       </tbody>
@@ -254,28 +284,22 @@ function formatVerifiedAt(verifiedAt: string | null): string {
             {{ reverifyError }}
           </p>
           <div class="flex-1" />
-          <button
-            type="button"
+          <ReadionButton
             data-testid="reverify-cancel-btn"
-            class="rounded-lg border border-readion-background-surface px-4 py-2 font-medium text-slate-100 text-sm transition-colors hover:bg-readion-background-surface"
+            variant="secondary"
+            :disabled="submitting"
             @click="cancelReverify"
           >
             Cancel
-          </button>
-          <button
-            type="button"
+          </ReadionButton>
+          <ReadionButton
             data-testid="reverify-submit-btn"
-            :disabled="submitting"
-            class="inline-flex items-center gap-2 rounded-lg bg-readion-primary px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-50"
+            :busy="submitting"
+            busy-label="Re-verifying…"
             @click="submitReverify"
           >
-            <span
-              v-if="submitting"
-              data-testid="reverify-submitting-spinner"
-              class="size-3.5 animate-spin rounded-full border-2 border-white/35 border-t-white"
-            />
-            {{ submitting ? 'Re-verifying…' : 'Accept all & re-verify' }}
-          </button>
+            Accept all & re-verify
+          </ReadionButton>
         </div>
       </div>
     </div>

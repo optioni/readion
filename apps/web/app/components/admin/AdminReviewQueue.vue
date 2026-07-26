@@ -19,8 +19,8 @@ const quarantineQuery = useAdminQuarantine()
 
 const items = computed(() => quarantineQuery.data.value?.data ?? [])
 const awaitingCount = computed(() => quarantineQuery.data.value?.meta.total ?? items.value.length)
-const isLoading = computed(() => quarantineQuery.isLoading.value)
-const isError = computed(() => quarantineQuery.isError.value)
+const isLoading = computed(() => quarantineQuery.isLoading.value && items.value.length === 0)
+const isError = computed(() => quarantineQuery.isError.value && items.value.length === 0)
 
 const certsQuery = useAdminCertificationsList()
 const certsById = computed(() =>
@@ -50,36 +50,44 @@ function selectCertFilter(certId: string | null) {
 const selectedId = ref<string | null>(null)
 const actionError = ref<string | null>(null)
 const pendingId = ref<string | null>(null)
+const pendingAction = ref<'approve' | 'reject' | null>(null)
 
 function select(id: string) {
+  actionError.value = null
   selectedId.value = id
 }
 
 async function resolve(
   id: string,
+  actionName: 'approve' | 'reject',
   action: typeof quarantineAdminControllerApprove | typeof quarantineAdminControllerReject,
 ) {
+  if (pendingId.value !== null) return
   actionError.value = null
   pendingId.value = id
+  pendingAction.value = actionName
   try {
     await action(id)
     await queryClient.invalidateQueries({ queryKey: adminQueryKeys.quarantine() })
     selectedId.value = null
   } catch (error) {
-    if (error instanceof ReadionProblemDetailsError && error.status === 409) {
+    if (error instanceof ReadionProblemDetailsError) {
       actionError.value = error.detail ?? error.title
+    } else {
+      actionError.value = `Could not ${actionName} this item. Please try again.`
     }
   } finally {
     pendingId.value = null
+    pendingAction.value = null
   }
 }
 
 function approve(id: string) {
-  return resolve(id, quarantineAdminControllerApprove)
+  return resolve(id, 'approve', quarantineAdminControllerApprove)
 }
 
 function reject(id: string) {
-  return resolve(id, quarantineAdminControllerReject)
+  return resolve(id, 'reject', quarantineAdminControllerReject)
 }
 </script>
 
@@ -105,19 +113,12 @@ function reject(id: string) {
       v-else-if="isError"
       kind="error"
       message="Could not load the review queue. Please try again."
+      :retrying="quarantineQuery.isFetching?.value ?? false"
       data-testid="admin-review-queue-error"
       @retry="quarantineQuery.refetch()"
     />
 
     <template v-else>
-      <p
-        v-if="actionError"
-        data-testid="review-queue-error-banner"
-        class="px-7 pt-3 text-red-400 text-sm"
-      >
-        {{ actionError }}
-      </p>
-
       <div class="flex flex-1 overflow-hidden">
         <div
           v-if="items.length === 0"
@@ -139,6 +140,8 @@ function reject(id: string) {
         <AdminReviewQueueDetail
           :id="selectedId"
           :pending-id="pendingId"
+          :pending-action="pendingAction"
+          :action-error="actionError"
           @approve="approve"
           @reject="reject"
         />

@@ -28,6 +28,7 @@ export interface CertReverifyFlow {
   currentCert: ReturnType<typeof ref<CertificationResponseDto | null>>
   diff: ReturnType<typeof ref<CertDiff | null>>
   reverifyError: ReturnType<typeof ref<string | null>>
+  starting: ReturnType<typeof ref<boolean>>
   submitting: ReturnType<typeof ref<boolean>>
   start: (item: CertReverifyTarget) => Promise<void>
   submit: () => Promise<void>
@@ -45,6 +46,7 @@ export function useCertReverifyFlow(onSubmitted?: () => void | Promise<void>): C
   const extractionFields = ref<CertExtractionFields | null>(null)
   const diff = ref<CertDiff | null>(null)
   const reverifyError = ref<string | null>(null)
+  const starting = ref(false)
   const submitting = ref(false)
 
   // Re-verification runs the same cert-extraction job as the setup wizard, so it consumes the same
@@ -82,7 +84,7 @@ export function useCertReverifyFlow(onSubmitted?: () => void | Promise<void>): C
     }
   })
 
-  function reset(): void {
+  function clearFlow(): void {
     activeCertId.value = null
     currentCert.value = null
     confirmedSourceUrl.value = null
@@ -91,8 +93,15 @@ export function useCertReverifyFlow(onSubmitted?: () => void | Promise<void>): C
     diff.value = null
   }
 
+  function reset(): void {
+    clearFlow()
+    starting.value = false
+  }
+
   async function start(item: CertReverifyTarget): Promise<void> {
-    reset()
+    if (starting.value || submitting.value) return
+    starting.value = true
+    clearFlow()
     reverifyError.value = null
     activeCertId.value = item.id
 
@@ -109,10 +118,13 @@ export function useCertReverifyFlow(onSubmitted?: () => void | Promise<void>): C
         error instanceof ReadionProblemDetailsError
           ? (error.detail ?? error.title)
           : 'Re-verification could not be started. Please try again.'
+    } finally {
+      starting.value = false
     }
   }
 
   async function submit(): Promise<void> {
+    if (submitting.value) return
     if (
       !activeCertId.value ||
       !diff.value ||
@@ -143,5 +155,15 @@ export function useCertReverifyFlow(onSubmitted?: () => void | Promise<void>): C
     }
   }
 
-  return { activeCertId, currentCert, diff, reverifyError, submitting, start, submit, reset }
+  return {
+    activeCertId,
+    currentCert,
+    diff,
+    reverifyError,
+    starting,
+    submitting,
+    start,
+    submit,
+    reset,
+  }
 }

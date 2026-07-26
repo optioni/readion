@@ -14,6 +14,8 @@ describe('AdminAsyncMessage', () => {
     expect(wrapper.find('[data-testid="admin-async-spinner"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('Loading certifications…')
     expect(wrapper.find('[data-testid="admin-async-retry-btn"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="admin-async-message"]').attributes('aria-busy')).toBe('true')
+    expect(wrapper.find('[role="status"]').exists()).toBe(true)
   })
 
   it('renders an error state with a Retry action that emits retry', async () => {
@@ -25,9 +27,13 @@ describe('AdminAsyncMessage', () => {
       'error',
     )
     expect(wrapper.find('[data-testid="admin-async-error-icon"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="admin-async-message"]').attributes('role')).toBe('alert')
     const retryBtn = wrapper.find('[data-testid="admin-async-retry-btn"]')
     expect(retryBtn.exists()).toBe(true)
     expect(retryBtn.text()).toBe('Retry')
+
+    await retryBtn.trigger('click')
+    expect(wrapper.emitted('retry')).toHaveLength(1)
 
     await retryBtn.trigger('click')
     expect(wrapper.emitted('retry')).toHaveLength(1)

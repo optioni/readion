@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import type { QuarantinedItemDetail } from '@readion/shared'
 import { computed } from 'vue'
+import AdminAsyncMessage from '~/components/admin/AdminAsyncMessage.vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import { useAdminQuarantineDetail } from '~/composables/useAdminQuarantineDetail'
 import { formatVerdict, verdictInputFromProvenance } from '~/utils/formatVerdict'
 
 const props = defineProps<{
   id: string | null
   pendingId?: string | null
+  pendingAction?: 'approve' | 'reject' | null
+  actionError?: string | null
 }>()
 
 const emit = defineEmits<{ approve: [id: string]; reject: [id: string] }>()
@@ -14,9 +18,9 @@ const emit = defineEmits<{ approve: [id: string]; reject: [id: string] }>()
 const idRef = computed(() => props.id)
 const detailQuery = useAdminQuarantineDetail(idRef)
 
-const isLoading = computed(() => detailQuery.isLoading.value)
-const isError = computed(() => detailQuery.isError.value)
 const detail = computed<QuarantinedItemDetail | undefined>(() => detailQuery.data.value)
+const isLoading = computed(() => detailQuery.isLoading.value && !detail.value)
+const isError = computed(() => detailQuery.isError.value && !detail.value)
 
 function firstSpan(supportingSpans: string[]): string | null {
   return supportingSpans[0] ?? null
@@ -42,6 +46,10 @@ const toneClasses = computed(() =>
 function isPending(id: string): boolean {
   return props.pendingId === id
 }
+
+function isActionPending(id: string, action: 'approve' | 'reject'): boolean {
+  return isPending(id) && props.pendingAction === action
+}
 </script>
 
 <template>
@@ -54,21 +62,21 @@ function isPending(id: string): boolean {
       Select an item to review.
     </div>
 
-    <div
+    <AdminAsyncMessage
       v-else-if="isLoading"
+      kind="loading"
+      message="Loading item detail…"
       data-testid="review-queue-detail-loading"
-      class="flex h-full items-center justify-center text-center text-slate-400 text-sm"
-    >
-      Loading item detail…
-    </div>
+    />
 
-    <div
+    <AdminAsyncMessage
       v-else-if="isError"
+      kind="error"
+      message="Could not load this item's detail. Please try again."
+      :retrying="detailQuery.isFetching?.value ?? false"
       data-testid="review-queue-detail-error"
-      class="flex h-full items-center justify-center text-center text-red-400 text-sm"
-    >
-      Could not load this item's detail. Please try again.
-    </div>
+      @retry="detailQuery.refetch()"
+    />
 
     <div v-else-if="detail && verdict" data-testid="review-queue-detail" class="flex flex-col gap-5">
       <div class="rounded-lg border px-4 py-4" :class="toneClasses">
@@ -177,25 +185,37 @@ function isPending(id: string): boolean {
         </p>
       </div>
 
+      <p
+        v-if="actionError"
+        data-testid="review-queue-action-error"
+        class="text-readion-status-poor text-sm"
+        role="alert"
+      >
+        <span data-testid="review-queue-error-banner">{{ actionError }}</span>
+      </p>
+
       <div class="flex gap-2">
-        <button
-          type="button"
+        <ReadionButton
           data-testid="approve-item-btn"
           :disabled="isPending(detail.id)"
-          class="rounded-md border border-readion-background-surface px-3 py-1.5 font-medium text-slate-100 text-xs transition-colors hover:bg-readion-background-surface disabled:opacity-50"
+          :busy="isActionPending(detail.id, 'approve')"
+          busy-label="Approving…"
+          class="!min-h-0 px-3 py-1.5 text-xs"
           @click="emit('approve', detail.id)"
         >
           Approve
-        </button>
-        <button
-          type="button"
+        </ReadionButton>
+        <ReadionButton
           data-testid="reject-item-btn"
+          variant="secondary"
           :disabled="isPending(detail.id)"
-          class="rounded-md border border-readion-background-surface px-3 py-1.5 font-medium text-slate-100 text-xs transition-colors hover:bg-readion-background-surface disabled:opacity-50"
+          :busy="isActionPending(detail.id, 'reject')"
+          busy-label="Rejecting…"
+          class="!min-h-0 px-3 py-1.5 text-xs"
           @click="emit('reject', detail.id)"
         >
           Reject
-        </button>
+        </ReadionButton>
       </div>
     </div>
   </div>

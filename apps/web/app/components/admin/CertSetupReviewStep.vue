@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { ReadionProblemDetailsError } from '~/api/mutator'
+import ReadionButton from '~/components/ReadionButton.vue'
 import { readDataEnvelope } from '~/composables/adminEnvelope'
 import { buildDraftCreateBody, canCreateDraft } from '~/composables/certDraftCreateBody'
 import type { CertSetupWizardState } from '~/composables/useCertSetupWizard'
@@ -43,15 +44,16 @@ async function submitDraft(): Promise<void> {
 
 <template>
   <div class="flex flex-col gap-4">
-    <button
-      type="button"
+    <ReadionButton
       data-testid="submit-draft-btn"
       :disabled="!canSubmit || submitting"
-      class="self-start rounded-lg bg-readion-primary px-5 py-2.5 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-60"
+      :busy="submitting"
+      busy-label="Creating…"
+      class="self-start px-5 py-2.5"
       @click="submitDraft"
     >
       Create draft certification
-    </button>
+    </ReadionButton>
 
     <p v-if="errorMessage" data-testid="submit-draft-error" class="text-red-400 text-sm">
       {{ errorMessage }}

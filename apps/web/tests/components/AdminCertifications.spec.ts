@@ -22,12 +22,14 @@ vi.mock('~~/src/api/cert-setup/cert-setup')
 const dueData = ref<unknown[]>([])
 const dueLoading = ref(false)
 const dueError = ref(false)
+const dueRefetch = vi.fn()
 
 vi.mock('~/composables/useDueForReverification', () => ({
   useDueForReverification: () => ({
     data: dueData,
     isLoading: dueLoading,
     isError: dueError,
+    refetch: dueRefetch,
   }),
 }))
 
@@ -112,10 +114,13 @@ const NuxtLinkStub = {
   template: '<a :data-to="JSON.stringify(to)"><slot /></a>',
 }
 
+let mountedQueryClient: QueryClient | null = null
+
 function mountComponent() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   })
+  mountedQueryClient = queryClient
   return mount(AdminCertifications, {
     global: { plugins: [[VueQueryPlugin, { queryClient }]], stubs: { NuxtLink: NuxtLinkStub } },
   })
@@ -162,6 +167,7 @@ describe('AdminCertifications due list', () => {
   })
 
   it('shows a loading state', () => {
+    dueData.value = []
     dueLoading.value = true
     const wrapper = mountComponent()
     expect(wrapper.find('[data-testid="due-loading"]').exists()).toBe(true)
@@ -169,9 +175,23 @@ describe('AdminCertifications due list', () => {
   })
 
   it('shows an error state', () => {
+    dueData.value = []
     dueError.value = true
     const wrapper = mountComponent()
     expect(wrapper.find('[data-testid="due-error"]').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('retries a failed due-for-reverification read once', async () => {
+    dueData.value = []
+    dueError.value = true
+    const wrapper = mountComponent()
+
+    await wrapper
+      .find('[data-testid="due-error"] [data-testid="admin-async-retry-btn"]')
+      .trigger('click')
+
+    expect(dueRefetch).toHaveBeenCalledTimes(1)
     wrapper.unmount()
   })
 
@@ -179,6 +199,16 @@ describe('AdminCertifications due list', () => {
     dueData.value = []
     const wrapper = mountComponent()
     expect(wrapper.find('[data-testid="due-empty"]').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('preserves successful due rows when a background refresh fails', () => {
+    dueError.value = true
+    const wrapper = mountComponent()
+
+    expect(wrapper.find('[data-testid="due-reverification-row"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="due-error"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="due-empty"]').exists()).toBe(false)
     wrapper.unmount()
   })
 })
@@ -390,7 +420,11 @@ describe('AdminCertifications reverify modal overlay', () => {
     await flush()
 
     expect(submitBtn.text()).toContain('Re-verifying…')
-    expect(wrapper.find('[data-testid="reverify-submitting-spinner"]').exists()).toBe(true)
+    expect(submitBtn.find('[data-testid="readion-button-spinner"]').exists()).toBe(true)
+    expect(submitBtn.attributes('aria-busy')).toBe('true')
+
+    await submitBtn.trigger('click')
+    expect(certSetupControllerReverify).toHaveBeenCalledTimes(1)
 
     resolveReverify?.()
     await flush()
@@ -421,6 +455,80 @@ describe('AdminCertifications reverify modal overlay', () => {
 })
 
 describe('AdminCertifications existing certifications list', () => {
+  it('does not flash the empty state while the initial list read is unresolved', async () => {
+    let resolveList: ((value: unknown) => void) | undefined
+    vi.mocked(certificationsControllerList).mockReturnValue(
+      new Promise((resolve) => {
+        resolveList = resolve
+      }) as never,
+    )
+    const wrapper = mountComponent()
+    await nextTick()
+
+    expect(wrapper.find('[data-testid="existing-certs-loading"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="existing-certs-empty"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="existing-cert-row"]').exists()).toBe(false)
+
+    resolveList?.({
+      data: { data: EXISTING_CERTS, meta: { total: EXISTING_CERTS.length, page: 1, limit: 20 } },
+      status: 200,
+      headers: new Headers(),
+    })
+    await flush()
+    wrapper.unmount()
+  })
+
+  it('retries a failed initial list read and replaces the error with returned rows', async () => {
+    vi.mocked(certificationsControllerList)
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValue({
+        data: { data: EXISTING_CERTS, meta: { total: EXISTING_CERTS.length, page: 1, limit: 20 } },
+        status: 200,
+        headers: new Headers(),
+        // biome-ignore lint/suspicious/noExplicitAny: generated envelope type narrowed in tests
+      } as any)
+    const wrapper = mountComponent()
+    await flush()
+
+    expect(wrapper.find('[data-testid="existing-certs-error"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="existing-certs-empty"]').exists()).toBe(false)
+
+    await wrapper
+      .find('[data-testid="existing-certs-error"] [data-testid="admin-async-retry-btn"]')
+      .trigger('click')
+    await flush()
+
+    expect(certificationsControllerList).toHaveBeenCalledTimes(2)
+    expect(wrapper.findAll('[data-testid="existing-cert-row"]')).toHaveLength(2)
+    wrapper.unmount()
+  })
+
+  it('preserves successful rows while a background list refresh is unresolved', async () => {
+    const wrapper = mountComponent()
+    await flush()
+
+    let resolveRefresh: ((value: unknown) => void) | undefined
+    vi.mocked(certificationsControllerList).mockReturnValue(
+      new Promise((resolve) => {
+        resolveRefresh = resolve
+      }) as never,
+    )
+    void mountedQueryClient?.refetchQueries({ queryKey: ['admin', 'certifications-list'] })
+    await nextTick()
+
+    expect(wrapper.findAll('[data-testid="existing-cert-row"]')).toHaveLength(2)
+    expect(wrapper.find('[data-testid="existing-certs-loading"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="existing-certs-empty"]').exists()).toBe(false)
+
+    resolveRefresh?.({
+      data: { data: EXISTING_CERTS, meta: { total: EXISTING_CERTS.length, page: 1, limit: 20 } },
+      status: 200,
+      headers: new Headers(),
+    })
+    await flush()
+    wrapper.unmount()
+  })
+
   it('lists existing certifications alongside the due-for-reverification section', async () => {
     const wrapper = mountComponent()
     await flush()

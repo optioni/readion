@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import AdminAsyncMessage from '~/components/admin/AdminAsyncMessage.vue'
+import ReadionButton from '~/components/ReadionButton.vue'
 import { useCertReverifyFlow } from '~/composables/useCertReverifyFlow'
 import { useDueForReverification } from '~/composables/useDueForReverification'
 
@@ -10,6 +11,8 @@ const dueQuery = useDueForReverification()
 const dueItem = computed(
   () => dueQuery.data.value?.find((item) => item.code === props.code) ?? null,
 )
+const dueLoading = computed(() => dueQuery.isLoading.value && !dueItem.value)
+const dueError = computed(() => dueQuery.isError.value && !dueItem.value)
 
 const { diff, reverifyError, submitting, start, submit } = useCertReverifyFlow()
 
@@ -50,7 +53,25 @@ watch(
     </div>
 
     <div class="flex-1 overflow-y-auto px-9 py-6">
-      <div v-if="!dueItem" data-testid="reverify-not-found" class="text-slate-400 text-sm">
+      <AdminAsyncMessage
+        v-if="dueLoading"
+        kind="loading"
+        message="Loading certification…"
+        data-testid="reverify-due-loading"
+      />
+      <AdminAsyncMessage
+        v-else-if="dueError"
+        kind="error"
+        message="Could not load certification. Please try again."
+        :retrying="dueQuery.isFetching?.value ?? false"
+        data-testid="reverify-due-error"
+        @retry="dueQuery.refetch()"
+      />
+      <div
+        v-else-if="!dueItem"
+        data-testid="reverify-not-found"
+        class="text-slate-400 text-sm"
+      >
         No certification is due for re-verification with this code.
       </div>
 
@@ -114,15 +135,15 @@ watch(
           </p>
 
           <div class="mt-6 flex justify-end">
-            <button
-              type="button"
+            <ReadionButton
               data-testid="reverify-submit-btn"
-              :disabled="submitting"
-              class="inline-flex items-center gap-2 rounded-lg bg-readion-primary px-5 py-2 font-medium text-sm text-white transition-colors hover:bg-readion-primary/90 disabled:opacity-50"
+              :busy="submitting"
+              busy-label="Re-verifying…"
+              class="px-5"
               @click="submit"
             >
-              {{ submitting ? 'Re-verifying…' : 'Accept all & re-verify' }}
-            </button>
+              Accept all & re-verify
+            </ReadionButton>
           </div>
         </template>
       </template>
