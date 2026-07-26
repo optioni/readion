@@ -37,7 +37,8 @@ vi.mock('~/composables/sessionSummaryMapper', () => ({
   })),
 }))
 
-vi.stubGlobal('useRoute', () => ({ params: { id: 'enr-1' } }))
+let routeQuery: Record<string, string> = {}
+vi.stubGlobal('useRoute', () => ({ params: { id: 'enr-1' }, query: routeQuery }))
 vi.stubGlobal('definePageMeta', vi.fn())
 const mockNavigate = vi.fn()
 vi.stubGlobal('navigateTo', mockNavigate)
@@ -167,6 +168,7 @@ function mountPage() {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  routeQuery = {}
   stubQueue()
   stubStartReview()
   stubSessionDetail([quizItem(0)])
@@ -198,6 +200,41 @@ describe('Review page — queue scene', () => {
 
     expect(wrapper.find('[data-testid="review-queue-entry-stub"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="quiz-card"]').exists()).toBe(false)
+  })
+
+  it('autostarts exactly once after the dashboard handoff queue has loaded', async () => {
+    routeQuery = { autostart: '1' }
+    const wrapper = mountPage()
+    await flushPromises()
+
+    expect(fetchReviewQueue).toHaveBeenCalledTimes(1)
+    expect(startReview).toHaveBeenCalledTimes(1)
+    expect(startReview).toHaveBeenCalledWith('enr-1')
+    expect(wrapper.find('[data-testid="self-grade-card"]').exists()).toBe(true)
+  })
+
+  it('does not double-start when the queue start event fires during an autostart request', async () => {
+    routeQuery = { autostart: '1' }
+    let finishStart = () => {}
+    vi.mocked(startReview).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finishStart = () =>
+            resolve({
+              status: 'started',
+              // biome-ignore lint/suspicious/noExplicitAny: generated envelope narrowed in tests
+              session: { id: 'sess-review' } as any,
+            })
+        }),
+    )
+    const wrapper = mountPage()
+    await vi.waitFor(() => expect(startReview).toHaveBeenCalledTimes(1))
+
+    await wrapper.get('[data-testid="start-review-button"]').trigger('click')
+    expect(startReview).toHaveBeenCalledTimes(1)
+
+    finishStart()
+    await flushPromises()
   })
 })
 

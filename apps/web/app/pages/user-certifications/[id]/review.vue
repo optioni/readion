@@ -46,6 +46,7 @@ const reviewMode = ref<ReviewMode>('self-grade')
 // --- Queue state ---
 const queueItems = ref<ReviewItemResponse[]>([])
 const dueCount = ref(0)
+const isStartingReview = ref(false)
 
 // --- Quiz loop state ---
 const activeSessionId = ref<string | null>(null)
@@ -87,27 +88,36 @@ onMounted(async () => {
   const queue = await fetchReviewQueue(enrollmentId.value)
   queueItems.value = queue.items
   dueCount.value = queue.meta.dueCount
+  if (route.query.autostart === '1') {
+    await handleStart()
+  }
 })
 
 // --- Run-loop entry ---
 async function handleStart() {
-  const result = await startReview(enrollmentId.value)
-  if (result.status === 'all_caught_up') {
-    dueCount.value = 0
-    return
-  }
-  const sessionId = String(result.session.id)
-  activeSessionId.value = sessionId
+  if (isStartingReview.value) return
+  isStartingReview.value = true
+  try {
+    const result = await startReview(enrollmentId.value)
+    if (result.status === 'all_caught_up') {
+      dueCount.value = 0
+      return
+    }
+    const sessionId = String(result.session.id)
+    activeSessionId.value = sessionId
 
-  if (reviewMode.value === 'quiz') {
-    const detail = await fetchSessionDetail(sessionId)
-    items.value = (detail.data.items ?? []).map(toItem)
-    currentPos.value = 0
-    scene.value = 'loop'
-    return
-  }
+    if (reviewMode.value === 'quiz') {
+      const detail = await fetchSessionDetail(sessionId)
+      items.value = (detail.data.items ?? []).map(toItem)
+      currentPos.value = 0
+      scene.value = 'loop'
+      return
+    }
 
-  enterSelfGradeFlow()
+    enterSelfGradeFlow()
+  } finally {
+    isStartingReview.value = false
+  }
 }
 
 async function handleAdvance(index: number) {
