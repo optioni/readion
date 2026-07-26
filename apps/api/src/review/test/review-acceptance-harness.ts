@@ -13,6 +13,7 @@ import { vi } from 'vitest'
 import { AppModule } from '../../app.module'
 import { bootstrapApp } from '../../bootstrap'
 import { ProviderAdapter } from '../../llm/provider-adapter'
+import { extractSourceChunkId } from '../../mock-exam/test/mock-exam-test-utils'
 import { REDIS_CLIENT } from '../../redis/redis.module'
 
 const FINISH_REASON_STOP: LanguageModelV3FinishReason = { unified: 'stop', raw: 'stop' }
@@ -115,10 +116,8 @@ export async function createReviewHarness(): Promise<ReviewHarness> {
       if (allText.includes('independent answer verifier') || allText.includes('Verify:')) {
         text = MOCK_VERIFIER_VERDICT
       } else if (allText.includes('quiz question')) {
-        const chunkIdMatch = allText.match(
-          /\[(?:Source: )?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\]/,
-        )
-        const sourceChunkId = chunkIdMatch?.[1] ?? '00000000-0000-0000-0000-000000000000'
+        const sourceChunkId =
+          extractSourceChunkId(allText) ?? '00000000-0000-0000-0000-000000000000'
         text = buildMockQuizItem(sourceChunkId)
       } else {
         text = MOCK_READING_BLOCK

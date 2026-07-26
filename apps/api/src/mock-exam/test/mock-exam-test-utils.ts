@@ -44,6 +44,12 @@ export function extractMessageText(prompt: Array<{ role: string; content: unknow
     .join('\n')
 }
 
+export function extractSourceChunkId(text: string): string | undefined {
+  return text.match(
+    /(?:<source id="|\[(?:Source: )?)([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:">|\])/,
+  )?.[1]
+}
+
 export function buildMockQuestion(sourceChunkId: string): string {
   return JSON.stringify({
     question: 'What is the primary concept in this domain?',
@@ -128,10 +134,8 @@ export function createStandardMockLangModel(): MockLanguageModelV3 {
       if (allText.includes('independent answer verifier') || allText.includes('Verify:')) {
         text = PASS_VERDICT
       } else {
-        const chunkIdMatch = allText.match(
-          /\[(?:Source: )?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\]/,
-        )
-        const sourceChunkId = chunkIdMatch?.[1] ?? '00000000-0000-0000-0000-000000000000'
+        const sourceChunkId =
+          extractSourceChunkId(allText) ?? '00000000-0000-0000-0000-000000000000'
         text = buildMockQuestion(sourceChunkId)
       }
 

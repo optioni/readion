@@ -21,6 +21,7 @@ import {
   configureTestEnv,
   createMockEmbeddingModel,
   extractMessageText,
+  extractSourceChunkId,
   FINISH_REASON_STOP,
   PASS_VERDICT,
   truncateTables,
@@ -45,10 +46,8 @@ function createCombinedMockLangModel(): MockLanguageModelV3 {
       if (allText.includes('independent answer verifier') || allText.includes('Verify:')) {
         text = PASS_VERDICT
       } else if (allText.includes('quiz question')) {
-        const chunkIdMatch = allText.match(
-          /\[(?:Source: )?([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\]/,
-        )
-        const sourceChunkId = chunkIdMatch?.[1] ?? '00000000-0000-0000-0000-000000000000'
+        const sourceChunkId =
+          extractSourceChunkId(allText) ?? '00000000-0000-0000-0000-000000000000'
         text = buildMockQuestion(sourceChunkId)
       } else {
         text = MOCK_READING_BLOCK
