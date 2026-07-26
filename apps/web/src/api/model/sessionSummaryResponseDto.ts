@@ -4,12 +4,13 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { SessionSummaryDomainStatDto } from './sessionSummaryDomainStatDto'
-import type { WeakAreaDeltaDto } from './weakAreaDeltaDto'
+
 import type { SessionReadinessChangeDto } from './sessionReadinessChangeDto'
+import type { SessionSummaryDomainStatDto } from './sessionSummaryDomainStatDto'
+import type { SessionSummaryResponseDtoNextFocus } from './sessionSummaryResponseDtoNextFocus'
 import type { SessionSummaryResponseDtoStrongestQuestion } from './sessionSummaryResponseDtoStrongestQuestion'
 import type { SessionSummaryResponseDtoWeakestQuestion } from './sessionSummaryResponseDtoWeakestQuestion'
-import type { SessionSummaryResponseDtoNextFocus } from './sessionSummaryResponseDtoNextFocus'
+import type { WeakAreaDeltaDto } from './weakAreaDeltaDto'
 
 export interface SessionSummaryResponseDto {
   questionsAnswered: number

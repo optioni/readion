@@ -4,8 +4,9 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { QuarantinedItemListItemDto } from './quarantinedItemListItemDto'
+
 import type { ListMetaDto } from './listMetaDto'
+import type { QuarantinedItemListItemDto } from './quarantinedItemListItemDto'
 
 export interface QuarantinedItemListResponseDto {
   data: QuarantinedItemListItemDto[]

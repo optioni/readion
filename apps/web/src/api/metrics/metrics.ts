@@ -4,13 +4,14 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from '@tanstack/vue-query'
+
 import type {
   QueryFunction,
   QueryKey,
   UseQueryOptions,
   UseQueryReturnType,
 } from '@tanstack/vue-query'
+import { useQuery } from '@tanstack/vue-query'
 
 import { unref } from 'vue'
 

@@ -4,9 +4,10 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { QuarantinedItemDetailDtoStatus } from './quarantinedItemDetailDtoStatus'
-import type { QuarantinedItemDetailDtoProvenance } from './quarantinedItemDetailDtoProvenance'
+
 import type { QuarantinedItemDetailDtoContent } from './quarantinedItemDetailDtoContent'
+import type { QuarantinedItemDetailDtoProvenance } from './quarantinedItemDetailDtoProvenance'
+import type { QuarantinedItemDetailDtoStatus } from './quarantinedItemDetailDtoStatus'
 
 export interface QuarantinedItemDetailDto {
   id: string

@@ -4,19 +4,18 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from '@tanstack/vue-query'
+
 import type {
   QueryFunction,
   QueryKey,
   UseQueryOptions,
   UseQueryReturnType,
 } from '@tanstack/vue-query'
+import { useQuery } from '@tanstack/vue-query'
 
 import { unref } from 'vue'
-
-import type { AnalyticsOverviewResponseDto } from '.././model'
-
 import { readionFetch } from '../../../app/api/mutator'
+import type { AnalyticsOverviewResponseDto } from '.././model'
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 

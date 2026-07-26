@@ -4,8 +4,9 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { MockExamResponseDto } from './mockExamResponseDto'
+
 import type { MockExamListMetaDto } from './mockExamListMetaDto'
+import type { MockExamResponseDto } from './mockExamResponseDto'
 
 export interface MockExamListResponseDto {
   data: MockExamResponseDto[]

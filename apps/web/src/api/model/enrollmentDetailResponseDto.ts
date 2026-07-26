@@ -4,8 +4,9 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { EnrollmentResponseDto } from './enrollmentResponseDto'
+
 import type { EnrollmentRelationshipsDto } from './enrollmentRelationshipsDto'
+import type { EnrollmentResponseDto } from './enrollmentResponseDto'
 
 export interface EnrollmentDetailResponseDto {
   data: EnrollmentResponseDto

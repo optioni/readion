@@ -4,9 +4,10 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { SessionDefaultsDtoDuration } from './sessionDefaultsDtoDuration'
+
 import type { SessionDefaultsDtoContentMix } from './sessionDefaultsDtoContentMix'
 import type { SessionDefaultsDtoDifficulty } from './sessionDefaultsDtoDifficulty'
+import type { SessionDefaultsDtoDuration } from './sessionDefaultsDtoDuration'
 import type { SessionDefaultsDtoFocusArea } from './sessionDefaultsDtoFocusArea'
 import type { SessionDefaultsDtoLearningStyle } from './sessionDefaultsDtoLearningStyle'
 

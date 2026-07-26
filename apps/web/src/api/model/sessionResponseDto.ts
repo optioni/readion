@@ -4,11 +4,12 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
+
+import type { SessionItemResponseDto } from './sessionItemResponseDto'
+import type { SessionResponseDtoEndedAt } from './sessionResponseDtoEndedAt'
+import type { SessionResponseDtoFocusArea } from './sessionResponseDtoFocusArea'
 import type { SessionResponseDtoKind } from './sessionResponseDtoKind'
 import type { SessionResponseDtoStatus } from './sessionResponseDtoStatus'
-import type { SessionResponseDtoFocusArea } from './sessionResponseDtoFocusArea'
-import type { SessionResponseDtoEndedAt } from './sessionResponseDtoEndedAt'
-import type { SessionItemResponseDto } from './sessionItemResponseDto'
 
 export interface SessionResponseDto {
   id: string

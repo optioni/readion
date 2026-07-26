@@ -4,8 +4,9 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { SessionReadinessChangeDtoBefore } from './sessionReadinessChangeDtoBefore'
+
 import type { SessionReadinessChangeDtoAfter } from './sessionReadinessChangeDtoAfter'
+import type { SessionReadinessChangeDtoBefore } from './sessionReadinessChangeDtoBefore'
 import type { SessionReadinessChangeDtoDelta } from './sessionReadinessChangeDtoDelta'
 
 export interface SessionReadinessChangeDto {

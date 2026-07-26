@@ -38,18 +38,14 @@ test.describe('seo-hygiene — default title and description baseline', () => {
     expect(title.length).toBeGreaterThan(0)
     expect(title).toMatch(/· Readion$/)
 
-    const description = await page
-      .locator('meta[name="description"]')
-      .getAttribute('content')
+    const description = await page.locator('meta[name="description"]').getAttribute('content')
     expect(description?.length ?? 0).toBeGreaterThan(0)
   })
 })
 
 test.describe('seo-hygiene — global title and social share metadata', () => {
   for (const route of ['/login', '/register']) {
-    test(`${route} renders a titled, described, and shareable document head`, async ({
-      page,
-    }) => {
+    test(`${route} renders a titled, described, and shareable document head`, async ({ page }) => {
       await page.goto(route)
       await page.waitForLoadState('networkidle')
 

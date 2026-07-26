@@ -4,8 +4,9 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { DrillResultResponseDtoStatus } from './drillResultResponseDtoStatus'
+
 import type { DrillResultResponseDtoSession } from './drillResultResponseDtoSession'
+import type { DrillResultResponseDtoStatus } from './drillResultResponseDtoStatus'
 
 export interface DrillResultResponseDto {
   status: DrillResultResponseDtoStatus

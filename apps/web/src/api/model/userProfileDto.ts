@@ -4,8 +4,9 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { UserProfileDtoRole } from './userProfileDtoRole'
+
 import type { SessionDefaultsDto } from './sessionDefaultsDto'
+import type { UserProfileDtoRole } from './userProfileDtoRole'
 
 export interface UserProfileDto {
   id: string

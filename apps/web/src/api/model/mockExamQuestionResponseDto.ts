@@ -4,8 +4,9 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { MockExamQuestionResponseDtoUserAnswer } from './mockExamQuestionResponseDtoUserAnswer'
+
 import type { MockExamCitationDto } from './mockExamCitationDto'
+import type { MockExamQuestionResponseDtoUserAnswer } from './mockExamQuestionResponseDtoUserAnswer'
 
 export interface MockExamQuestionResponseDto {
   id: string

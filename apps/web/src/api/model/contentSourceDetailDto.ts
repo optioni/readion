@@ -4,8 +4,9 @@
  * Readion
  * OpenAPI spec version: 0.1.0
  */
-import type { ContentSourceResponseDto } from './contentSourceResponseDto'
+
 import type { ContentSourceDetailDtoRelationships } from './contentSourceDetailDtoRelationships'
+import type { ContentSourceResponseDto } from './contentSourceResponseDto'
 
 export interface ContentSourceDetailDto {
   data: ContentSourceResponseDto
