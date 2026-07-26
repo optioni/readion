@@ -176,7 +176,7 @@ describe('OnboardingSessionPrefs settings layout — duration slider', () => {
 })
 
 describe('OnboardingSessionPrefs settings layout — FieldRow, hint, and pill shape', () => {
-  it('renders each field as a two-column FieldRow with the label to the left of the control', async () => {
+  it('stacks the label safely on phones and uses a fixed label column from the small breakpoint', async () => {
     stubProfile(DEFAULT_SESSION_DEFAULTS)
 
     const { wrapper } = mountStep({ layout: 'settings' })
@@ -185,14 +185,13 @@ describe('OnboardingSessionPrefs settings layout — FieldRow, hint, and pill sh
     const label = wrapper.find('label')
     expect(label.exists()).toBe(true)
 
-    // SettingsFieldRow's fixed-width label column sits beside the control (Group 3 design.md /
-    // apps/web/tests/components/SettingsFieldRow.spec.ts pins the w-40 shrink-0 contract).
     const labelColumn = label.element.parentElement
     if (!labelColumn) {
       throw new Error('missing label column parent element')
     }
-    expect(Array.from(labelColumn.classList)).toContain('w-40')
-    expect(Array.from(labelColumn.classList)).toContain('shrink-0')
+    expect(Array.from(labelColumn.classList)).toEqual(
+      expect.arrayContaining(['w-full', 'min-w-0', 'sm:w-40', 'sm:shrink-0']),
+    )
   })
 
   it('shows the "Default duration per session" hint under the Session length label', async () => {

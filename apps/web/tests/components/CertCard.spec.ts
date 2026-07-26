@@ -368,6 +368,9 @@ describe('CertCard due-review quick-start', () => {
     const wrapper = mountCard()
     await wrapper.find('[data-testid="review-start-btn"]').trigger('click')
     await flushPromises()
-    expect(mockPush).toHaveBeenCalledWith('/user-certifications/enr-1/review')
+    expect(mockPush).toHaveBeenCalledWith({
+      path: '/user-certifications/enr-1/review',
+      query: { autostart: '1' },
+    })
   })
 })

@@ -31,6 +31,12 @@ describe('fetch-etiquette', () => {
       expect(result).toBe(true)
     })
 
+    it('returns true when robots.txt fetch rejects with a non-Error value', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue('network unavailable'))
+      const result = await isAllowedByRobots('https://example.com/page')
+      expect(result).toBe(true)
+    })
+
     it('returns true when robots.txt returns non-OK', async () => {
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
       const result = await isAllowedByRobots('https://example.com/page')
@@ -101,6 +107,17 @@ describe('fetch-etiquette', () => {
       await throttleForDomain(uniqueDomain)
       expect(Date.now() - start).toBeLessThan(100)
     })
+
+    it('does not delay a repeat request after the rate-limit window has elapsed', async () => {
+      const uniqueDomain = `elapsed-domain-${Date.now()}.example.com`
+      const timeoutSpy = vi.spyOn(globalThis, 'setTimeout')
+
+      await throttleForDomain(uniqueDomain)
+      vi.advanceTimersByTime(1_000)
+      await throttleForDomain(uniqueDomain)
+
+      expect(timeoutSpy).not.toHaveBeenCalled()
+    })
   })
 
   describe('politelyFetch', () => {
@@ -132,6 +149,25 @@ describe('fetch-etiquette', () => {
 
       const callArgs = fetchMock.mock.calls[1]
       expect(callArgs[1]?.headers?.['User-Agent']).toContain('Readion')
+    })
+
+    it('preserves caller headers alongside the User-Agent header', async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce({ ok: false })
+        .mockResolvedValueOnce({ ok: true })
+
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { politelyFetch } = await import('./fetch-etiquette')
+      await politelyFetch('https://headers.example.com/page', {
+        headers: { Accept: 'text/plain' },
+      })
+
+      expect(fetchMock.mock.calls[1]?.[1]?.headers).toEqual({
+        Accept: 'text/plain',
+        'User-Agent': USER_AGENT,
+      })
     })
   })
 })

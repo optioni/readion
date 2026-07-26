@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ScrapperClient } from '../../scrapper/scrapper.client'
 import { ScrapperError } from '../../scrapper/scrapper.errors'
 import { PdfFetchStrategy } from './pdf.strategy'
@@ -19,6 +19,10 @@ describe('PdfFetchStrategy', () => {
   beforeEach(() => {
     scrapper = { fetch: vi.fn() }
     strategy = new PdfFetchStrategy(scrapper as unknown as ScrapperClient)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   it('returns scrapper content when scrapper succeeds', async () => {
@@ -46,5 +50,14 @@ describe('PdfFetchStrategy', () => {
     const result = await strategy.fetch('https://example.com/guide.pdf')
     expect(result).toHaveLength(1)
     expect(result[0]!.text).toBe('Extracted PDF text content')
+  })
+
+  it('returns no content when direct PDF fetching fails', async () => {
+    scrapper.fetch.mockRejectedValue('scrapper unavailable')
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
+
+    const result = await strategy.fetch('https://example.com/guide.pdf')
+
+    expect(result).toHaveLength(0)
   })
 })

@@ -78,5 +78,15 @@ describe('BaseProcessor', () => {
 
       await expect(processor.process(makeMockJob())).rejects.toBe(error)
     })
+
+    it('logs and re-throws non-Error failures', async () => {
+      const processor = new ConcreteTestProcessor(async () => {
+        throw 'plain failure'
+      })
+      const errorSpy = vi.spyOn(processor.logger, 'error')
+
+      await expect(processor.process(makeMockJob())).rejects.toBe('plain failure')
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('plain failure'))
+    })
   })
 })
