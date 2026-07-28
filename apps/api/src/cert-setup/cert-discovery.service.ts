@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common'
 import {
+  type ContentSourceType,
   contentSourceTypes,
   type DiscoverSourcesRequest,
   type DiscoverSourcesResponse,
@@ -17,6 +18,7 @@ import {
 } from './cert-discovery.types'
 
 const CERT_DISCOVERY_MAX_STEPS = 4
+const SELECTION_LOG_LIMIT = 2_000
 
 const SEARCH_SYSTEM_PROMPT =
   'You research certification exams. Use the webSearch tool to find authoritative pages describing the exam. Search thoroughly, issuing multiple queries if it helps surface official sources.'
@@ -148,8 +150,16 @@ export class CertDiscoveryService {
       if (!NoObjectGeneratedError.isInstance(error)) {
         throw error
       }
-      this.logger.warn(`cert discovery selection produced no object: error=${error.message}`)
-      return { candidateUrls: [], suggested: [] }
+      // `message` alone cannot distinguish which field mismatched, leaving a
+      // zero-candidate result unattributable. `cause` carries the failing path
+      // and `text` the model's raw output — both are needed to tell a bad enum
+      // value apart from a wrong candidate shape.
+      this.logger.warn(
+        `cert discovery selection produced no object: error=${error.message} ` +
+          `finishReason=${error.finishReason ?? 'unknown'} ` +
+          `cause=${truncate(causeMessage(error.cause))} text=${truncate(error.text ?? '')}`,
+      )
+      return salvageSelection(error.text)
     }
   }
 
@@ -177,6 +187,80 @@ export class CertDiscoveryService {
 
 function labelFor(request: DiscoverSourcesRequest): string {
   return request.code ? `${request.name} (${request.code})` : request.name
+}
+
+function truncate(value: string): string {
+  return value.length <= SELECTION_LOG_LIMIT
+    ? value
+    : `${value.slice(0, SELECTION_LOG_LIMIT)}…[${value.length} chars]`
+}
+
+function causeMessage(cause: unknown): string {
+  if (cause instanceof Error) {
+    return cause.message
+  }
+  return cause === undefined ? 'unknown' : String(cause)
+}
+
+// Schema validation covers the whole object, so a single out-of-enum `type` in
+// suggestedContentSources would otherwise discard every grounded candidate
+// alongside it. Recover the items that are individually well-formed and drop
+// only the malformed ones. assembleResponse still grounds every URL against the
+// search pool, so salvaging can never admit a fabricated one.
+function salvageSelection(text: string | undefined): CandidateSelection {
+  const parsed = parseJson(text)
+  if (typeof parsed !== 'object' || parsed === null) {
+    return { candidateUrls: [], suggested: [] }
+  }
+  const { candidates, suggestedContentSources } = parsed as Record<string, unknown>
+  return {
+    candidateUrls: asArray(candidates).flatMap(salvageUrl),
+    suggested: asArray(suggestedContentSources).flatMap(salvageSuggestion),
+  }
+}
+
+function parseJson(text: string | undefined): unknown {
+  if (text === undefined) {
+    return null
+  }
+  try {
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : []
+}
+
+// The model sometimes emits a bare url string where the schema asks for { url }.
+function salvageUrl(item: unknown): string[] {
+  if (typeof item === 'string') {
+    return [item]
+  }
+  if (typeof item === 'object' && item !== null) {
+    const { url } = item as { url?: unknown }
+    if (typeof url === 'string') {
+      return [url]
+    }
+  }
+  return []
+}
+
+function salvageSuggestion(item: unknown): SuggestedContentSource[] {
+  if (typeof item !== 'object' || item === null) {
+    return []
+  }
+  const { url, type } = item as { url?: unknown; type?: unknown }
+  if (typeof url !== 'string' || !isContentSourceType(type)) {
+    return []
+  }
+  return [{ url, type }]
+}
+
+function isContentSourceType(value: unknown): value is ContentSourceType {
+  return typeof value === 'string' && (contentSourceTypes as readonly string[]).includes(value)
 }
 
 function assembleResponse(

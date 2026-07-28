@@ -269,6 +269,50 @@ describe('CertDiscoveryService', () => {
     expect(result.candidates).toEqual([])
   })
 
+  // Reproduces the CLF-C02 production failure: the model returns well-formed JSON
+  // whose `type` falls outside the enum. Validation covers the whole object, so an
+  // unsalvaged failure discards the grounded candidates alongside the bad suggestion.
+  it('keeps valid candidates when a suggested source fails schema validation', async () => {
+    searchMock.mockResolvedValue([VENDOR_RESULT, THIRD_PARTY_RESULT])
+    selectionReply = JSON.stringify({
+      candidates: [{ url: VENDOR_URL }],
+      suggestedContentSources: [{ url: VENDOR_URL, type: 'documentation' }],
+    })
+
+    const result = await service.discoverSources({
+      name: 'AWS Certified Cloud Practitioner',
+      code: 'CLF-C02',
+    })
+
+    expect(result.candidates.map((candidate) => candidate.url)).toEqual([VENDOR_URL])
+    expect(result.suggestedContentSources).toBeUndefined()
+  })
+
+  it('keeps candidates the model emitted as bare url strings', async () => {
+    searchMock.mockResolvedValue([VENDOR_RESULT])
+    selectionReply = JSON.stringify({ candidates: [VENDOR_URL] })
+
+    const result = await service.discoverSources({ name: 'AWS Cloud Practitioner' })
+
+    expect(result.candidates.map((candidate) => candidate.url)).toEqual([VENDOR_URL])
+  })
+
+  it('logs the validation cause and raw model text when selection fails validation', async () => {
+    searchMock.mockResolvedValue([VENDOR_RESULT])
+    selectionReply = JSON.stringify({
+      candidates: [{ url: VENDOR_URL }],
+      suggestedContentSources: [{ url: VENDOR_URL, type: 'documentation' }],
+    })
+    const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined)
+
+    await service.discoverSources({ name: 'AWS Cloud Practitioner' })
+
+    const message = warnSpy.mock.calls.map((call) => call[0] as string).join('\n')
+    expect(message).toContain('suggestedContentSources')
+    expect(message).toContain('documentation')
+    warnSpy.mockRestore()
+  })
+
   it('warns with per-stage counts when discovery yields no candidates', async () => {
     searchMock.mockResolvedValue([VENDOR_RESULT, THIRD_PARTY_RESULT])
     selectionReply = JSON.stringify({ candidates: [{ url: HALLUCINATED_URL }] })
