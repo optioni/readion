@@ -22,3 +22,14 @@ resolved = "353d6683855e26ee34570cd5b45506bcd497f89a"
   [[source.item]]
   id    = "agent:phase-orchestrator"
   files = [".claude/agents/phase-orchestrator.md"]
+
+  [[source.item]]
+  id    = "schema:tdd"
+  files = [
+    "openspec/schemas/tdd/schema.yaml",
+    "openspec/schemas/tdd/templates/design.md",
+    "openspec/schemas/tdd/templates/planning-review.md",
+    "openspec/schemas/tdd/templates/proposal.md",
+    "openspec/schemas/tdd/templates/spec.md",
+    "openspec/schemas/tdd/templates/tasks.md",
+  ]

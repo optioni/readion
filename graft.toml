@@ -1,4 +1,4 @@
 [sources.openspec-schemas]
 git     = "github.com/optioni/openspec-schemas"
 rev     = "v0.1.0"
-install = ["agent:*"]
+install = ["agent:*", "schema:tdd"]
