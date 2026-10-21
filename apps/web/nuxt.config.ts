@@ -48,7 +48,11 @@ export default defineNuxtConfig({
       // page-specific title set via useHead/useSeoMeta — with the site name.
       title: DEFAULT_PAGE_TITLE,
       titleTemplate: TITLE_TEMPLATE,
-      link: [{ rel: 'manifest', href: '/manifest.webmanifest' }],
+      link: [
+        { rel: 'manifest', href: '/manifest.webmanifest' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/icons/readion.svg' },
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+      ],
       meta: [
         { name: 'theme-color', content: '#0f172a' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
