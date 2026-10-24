@@ -15,7 +15,7 @@ jobs:
     name: Typecheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: corepack enable
       - uses: actions/setup-node@v4
         with:
@@ -28,7 +28,7 @@ jobs:
     name: Lint & Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: corepack enable
       - uses: actions/setup-node@v4
         with:
@@ -42,7 +42,7 @@ jobs:
     name: Validate Kubernetes Manifests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       # Self-contained: installs its own tooling rather than relying on
       # whatever happens to be preinstalled on the runner image, so this job
@@ -75,7 +75,7 @@ jobs:
     name: Test (unit)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: corepack enable
       - uses: actions/setup-node@v4
         with:
@@ -98,7 +98,7 @@ jobs:
         image: docker:dind
         options: --privileged
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: corepack enable
       - uses: actions/setup-node@v4
         with:
@@ -113,7 +113,7 @@ jobs:
     name: Build All Apps
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: corepack enable
       - uses: actions/setup-node@v4
         with:

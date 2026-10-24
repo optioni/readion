@@ -62,7 +62,7 @@ jobs:
       # fetch-depth: 0 — the action derives the same-month MICRO counter from
       # existing tags. A shallow (tag-less) checkout restarts it at .0 and
       # collides on the second release of a month.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
@@ -99,7 +99,7 @@ jobs:
     steps:
       # fetch-depth: 0 — resolving the diff base needs the last v* tag on
       # dispatch and the full commit range on push.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
@@ -174,7 +174,7 @@ jobs:
     steps:
       # No ref pin: the dispatched commit IS the commit the release job will
       # tag afterwards, so there is no pre-created tag to check out.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -223,7 +223,7 @@ jobs:
       # errors symbolicate against these maps.
       RELEASE: ${{ github.event_name == 'workflow_dispatch' && needs.version.outputs.value || github.sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         if: env.SENTRY_AUTH_TOKEN_SET == 'true'
 
       - run: corepack enable
