@@ -6,7 +6,7 @@
 # (see docker-bake.hcl) so buildx shares those stages within one invocation.
 
 # ---- shared base -----------------------------------------------------------
-FROM node:24.18-slim AS base
+FROM node:24.22-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c AS base
 RUN corepack enable
 WORKDIR /app
 
@@ -48,7 +48,7 @@ COPY apps/web/ ./apps/web/
 RUN yarn workspace @readion/web build
 
 # ---- runtime images --------------------------------------------------------
-FROM node:24.18-slim AS api
+FROM node:24.22-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c AS api
 WORKDIR /app
 ARG SENTRY_RELEASE
 ENV NODE_ENV=production
@@ -60,7 +60,7 @@ COPY apps/api/package.json ./apps/api/
 EXPOSE 3001
 CMD ["node", "apps/api/dist/src/main.js"]
 
-FROM node:24.18-slim AS worker
+FROM node:24.22-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c AS worker
 WORKDIR /app
 ARG SENTRY_RELEASE
 ENV NODE_ENV=production
@@ -71,7 +71,7 @@ COPY --from=packages-build /app/packages ./packages
 COPY apps/worker/package.json ./apps/worker/
 CMD ["node", "apps/worker/dist/src/main.js"]
 
-FROM node:24.18-slim AS web
+FROM node:24.22-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c AS web
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=web-build /app/apps/web/.output ./apps/web/.output
