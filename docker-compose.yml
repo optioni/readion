@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: pgvector/pgvector:pg17
+    image: pgvector/pgvector:pg17@sha256:ac08538c6f8b9904c33c8224c5e5706dbe760aca29db1d096972b4052c22a75d
     environment:
       POSTGRES_USER: readion
       POSTGRES_PASSWORD: readion
@@ -16,7 +16,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:8da19c7399dca900c6822a1cf30f9d2285585e2c4b457ff4095b0f4500054d3f
     ports:
       - '6379:6379'
     volumes:
@@ -28,7 +28,7 @@ services:
       retries: 5
 
   mailpit:
-    image: axllent/mailpit:v1.27
+    image: axllent/mailpit:v1.27@sha256:e22dce5b36f93c77082e204a3942fb6b283b7896e057458400a4c88344c3df68
     ports:
       - '1025:1025'
       - '8025:8025'
@@ -39,7 +39,7 @@ services:
       retries: 5
 
   scrapper:
-    image: amerkurev/scrapper:latest
+    image: amerkurev/scrapper:latest@sha256:81b32d7f282ff298e1c4413f6374e5806c41e7fc757c89940032b0e952111ede
     ports:
       - '3000:3000'
     environment:

@@ -62,7 +62,7 @@ jobs:
       # fetch-depth: 0 — the action derives the same-month MICRO counter from
       # existing tags. A shallow (tag-less) checkout restarts it at .0 and
       # collides on the second release of a month.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
@@ -71,7 +71,7 @@ jobs:
       # release-tag string is affected, never application data.
       - name: Compute CalVer version
         id: calver
-        uses: alepee/calendar-version-action@v2
+        uses: alepee/calendar-version-action@727e2b1eca05fa95ee77e336e2a60c2bda403017 # v2
         with:
           dateFormat: "YYYY.MM"
           format: "v%NOW%.%MICRO%"
@@ -99,13 +99,13 @@ jobs:
     steps:
       # fetch-depth: 0 — resolving the diff base needs the last v* tag on
       # dispatch and the full commit range on push.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
       - run: corepack enable
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
           cache: yarn
@@ -174,10 +174,10 @@ jobs:
     steps:
       # No ref pin: the dispatched commit IS the commit the release job will
       # tag afterwards, so there is no pre-created tag to check out.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -186,7 +186,7 @@ jobs:
       # The arm-runners group is arm64 hardware, so buildx builds natively —
       # no setup-qemu-action and no `platforms:` cross-emulation.
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
       # `targets` restricts one bake invocation to the affected apps, so the
       # shared base/deps/packages-build stages still compile once. bake reads
@@ -195,7 +195,7 @@ jobs:
       # docker/metadata-action, whose auto-latest-on-default-branch behavior
       # would inject a moving tag production must never pin.
       - name: Build & push affected images
-        uses: docker/bake-action@v6
+        uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6
         with:
           files: ./docker-bake.hcl
           targets: ${{ join(fromJSON(needs.detect.outputs.apps), ',') }}
@@ -223,13 +223,13 @@ jobs:
       # errors symbolicate against these maps.
       RELEASE: ${{ github.event_name == 'workflow_dispatch' && needs.version.outputs.value || github.sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         if: env.SENTRY_AUTH_TOKEN_SET == 'true'
 
       - run: corepack enable
         if: env.SENTRY_AUTH_TOKEN_SET == 'true'
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         if: env.SENTRY_AUTH_TOKEN_SET == 'true'
         with:
           node-version-file: .nvmrc
@@ -274,7 +274,7 @@ jobs:
       # No checkout: the action creates the tag and the Release through the
       # API at the run's commit. A working tree is only needed to attach files.
       - name: Create GitHub Release (auto-generated notes)
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
           tag_name: ${{ needs.version.outputs.value }}
           generate_release_notes: true

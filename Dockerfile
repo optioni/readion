@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 #
 # Single multi-stage build for every deployable in the monorepo. `deps` and the
 # `packages-build` stage (shared + db) are compiled exactly once and reused by
@@ -6,7 +6,7 @@
 # (see docker-bake.hcl) so buildx shares those stages within one invocation.
 
 # ---- shared base -----------------------------------------------------------
-FROM node:24.18-slim AS base
+FROM node:24.18-slim@sha256:235600a8101ab264e117b1768e925532262668dc9b581ef1dd7d96ced463b8e7 AS base
 RUN corepack enable
 WORKDIR /app
 
@@ -48,7 +48,7 @@ COPY apps/web/ ./apps/web/
 RUN yarn workspace @readion/web build
 
 # ---- runtime images --------------------------------------------------------
-FROM node:24.18-slim AS api
+FROM node:24.18-slim@sha256:235600a8101ab264e117b1768e925532262668dc9b581ef1dd7d96ced463b8e7 AS api
 WORKDIR /app
 ARG SENTRY_RELEASE
 ENV NODE_ENV=production
@@ -60,7 +60,7 @@ COPY apps/api/package.json ./apps/api/
 EXPOSE 3001
 CMD ["node", "apps/api/dist/src/main.js"]
 
-FROM node:24.18-slim AS worker
+FROM node:24.18-slim@sha256:235600a8101ab264e117b1768e925532262668dc9b581ef1dd7d96ced463b8e7 AS worker
 WORKDIR /app
 ARG SENTRY_RELEASE
 ENV NODE_ENV=production
@@ -71,7 +71,7 @@ COPY --from=packages-build /app/packages ./packages
 COPY apps/worker/package.json ./apps/worker/
 CMD ["node", "apps/worker/dist/src/main.js"]
 
-FROM node:24.18-slim AS web
+FROM node:24.18-slim@sha256:235600a8101ab264e117b1768e925532262668dc9b581ef1dd7d96ced463b8e7 AS web
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=web-build /app/apps/web/.output ./apps/web/.output
